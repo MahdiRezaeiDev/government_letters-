@@ -14,7 +14,6 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Vazir', ...defaultTheme.fontFamily.sans],
-                // Add Nastaliq as a secondary custom font
                 nastaliq: ['IranNastaliq', 'serif'],
             },
         },
