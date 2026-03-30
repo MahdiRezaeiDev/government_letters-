@@ -21,9 +21,9 @@ return new class extends Migration
             $table->string('employment_code', 50)->unique()->nullable()->after('mobile');
             $table->string('avatar')->nullable()->after('employment_code');
             $table->enum('status', ['active', 'inactive', 'suspended'])->default('active')->after('avatar');
-            $table->string('two_factor_secret')->nullable()->after('status');
-            $table->text('two_factor_recovery_codes')->nullable()->after('two_factor_secret');
-            $table->timestamp('two_factor_confirmed_at')->nullable()->after('two_factor_recovery_codes');
+            // $table->string('two_factor_secret')->nullable()->after('status');
+            // $table->text('two_factor_recovery_codes')->nullable()->after('two_factor_secret');
+            // $table->timestamp('two_factor_confirmed_at')->nullable()->after('two_factor_recovery_codes');
             $table->timestamp('last_login_at')->nullable()->after('two_factor_confirmed_at');
             $table->string('last_login_ip', 45)->nullable()->after('last_login_at');
             $table->softDeletes();
