@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('archive_permissions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('archive_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('position_id')->constrained()->cascadeOnDelete();
+            $table->enum('permission_type', ['read', 'write', 'delete', 'manage'])->default('read');
             $table->timestamps();
         });
     }

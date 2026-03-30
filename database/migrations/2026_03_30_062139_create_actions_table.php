@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('actions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('routing_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->enum('action_type', ['view', 'download', 'complete', 'reject', 'reject', 'comment'])->default('');
+            $table->text('description')->nullable();
+            $table->json('metadata')->nullable();
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
             $table->timestamps();
         });
     }

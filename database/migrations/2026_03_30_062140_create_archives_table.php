@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('archives', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
+            $table->string('name', 255);
+            $table->string('code', 100)->nullable();
+            $table->foreignId('parent_id')->nullable()->constrained('archives')->nullOnDelete();
+            $table->text('description')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
