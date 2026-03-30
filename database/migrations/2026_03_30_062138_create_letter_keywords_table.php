@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('letter_keywords', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('letter_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('keyword_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }
