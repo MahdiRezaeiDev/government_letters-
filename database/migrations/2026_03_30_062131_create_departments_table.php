@@ -13,7 +13,16 @@ return new class extends Migration
     {
         Schema::create('departments', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
+            $table->string('code', 50)->nullable();
+            $table->foreignId('parent_id')->nullable()->constrained('departments')->nullOnDelete();
+            $table->unsignedBigInteger('manager_position_id')->nullable();
+            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->integer('level')->default(0);
+            $table->text('path')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

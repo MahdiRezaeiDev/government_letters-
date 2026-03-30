@@ -13,6 +13,14 @@ return new class extends Migration
     {
         Schema::create('letter_categories', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('organization_id')->constrained()->onDelete('cascade');
+            $table->string('name', 255);
+            $table->string('code', 50)->unique();
+            $table->foreignId('parent_id')->nullable()->constrained('letter_categories')->nullOnDelete();
+            $table->text('description')->nullable();
+            $table->string('color', 7)->nullable();
+            $table->integer('sort_order')->nullable();
+            $table->boolean('status')->default(true);
             $table->timestamps();
         });
     }

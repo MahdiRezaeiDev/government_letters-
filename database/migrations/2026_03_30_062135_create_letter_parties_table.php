@@ -13,6 +13,21 @@ return new class extends Migration
     {
         Schema::create('letter_parties', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('organization_id')->constrained()->onDelete('cascade');
+            $table->enum('party_type', ['person','company','organization'])->default('organization');
+            $table->string('name', 255);
+            $table->string('legal_name', 255)->nullable();
+            $table->string('national_id', 20)->nullable();
+            $table->string('economic_code', 20)->nullable();
+            $table->string('registration_number', 50)->nullable();
+            $table->text('address')->nullable();
+            $table->string('phone', 20)->nullable();
+            $table->string('email', 255)->nullable();
+            $table->string('website', 255)->nullable();
+            $table->string('contact_person', 255)->nullable();
+            $table->text('description')->nullable();
+            $table->boolean('status')->default(true);
+            
             $table->timestamps();
         });
     }

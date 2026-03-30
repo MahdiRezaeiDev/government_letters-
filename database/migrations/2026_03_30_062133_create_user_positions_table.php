@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('user_positions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('position_id')->constrained()->cascadeOnDelete();
+            $table->boolean('is_primary')->default(false);
+            $table->date('start_date')->nullable();
+            $table->foreignId('deputy_user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
         });
     }
