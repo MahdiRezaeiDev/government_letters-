@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('actions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('routing_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('routing_id')->constrained('routings')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->enum('action_type', ['view', 'download', 'complete', 'reject', 'reject', 'comment'])->default('');
+            $table->enum('action_type', ['view', 'download', 'complete', 'reject', 'comment'])->default('view');
             $table->text('description')->nullable();
             $table->json('metadata')->nullable();
             $table->string('ip_address', 45)->nullable();

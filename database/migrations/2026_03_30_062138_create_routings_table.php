@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('routings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('letter_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('from_position_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('from_user_id ')->constrained()->cascadeOnDelete();
-            $table->foreignId('to_position_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('to_user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('from_position_id')->constrained('positions')->cascadeOnDelete();
+            $table->foreignId('from_user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('to_position_id')->constrained('positions')->cascadeOnDelete();
+            $table->foreignId('to_user_id')->constrained('users')->cascadeOnDelete();
             $table->enum('action_type', ['information', 'approval', 'coordination', 'sign']);
             $table->text('instructions')->nullable();
             $table->datetime('deadline')->nullable();
@@ -28,7 +28,7 @@ return new class extends Migration
             $table->text('completed_note')->nullable();
             $table->integer('priority')->default(0);
             $table->integer('step_order')->default(0);
-            $table->boolean('is_parallel')->default(true);
+            $table->boolean('is_parallel')->default(false);
             $table->text('parallel_group_id')->nullable();
             $table->timestamps();
         });

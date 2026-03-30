@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('position_id')->constrained()->cascadeOnDelete();
             $table->boolean('is_primary')->default(false);
             $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->foreignId('deputy_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();

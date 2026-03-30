@@ -13,7 +13,18 @@ return new class extends Migration
     {
         Schema::create('event_logs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('event_type', 255);
+            $table->string('subject_type', 255)->nullable();
+            $table->unsignedBigInteger('subject_id')->nullable();
+            $table->text('description')->nullable();
+            $table->json('properties')->nullable();
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
             $table->timestamps();
+
+            $table->index(['subject_type', 'subject_id']);
+            $table->index('event_type');
         });
     }
 

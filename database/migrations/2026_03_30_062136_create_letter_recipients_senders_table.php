@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('letter_recipients_senders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('letter_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('party_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('party_id')->constrained('letter_parties')->cascadeOnDelete();
             $table->enum('type', ['recipient', 'sender', 'cc']);
             $table->timestamps();
         });

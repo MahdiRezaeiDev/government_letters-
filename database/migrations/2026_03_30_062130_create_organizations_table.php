@@ -22,8 +22,8 @@ return new class extends Migration
             $table->string('website')->nullable();
             $table->foreignId('parent_id')->nullable()->constrained('organizations')->nullOnDelete();
             $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->timestamps();
             $table->softDeletes();
+            $table->timestamps();
         });
     }
 

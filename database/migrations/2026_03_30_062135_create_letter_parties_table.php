@@ -22,12 +22,12 @@ return new class extends Migration
             $table->string('registration_number', 50)->nullable();
             $table->text('address')->nullable();
             $table->string('phone', 20)->nullable();
+            $table->string('fax', 50)->nullable();
             $table->string('email', 255)->nullable();
             $table->string('website', 255)->nullable();
             $table->string('contact_person', 255)->nullable();
             $table->text('description')->nullable();
             $table->boolean('status')->default(true);
-            
             $table->timestamps();
         });
     }
