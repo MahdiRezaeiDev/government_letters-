@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Notification;
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
-    $this->skipUnlessFortifyFeature(Features::resetPasswords());
+    $this->skipUnlessFortifyHas(Features::resetPasswords());
 });
 
 test('reset password link screen can be rendered', function () {
