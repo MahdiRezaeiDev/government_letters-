@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('custom_form_data', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('custom_form_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('letter_id')->constrained()->cascadeOnDelete();
+            $table->json('form_data')->nullable();
+            $table->foreignId('submitted_by')->constrained('users')->cascadeOnDelete();
+            $table->timestamp('submitted_at')->useCurrent();
             $table->timestamps();
         });
     }
