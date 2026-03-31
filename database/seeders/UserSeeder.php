@@ -38,5 +38,7 @@ class UserSeeder extends Seeder
         'start_date'  => now(),
         'status'      => 'active',
     ]);
+    
+    $user->assignRole('manager');
 }
 }

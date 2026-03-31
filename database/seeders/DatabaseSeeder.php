@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
         OrganizationSeeder::class,
         DepartmentSeeder::class,
         PositionSeeder::class,
+        RoleAndPermissionSeeder::class,
         UserSeeder::class,
         LetterCategorySeeder::class,
     ]);
