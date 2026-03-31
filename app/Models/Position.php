@@ -3,8 +3,31 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Position extends Model
 {
-    //
+    protected $fillable = [
+        'department_id',
+        'name',
+        'code',
+        'level',
+        'is_management',
+        'description',
+    ];
+
+    public $casts = [
+        'is_management' => 'boolean'
+    ];
+
+    public function users() : HasMany {
+        return $this->hasMany(User::class);
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+
 }
