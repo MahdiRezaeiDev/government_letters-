@@ -20,13 +20,15 @@ class Letter extends Model
     ];
 
     protected $casts = [
-        'draft_content' => 'array',
-        'cc_recipients' => 'array',
-        'date' => 'date',
-        'due_date' => 'date',
+        'draft_content'     => 'array',
+        'cc_recipients'     => 'array',
+        'date'              => 'date',
+        'due_date'          => 'date',
         'response_deadline' => 'date',
-        'is_draft' => 'boolean',
+        'is_draft'          => 'boolean',
     ];
+
+    // ─── سازمان و دسته‌بندی ───────────────
 
     public function organization()
     {
@@ -38,14 +40,72 @@ class Letter extends Model
         return $this->belongsTo(LetterCategory::class);
     }
 
+    // ─── فرستنده ──────────────────────────
+
+    public function senderPosition()
+    {
+        return $this->belongsTo(Position::class, 'sender_id');
+    }
+
+    public function senderOrganization()
+    {
+        return $this->belongsTo(Organization::class, 'sender_id');
+    }
+
+    public function senderDepartment()
+    {
+        return $this->belongsTo(Department::class, 'sender_department_id');
+    }
+
+    // accessor — بسته به نوع نامه، درست برمیگردونه
+    public function getSenderAttribute()
+    {
+        return $this->letter_type === 'incoming'
+            ? $this->senderOrganization
+            : $this->senderPosition;
+    }
+
+    // ─── گیرنده ───────────────────────────
+
+    public function recipientPosition()
+    {
+        return $this->belongsTo(Position::class, 'recipient_id');
+    }
+
+    public function recipientOrganization()
+    {
+        return $this->belongsTo(Organization::class, 'recipient_id');
+    }
+
+    public function recipientDepartment()
+    {
+        return $this->belongsTo(Department::class, 'recipient_department_id');
+    }
+
+    public function getRecipientAttribute()
+    {
+        return $this->letter_type === 'outgoing'
+            ? $this->recipientOrganization
+            : $this->recipientPosition;
+    }
+
+    // ─── کاربران ──────────────────────────
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    // ─── پیوست و کلمات کلیدی ─────────────
+
     public function attachments()
     {
         return $this->hasMany(Attachment::class);
-    }
-
-    public function routings()
-    {
-        return $this->hasMany(Routing::class);
     }
 
     public function keywords()
@@ -53,10 +113,14 @@ class Letter extends Model
         return $this->belongsToMany(Keyword::class, 'letter_keywords');
     }
 
-    public function creator()
+    // ─── گردش کار ─────────────────────────
+
+    public function routings()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->hasMany(Routing::class);
     }
+
+    // ─── ارتباط نامه به نامه ──────────────
 
     public function responseTo()
     {
@@ -68,31 +132,13 @@ class Letter extends Model
         return $this->hasMany(Letter::class, 'is_response_to');
     }
 
-    public function sender()
-    {
-        return match($this->letter_type) {
-            'incoming' => $this->belongsTo(Organization::class, 'sender_id'),
-            'outgoing', 'internal' => $this->belongsTo(Position::class, 'sender_id'),
-        };
-    }
-
-    public function recipient()
-    {
-        return match($this->letter_type) {
-            'outgoing' => $this->belongsTo(Organization::class, 'recipient_id'),
-            'incoming', 'internal' => $this->belongsTo(Position::class, 'recipient_id'),
-        };
-    }
-
-        // پیگیری‌ها
-    public function followUps()
-    {
-        return $this->hasMany(Letter::class, 'is_follow_up');
-    }
-
-    public function parentLetter()
+    public function originalLetter()
     {
         return $this->belongsTo(Letter::class, 'is_follow_up');
     }
 
+    public function followUps()
+    {
+        return $this->hasMany(Letter::class, 'is_follow_up');
+    }
 }
