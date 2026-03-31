@@ -39,6 +39,7 @@ class LetterController extends Controller
             'security_level' => 'required|in:public,internal,confidential,secret,top_secret',
             'date'           => 'required|date',
         ]);
+        
 
         $user = auth()->user();
 

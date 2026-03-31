@@ -2,6 +2,7 @@
 
 namespace App\Casts;
 
+use Carbon\Carbon;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 use Morilog\Jalali\Jalalian;
@@ -26,7 +27,7 @@ class JalaliDateCast implements CastsAttributes
         }
 
         // تبدیل تاریخ میلادی دیتابیس به تاریخ شمسی
-        return Jalalian::fromDateTime($value)->format($this->format);
+        return Jalalian::fromCarbon(Carbon::parse($value))->format($this->format);
     }
 
     /**
