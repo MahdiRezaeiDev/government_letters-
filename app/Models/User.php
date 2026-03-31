@@ -62,4 +62,23 @@ class User extends Authenticatable
     {
         return $this->hasMany(Routing::class, 'to_user_id');
     }
+
+    // سمت فعال فعلی
+        public function activePosition()
+        {
+            return $this->hasOneThrough(
+                Position::class,
+                UserPosition::class,
+                'user_id',
+                'id',
+                'id',
+                'position_id'
+            )->where('user_positions.status', 'active');
+        }
+
+        // تاریخچه همه سمت‌ها
+        public function positionHistory()
+        {
+            return $this->hasMany(UserPosition::class);
+        }
 }
