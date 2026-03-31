@@ -1,6 +1,7 @@
 <?php
 namespace App\Models;
 
+use App\Casts\JalaliDateCast;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -22,9 +23,9 @@ class Letter extends Model
     protected $casts = [
         'draft_content'     => 'array',
         'cc_recipients'     => 'array',
-        'date'              => 'date',
-        'due_date'          => 'date',
-        'response_deadline' => 'date',
+        'date'              => JalaliDateCast::class,
+        'due_date'          => JalaliDateCast::class,
+        'response_deadline' => JalaliDateCast::class,
         'is_draft'          => 'boolean',
     ];
 
