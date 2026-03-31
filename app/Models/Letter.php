@@ -11,9 +11,9 @@ class Letter extends Model
     protected $fillable = [
         'organization_id', 'letter_type', 'letter_number', 'tracking_number',
         'security_level', 'priority', 'category_id', 'subject', 'summary',
-        'content', 'draft_content', 'sender_type', 'sender_id', 'sender_name',
-        'sender_position', 'recipient_type', 'recipient_id', 'recipient_name',
-        'recipient_position', 'cc_recipients', 'date', 'due_date',
+        'content', 'draft_content', 'sender_id', 'sender_name',
+        'sender_position', 'sender_department_id', 'recipient_id', 'recipient_name',
+        'recipient_position', 'recipient_department_id', 'cc_recipients', 'date', 'due_date',
         'response_deadline', 'is_response_to', 'is_follow_up', 'follow_up_count',
         'sheet_count', 'is_draft', 'draft_of', 'draft_step',
         'final_status', 'created_by', 'updated_by',
@@ -83,4 +83,16 @@ class Letter extends Model
             'incoming', 'internal' => $this->belongsTo(Position::class, 'recipient_id'),
         };
     }
+
+        // پیگیری‌ها
+    public function followUps()
+    {
+        return $this->hasMany(Letter::class, 'is_follow_up');
+    }
+
+    public function parentLetter()
+    {
+        return $this->belongsTo(Letter::class, 'is_follow_up');
+    }
+
 }
