@@ -67,4 +67,20 @@ class Letter extends Model
     {
         return $this->hasMany(Letter::class, 'is_response_to');
     }
+
+    public function sender()
+    {
+        return match($this->letter_type) {
+            'incoming' => $this->belongsTo(Organization::class, 'sender_id'),
+            'outgoing', 'internal' => $this->belongsTo(Position::class, 'sender_id'),
+        };
+    }
+
+    public function recipient()
+    {
+        return match($this->letter_type) {
+            'outgoing' => $this->belongsTo(Organization::class, 'recipient_id'),
+            'incoming', 'internal' => $this->belongsTo(Position::class, 'recipient_id'),
+        };
+    }
 }
