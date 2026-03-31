@@ -14,7 +14,12 @@ return new class extends Migration
         Schema::create('attachments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('letter_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+           $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('position_id')
+                ->nullable()
+                ->constrained('positions')
+                ->nullOnDelete();
+
             $table->string('filename', 255);
             $table->string('filepath',255);
             $table->bigInteger('file_size')->nullable();
