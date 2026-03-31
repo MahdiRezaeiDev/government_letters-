@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LetterCategory extends Model
 {
-    use SoftDeletes;
 
     protected $fillable = [
         'organization_id',

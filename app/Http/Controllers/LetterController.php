@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Letter;
+use App\Models\LetterCategory;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 
@@ -21,7 +22,11 @@ class LetterController extends Controller
 
     public function create()
     {
-        return Inertia::render('Letters/Create');
+      return Inertia::render('Letters/Create', [
+        'categories' => LetterCategory::where('organization_id', auth()->user()->organization_id)
+                                      ->where('status', true)
+                                      ->get(['id', 'name']),
+    ]);
     }
 
     public function store(Request $request)
