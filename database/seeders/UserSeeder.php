@@ -13,9 +13,11 @@ class UserSeeder extends Seeder
      */
    public function run(): void
     {
-        $user = User::factory()
+        $organizations = Organization::all();
+
+        User::factory()
         ->count(3)
-        ->has(Organization::factory(), 'organization')
+        ->for($organizations->random(), 'organization')
         ->create();
         
         // $user->assignRole('manager');

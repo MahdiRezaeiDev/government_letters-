@@ -3,6 +3,7 @@
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\CartableController;
 use App\Http\Controllers\LetterController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoutingController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -34,6 +35,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
          ->name('routings.store');
     Route::post('routings/{routing}/action', [RoutingController::class, 'action'])
          ->name('routings.action');
+
+     // Report route
+     Route::get('reports', [ReportController::class, 'index'])
+         ->name('reports.index');
 });
 
 require __DIR__.'/settings.php';

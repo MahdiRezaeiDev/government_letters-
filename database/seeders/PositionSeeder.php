@@ -14,8 +14,11 @@ class PositionSeeder extends Seeder
      */
     public function run(): void
     {
+        $departments = Department::all();
+
+
         Position::factory()
-        ->has(Department::factory()->create(), 'department')
+        ->for($departments->random(), 'department')
         ->count(3)->create();
     }
 }

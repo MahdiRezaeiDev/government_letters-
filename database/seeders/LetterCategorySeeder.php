@@ -13,23 +13,23 @@ class LetterCategorySeeder extends Seeder
      * Run the database seeds.
      */
     public function run(): void
-{
-    $org = Organization::where('code', 'MOE')->first();
+    {
+        $org = Organization::all();
 
-    $categories = [
-        ['name' => 'مکاتبات اداری',  'code' => 'ADM'],
-        ['name' => 'مکاتبات مالی',   'code' => 'FIN'],
-        ['name' => 'مکاتبات حقوقی',  'code' => 'LEG'],
-        ['name' => 'مکاتبات فنی',    'code' => 'TEC'],
-    ];
+        $categories = [
+            ['name' => 'مکاتبات اداری',  'code' => 'ADM'],
+            ['name' => 'مکاتبات مالی',   'code' => 'FIN'],
+            ['name' => 'مکاتبات حقوقی',  'code' => 'LEG'],
+            ['name' => 'مکاتبات فنی',    'code' => 'TEC'],
+        ];
 
-    foreach ($categories as $cat) {
-        LetterCategory::create([
-            'organization_id' => $org->id,
-            'name'            => $cat['name'],
-            'code'            => $cat['code'],
-            'status'          => true,
-        ]);
+        foreach ($categories as $cat) {
+            LetterCategory::create([
+                'organization_id' => $org->random()->id,
+                'name'            => $cat['name'],
+                'code'            => $cat['code'],
+                'status'          => true,
+            ]);
+        }
     }
-}
 }

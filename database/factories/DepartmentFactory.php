@@ -21,7 +21,6 @@ class DepartmentFactory extends Factory
             "name"=> $this->faker->name,
             "code"=> $this->faker->unique()->numerify('DEP-####'),
             "parent_id"=> null,
-            "manager_position_id"=> null,
             "status"=> $this->faker->randomElement(['active', 'inactive']),
             "level"=> 1,
             "path"=> '1',

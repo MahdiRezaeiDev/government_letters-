@@ -12,10 +12,17 @@ class DepartmentSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-    public function run(): void
+  public function run(): void
     {
+        $organizations = Organization::all();
+        
+        if ($organizations->isEmpty()) {
+            $organizations = Organization::factory()->count(3)->create();
+        }
+        
         Department::factory()
-        ->has(Organization::factory()->create(), 'organization')
-        ->count(3)->create();
+            ->count(3)
+            ->for($organizations->random(), 'organization')
+            ->create();
     }
 }
