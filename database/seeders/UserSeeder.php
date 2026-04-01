@@ -15,30 +15,11 @@ class UserSeeder extends Seeder
      * Run the database seeds.
      */
    public function run(): void
-{
-    $org      = Organization::where('code', 'MOE')->first();
-    $position = Position::where('code', 'POS-001')->first();
-
-    $user = User::create([
-        'organization_id' => $org->id,
-        'last_name'       => 'رضایی',
-        'name'            => 'علی',
+    {
+        $user = User::factory()
+        ->count(3)
+        ->create();
         
-        'first_name'      => 'علی',
-        'username'        => 'ali.rezaei',
-        'email'           => 'ali@moe.ir',
-        'password'        => bcrypt('password'),
-        'status'          => 'active',
-    ]);
-
-    // سمت فعال
-    UserPosition::create([
-        'user_id'     => $user->id,
-        'position_id' => $position->id,
-        'start_date'  => now(),
-        'status'      => 'active',
-    ]);
-    
-    $user->assignRole('manager');
-}
+        $user->assignRole('manager');
+    }
 }

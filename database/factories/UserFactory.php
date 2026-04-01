@@ -33,6 +33,17 @@ class UserFactory extends Factory
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
+            'organization_id' => null,
+            'username' => fake()->unique()->userName(),
+            'first_name' => fake()->firstName(),
+            'last_name' => fake()->lastName(),
+            'national_code' => fake()->unique()->numerify('##########'),
+            'mobile' => fake()->unique()->numerify('09#########'),
+            'employment_code' => fake()->unique()->numerify('EMP-#####'),
+            'avatar' => null,
+            'status' => 'active',
+            'last_login_at' => null,
+            'last_login_ip' => null,
         ];
     }
 
