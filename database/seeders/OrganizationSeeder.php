@@ -12,25 +12,9 @@ class OrganizationSeeder extends Seeder
      * Run the database seeds.
      */
    public function run(): void
-{
-    // سازمان اصلی ما
-    Organization::create([
-        'name'   => 'وزارت آموزش و پرورش',
-        'code'   => 'MOE',
-        'status' => 'active',
-    ]);
-
-    // وزارتخانه‌های طرف مکاتبه
-    Organization::create([
-        'name'   => 'وزارت اقتصاد',
-        'code'   => 'MOF',
-        'status' => 'active',
-    ]);
-
-    Organization::create([
-        'name'   => 'وزارت کشور',
-        'code'   => 'MOI',
-        'status' => 'active',
-    ]);
-}
+    {
+        Organization::factory()
+        ->count(5)
+        ->create();
+    }
 }

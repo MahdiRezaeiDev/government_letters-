@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use Database\Factories\OrganizationFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Organization extends Model
 {
-    use HasFactory, SoftDeletes;
+     /** @use HasFactory<OrganizationFactory> */
+    use HasFactory, SoftDeletes, HasFactory;
 
     protected $fillable = [
         'name', 'code', 'logo', 'address',
