@@ -287,31 +287,18 @@ export default function Show({ letter, uploadUrl }: Props) {
                             تاریخچه گردش کار
                         </h2>
                         <div className="space-y-3">
-                            {letter.routings.map(routing => (
-                                <div
-                                    key={routing.id}
-                                    className="flex items-start gap-3 text-sm"
-                                >
-                                    <span className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${
-                                        routing.status === 'completed' ? 'bg-green-500' :
-                                        routing.status === 'rejected'  ? 'bg-red-500' :
-                                        routing.status === 'pending'   ? 'bg-yellow-500' :
-                                        'bg-gray-300'
-                                    }`} />
-                                    <div>
-                                        <span className="font-medium text-gray-700">
-                                            {routing.toUser
-                                                ? `${routing.toUser.first_name} ${routing.toUser.last_name}`
-                                                : routing.toPosition?.name ?? '---'}
-                                        </span>
-                                        {routing.instruction && (
-                                            <p className="text-gray-500 text-xs mt-0.5">
-                                                {routing.instruction}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <h2 className="text-sm font-semibold text-gray-500 mb-4 border-b pb-2">
+                                    گردش کار
+                                </h2>
+                                <RoutingPanel
+                                    letterId={letter.id}
+                                    routings={letter.routings}
+                                    positions={positions}
+                                    users={users}
+                                    storeUrl={storeRoutingUrl}
+                                />
+                            </div>
                         </div>
                     </div>
                 )}
