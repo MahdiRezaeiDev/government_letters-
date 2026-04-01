@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\CartableController;
 use App\Http\Controllers\LetterController;
@@ -39,6 +40,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
      // Report route
      Route::get('reports', [ReportController::class, 'index'])
          ->name('reports.index');
+         
+});
+
+
+Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('users', UserController::class);
 });
 
 require __DIR__.'/settings.php';
