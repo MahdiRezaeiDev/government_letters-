@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\CartableController;
 use App\Http\Controllers\LetterController;
+use App\Http\Controllers\RoutingController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
@@ -23,6 +25,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
          ->name('attachments.destroy');
     Route::get('attachments/{attachment}/download', [AttachmentController::class, 'download'])
          ->name('attachments.download');
+
+    // Cartable route
+     Route::get('cartable', [CartableController::class, 'index'])->name('cartable.index');
+
+    // Routing routes
+    Route::post('letters/{letter}/routings', [RoutingController::class, 'store'])
+         ->name('routings.store');
+    Route::post('routings/{routing}/action', [RoutingController::class, 'action'])
+         ->name('routings.action');
 });
 
 require __DIR__.'/settings.php';

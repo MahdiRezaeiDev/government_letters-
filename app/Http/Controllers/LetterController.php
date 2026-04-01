@@ -6,6 +6,7 @@ use App\Models\Letter;
 use App\Models\LetterCategory;
 use App\Models\Organization;
 use App\Models\Position;
+use App\Models\User;
 use App\Services\LetterNumberingService;
 use App\Services\TrackingNumberService;
 use Inertia\Inertia;
@@ -117,14 +118,28 @@ class LetterController extends Controller
     }
 
    public function show(Letter $letter)
-        {
-            $letter->load(['category', 'creator', 'attachments', 'keywords', 'routings']);
+    {
+        $orgId = auth()->user()->organization_id;
 
-            return Inertia::render('Letters/Show', [
-                'letter'    => $letter,
-                'uploadUrl' => route('attachments.store', $letter),
-            ]);
-        }
+        $letter->load([
+            'category', 'creator', 'attachments', 'keywords',
+            'routings.toUser', 'routings.toPosition',
+            'routings.fromUser',
+        ]);
+
+        return Inertia::render('Letters/Show', [
+            'letter'          => $letter,
+            'uploadUrl'       => route('attachments.store', $letter),
+            'storeRoutingUrl' => route('routings.store', $letter),
+            'positions'       => Position::whereHas('department', fn($q) =>
+                                    $q->where('organization_id', $orgId))
+                                    ->with('department:id,name')
+                                    ->get(['id', 'name', 'department_id']),
+            'users'           => User::where('organization_id', $orgId)
+                                    ->with('activePosition:id,name')
+                                    ->get(['id', 'first_name', 'last_name']),
+        ]);
+    }
     public function edit(Letter $letter)
     {
         return Inertia::render('Letters/Edit', [

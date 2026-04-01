@@ -1,6 +1,8 @@
 import { Head, Link, router } from '@inertiajs/react';
 import AttachmentUploader from '@/Components/AttachmentUploader';
 import * as letters from '@/routes/letters';
+import RoutingPanel from '@/Components/RoutingPanel';
+
 
 // ─── Types ───────────────────────────────
 
@@ -48,6 +50,9 @@ interface Letter {
 interface Props {
     letter: Letter;
     uploadUrl: string;
+    storeRoutingUrl: string;
+    positions: { id: number; name: string; department: { name: string } }[];
+    users:     { id: number; first_name: string; last_name: string; activePosition: { name: string } | null }[];
 }
 
 // ─── Constants ───────────────────────────
@@ -262,7 +267,7 @@ export default function Show({ letter, uploadUrl }: Props) {
                 )}
 
                 {/* پیوست‌ها */}
-                {letter.attachments.length > 0 && (
+                {letter.attachments.length === 0 && (
                     <div className="bg-white rounded-lg shadow p-6">
                         <h2 className="text-sm font-semibold text-gray-500 mb-3 border-b pb-2">
                             پیوست‌ها
