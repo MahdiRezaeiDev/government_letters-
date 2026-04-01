@@ -13,6 +13,7 @@ class RoutingController extends Controller
     // ارجاع نامه به یه نفر
     public function store(Request $request, Letter $letter)
     {
+        dd($request->all());
         $validated = $request->validate([
             'to_user_id'     => 'nullable|exists:users,id',
             'to_position_id' => 'nullable|exists:positions,id',

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('to_position_id')->constrained('positions')->cascadeOnDelete();
             $table->foreignId('to_user_id')->constrained('users')->cascadeOnDelete();
             $table->enum('action_type', ['information', 'approval', 'coordination', 'sign']);
-            $table->text('instructions')->nullable();
+            $table->text('instruction')->nullable();
             $table->datetime('deadline')->nullable();
             $table->boolean('reminder_sent')->default(false);
             $table->datetime('reminder_sent_at')->nullable();

@@ -113,7 +113,7 @@ function formatFileSize(bytes: number): string {
 
 // ─── Component ───────────────────────────
 
-export default function Show({ letter, uploadUrl }: Props) {
+export default function Show({ letter, uploadUrl, storeRoutingUrl, positions, users }: Props) {
 
     function handleDelete() {
         if (confirm('آیا مطمئن هستید؟')) {
@@ -281,7 +281,7 @@ export default function Show({ letter, uploadUrl }: Props) {
                 )}
 
                 {/* گردش کار */}
-                {letter.routings.length > 0 && (
+                {letter.routings.length === 0 && (
                     <div className="bg-white rounded-lg shadow p-6">
                         <h2 className="text-sm font-semibold text-gray-500 mb-3 border-b pb-2">
                             تاریخچه گردش کار
