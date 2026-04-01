@@ -72,14 +72,26 @@ class LetterController extends Controller
     public function edit(Letter $letter)
     {
         return Inertia::render('Letters/Edit', [
-            'letter' => $letter
+            'letter'     => $letter,
+            'categories' => LetterCategory::where('organization_id', auth()->user()->organization_id)
+                                        ->where('status', true)
+                                        ->get(['id', 'name']),
         ]);
     }
 
     public function update(Request $request, Letter $letter)
     {
+        $validated = $request->validate([
+            'letter_type'    => 'required|in:incoming,outgoing,internal',
+            'subject'        => 'required|string|max:500',
+            'content'        => 'nullable|string',
+            'priority'       => 'required|in:low,normal,high,urgent,very_urgent',
+            'security_level' => 'required|in:public,internal,confidential,secret,top_secret',
+            'date'           => 'required|date',
+        ]);
+
         $letter->update([
-            ...$request->validated(),
+            ...$validated,
             'updated_by' => auth()->id(),
         ]);
 
