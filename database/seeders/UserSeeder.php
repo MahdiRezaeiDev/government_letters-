@@ -15,7 +15,7 @@ class UserSeeder extends Seeder
     {
         $user = User::factory()
         ->count(3)
-        ->has(Organization::factory()->count(3))
+        ->has(Organization::factory(), 'organization')
         ->create();
         
         // $user->assignRole('manager');

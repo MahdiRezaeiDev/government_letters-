@@ -13,7 +13,9 @@ class DepartmentSeeder extends Seeder
      * Run the database seeds.
      */
     public function run(): void
-{
-   Department::factory
-}
+    {
+        Department::factory()
+        ->has(Organization::factory()->create(), 'organization')
+        ->count(3)->create();
+    }
 }
