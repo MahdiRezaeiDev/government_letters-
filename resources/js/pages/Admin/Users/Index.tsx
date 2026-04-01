@@ -1,5 +1,4 @@
 import { Head, Link, router } from '@inertiajs/react';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import * as users from '@/routes/admin/users';
 
 // ─── Types ───────────────────────────────
@@ -49,7 +48,7 @@ export default function Index({ users: data }: Props) {
     }
 
     return (
-        <AuthenticatedLayout header="مدیریت کاربران">
+        <>
             <Head title="کاربران" />
 
             <div className="p-6">
@@ -146,6 +145,6 @@ export default function Index({ users: data }: Props) {
                     </div>
                 )}
             </div>
-        </AuthenticatedLayout>
+        </>
     );
 }

@@ -1,5 +1,4 @@
 import { Head, router } from '@inertiajs/react';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useForm } from '@inertiajs/react';
 import * as users from '@/routes/admin/users';
 
@@ -45,7 +44,7 @@ export default function Create({ roles, positions }: Props) {
     }
 
     return (
-        <AuthenticatedLayout header="کاربر جدید">
+        <>
             <Head title="کاربر جدید" />
 
             <div className="p-6 max-w-2xl mx-auto">
@@ -184,6 +183,6 @@ export default function Create({ roles, positions }: Props) {
 
                 </form>
             </div>
-        </AuthenticatedLayout>
+        </>
     );
 }

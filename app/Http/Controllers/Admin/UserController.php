@@ -13,7 +13,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        $this->authorize('user.manage');
+        // $this->authorize('user.manage');
 
         $users = User::where('organization_id', auth()->user()->organization_id)
             ->with(['activePosition.department'])
@@ -28,7 +28,7 @@ class UserController extends Controller
 
     public function create()
     {
-        $this->authorize('user.manage');
+        // $this->authorize('user.manage');
 
         $orgId = auth()->user()->organization_id;
 
