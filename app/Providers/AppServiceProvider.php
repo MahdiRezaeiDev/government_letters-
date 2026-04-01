@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\LetterNumberingService;
+use App\Services\TrackingNumberService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +17,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(LetterNumberingService::class, function ($app) {
+            return new LetterNumberingService();
+        });
+
+        $this->app->singleton(TrackingNumberService::class, function ($app) {
+            return new TrackingNumberService();
+        });
     }
 
     /**

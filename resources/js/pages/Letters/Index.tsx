@@ -26,6 +26,7 @@ interface Props {
         last_page: number;
         links: PaginationLink[];
     };
+    filters: { type?: string; status?: string };
 }
 
 // ─── Constants ───────────────────────────
@@ -62,12 +63,16 @@ const TYPE_LABEL: Record<Letter['letter_type'], string> = {
 
 // ─── Component ───────────────────────────
 
-export default function Index({ letters: data }: Props) {
+export default function Index({ letters: data, filters }: Props) {
 
     function handleDelete(id: number) {
         if (confirm('آیا مطمئن هستید؟')) {
             router.delete(letters.destroy(id).url);
         }
+    }
+    
+    function handleFilter(type: string) {
+        router.get(letters.index().url, { type }, { preserveState: true });
     }
 
     return (
@@ -81,6 +86,24 @@ export default function Index({ letters: data }: Props) {
                     <h2 className="text-lg font-medium text-gray-800">
                         نامه‌ها ({data.total})
                     </h2>
+                    {[
+                        { value: '',         label: 'همه' },
+                        { value: 'incoming', label: 'وارده' },
+                        { value: 'outgoing', label: 'صادره' },
+                        { value: 'internal', label: 'داخلی' },
+                    ].map(f => (
+                        <button
+                            key={f.value}
+                            onClick={() => handleFilter(f.value)}
+                            className={`px-4 py-1.5 rounded-full text-sm transition-colors ${
+                                (filters.type ?? '') === f.value
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                        >
+                            {f.label}
+                        </button>
+                    ))}
                     <Link
                         href={letters.create().url}
                         className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm"
