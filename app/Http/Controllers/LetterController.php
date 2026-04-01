@@ -116,18 +116,15 @@ class LetterController extends Controller
                         ->with('success', 'نامه ذخیره شد');
     }
 
-    public function show(Letter $letter)
-    {
-        $letter->load([
-            'category', 'creator', 'attachments',
-            'keywords', 'routings',
-        ]);
+   public function show(Letter $letter)
+        {
+            $letter->load(['category', 'creator', 'attachments', 'keywords', 'routings']);
 
-        return Inertia::render('Letters/Show', [
-            'letter' => $letter
-        ]);
-    }
-
+            return Inertia::render('Letters/Show', [
+                'letter'    => $letter,
+                'uploadUrl' => route('attachments.store', $letter),
+            ]);
+        }
     public function edit(Letter $letter)
     {
         return Inertia::render('Letters/Edit', [

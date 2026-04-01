@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import AttachmentUploader from '@/Components/AttachmentUploader';
 import * as letters from '@/routes/letters';
 
 // ─── Types ───────────────────────────────
@@ -46,6 +47,7 @@ interface Letter {
 
 interface Props {
     letter: Letter;
+    uploadUrl: string;
 }
 
 // ─── Constants ───────────────────────────
@@ -106,7 +108,7 @@ function formatFileSize(bytes: number): string {
 
 // ─── Component ───────────────────────────
 
-export default function Show({ letter }: Props) {
+export default function Show({ letter, uploadUrl }: Props) {
 
     function handleDelete() {
         if (confirm('آیا مطمئن هستید؟')) {
@@ -263,23 +265,13 @@ export default function Show({ letter }: Props) {
                 {letter.attachments.length > 0 && (
                     <div className="bg-white rounded-lg shadow p-6">
                         <h2 className="text-sm font-semibold text-gray-500 mb-3 border-b pb-2">
-                            پیوست‌ها ({letter.attachments.length})
+                            پیوست‌ها
                         </h2>
-                        <div className="space-y-2">
-                            {letter.attachments.map(att => (
-                                <div
-                                    key={att.id}
-                                    className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-2"
-                                >
-                                    <span className="text-sm text-gray-700">
-                                        {att.file_name}
-                                    </span>
-                                    <span className="text-xs text-gray-400">
-                                        {formatFileSize(att.file_size)}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
+                        <AttachmentUploader
+                            letterId={letter.id}
+                            attachments={letter.attachments}
+                            uploadUrl={uploadUrl}
+                        />
                     </div>
                 )}
 
