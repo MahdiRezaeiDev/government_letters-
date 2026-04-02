@@ -10,7 +10,7 @@ class OrganizationController extends Controller
 {
     public function index()
     {
-        $this->authorize('organization.manage');
+        // $this->authorize('organization.manage');
 
         $organizations = Organization::withCount(['departments', 'users'])
             ->with('parent:id,name')

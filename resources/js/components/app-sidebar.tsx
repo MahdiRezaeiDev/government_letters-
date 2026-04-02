@@ -9,6 +9,7 @@ import {
     Building2,
     Briefcase,
 } from 'lucide-react';
+import { Building } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -24,6 +25,7 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import adminDepartments from '@/routes/admin/departments';
+import * as adminOrgs from '@/routes/admin/organizations';
 import adminPositions from '@/routes/admin/positions';
 import adminUsers from '@/routes/admin/users';
 import * as archivesRoute from '@/routes/archives';
@@ -61,6 +63,11 @@ const mainNavItems: NavItem[] = [
 ];
 
 const adminNavItems: NavItem[] = [
+    {
+        title: 'سازمان‌ها',
+        href:  adminOrgs.index(),
+        icon:  Building,
+    },
     {
         title: 'کاربران',
         href: adminUsers.index(),
