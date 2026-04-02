@@ -1,5 +1,14 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, LetterText } from 'lucide-react';
+import {
+    LayoutGrid,
+    LetterText,
+    Inbox,
+    BarChart2,
+    Archive,
+    Users,
+    Building2,
+    Briefcase,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -7,6 +16,10 @@ import { NavUser } from '@/components/nav-user';
 import { dashboard } from '@/routes';
 import cartable from '@/routes/cartable';
 import letters from '@/routes/letters';
+import reports from '@/routes/reports';
+import adminUsers from '@/routes/admin/users';
+import adminDepartments from '@/routes/admin/departments';
+import adminPositions from '@/routes/admin/positions';
 import {
     Sidebar,
     SidebarContent,
@@ -20,20 +33,43 @@ import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
+        title: 'داشبورد',
         href: dashboard(),
         icon: LayoutGrid,
     },
     {
-        title: 'Letters',
+        title: 'کارتابل',
+        href: cartable.index(),
+        icon: Inbox,
+    },
+    {
+        title: 'نامه‌ها',
         href: letters.index(),
         icon: LetterText,
     },
     {
-        title: 'Cartable',
-        href: cartable.index(),
-        icon: LetterText,
-    }
+        title: 'گزارش‌ها',
+        href: reports.index(),
+        icon: BarChart2,
+    },
+];
+
+const adminNavItems: NavItem[] = [
+    {
+        title: 'کاربران',
+        href: adminUsers.index(),
+        icon: Users,
+    },
+    {
+        title: 'واحدها',
+        href: adminDepartments.index(),
+        icon: Building2,
+    },
+    {
+        title: 'سمت‌ها',
+        href: adminPositions.index(),
+        icon: Briefcase,
+    },
 ];
 
 export function AppSidebar() {
@@ -52,7 +88,8 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={mainNavItems} label="عمومی" />
+                <NavMain items={adminNavItems} label="مدیریت" />
             </SidebarContent>
 
             <SidebarFooter>

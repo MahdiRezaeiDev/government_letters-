@@ -6,6 +6,7 @@ use App\Models\Routing;
 use App\Models\Action;
 use App\Models\User;
 use App\Models\Position;
+use App\Notifications\LetterRoutedNotification;
 use Illuminate\Http\Request;
 
 class RoutingController extends Controller
@@ -13,7 +14,6 @@ class RoutingController extends Controller
     // ارجاع نامه به یه نفر
     public function store(Request $request, Letter $letter)
     {
-        dd($request->all());
         $validated = $request->validate([
             'to_user_id'     => 'nullable|exists:users,id',
             'to_position_id' => 'nullable|exists:positions,id',
@@ -42,6 +42,21 @@ class RoutingController extends Controller
             'final_status' => 'pending',
             'is_draft'     => false,
         ]);
+
+        $recipient = null;
+
+        if ($validated['to_user_id']) {
+            $recipient = User::find($validated['to_user_id']);
+        } elseif ($validated['to_position_id']) {
+            // کاربر فعال این سمت
+            $recipient = User::whereHas('activeUserPosition', fn($q) =>
+                $q->where('position_id', $validated['to_position_id'])
+            )->first();
+        }
+
+        if ($recipient) {
+            $recipient->notify(new LetterRoutedNotification($routing));
+        }
 
         return back()->with('success', 'نامه ارجاع داده شد');
     }
