@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\PositionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\CartableController;
@@ -45,7 +47,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
-    Route::resource('users', UserController::class);
+    
+     // Users report
+     Route::resource('users', UserController::class);
+
+     // Departments Routes
+     Route::resource('departments', DepartmentController::class);
+
+     // Positions Routes
+     Route::resource('positions',   PositionController::class);
+
 });
 
 require __DIR__.'/settings.php';

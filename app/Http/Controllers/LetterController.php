@@ -19,24 +19,24 @@ class LetterController extends Controller
         $user = auth()->user();
         $orgId = $user->organization_id;
 
-        $letters = Letter::where(function($q) use ($orgId) {
+        $letters = Letter::where(function($query) use ($orgId) {
                 // نامه‌هایی که ما فرستادیم
-                $q->where('sender_id', $orgId)
+                $query->where('sender_id', $orgId)
                 // یا به ما رسیده
                 ->orWhere('recipient_id', $orgId);
             })
             ->with(['category', 'creator'])
-            ->when($request->type, function($q) use ($request, $orgId) {
+            ->when($request->type, function($query) use ($request, $orgId) {
                 if ($request->type === 'incoming') {
-                    $q->where('recipient_id', $orgId);
+                    $query->where('recipient_id', $orgId);
                 } elseif ($request->type === 'outgoing') {
-                    $q->where('sender_id', $orgId);
+                    $query->where('sender_id', $orgId);
                 } elseif ($request->type === 'internal') {
-                    $q->where('letter_type', 'internal');
+                    $query->where('letter_type', 'internal');
                 }
             })
-            ->when($request->status, fn($q) =>
-                $q->where('final_status', $request->status))
+            ->when($request->status, fn($query) =>
+                $query->where('final_status', $request->status))
             ->latest()
             ->paginate(15);
 
