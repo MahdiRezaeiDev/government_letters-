@@ -3,6 +3,8 @@
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\PositionController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Archive\FileController;
+use App\Http\Controllers\ArchiveController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\CartableController;
 use App\Http\Controllers\LetterController;
@@ -53,6 +55,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
          ->name('notifications.read');
      Route::post('notifications/read-all',    [NotificationController::class, 'markAllAsRead'])
          ->name('notifications.read-all');
+
+    // Archives routes
+    Route::resource('archives', ArchiveController::class)
+         ->except(['show', 'edit', 'create']);
+
+    Route::get('archives/{archive}/files',
+        [FileController::class, 'index'])->name('archives.files.index');
+
+    Route::post('archives/{archive}/files',
+        [FileController::class, 'store'])->name('archives.files.store');
+
+    Route::post('files/{file}/letters',
+        [FileController::class, 'attachLetter'])->name('files.letters.attach');
+
+    Route::delete('files/{file}/letters/{letter}',
+        [FileController::class, 'detachLetter'])->name('files.letters.detach');
          
 });
 
