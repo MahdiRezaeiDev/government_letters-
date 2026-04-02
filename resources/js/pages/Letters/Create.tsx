@@ -281,169 +281,134 @@ export default function Create({ categories, organizations, departments, positio
         <>
             <Head title="نامه جدید" />
 
-            <div className="p-6 max-w-3xl mx-auto">
-                <form onSubmit={handleSubmit} className="space-y-6">
+            <main className="flex-1 overflow-auto p-6">
+      <div className="max-w-4xl mx-auto space-y-5">
 
-                    {/* نوع نامه */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            نوع نامه <span className="text-red-500">*</span>
-                        </label>
-                        <div className="flex gap-3">
-                           {([
-                                { value: 'outgoing', label: 'صادره' },
-                                { value: 'internal', label: 'داخلی' },
-                            ] as const).map(type => (
-                                <button
-                                    key={type.value}
-                                    type="button"
-                                    onClick={() => handleTypeChange(type.value)}
-                                    className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                                        data.letter_type === type.value
-                                            ? 'bg-blue-600 text-white border-blue-600'
-                                            : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
-                                    }`}
-                                >
-                                    {type.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+          <p className="text-sm font-semibold text-gray-700 mb-3">نوع نامه</p>
+          <div className="flex gap-3">
+            <button onClick="setType(this,'incoming')" className="type-btn flex-1 py-3 rounded-xl border-2 border-green-400 bg-green-50 text-green-700 text-sm font-medium transition-all">📥 وارده</button>
+            <button onClick="setType(this,'outgoing')" className="type-btn flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 text-sm font-medium transition-all hover:border-purple-400">📤 صادره</button>
+            <button onClick="setType(this,'internal')" className="type-btn flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 text-sm font-medium transition-all hover:border-blue-400">🔄 داخلی</button>
+          </div>
+        </div>
 
-                    {/* فرستنده / گیرنده */}
-                    {renderSenderRecipient()}
-                    here
-
-                    {/* موضوع */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            موضوع <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            value={data.subject}
-                            onChange={e => setData('subject', e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                            placeholder="موضوع نامه را وارد کنید"
-                        />
-                        {errors.subject && (
-                            <p className="text-red-500 text-xs mt-1">{errors.subject}</p>
-                        )}
-                    </div>
-
-                    {/* خلاصه */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">خلاصه</label>
-                        <textarea
-                            value={data.summary}
-                            onChange={e => setData('summary', e.target.value)}
-                            rows={2}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                        />
-                    </div>
-
-                    {/* متن */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">متن نامه</label>
-                        <textarea
-                            value={data.content}
-                            onChange={e => setData('content', e.target.value)}
-                            rows={6}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                        />
-                    </div>
-
-                    {/* اولویت + سطح امنیت */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">اولویت</label>
-                            <select
-                                value={data.priority}
-                                onChange={e => setData('priority', e.target.value as LetterForm['priority'])}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                            >
-                                <option value="low">کم</option>
-                                <option value="normal">عادی</option>
-                                <option value="high">مهم</option>
-                                <option value="urgent">فوری</option>
-                                <option value="very_urgent">خیلی فوری</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">سطح امنیت</label>
-                            <select
-                                value={data.security_level}
-                                onChange={e => setData('security_level', e.target.value as LetterForm['security_level'])}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                            >
-                                <option value="public">عمومی</option>
-                                <option value="internal">داخلی</option>
-                                <option value="confidential">محرمانه</option>
-                                <option value="secret">سری</option>
-                                <option value="top_secret">بسیار سری</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* دسته‌بندی + تاریخ */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">دسته‌بندی</label>
-                            <select
-                                value={data.category_id}
-                                onChange={e => setData('category_id', e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                            >
-                                <option value="">انتخاب کنید</option>
-                                {categories.map(cat => (
-                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                تاریخ <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="date"
-                                value={data.date}
-                                onChange={e => setData('date', e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                            />
-                        </div>
-                    </div>
-
-                    {/* مهلت */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">مهلت اقدام</label>
-                        <input
-                            type="date"
-                            value={data.due_date}
-                            onChange={e => setData('due_date', e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                        />
-                    </div>
-
-                    {/* دکمه‌ها */}
-                    <div className="flex gap-3 pt-2">
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm disabled:opacity-50"
-                        >
-                            {processing ? 'در حال ذخیره...' : 'ذخیره پیش‌نویس'}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => router.visit(letters.index().url)}
-                            className="bg-gray-100 text-gray-600 px-6 py-2 rounded-lg hover:bg-gray-200 text-sm"
-                        >
-                            انصراف
-                        </button>
-                    </div>
-
-                </form>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-gray-700 pb-3 border-b border-gray-100">اطلاعات نامه</h2>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">موضوع نامه <span className="text-red-500">*</span></label>
+            <input type="text" placeholder="موضوع نامه را وارد کنید..." className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">اولویت <span className="text-red-500">*</span></label>
+              <select className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option>کم اهمیت</option>
+                <option selected>عادی</option>
+                <option>مهم</option>
+                <option>فوری</option>
+                <option>خیلی فوری</option>
+              </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">سطح دسترسی</label>
+              <select className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option>عمومی</option>
+                <option selected>داخلی</option>
+                <option>محرمانه</option>
+                <option>سری</option>
+                <option>بسیار سری</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">دسته‌بندی</label>
+              <select className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option>انتخاب کنید...</option>
+                <option>اداری</option>
+                <option>مالی</option>
+                <option>حقوقی</option>
+                <option>فنی</option>
+                <option>قراردادها</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">تاریخ نامه <span className="text-red-500">*</span></label>
+              <input type="date" value="2025-04-05" className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">مهلت پاسخ</label>
+              <input type="date" className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">تعداد برگ</label>
+              <input type="number" value="1" min="1" className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-gray-700 pb-3 border-b border-gray-100">فرستنده و گیرنده</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">نام فرستنده</label>
+              <input type="text" placeholder="نام و نام خانوادگی یا نام شرکت" className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">سمت فرستنده</label>
+              <input type="text" placeholder="مثال: مدیرعامل" className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">نام گیرنده</label>
+              <input type="text" placeholder="نام و نام خانوادگی یا نام شرکت" className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">سمت گیرنده</label>
+              <input type="text" placeholder="مثال: مدیر مالی" className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-gray-700 pb-3 border-b border-gray-100">متن نامه</h2>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">خلاصه</label>
+            <textarea rows={8} placeholder="خلاصه مختصر نامه..." className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">متن کامل نامه</label>
+            <textarea rows={2} placeholder="متن کامل نامه را اینجا بنویسید..." className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"></textarea>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+          <h2 className="text-sm font-semibold text-gray-700 pb-3 border-b border-gray-100 mb-4">پیوست‌ها</h2>
+          <div className="drop-zone rounded-xl p-8 text-center cursor-pointer" onClick="document.getElementById('fileInput').click()">
+            <svg className="w-10 h-10 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+            <p className="text-sm text-gray-500">فایل را اینجا بکشید یا <span className="text-blue-600">کلیک کنید</span></p>
+            <p className="text-xs text-gray-400 mt-1">PDF، Word، Excel، تصویر — حداکثر ۱۰ مگابایت</p>
+            <input id="fileInput" type="file" multiple className="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.png" onchange="addFiles(this)"/>
+          </div>
+          <div id="fileList" className="mt-3 space-y-2"></div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between">
+          <a href="letters.html" className="text-sm text-gray-500 hover:text-gray-700">انصراف</a>
+          <div className="flex items-center gap-3">
+            <button className="flex items-center gap-2 px-5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+              ذخیره پیش‌نویس
+            </button>
+            <button className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+              ثبت نامه
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </main>
         </>
     );
 }

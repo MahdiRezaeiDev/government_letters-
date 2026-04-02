@@ -79,134 +79,75 @@ export default function Index({ letters: data, filters }: Props) {
         <>
             <Head title="نامه‌ها" />
 
-            <div className="p-6">
+            <main className="flex-1 overflow-auto p-6 space-y-5">
 
-                {/* هدر */}
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-lg font-medium text-gray-800">
-                        نامه‌ها ({data.total})
-                    </h2>
-                    {[
-                        { value: '',         label: 'همه' },
-                        { value: 'incoming', label: 'وارده' },
-                        { value: 'outgoing', label: 'صادره' },
-                        { value: 'internal', label: 'داخلی' },
-                    ].map(f => (
-                        <button
-                            key={f.value}
-                            onClick={() => handleFilter(f.value)}
-                            className={`px-4 py-1.5 rounded-full text-sm transition-colors ${
-                                (filters.type ?? '') === f.value
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                        >
-                            {f.label}
-                        </button>
-                    ))}
-                    <Link
-                        href={letters.create().url}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm"
-                    >
-                        + نامه جدید
-                    </Link>
-                </div>
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex rounded-lg border border-gray-200 overflow-hidden text-sm">
+            <button className="px-4 py-2 bg-blue-600 text-white font-medium">همه</button>
+            <button className="px-4 py-2 text-gray-600 hover:bg-gray-50 border-r border-gray-200">وارده</button>
+            <button className="px-4 py-2 text-gray-600 hover:bg-gray-50 border-r border-gray-200">صادره</button>
+            <button className="px-4 py-2 text-gray-600 hover:bg-gray-50 border-r border-gray-200">داخلی</button>
+          </div>
 
-                {/* جدول */}
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                    <table className="w-full text-right text-sm">
-                        <thead className="bg-gray-50 text-gray-500">
-                            <tr>
-                                <th className="px-4 py-3 font-medium">شماره</th>
-                                <th className="px-4 py-3 font-medium">موضوع</th>
-                                <th className="px-4 py-3 font-medium">نوع</th>
-                                <th className="px-4 py-3 font-medium">اولویت</th>
-                                <th className="px-4 py-3 font-medium">وضعیت</th>
-                                <th className="px-4 py-3 font-medium">تاریخ</th>
-                                <th className="px-4 py-3 font-medium">عملیات</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {data.data.length === 0 ? (
-                                <tr>
-                                    <td colSpan={7} className="text-center py-10 text-gray-400">
-                                        هیچ نامه‌ای وجود ندارد
-                                    </td>
-                                </tr>
-                            ) : (
-                                data.data.map(letter => (
-                                    <tr key={letter.id} className="hover:bg-gray-50">
-                                        <td className="px-4 py-3 text-gray-400">
-                                            {letter.letter_number ?? '---'}
-                                        </td>
-                                        <td className="px-4 py-3 font-medium text-gray-800">
-                                            {letter.subject}
-                                        </td>
-                                        <td className="px-4 py-3 text-gray-600">
-                                            {TYPE_LABEL[letter.letter_type]}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <span className={`text-xs px-2 py-1 rounded-full ${PRIORITY_COLOR[letter.priority]}`}>
-                                                {PRIORITY_LABEL[letter.priority]}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-gray-600">
-                                            {STATUS_LABEL[letter.final_status]}
-                                        </td>
-                                        <td className="px-4 py-3 text-gray-400">
-                                            {letter.date}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex gap-3">
-                                                <Link
-                                                    href={letters.show(letter.id).url}
-                                                    className="text-blue-600 hover:underline"
-                                                >
-                                                    مشاهده
-                                                </Link>
-                                                {letter.final_status === 'draft' && (
-                                                    <>
-                                                        <Link
-                                                            href={letters.edit(letter.id).url}
-                                                            className="text-yellow-600 hover:underline"
-                                                        >
-                                                            ویرایش
-                                                        </Link>
-                                                        <button
-                                                            onClick={() => handleDelete(letter.id)}
-                                                            className="text-red-600 hover:underline"
-                                                        >
-                                                            حذف
-                                                        </button>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+          <select className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option>همه وضعیت‌ها</option>
+            <option>پیش‌نویس</option>
+            <option>در جریان</option>
+            <option>تأیید شده</option>
+            <option>بایگانی</option>
+          </select>
 
-                {/* صفحه‌بندی */}
-                {data.last_page > 1 && (
-                    <div className="flex gap-2 mt-4 justify-center">
-                        {data.links.map((link, i) => (
-                            <Link
-                                key={i}
-                                href={link.url ?? '#'}
-                                className={`px-3 py-1 rounded text-sm ${
-                                    link.active
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-white text-gray-600 hover:bg-gray-50 border'
-                                }`}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
+          <select className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option>همه اولویت‌ها</option>
+            <option>خیلی فوری</option>
+            <option>فوری</option>
+            <option>مهم</option>
+            <option>عادی</option>
+            <option>کم</option>
+          </select>
+
+          <div className="flex-1 min-w-48 relative">
+            <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" placeholder="جستجو در موضوع، شماره..." className="w-full text-sm border border-gray-200 rounded-lg pr-4 pl-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th className="w-8 px-4 py-3">
+                <input type="checkbox" className="rounded"/>
+                </th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500">شماره نامه</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500">موضوع</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500">نوع</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500">اولویت</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500">وضعیت</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500">فرستنده</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500">تاریخ</th>
+              <th className="px-4 py-3 w-20"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50" id="lettersTable">
+          </tbody>
+        </table>
+        <div className="flex items-center justify-between px-5 py-4 border-t border-gray-100">
+          <p className="text-xs text-gray-500">نمایش ۱–۱۰ از ۵۲۸ نامه</p>
+          <div className="flex items-center gap-1">
+            <button className="px-3 py-1.5 text-xs text-gray-400 rounded-lg">«</button>
+            <button className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg">۱</button>
+            <button className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg">۲</button>
+            <button className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg">۳</button>
+            <button className="px-3 py-1.5 text-xs text-gray-400 rounded-lg">...</button>
+            <button className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg">۵۳</button>
+            <button className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded-lg">»</button>
+          </div>
+        </div>
+      </div>
+    </main>
         </>
     );
 }
