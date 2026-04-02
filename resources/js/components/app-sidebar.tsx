@@ -13,13 +13,6 @@ import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { dashboard } from '@/routes';
-import cartable from '@/routes/cartable';
-import letters from '@/routes/letters';
-import reports from '@/routes/reports';
-import adminUsers from '@/routes/admin/users';
-import adminDepartments from '@/routes/admin/departments';
-import adminPositions from '@/routes/admin/positions';
 import {
     Sidebar,
     SidebarContent,
@@ -29,6 +22,14 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { dashboard } from '@/routes';
+import adminDepartments from '@/routes/admin/departments';
+import adminPositions from '@/routes/admin/positions';
+import adminUsers from '@/routes/admin/users';
+import * as archivesRoute from '@/routes/archives';
+import cartable from '@/routes/cartable';
+import letters from '@/routes/letters';
+import reports from '@/routes/reports';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -51,6 +52,11 @@ const mainNavItems: NavItem[] = [
         title: 'گزارش‌ها',
         href: reports.index(),
         icon: BarChart2,
+    },
+    {
+        title: 'بایگانی',
+        href:  archivesRoute.index(),
+        icon:  Archive,
     },
 ];
 

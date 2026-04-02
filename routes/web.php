@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\OrganizationController;
 use App\Http\Controllers\Admin\PositionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Archive\FileController;
@@ -85,6 +86,10 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
      // Positions Routes
      Route::resource('positions',   PositionController::class);
+
+     // Organizations Routes
+      Route::resource('organizations', OrganizationController::class)
+         ->except(['show', 'edit', 'create']);
 
 });
 

@@ -20,7 +20,7 @@ class FileController extends Controller
 
         return Inertia::render('Archives/Files/Index', [
             'archive' => $archive,
-            'files'   => $archive->files()->withCount('letters')->get(),
+            'files'   => $archive->files()->withCount('letter')->get(),
         ]);
     }
 

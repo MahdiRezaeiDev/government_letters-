@@ -54,7 +54,6 @@ export default function Index({ archive, files }: Props) {
 
     function handleAttach(fileId: number) {
         if (!attachForm.data.letter_id) return;
-        
         attachForm.post(`/files/${fileId}/letters`, {
             onSuccess: () => { attachForm.reset(); }
         });

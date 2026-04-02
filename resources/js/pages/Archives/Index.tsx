@@ -1,6 +1,6 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { Link } from '@inertiajs/react';
 import { useState } from 'react';
+import { Link } from '@inertiajs/react';
 import * as archives from '@/routes/archives';
 
 interface Archive {

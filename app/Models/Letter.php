@@ -3,6 +3,7 @@ namespace App\Models;
 
 use App\Casts\JalaliDateCast;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Letter extends Model
@@ -141,5 +142,10 @@ class Letter extends Model
     public function followUps()
     {
         return $this->hasMany(Letter::class, 'is_follow_up');
+    }
+
+    public function files() : HasMany
+    {
+        return $this->hasMany(File::class);
     }
 }

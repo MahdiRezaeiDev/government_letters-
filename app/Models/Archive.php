@@ -31,4 +31,9 @@ class Archive extends Model
     {
         return $this->hasMany(Archive::class, 'parent_id');
     }
+
+    public function files() : HasMany
+    {
+        return $this->hasMany(File::class);
+    }
 }
