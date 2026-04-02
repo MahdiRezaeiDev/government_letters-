@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\CartableController;
 use App\Http\Controllers\LetterController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoutingController;
 use Illuminate\Support\Facades\Route;
@@ -42,6 +43,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
      // Report route
      Route::get('reports', [ReportController::class, 'index'])
          ->name('reports.index');
+
+     // Notification route
+     Route::get('notifications',              [NotificationController::class, 'index'])
+         ->name('notifications.index');
+     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount'])
+         ->name('notifications.unread-count');
+     Route::post('notifications/{id}/read',   [NotificationController::class, 'markAsRead'])
+         ->name('notifications.read');
+     Route::post('notifications/read-all',    [NotificationController::class, 'markAllAsRead'])
+         ->name('notifications.read-all');
          
 });
 
