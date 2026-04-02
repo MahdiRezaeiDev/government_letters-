@@ -1,9 +1,6 @@
 import { Form, Head } from '@inertiajs/react';
 import InputError from '@/components/input-error';
-import TextLink from '@/components/text-link';
-import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { register } from '@/routes';
 import { store } from '@/routes/login';
 
 type Props = {
@@ -14,13 +11,11 @@ type Props = {
 
 export default function Login({
     status,
-    canResetPassword,
-    canRegister,
 }: Props) {
     
     return (
         <>
-            <Head title="Log in" />
+            <Head title="ورود به حساب کاربری" />
 
             <Form
                 {...store.form()}
@@ -85,21 +80,14 @@ export default function Login({
                                 tabIndex={4}
                                 disabled={processing}
                                 data-test="login-button"
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition-colors text-sm">
-                            {processing && <Spinner />}
+                                className="w-full flex justify-center mt-4 gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition-colors text-sm">
                             ورود به سیستم
+                            {processing && <Spinner />}
                             </button>
                         </div>
                     </>
                 )}
             </Form>
-             
-
-        
-
-        
-
-        
 
             {status && (
                 <div className="mb-4 text-center text-sm font-medium text-green-600">
