@@ -1,37 +1,39 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import TempFileUploader, { type TempFile } from '@/Components/TempFileUploader';
 import { useState } from 'react';
 import * as letters from '@/routes/letters';
 
 // ─── Types ───────────────────────────────
 
-interface Category   { id: number; name: string; }
-interface Org        { id: number; name: string; }
+interface Category { id: number; name: string; }
+interface Org { id: number; name: string; }
 interface Department { id: number; name: string; parent_id: number | null; }
-interface Position   { id: number; name: string; department_id: number; }
+interface Position { id: number; name: string; department_id: number; }
 
 interface Props {
-    categories:    Category[];
+    categories: Category[];
     organizations: Org[];
-    departments:   Department[];
-    positions:     Position[];
+    departments: Department[];
+    positions: Position[];
 }
 
 interface LetterForm {
-    letter_type:              'incoming' | 'outgoing' | 'internal' | '';
-    subject:                  string;
-    content:                  string;
-    summary:                  string;
-    priority:                 'low' | 'normal' | 'high' | 'urgent' | 'very_urgent';
-    security_level:           'public' | 'internal' | 'confidential' | 'secret' | 'top_secret';
-    category_id:              string;
-    date:                     string;
-    due_date:                 string;
+    letter_type: 'incoming' | 'outgoing' | 'internal' | '';
+    subject: string;
+    content: string;
+    summary: string;
+    priority: 'low' | 'normal' | 'high' | 'urgent' | 'very_urgent';
+    security_level: 'public' | 'internal' | 'confidential' | 'secret' | 'top_secret';
+    category_id: string;
+    date: string;
+    due_date: string;
     // فرستنده
-    sender_id:                string;
-    sender_department_id:     string;
+    sender_id: string;
+    sender_department_id: string;
     // گیرنده
-    recipient_id:             string;
-    recipient_department_id:  string;
+    recipient_id: string;
+    recipient_department_id: string;
+    temp_files: TempFile[];
 }
 
 // ─── Component ───────────────────────────
@@ -39,35 +41,36 @@ interface LetterForm {
 export default function Create({ categories, organizations, departments, positions }: Props) {
 
     const { data, setData, post, processing, errors } = useForm<LetterForm>({
-        letter_type:             '',
-        subject:                 '',
-        content:                 '',
-        summary:                 '',
-        priority:                'normal',
-        security_level:          'internal',
-        category_id:             '',
-        date:                    new Date().toISOString().split('T')[0],
-        due_date:                '',
-        sender_id:               '',
-        sender_department_id:    '',
-        recipient_id:            '',
+        letter_type: '',
+        subject: '',
+        content: '',
+        summary: '',
+        priority: 'normal',
+        security_level: 'internal',
+        category_id: '',
+        date: new Date().toISOString().split('T')[0],
+        due_date: '',
+        sender_id: '',
+        sender_department_id: '',
+        recipient_id: '',
         recipient_department_id: '',
+        temp_files: [],
     });
 
     // فیلتر department بر اساس org انتخاب شده
-    const [senderDepts,    setSenderDepts]    = useState<Department[]>([]);
+    const [senderDepts, setSenderDepts] = useState<Department[]>([]);
     const [recipientDepts, setRecipientDepts] = useState<Department[]>([]);
-    const [senderPos,      setSenderPos]      = useState<Position[]>([]);
-    const [recipientPos,   setRecipientPos]   = useState<Position[]>([]);
+    const [senderPos, setSenderPos] = useState<Position[]>([]);
+    const [recipientPos, setRecipientPos] = useState<Position[]>([]);
 
     // وقتی نوع نامه عوض میشه، فیلدهای فرستنده/گیرنده reset میشن
     function handleTypeChange(type: LetterForm['letter_type']) {
         setData(prev => ({
             ...prev,
-            letter_type:             type,
-            sender_id:               '',
-            sender_department_id:    '',
-            recipient_id:            '',
+            letter_type: type,
+            sender_id: '',
+            sender_department_id: '',
+            recipient_id: '',
             recipient_department_id: '',
         }));
         setSenderDepts([]);
@@ -290,7 +293,7 @@ export default function Create({ categories, organizations, departments, positio
                             نوع نامه <span className="text-red-500">*</span>
                         </label>
                         <div className="flex gap-3">
-                           {([
+                            {([
                                 { value: 'outgoing', label: 'صادره' },
                                 { value: 'internal', label: 'داخلی' },
                             ] as const).map(type => (
@@ -298,11 +301,10 @@ export default function Create({ categories, organizations, departments, positio
                                     key={type.value}
                                     type="button"
                                     onClick={() => handleTypeChange(type.value)}
-                                    className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                                        data.letter_type === type.value
-                                            ? 'bg-blue-600 text-white border-blue-600'
-                                            : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
-                                    }`}
+                                    className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${data.letter_type === type.value
+                                        ? 'bg-blue-600 text-white border-blue-600'
+                                        : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
+                                        }`}
                                 >
                                     {type.label}
                                 </button>
@@ -421,6 +423,16 @@ export default function Create({ categories, organizations, departments, positio
                             value={data.due_date}
                             onChange={e => setData('due_date', e.target.value)}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            پیوست‌ها
+                        </label>
+                        <TempFileUploader
+                            value={data.temp_files}
+                            onChange={files => setData('temp_files', files)}
                         />
                     </div>
 

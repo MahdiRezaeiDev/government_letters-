@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Department;
@@ -19,14 +20,14 @@ class LetterController extends Controller
         $user = auth()->user();
         $orgId = $user->organization_id;
 
-        $letters = Letter::where(function($query) use ($orgId) {
-                // نامه‌هایی که ما فرستادیم
-                $query->where('sender_id', $orgId)
+        $letters = Letter::where(function ($query) use ($orgId) {
+            // نامه‌هایی که ما فرستادیم
+            $query->where('sender_id', $orgId)
                 // یا به ما رسیده
                 ->orWhere('recipient_id', $orgId);
-            })
+        })
             ->with(['category', 'creator'])
-            ->when($request->type, function($query) use ($request, $orgId) {
+            ->when($request->type, function ($query) use ($request, $orgId) {
                 if ($request->type === 'incoming') {
                     $query->where('recipient_id', $orgId);
                 } elseif ($request->type === 'outgoing') {
@@ -36,7 +37,7 @@ class LetterController extends Controller
                 }
             })
             ->when($request->status, fn($query) =>
-                $query->where('final_status', $request->status))
+            $query->where('final_status', $request->status))
             ->latest()
             ->paginate(15);
 
@@ -53,55 +54,56 @@ class LetterController extends Controller
 
         return Inertia::render('Letters/Create', [
             'categories'  => LetterCategory::where('organization_id', $user->organization_id)
-                                        ->where('status', true)
-                                        ->get(['id', 'name']),
+                ->where('status', true)
+                ->get(['id', 'name']),
 
             // سازمان‌های طرف مکاتبه (غیر از خودمان)
             'organizations' => Organization::where('id', '!=', $user->organization_id)
-                                        ->where('status', 'active')
-                                        ->get(['id', 'name']),
+                ->where('status', 'active')
+                ->get(['id', 'name']),
 
             // واحدهای داخلی خودمان
             'departments'   => Department::where('organization_id', $user->organization_id)
-                                        ->where('status', 'active')
-                                        ->get(['id', 'name', 'parent_id']),
+                ->where('status', 'active')
+                ->get(['id', 'name', 'parent_id']),
 
             // سمت‌های داخلی خودمان
             'positions'     => Position::whereHas('department', function ($q) use ($user) {
-                                    $q->where('organization_id', $user->organization_id);
-                                })
-                                    ->get(['id', 'name', 'department_id']),
+                $q->where('organization_id', $user->organization_id);
+            })
+                ->get(['id', 'name', 'department_id']),
         ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'letter_type'            => 'required|in:outgoing,internal',
-            'subject'                => 'required|string|max:500',
-            'content'                => 'nullable|string',
-            'summary'                => 'nullable|string',
-            'category_id'            => 'nullable|exists:letter_categories,id',
-            'priority'               => 'required|in:low,normal,high,urgent,very_urgent',
-            'security_level'         => 'required|in:public,internal,confidential,secret,top_secret',
-            'date'                   => 'required|date',
-            'due_date'               => 'nullable|date',
-            'sender_id'              => 'nullable|integer',
-            'sender_department_id'   => 'nullable|exists:departments,id',
-            'recipient_id'           => 'nullable|integer',
-            'recipient_department_id'=> 'nullable|exists:departments,id',
+            'letter_type'             => 'required|in:outgoing,internal',
+            'subject'                 => 'required|string|max:500',
+            'content'                 => 'nullable|string',
+            'summary'                 => 'nullable|string',
+            'category_id'             => 'nullable|exists:letter_categories,id',
+            'priority'                => 'required|in:low,normal,high,urgent,very_urgent',
+            'security_level'          => 'required|in:public,internal,confidential,secret,top_secret',
+            'date'                    => 'required|date',
+            'due_date'                => 'nullable|date',
+            'sender_id'               => 'nullable|integer',
+            'sender_department_id'    => 'nullable|exists:departments,id',
+            'recipient_id'            => 'nullable|integer',
+            'recipient_department_id' => 'nullable|exists:departments,id',
+            'temp_files'              => 'nullable|array',
+            'temp_files.*.temp_id'    => 'required|string',
+            'temp_files.*.file_name'  => 'required|string',
+            'temp_files.*.file_size'  => 'required|integer',
+            'temp_files.*.extension'  => 'required|string',
+            'temp_files.*.mime_type'  => 'required|string',
         ]);
 
-        $user = auth()->user();
+        $user      = auth()->user();
         $numbering = app(LetterNumberingService::class);
         $tracking  = app(TrackingNumberService::class);
 
-        // اگه sender_id نیومد، سازمان خودمون رو بذار
-        if ($validated['letter_type'] === 'outgoing') {
-            $validated['sender_id'] = $user->organization_id;
-        }
-
-        Letter::create([
+        $letter = Letter::create([
             ...$validated,
             'organization_id' => $user->organization_id,
             'letter_number'   => $numbering->generate($validated['letter_type'], $user->organization_id),
@@ -113,17 +115,65 @@ class LetterController extends Controller
             'sender_position' => $user->activePosition?->name,
         ]);
 
+        // انتقال فایل‌های موقت
+        if (!empty($validated['temp_files'])) {
+            $this->moveTempFiles($letter, $validated['temp_files'], $user);
+        }
+
         return redirect()->route('letters.index')
-                        ->with('success', 'نامه ذخیره شد');
+            ->with('success', 'نامه ذخیره شد');
     }
 
-   public function show(Letter $letter)
+    private function moveTempFiles(Letter $letter, array $tempFiles, $user): void
+    {
+        foreach ($tempFiles as $tempFile) {
+            $tempDir  = 'temp/' . $user->id;
+            $allFiles = \Storage::disk('local')->files($tempDir);
+            $tempPath = null;
+
+            foreach ($allFiles as $file) {
+                if (str_contains($file, $tempFile['temp_id'])) {
+                    $tempPath = $file;
+                    break;
+                }
+            }
+
+            if (!$tempPath) continue;
+
+            $newPath = "letters/{$letter->id}/{$tempFile['temp_id']}.{$tempFile['extension']}";
+
+            \Storage::disk('public')->put(
+                $newPath,
+                \Storage::disk('local')->get($tempPath)
+            );
+
+            \Storage::disk('local')->delete($tempPath);
+
+            Attachment::create([
+                'letter_id'         => $letter->id,
+                'user_id'           => $user->id,
+                'uploader_name'     => $user->first_name . ' ' . $user->last_name,
+                'uploader_position' => $user->activePosition?->name,
+                'file_name'         => $tempFile['file_name'],
+                'file_path'         => $newPath,
+                'file_size'         => $tempFile['file_size'],
+                'mime_type'         => $tempFile['mime_type'],
+                'extension'         => $tempFile['extension'],
+            ]);
+        }
+    }
+
+    public function show(Letter $letter)
     {
         $orgId = auth()->user()->organization_id;
 
         $letter->load([
-            'category', 'creator', 'attachments', 'keywords',
-            'routings.toUser', 'routings.toPosition',
+            'category',
+            'creator',
+            'attachments',
+            'keywords',
+            'routings.toUser',
+            'routings.toPosition',
             'routings.fromUser',
         ]);
 
@@ -132,12 +182,12 @@ class LetterController extends Controller
             'uploadUrl'       => route('attachments.store', $letter),
             'storeRoutingUrl' => route('routings.store', $letter),
             'positions'       => Position::whereHas('department', fn($q) =>
-                                    $q->where('organization_id', $orgId))
-                                    ->with('department:id,name')
-                                    ->get(['id', 'name', 'department_id']),
+            $q->where('organization_id', $orgId))
+                ->with('department:id,name')
+                ->get(['id', 'name', 'department_id']),
             'users'           => User::where('organization_id', $orgId)
-                                    ->with('activePosition:positions.id,positions.name')  // ✅ مشخص کردن جدول
-                                    ->get(['users.id', 'first_name', 'last_name']),
+                ->with('activePosition:positions.id,positions.name')  // ✅ مشخص کردن جدول
+                ->get(['users.id', 'first_name', 'last_name']),
         ]);
     }
     public function edit(Letter $letter)
@@ -145,8 +195,8 @@ class LetterController extends Controller
         return Inertia::render('Letters/Edit', [
             'letter'     => $letter,
             'categories' => LetterCategory::where('organization_id', auth()->user()->organization_id)
-                                        ->where('status', true)
-                                        ->get(['id', 'name']),
+                ->where('status', true)
+                ->get(['id', 'name']),
         ]);
     }
 
@@ -167,7 +217,7 @@ class LetterController extends Controller
         ]);
 
         return redirect()->route('letters.index')
-                         ->with('success', 'نامه آپدیت شد');
+            ->with('success', 'نامه آپدیت شد');
     }
 
     public function destroy(Letter $letter)
@@ -175,6 +225,6 @@ class LetterController extends Controller
         $letter->delete();
 
         return redirect()->route('letters.index')
-                         ->with('success', 'نامه حذف شد');
+            ->with('success', 'نامه حذف شد');
     }
 }
