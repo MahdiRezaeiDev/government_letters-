@@ -1,8 +1,8 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Letter;
-use App\Models\Routing;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -10,47 +10,27 @@ class ReportController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('report.view');
 
         $orgId = auth()->user()->organization_id;
+        $from  = $request->from ?? now()->startOfMonth()->toDateString();
+        $to    = $request->to   ?? now()->toDateString();
 
-        // بازه زمانی
-        $from = $request->from ?? now()->startOfMonth()->toDateString();
-        $to   = $request->to   ?? now()->toDateString();
-
-        // ─── آمار کلی ───
         $stats = [
-            'total'    => Letter::where('organization_id', $orgId)
-                                ->whereBetween('date', [$from, $to])
-                                ->count(),
-            'incoming' => Letter::where('organization_id', $orgId)
-                                ->where('recipient_id', $orgId)
-                                ->whereBetween('date', [$from, $to])
-                                ->count(),
-            'outgoing' => Letter::where('organization_id', $orgId)
-                                ->where('sender_id', $orgId)
-                                ->whereBetween('date', [$from, $to])
-                                ->count(),
-            'internal' => Letter::where('organization_id', $orgId)
-                                ->where('letter_type', 'internal')
-                                ->whereBetween('date', [$from, $to])
-                                ->count(),
-            'pending'  => Letter::where('organization_id', $orgId)
-                                ->where('final_status', 'pending')
-                                ->count(),
-            'approved' => Letter::where('organization_id', $orgId)
-                                ->where('final_status', 'approved')
-                                ->whereBetween('date', [$from, $to])
-                                ->count(),
+            'total'    => Letter::where('organization_id', $orgId)->whereBetween('date', [$from, $to])->count(),
+            'incoming' => Letter::where('organization_id', $orgId)->where('recipient_id', $orgId)->whereBetween('date', [$from, $to])->count(),
+            'outgoing' => Letter::where('organization_id', $orgId)->where('sender_id', $orgId)->whereBetween('date', [$from, $to])->count(),
+            'internal' => Letter::where('organization_id', $orgId)->where('letter_type', 'internal')->whereBetween('date', [$from, $to])->count(),
+            'pending'  => Letter::where('organization_id', $orgId)->where('final_status', 'pending')->count(),
+            'approved' => Letter::where('organization_id', $orgId)->where('final_status', 'approved')->whereBetween('date', [$from, $to])->count(),
         ];
 
-        // ─── نامه بر اساس اولویت ───
         $byPriority = Letter::where('organization_id', $orgId)
             ->whereBetween('date', [$from, $to])
             ->selectRaw('priority, count(*) as count')
             ->groupBy('priority')
             ->pluck('count', 'priority');
 
-        // ─── نامه بر اساس دسته‌بندی ───
         $byCategory = Letter::where('organization_id', $orgId)
             ->whereBetween('date', [$from, $to])
             ->whereNotNull('category_id')
@@ -63,18 +43,13 @@ class ReportController extends Controller
                 'count' => $item->count,
             ]);
 
-        // ─── نامه روزانه (۳۰ روز اخیر) ───
         $daily = Letter::where('organization_id', $orgId)
-            ->whereBetween('date', [
-                now()->subDays(30)->toDateString(),
-                now()->toDateString(),
-            ])
+            ->whereBetween('date', [now()->subDays(30)->toDateString(), now()->toDateString()])
             ->selectRaw('date, count(*) as count')
             ->groupBy('date')
             ->orderBy('date')
             ->pluck('count', 'date');
 
-        // ─── نامه‌های معوق ───
         $overdue = Letter::where('organization_id', $orgId)
             ->where('final_status', 'pending')
             ->whereNotNull('due_date')

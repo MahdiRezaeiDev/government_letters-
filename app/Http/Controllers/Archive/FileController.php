@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Archive;
 
 use App\Http\Controllers\Controller;
@@ -13,14 +14,9 @@ class FileController extends Controller
 {
     public function index(Archive $archive)
     {
-        $archive->load([
-            'files.letters',
-            'parent:id,name',
-        ]);
-
         return Inertia::render('Archives/Files/Index', [
-            'archive' => $archive,
-            'files'   => $archive->files()->withCount('letter')->get(),
+            'archive' => $archive->load('parent:id,name'),
+            'files'   => $archive->files()->withCount('letters')->with('letters')->get(),
         ]);
     }
 
@@ -34,13 +30,9 @@ class FileController extends Controller
             'retention_unit'   => 'nullable|in:days,months,years',
         ]);
 
-        // محاسبه تاریخ انقضا
         $expiryDate = null;
-        if ($validated['retention_period'] && $validated['retention_unit']) {
-            $expiryDate = now()->add(
-                $validated['retention_period'],
-                $validated['retention_unit']
-            )->toDateString();
+        if (!empty($validated['retention_period']) && !empty($validated['retention_unit'])) {
+            $expiryDate = now()->add($validated['retention_period'], $validated['retention_unit'])->toDateString();
         }
 
         File::create([
@@ -53,14 +45,12 @@ class FileController extends Controller
         return back()->with('success', 'پرونده ایجاد شد');
     }
 
-    // الصاق نامه به پرونده
     public function attachLetter(Request $request, File $file)
     {
         $validated = $request->validate([
             'letter_id' => 'required|exists:letters,id',
         ]);
 
-        // چک کن قبلاً الصاق نشده باشه
         $exists = LetterFile::where('file_id', $file->id)
                             ->where('letter_id', $validated['letter_id'])
                             ->exists();
@@ -74,20 +64,14 @@ class FileController extends Controller
             'letter_id' => $validated['letter_id'],
         ]);
 
-        // وضعیت نامه رو آپدیت کن
-        Letter::find($validated['letter_id'])
-              ->update(['final_status' => 'archived']);
+        Letter::find($validated['letter_id'])->update(['final_status' => 'archived']);
 
         return back()->with('success', 'نامه به پرونده الصاق شد');
     }
 
-    // جدا کردن نامه از پرونده
     public function detachLetter(File $file, Letter $letter)
     {
-        LetterFile::where('file_id', $file->id)
-                  ->where('letter_id', $letter->id)
-                  ->delete();
-
+        LetterFile::where('file_id', $file->id)->where('letter_id', $letter->id)->delete();
         $letter->update(['final_status' => 'approved']);
 
         return back()->with('success', 'نامه از پرونده جدا شد');

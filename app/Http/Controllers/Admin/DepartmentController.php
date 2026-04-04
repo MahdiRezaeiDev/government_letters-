@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -10,13 +11,12 @@ class DepartmentController extends Controller
 {
     public function index()
     {
-        // $this->authorize('organization.manage');
+        $this->authorize('organization.manage');
 
         $departments = Department::where('organization_id', auth()->user()->organization_id)
             ->with('parent:id,name')
             ->withCount('positions')
-            ->orderBy('level')
-            ->orderBy('name')
+            ->orderBy('level')->orderBy('name')
             ->get();
 
         return Inertia::render('Admin/Departments/Index', [
@@ -35,13 +35,10 @@ class DepartmentController extends Controller
             'status'    => 'required|in:active,inactive',
         ]);
 
-        $orgId = auth()->user()->organization_id;
-
-        // محاسبه level و path
         $level = 0;
         $path  = '';
 
-        if ($validated['parent_id']) {
+        if (!empty($validated['parent_id'])) {
             $parent = Department::find($validated['parent_id']);
             $level  = $parent->level + 1;
             $path   = $parent->path . '/' . $parent->id;
@@ -49,7 +46,7 @@ class DepartmentController extends Controller
 
         Department::create([
             ...$validated,
-            'organization_id' => $orgId,
+            'organization_id' => auth()->user()->organization_id,
             'level'           => $level,
             'path'            => $path,
         ]);
@@ -68,7 +65,6 @@ class DepartmentController extends Controller
         ]);
 
         $department->update($validated);
-
         return back()->with('success', 'واحد آپدیت شد');
     }
 
@@ -77,7 +73,7 @@ class DepartmentController extends Controller
         $this->authorize('organization.manage');
 
         if ($department->positions()->count() > 0) {
-            return back()->with('error', 'این واحد دارای سمت است — ابتدا سمت‌ها را حذف کنید');
+            return back()->with('error', 'این واحد دارای سمت است');
         }
 
         if ($department->children()->count() > 0) {
@@ -85,7 +81,6 @@ class DepartmentController extends Controller
         }
 
         $department->delete();
-
         return back()->with('success', 'واحد حذف شد');
     }
 }

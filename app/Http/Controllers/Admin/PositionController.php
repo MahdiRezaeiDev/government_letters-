@@ -1,9 +1,10 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Position;
 use App\Models\Department;
+use App\Models\Position;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -15,16 +16,13 @@ class PositionController extends Controller
 
         $orgId = auth()->user()->organization_id;
 
-        $positions = Position::whereHas('department', fn($q) =>
-                         $q->where('organization_id', $orgId))
-            ->with(['department:id,name'])
-            ->withCount('userPositions')
-            ->orderBy('department_id')
-            ->orderBy('level')
-            ->get();
-
         return Inertia::render('Admin/Positions/Index', [
-            'positions'   => $positions,
+            'positions'   => Position::whereHas('department', fn($q) =>
+                                $q->where('organization_id', $orgId))
+                                ->with('department:id,name')
+                                ->withCount('userPositions')
+                                ->orderBy('department_id')->orderBy('level')
+                                ->get(),
             'departments' => Department::where('organization_id', $orgId)
                                        ->where('status', 'active')
                                        ->get(['id', 'name']),
@@ -45,7 +43,6 @@ class PositionController extends Controller
         ]);
 
         Position::create($validated);
-
         return back()->with('success', 'سمت ایجاد شد');
     }
 
@@ -61,7 +58,6 @@ class PositionController extends Controller
         ]);
 
         $position->update($validated);
-
         return back()->with('success', 'سمت آپدیت شد');
     }
 
@@ -74,7 +70,6 @@ class PositionController extends Controller
         }
 
         $position->delete();
-
         return back()->with('success', 'سمت حذف شد');
     }
 }

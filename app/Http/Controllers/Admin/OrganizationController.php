@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -10,15 +11,13 @@ class OrganizationController extends Controller
 {
     public function index()
     {
-        // $this->authorize('organization.manage');
-
-        $organizations = Organization::withCount(['departments', 'users'])
-            ->with('parent:id,name')
-            ->orderBy('name')
-            ->get();
+        $this->authorize('organization.manage');
 
         return Inertia::render('Admin/Organizations/Index', [
-            'organizations' => $organizations,
+            'organizations' => Organization::withCount(['departments', 'users'])
+                ->with('parent:id,name')
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
@@ -37,7 +36,6 @@ class OrganizationController extends Controller
         ]);
 
         Organization::create($validated);
-
         return back()->with('success', 'سازمان ایجاد شد');
     }
 
@@ -54,7 +52,6 @@ class OrganizationController extends Controller
         ]);
 
         $organization->update($validated);
-
         return back()->with('success', 'سازمان آپدیت شد');
     }
 
@@ -67,7 +64,6 @@ class OrganizationController extends Controller
         }
 
         $organization->delete();
-
         return back()->with('success', 'سازمان حذف شد');
     }
 }

@@ -1,8 +1,8 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Archive;
-use App\Models\Letter;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -10,9 +10,7 @@ class ArchiveController extends Controller
 {
     public function index()
     {
-        $orgId = auth()->user()->organization_id;
-
-        $archives = Archive::where('organization_id', $orgId)
+        $archives = Archive::where('organization_id', auth()->user()->organization_id)
             ->with('parent:id,name')
             ->withCount('files')
             ->orderBy('name')

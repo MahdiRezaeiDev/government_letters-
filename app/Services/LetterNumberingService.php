@@ -1,11 +1,11 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\Letter;
 
 class LetterNumberingService
 {
-    // پیشوند هر نوع نامه
     private array $prefixes = [
         'incoming' => 'و',
         'outgoing' => 'ص',
@@ -14,7 +14,7 @@ class LetterNumberingService
 
     public function generate(string $letterType, int $organizationId): string
     {
-        $year  = $this->getCurrentYear();
+        $year   = $this->getCurrentYear();
         $prefix = $this->prefixes[$letterType];
 
         $last = Letter::where('organization_id', $organizationId)
@@ -31,14 +31,9 @@ class LetterNumberingService
 
     private function getCurrentYear(): string
     {
-        // سال شمسی
-        return $this->toJalaliYear(now()->year, now()->month);
-    }
-
-    private function toJalaliYear(int $gregorianYear, int $month): string
-    {
-        // تبدیل ساده سال میلادی به شمسی
-        $jalaliYear = $gregorianYear - 621;
+        $year  = now()->year;
+        $month = now()->month;
+        $jalaliYear = $year - 621;
         if ($month <= 3) {
             $jalaliYear--;
         }

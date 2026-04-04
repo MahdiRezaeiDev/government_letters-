@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Attachment;
 use App\Models\Department;
 use App\Models\Letter;
 use App\Models\LetterCategory;
@@ -10,34 +11,33 @@ use App\Models\Position;
 use App\Models\User;
 use App\Services\LetterNumberingService;
 use App\Services\TrackingNumberService;
-use Inertia\Inertia;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class LetterController extends Controller
 {
     public function index(Request $request)
     {
-        $user = auth()->user();
+        $user  = auth()->user();
         $orgId = $user->organization_id;
 
-        $letters = Letter::where(function ($query) use ($orgId) {
-            // نامه‌هایی که ما فرستادیم
-            $query->where('sender_id', $orgId)
-                // یا به ما رسیده
-                ->orWhere('recipient_id', $orgId);
-        })
+        $letters = Letter::where(function ($q) use ($orgId) {
+                $q->where('sender_id', $orgId)
+                  ->orWhere('recipient_id', $orgId)
+                  ->orWhere('organization_id', $orgId);
+            })
             ->with(['category', 'creator'])
-            ->when($request->type, function ($query) use ($request, $orgId) {
+            ->when($request->type, function ($q) use ($request, $orgId) {
                 if ($request->type === 'incoming') {
-                    $query->where('recipient_id', $orgId);
+                    $q->where('recipient_id', $orgId);
                 } elseif ($request->type === 'outgoing') {
-                    $query->where('sender_id', $orgId);
+                    $q->where('sender_id', $orgId);
                 } elseif ($request->type === 'internal') {
-                    $query->where('letter_type', 'internal');
+                    $q->where('letter_type', 'internal');
                 }
             })
-            ->when($request->status, fn($query) =>
-            $query->where('final_status', $request->status))
+            ->when($request->status, fn($q) =>
+                $q->where('final_status', $request->status))
             ->latest()
             ->paginate(15);
 
@@ -47,31 +47,24 @@ class LetterController extends Controller
         ]);
     }
 
-    // LetterController.php
     public function create()
     {
-        $user = auth()->user();
+        $user  = auth()->user();
+        $orgId = $user->organization_id;
 
         return Inertia::render('Letters/Create', [
-            'categories'  => LetterCategory::where('organization_id', $user->organization_id)
-                ->where('status', true)
-                ->get(['id', 'name']),
-
-            // سازمان‌های طرف مکاتبه (غیر از خودمان)
-            'organizations' => Organization::where('id', '!=', $user->organization_id)
-                ->where('status', 'active')
-                ->get(['id', 'name']),
-
-            // واحدهای داخلی خودمان
-            'departments'   => Department::where('organization_id', $user->organization_id)
-                ->where('status', 'active')
-                ->get(['id', 'name', 'parent_id']),
-
-            // سمت‌های داخلی خودمان
-            'positions'     => Position::whereHas('department', function ($q) use ($user) {
-                $q->where('organization_id', $user->organization_id);
-            })
-                ->get(['id', 'name', 'department_id']),
+            'categories'    => LetterCategory::where('organization_id', $orgId)
+                                             ->where('status', true)
+                                             ->get(['id', 'name']),
+            'organizations' => Organization::where('id', '!=', $orgId)
+                                           ->where('status', 'active')
+                                           ->get(['id', 'name']),
+            'departments'   => Department::where('organization_id', $orgId)
+                                         ->where('status', 'active')
+                                         ->get(['id', 'name', 'parent_id']),
+            'positions'     => Position::whereHas('department', fn($q) =>
+                                   $q->where('organization_id', $orgId))
+                                   ->get(['id', 'name', 'department_id']),
         ]);
     }
 
@@ -103,6 +96,10 @@ class LetterController extends Controller
         $numbering = app(LetterNumberingService::class);
         $tracking  = app(TrackingNumberService::class);
 
+        if ($validated['letter_type'] === 'outgoing') {
+            $validated['sender_id'] = $user->organization_id;
+        }
+
         $letter = Letter::create([
             ...$validated,
             'organization_id' => $user->organization_id,
@@ -115,13 +112,87 @@ class LetterController extends Controller
             'sender_position' => $user->activePosition?->name,
         ]);
 
-        // انتقال فایل‌های موقت
         if (!empty($validated['temp_files'])) {
             $this->moveTempFiles($letter, $validated['temp_files'], $user);
         }
 
         return redirect()->route('letters.index')
-            ->with('success', 'نامه ذخیره شد');
+                         ->with('success', 'نامه ذخیره شد');
+    }
+
+    public function show(Letter $letter)
+    {
+        $orgId = auth()->user()->organization_id;
+
+        $letter->load([
+            'category', 'creator', 'attachments',
+            'keywords', 'routings.toUser', 'routings.toPosition',
+            'routings.fromUser',
+        ]);
+
+        return Inertia::render('Letters/Show', [
+            'letter'          => $letter,
+            'uploadUrl'       => route('attachments.store', $letter),
+            'storeRoutingUrl' => route('routings.store', $letter),
+            'positions'       => Position::whereHas('department', fn($q) =>
+                                     $q->where('organization_id', $orgId))
+                                     ->with('department:id,name')
+                                     ->get(['id', 'name', 'department_id']),
+            'users'           => User::where('organization_id', $orgId)
+                                     ->with('activePosition:id,name')
+                                     ->get(['id', 'first_name', 'last_name']),
+        ]);
+    }
+
+    public function edit(Letter $letter)
+    {
+        $orgId = auth()->user()->organization_id;
+
+        return Inertia::render('Letters/Edit', [
+            'letter'     => $letter,
+            'categories' => LetterCategory::where('organization_id', $orgId)
+                                          ->where('status', true)
+                                          ->get(['id', 'name']),
+        ]);
+    }
+
+    public function update(Request $request, Letter $letter)
+    {
+        if ($letter->final_status !== 'draft') {
+            return back()->with('error', 'فقط پیش‌نویس قابل ویرایش است');
+        }
+
+        $validated = $request->validate([
+            'letter_type'    => 'sometimes|in:outgoing,internal',
+            'subject'        => 'sometimes|string|max:500',
+            'content'        => 'nullable|string',
+            'summary'        => 'nullable|string',
+            'priority'       => 'sometimes|in:low,normal,high,urgent,very_urgent',
+            'security_level' => 'sometimes|in:public,internal,confidential,secret,top_secret',
+            'category_id'    => 'nullable|exists:letter_categories,id',
+            'date'           => 'sometimes|date',
+            'due_date'       => 'nullable|date',
+        ]);
+
+        $letter->update([
+            ...$validated,
+            'updated_by' => auth()->id(),
+        ]);
+
+        return redirect()->route('letters.show', $letter)
+                         ->with('success', 'نامه آپدیت شد');
+    }
+
+    public function destroy(Letter $letter)
+    {
+        if ($letter->final_status !== 'draft') {
+            return back()->with('error', 'فقط پیش‌نویس قابل حذف است');
+        }
+
+        $letter->delete();
+
+        return redirect()->route('letters.index')
+                         ->with('success', 'نامه حذف شد');
     }
 
     private function moveTempFiles(Letter $letter, array $tempFiles, $user): void
@@ -161,70 +232,5 @@ class LetterController extends Controller
                 'extension'         => $tempFile['extension'],
             ]);
         }
-    }
-
-    public function show(Letter $letter)
-    {
-        $orgId = auth()->user()->organization_id;
-
-        $letter->load([
-            'category',
-            'creator',
-            'attachments',
-            'keywords',
-            'routings.toUser',
-            'routings.toPosition',
-            'routings.fromUser',
-        ]);
-
-        return Inertia::render('Letters/Show', [
-            'letter'          => $letter,
-            'uploadUrl'       => route('attachments.store', $letter),
-            'storeRoutingUrl' => route('routings.store', $letter),
-            'positions'       => Position::whereHas('department', fn($q) =>
-            $q->where('organization_id', $orgId))
-                ->with('department:id,name')
-                ->get(['id', 'name', 'department_id']),
-            'users'           => User::where('organization_id', $orgId)
-                ->with('activePosition:positions.id,positions.name')  // ✅ مشخص کردن جدول
-                ->get(['users.id', 'first_name', 'last_name']),
-        ]);
-    }
-    public function edit(Letter $letter)
-    {
-        return Inertia::render('Letters/Edit', [
-            'letter'     => $letter,
-            'categories' => LetterCategory::where('organization_id', auth()->user()->organization_id)
-                ->where('status', true)
-                ->get(['id', 'name']),
-        ]);
-    }
-
-    public function update(Request $request, Letter $letter)
-    {
-        $validated = $request->validate([
-            'letter_type'    => 'required|in:incoming,outgoing,internal',
-            'subject'        => 'required|string|max:500',
-            'content'        => 'nullable|string',
-            'priority'       => 'required|in:low,normal,high,urgent,very_urgent',
-            'security_level' => 'required|in:public,internal,confidential,secret,top_secret',
-            'date'           => 'required|date',
-        ]);
-
-        $letter->update([
-            ...$validated,
-            'updated_by' => auth()->id(),
-        ]);
-
-        return redirect()->route('letters.index')
-            ->with('success', 'نامه آپدیت شد');
-    }
-
-    public function destroy(Letter $letter)
-    {
-        $letter->delete();
-
-        return redirect()->route('letters.index')
-            ->with('success', 'نامه حذف شد');
     }
 }

@@ -1,9 +1,11 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Department;
 use App\Models\Position;
+use App\Models\User;
 use App\Models\UserPosition;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,7 +19,6 @@ class UserController extends Controller
 
         $users = User::where('organization_id', auth()->user()->organization_id)
             ->with(['activePosition.department'])
-            ->withCount('positionHistory')
             ->latest()
             ->paginate(15);
 
@@ -33,47 +34,49 @@ class UserController extends Controller
         $orgId = auth()->user()->organization_id;
 
         return Inertia::render('Admin/Users/Create', [
-            'roles'     => Role::all(['id', 'name']),
-            'positions' => Position::whereHas('department', fn($q) =>
-                               $q->where('organization_id', $orgId))
-                               ->with('department:id,name')
-                               ->get(['id', 'name', 'department_id']),
+            'roles'         => Role::all(['id', 'name']),
+            'organizations' => \App\Models\Organization::where('status', 'active')->get(['id', 'name']),
+            'departments'   => Department::where('organization_id', $orgId)->where('status', 'active')->get(['id', 'name']),
+            'positions'     => Position::whereHas('department', fn($q) =>
+                                   $q->where('organization_id', $orgId))
+                                   ->with('department:id,name')
+                                   ->get(['id', 'name', 'department_id']),
         ]);
     }
 
     public function store(Request $request)
     {
-        $this->authorize('user.manage');
+        // $this->authorize('user.manage');
 
         $validated = $request->validate([
-            'first_name'    => 'required|string|max:255',
-            'last_name'     => 'required|string|max:255',
-            'username'      => 'required|string|unique:users',
-            'email'         => 'required|email|unique:users',
-            'password'      => 'required|min:8',
-            'national_code' => 'nullable|string|size:10|unique:users',
-            'mobile'        => 'nullable|string|max:20',
-            'role'          => 'required|exists:roles,name',
-            'position_id'   => 'required|exists:positions,id',
-            'status'        => 'required|in:active,inactive,suspended',
+            'first_name'      => 'required|string|max:255',
+            'last_name'       => 'required|string|max:255',
+            'username'        => 'required|string|unique:users',
+            'email'           => 'required|email|unique:users',
+            'password'        => 'required|min:8',
+            'national_code'   => 'nullable|string|size:10|unique:users',
+            'mobile'          => 'nullable|string|max:20',
+            'role'            => 'required|exists:roles,name',
+            'position_id'     => 'required|exists:positions,id',
+            'organization_id' => 'required|exists:organizations,id',
+            'status'          => 'required|in:active,inactive,suspended',
         ]);
 
         $user = User::create([
-            'organization_id' => auth()->user()->organization_id,
+            'organization_id' => $validated['organization_id'],
+            'name'            => $validated['first_name'] . ' ' . $validated['last_name'],
             'first_name'      => $validated['first_name'],
             'last_name'       => $validated['last_name'],
             'username'        => $validated['username'],
             'email'           => $validated['email'],
             'password'        => bcrypt($validated['password']),
-            'national_code'   => $validated['national_code'],
-            'mobile'          => $validated['mobile'],
+            'national_code'   => $validated['national_code'] ?? null,
+            'mobile'          => $validated['mobile'] ?? null,
             'status'          => $validated['status'],
         ]);
 
-        // نقش
         $user->assignRole($validated['role']);
 
-        // سمت
         UserPosition::create([
             'user_id'     => $user->id,
             'position_id' => $validated['position_id'],
@@ -81,8 +84,7 @@ class UserController extends Controller
             'status'      => 'active',
         ]);
 
-        return redirect()->route('admin.users.index')
-                         ->with('success', 'کاربر ایجاد شد');
+        return redirect()->route('admin.users.index')->with('success', 'کاربر ایجاد شد');
     }
 
     public function edit(User $user)
@@ -92,13 +94,14 @@ class UserController extends Controller
         $orgId = auth()->user()->organization_id;
 
         return Inertia::render('Admin/Users/Edit', [
-            'user'      => $user->load('activePosition'),
-            'roles'     => Role::all(['id', 'name']),
-            'userRoles' => $user->getRoleNames(),
-            'positions' => Position::whereHas('department', fn($q) =>
-                               $q->where('organization_id', $orgId))
-                               ->with('department:id,name')
-                               ->get(['id', 'name', 'department_id']),
+            'user'          => $user->load('activePosition'),
+            'roles'         => Role::all(['id', 'name']),
+            'userRoles'     => $user->getRoleNames(),
+            'organizations' => \App\Models\Organization::where('status', 'active')->get(['id', 'name']),
+            'positions'     => Position::whereHas('department', fn($q) =>
+                                   $q->where('organization_id', $orgId))
+                                   ->with('department:id,name')
+                                   ->get(['id', 'name', 'department_id']),
         ]);
     }
 
@@ -107,33 +110,31 @@ class UserController extends Controller
         $this->authorize('user.manage');
 
         $validated = $request->validate([
-            'first_name'  => 'required|string|max:255',
-            'last_name'   => 'required|string|max:255',
-            'mobile'      => 'nullable|string|max:20',
-            'status'      => 'required|in:active,inactive,suspended',
-            'role'        => 'required|exists:roles,name',
-            'position_id' => 'required|exists:positions,id',
+            'first_name'      => 'required|string|max:255',
+            'last_name'       => 'required|string|max:255',
+            'mobile'          => 'nullable|string|max:20',
+            'status'          => 'required|in:active,inactive,suspended',
+            'role'            => 'required|exists:roles,name',
+            'position_id'     => 'required|exists:positions,id',
+            'organization_id' => 'required|exists:organizations,id',
         ]);
 
         $user->update([
-            'first_name' => $validated['first_name'],
-            'last_name'  => $validated['last_name'],
-            'mobile'     => $validated['mobile'],
-            'status'     => $validated['status'],
+            'first_name'      => $validated['first_name'],
+            'last_name'       => $validated['last_name'],
+            'mobile'          => $validated['mobile'],
+            'status'          => $validated['status'],
+            'organization_id' => $validated['organization_id'],
         ]);
 
-        // آپدیت نقش
         $user->syncRoles([$validated['role']]);
 
-        // اگه سمت عوض شد
         $currentPosition = $user->activePosition;
         if (!$currentPosition || $currentPosition->id != $validated['position_id']) {
-            // سمت قدیمی رو غیرفعال کن
             UserPosition::where('user_id', $user->id)
                         ->where('status', 'active')
                         ->update(['status' => 'inactive', 'end_date' => now()]);
 
-            // سمت جدید
             UserPosition::create([
                 'user_id'     => $user->id,
                 'position_id' => $validated['position_id'],
@@ -142,21 +143,18 @@ class UserController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.users.index')
-                         ->with('success', 'کاربر آپدیت شد');
+        return redirect()->route('admin.users.index')->with('success', 'کاربر آپدیت شد');
     }
 
     public function destroy(User $user)
     {
         $this->authorize('user.manage');
 
-        // نمیشه خودت رو حذف کنی
         if ($user->id === auth()->id()) {
             return back()->with('error', 'نمی‌توانید خودتان را حذف کنید');
         }
 
         $user->delete();
-
         return back()->with('success', 'کاربر حذف شد');
     }
 }

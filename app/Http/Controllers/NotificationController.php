@@ -1,20 +1,14 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class NotificationController extends Controller
 {
-    // لیست همه نوتیفیکیشن‌ها
     public function index()
     {
-        $notifications = auth()->user()
-            ->notifications()
-            ->latest()
-            ->paginate(20);
-
-        // همه رو خونده علامت بزن
+        $notifications = auth()->user()->notifications()->latest()->paginate(20);
         auth()->user()->unreadNotifications->markAsRead();
 
         return Inertia::render('Notifications/Index', [
@@ -22,7 +16,6 @@ class NotificationController extends Controller
         ]);
     }
 
-    // تعداد نخونده — برای header
     public function unreadCount()
     {
         return response()->json([
@@ -30,18 +23,12 @@ class NotificationController extends Controller
         ]);
     }
 
-    // یکی رو خونده علامت بزن
     public function markAsRead(string $id)
     {
-        auth()->user()
-            ->notifications()
-            ->find($id)
-            ?->markAsRead();
-
+        auth()->user()->notifications()->find($id)?->markAsRead();
         return back();
     }
 
-    // همه رو خونده علامت بزن
     public function markAllAsRead()
     {
         auth()->user()->unreadNotifications->markAsRead();

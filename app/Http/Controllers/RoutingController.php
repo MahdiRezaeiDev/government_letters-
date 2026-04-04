@@ -1,17 +1,16 @@
 <?php
+
 namespace App\Http\Controllers;
 
+use App\Models\Action;
 use App\Models\Letter;
 use App\Models\Routing;
-use App\Models\Action;
 use App\Models\User;
-use App\Models\Position;
 use App\Notifications\LetterRoutedNotification;
 use Illuminate\Http\Request;
 
 class RoutingController extends Controller
 {
-    // ارجاع نامه به یه نفر
     public function store(Request $request, Letter $letter)
     {
         $validated = $request->validate([
@@ -22,33 +21,28 @@ class RoutingController extends Controller
             'deadline'       => 'nullable|date|after:today',
         ]);
 
-        $user  = auth()->user();
-        $posId = $user->activePosition?->id;
-
-        // شماره ترتیب — بعد از آخرین routing
+        $user      = auth()->user();
         $stepOrder = Routing::where('letter_id', $letter->id)->max('step_order') + 1;
 
-        Routing::create([
+        $routing = Routing::create([
             ...$validated,
             'letter_id'        => $letter->id,
             'from_user_id'     => $user->id,
-            'from_position_id' => $posId,
+            'from_position_id' => $user->activePosition?->id,
             'step_order'       => $stepOrder,
             'status'           => 'pending',
         ]);
 
-        // وضعیت نامه رو آپدیت کن
         $letter->update([
             'final_status' => 'pending',
             'is_draft'     => false,
         ]);
 
+        // نوتیفیکیشن
         $recipient = null;
-
         if ($validated['to_user_id']) {
             $recipient = User::find($validated['to_user_id']);
         } elseif ($validated['to_position_id']) {
-            // کاربر فعال این سمت
             $recipient = User::whereHas('activeUserPosition', fn($q) =>
                 $q->where('position_id', $validated['to_position_id'])
             )->first();
@@ -61,7 +55,6 @@ class RoutingController extends Controller
         return back()->with('success', 'نامه ارجاع داده شد');
     }
 
-    // اقدام روی routing
     public function action(Request $request, Routing $routing)
     {
         $validated = $request->validate([
@@ -69,19 +62,15 @@ class RoutingController extends Controller
             'description' => 'nullable|string|max:1000',
         ]);
 
-        $user = auth()->user();
-
-        // لاگ اقدام
         Action::create([
             'routing_id'  => $routing->id,
-            'user_id'     => $user->id,
+            'user_id'     => auth()->id(),
             'action_type' => $validated['action_type'],
             'description' => $validated['description'],
             'ip_address'  => $request->ip(),
         ]);
 
-        // آپدیت وضعیت routing
-        $status = match($validated['action_type']) {
+        $status = match ($validated['action_type']) {
             'complete' => 'completed',
             'reject'   => 'rejected',
             'forward'  => 'in_progress',
@@ -93,10 +82,7 @@ class RoutingController extends Controller
             'completed_note' => $validated['description'],
         ]);
 
-        // اگه تأیید بود و آخرین مرحله — نامه approved بشه
-        if ($validated['action_type'] === 'complete'
-            && $routing->action_type === 'approval') {
-
+        if ($validated['action_type'] === 'complete' && $routing->action_type === 'approval') {
             $hasMorePending = Routing::where('letter_id', $routing->letter_id)
                 ->where('status', 'pending')
                 ->where('id', '!=', $routing->id)
@@ -107,7 +93,6 @@ class RoutingController extends Controller
             }
         }
 
-        // اگه رد شد — نامه rejected بشه
         if ($validated['action_type'] === 'reject') {
             $routing->letter->update(['final_status' => 'rejected']);
         }

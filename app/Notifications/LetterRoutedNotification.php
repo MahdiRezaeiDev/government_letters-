@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Notifications;
 
 use App\Models\Routing;
@@ -22,15 +23,13 @@ class LetterRoutedNotification extends Notification
         $from   = $this->routing->fromUser;
 
         return [
-            'routing_id'   => $this->routing->id,
-            'letter_id'    => $letter->id,
-            'subject'      => $letter->subject,
-            'action_type'  => $this->routing->action_type,
-            'instruction'  => $this->routing->instruction,
-            'from_name'    => $from
-                                ? "{$from->first_name} {$from->last_name}"
-                                : '---',
-            'deadline'     => $this->routing->deadline,
+            'routing_id'  => $this->routing->id,
+            'letter_id'   => $letter->id,
+            'subject'     => $letter->subject,
+            'action_type' => $this->routing->action_type,
+            'instruction' => $this->routing->instruction,
+            'from_name'   => $from ? "{$from->first_name} {$from->last_name}" : '---',
+            'deadline'    => $this->routing->deadline,
         ];
     }
 }
