@@ -1,171 +1,98 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
+import AuthenticatedLayout from '@/layouts/app-layout';
 import { useState } from 'react';
 import * as depts from '@/routes/admin/departments';
 
-// ─── Types ───────────────────────────────
-
 interface Department {
-    id:              number;
-    name:            string;
-    code:            string | null;
-    level:           number;
-    status:          'active' | 'inactive';
-    positions_count: number;
-    parent:          { id: number; name: string } | null;
+    id: number; name: string; code: string | null; level: number;
+    status: 'active' | 'inactive'; positions_count: number;
+    parent: { id: number; name: string } | null;
 }
 
-interface Props {
-    departments: Department[];
-}
+interface Props { departments: Department[]; }
 
-// ─── Component ───────────────────────────
-
-export default function Index({ departments }: Props) {
+export default function DepartmentsIndex({ departments }: Props) {
 
     const [showForm, setShowForm] = useState(false);
-    const [editing, setEditing]   = useState<Department | null>(null);
+    const [editing,  setEditing]  = useState<Department | null>(null);
 
     const { data, setData, post, put, processing, errors, reset } = useForm({
-        name:      '',
-        code:      '',
-        parent_id: '',
-        status:    'active' as 'active' | 'inactive',
+        name: '', code: '', parent_id: '', status: 'active' as 'active' | 'inactive',
     });
-
-    function handleCreate() {
-        setEditing(null);
-        reset();
-        setShowForm(true);
-    }
 
     function handleEdit(dept: Department) {
         setEditing(dept);
-        setData({
-            name:      dept.name,
-            code:      dept.code ?? '',
-            parent_id: dept.parent?.id.toString() ?? '',
-            status:    dept.status,
-        });
+        setData({ name: dept.name, code: dept.code ?? '', parent_id: dept.parent?.id.toString() ?? '', status: dept.status });
         setShowForm(true);
     }
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        
         if (editing) {
-            put(depts.update(editing.id).url, {
-                onSuccess: () => { setShowForm(false); reset(); setEditing(null); }
-            });
+            put(depts.update(editing.id).url, { onSuccess: () => { setShowForm(false); reset(); setEditing(null); } });
         } else {
-            post(depts.store().url, {
-                onSuccess: () => { setShowForm(false); reset(); }
-            });
+            post(depts.store().url, { onSuccess: () => { setShowForm(false); reset(); } });
         }
     }
 
     function handleDelete(id: number) {
-        if (confirm('واحد حذف شود؟')) {
-            useForm({}).delete(depts.destroy(id).url);
-        }
+        if (confirm('واحد حذف شود؟')) router.delete(depts.destroy(id).url);
     }
 
-    // نمایش درختی
-    const roots  = departments.filter(d => !d.parent);
-    const childs = departments.filter(d => d.parent);
-
     return (
-        <>
+        <AuthenticatedLayout breadcrumbs={[{ title: 'واحدها', href: depts.index().url }]}>
             <Head title="واحدها" />
-
             <div className="p-6">
-
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-lg font-medium text-gray-800">
-                        واحدهای سازمانی ({departments.length})
-                    </h2>
-                    <button
-                        onClick={handleCreate}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
-                    >
-                        + واحد جدید
-                    </button>
+                    <h2 className="text-lg font-medium text-gray-800">واحدهای سازمانی ({departments.length})</h2>
+                    <button onClick={() => { setEditing(null); reset(); setShowForm(true); }}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">+ واحد جدید</button>
                 </div>
 
-                {/* فرم */}
                 {showForm && (
                     <div className="bg-blue-50 rounded-lg p-4 mb-6">
                         <form onSubmit={handleSubmit} className="space-y-3">
-                            <h3 className="text-sm font-semibold text-gray-700">
-                                {editing ? 'ویرایش واحد' : 'واحد جدید'}
-                            </h3>
+                            <h3 className="text-sm font-semibold text-gray-700">{editing ? 'ویرایش واحد' : 'واحد جدید'}</h3>
                             <div className="grid grid-cols-3 gap-3">
                                 <div>
-                                    <input
-                                        type="text"
-                                        placeholder="نام واحد *"
-                                        value={data.name}
+                                    <input type="text" placeholder="نام واحد *" value={data.name}
                                         onChange={e => setData('name', e.target.value)}
-                                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                                    />
+                                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
                                     {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                                 </div>
                                 <div>
-                                    <input
-                                        type="text"
-                                        placeholder="کد (اختیاری)"
-                                        value={data.code}
+                                    <input type="text" placeholder="کد" value={data.code}
                                         onChange={e => setData('code', e.target.value)}
-                                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                                    />
+                                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
                                 </div>
                                 {!editing && (
                                     <div>
-                                        <select
-                                            value={data.parent_id}
-                                            onChange={e => setData('parent_id', e.target.value)}
-                                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                                        >
-                                            <option value="">بدون والد (سطح اول)</option>
-                                            {departments.map(dept => (
-                                                <option key={dept.id} value={dept.id}>
-                                                    {'—'.repeat(dept.level)} {dept.name}
-                                                </option>
-                                            ))}
+                                        <select value={data.parent_id} onChange={e => setData('parent_id', e.target.value)}
+                                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm">
+                                            <option value="">بدون والد</option>
+                                            {departments.map(d => <option key={d.id} value={d.id}>{'—'.repeat(d.level)} {d.name}</option>)}
                                         </select>
                                     </div>
                                 )}
                                 <div>
-                                    <select
-                                        value={data.status}
-                                        onChange={e => setData('status', e.target.value as 'active' | 'inactive')}
-                                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                                    >
+                                    <select value={data.status} onChange={e => setData('status', e.target.value as 'active' | 'inactive')}
+                                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm">
                                         <option value="active">فعال</option>
                                         <option value="inactive">غیرفعال</option>
                                     </select>
                                 </div>
                             </div>
                             <div className="flex gap-2">
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="bg-blue-600 text-white px-4 py-2 rounded text-sm"
-                                >
+                                <button type="submit" disabled={processing} className="bg-blue-600 text-white px-4 py-2 rounded text-sm">
                                     {processing ? 'در حال ذخیره...' : 'ذخیره'}
                                 </button>
-                                <button
-                                    type="button"
-                                    onClick={() => { setShowForm(false); reset(); }}
-                                    className="bg-gray-100 text-gray-600 px-4 py-2 rounded text-sm"
-                                >
-                                    انصراف
-                                </button>
+                                <button type="button" onClick={() => { setShowForm(false); reset(); setEditing(null); }}
+                                    className="bg-gray-100 text-gray-600 px-4 py-2 rounded text-sm">انصراف</button>
                             </div>
                         </form>
                     </div>
                 )}
 
-                {/* لیست */}
                 <div className="bg-white rounded-lg shadow overflow-hidden">
                     <table className="w-full text-right text-sm">
                         <thead className="bg-gray-50 text-gray-500">
@@ -182,42 +109,20 @@ export default function Index({ departments }: Props) {
                             {departments.map(dept => (
                                 <tr key={dept.id} className="hover:bg-gray-50">
                                     <td className="px-4 py-3 font-medium text-gray-800">
-                                        {'　'.repeat(dept.level)}
-                                        {dept.level > 0 && '└ '}
-                                        {dept.name}
+                                        {'　'.repeat(dept.level)}{dept.level > 0 && '└ '}{dept.name}
                                     </td>
-                                    <td className="px-4 py-3 text-gray-500">
-                                        {dept.parent?.name ?? '---'}
-                                    </td>
-                                    <td className="px-4 py-3 text-gray-400">
-                                        {dept.code ?? '---'}
-                                    </td>
-                                    <td className="px-4 py-3 text-gray-500">
-                                        {dept.positions_count}
-                                    </td>
+                                    <td className="px-4 py-3 text-gray-500">{dept.parent?.name ?? '---'}</td>
+                                    <td className="px-4 py-3 text-gray-400">{dept.code ?? '---'}</td>
+                                    <td className="px-4 py-3 text-gray-500">{dept.positions_count}</td>
                                     <td className="px-4 py-3">
-                                        <span className={`text-xs px-2 py-1 rounded-full ${
-                                            dept.status === 'active'
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-gray-100 text-gray-500'
-                                        }`}>
+                                        <span className={`text-xs px-2 py-1 rounded-full ${dept.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                                             {dept.status === 'active' ? 'فعال' : 'غیرفعال'}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex gap-3">
-                                            <button
-                                                onClick={() => handleEdit(dept)}
-                                                className="text-yellow-600 hover:underline"
-                                            >
-                                                ویرایش
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(dept.id)}
-                                                className="text-red-600 hover:underline"
-                                            >
-                                                حذف
-                                            </button>
+                                            <button onClick={() => handleEdit(dept)} className="text-yellow-600 hover:underline">ویرایش</button>
+                                            <button onClick={() => handleDelete(dept.id)} className="text-red-600 hover:underline">حذف</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -226,6 +131,6 @@ export default function Index({ departments }: Props) {
                     </table>
                 </div>
             </div>
-        </>
+        </AuthenticatedLayout>
     );
 }
