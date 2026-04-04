@@ -1,46 +1,25 @@
-import { Head, router } from '@inertiajs/react';
-import { useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
+import AuthenticatedLayout from '@/layouts/app-layout';
 import * as letters from '@/routes/letters';
 
-// ─── Types ───────────────────────────────
-
-interface LetterCategory {
-    id: number;
-    name: string;
-}
-
+interface LetterCategory { id: number; name: string; }
 interface Letter {
-    id: number;
-    letter_type: 'incoming' | 'outgoing' | 'internal';
-    subject: string;
-    content: string | null;
-    summary: string | null;
+    id: number; letter_type: 'incoming' | 'outgoing' | 'internal';
+    subject: string; content: string | null; summary: string | null;
     priority: 'low' | 'normal' | 'high' | 'urgent' | 'very_urgent';
     security_level: 'public' | 'internal' | 'confidential' | 'secret' | 'top_secret';
-    category_id: number | null;
-    date: string;
-    due_date: string | null;
+    category_id: number | null; date: string; due_date: string | null;
 }
 
-interface Props {
-    letter: Letter;
-    categories: LetterCategory[];
-}
+interface Props { letter: Letter; categories: LetterCategory[]; }
 
 interface LetterForm {
     letter_type: 'incoming' | 'outgoing' | 'internal';
-    subject: string;
-    content: string;
-    summary: string;
+    subject: string; content: string; summary: string;
     priority: 'low' | 'normal' | 'high' | 'urgent' | 'very_urgent';
     security_level: 'public' | 'internal' | 'confidential' | 'secret' | 'top_secret';
-    category_id: string;
-    date: string;
-    due_date: string;
-    _method: 'PUT';
+    category_id: string; date: string; due_date: string; _method: 'PUT';
 }
-
-// ─── Component ───────────────────────────
 
 export default function Edit({ letter, categories }: Props) {
 
@@ -63,95 +42,54 @@ export default function Edit({ letter, categories }: Props) {
     }
 
     return (
-        <>
+        <AuthenticatedLayout breadcrumbs={[
+            { title: 'نامه‌ها', href: letters.index().url },
+            { title: 'ویرایش نامه', href: letters.edit(letter.id).url },
+        ]}>
             <Head title="ویرایش نامه" />
-
             <div className="p-6 max-w-3xl mx-auto">
                 <form onSubmit={handleSubmit} className="space-y-6">
 
-                    {/* نوع نامه */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            نوع نامه <span className="text-red-500">*</span>
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">نوع نامه <span className="text-red-500">*</span></label>
                         <div className="flex gap-3">
                             {([
-                                { value: 'incoming', label: 'وارده' },
                                 { value: 'outgoing', label: 'صادره' },
                                 { value: 'internal', label: 'داخلی' },
                             ] as const).map(type => (
-                                <button
-                                    key={type.value}
-                                    type="button"
+                                <button key={type.value} type="button"
                                     onClick={() => setData('letter_type', type.value)}
-                                    className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                                        data.letter_type === type.value
-                                            ? 'bg-blue-600 text-white border-blue-600'
-                                            : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
-                                    }`}
-                                >
+                                    className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${data.letter_type === type.value ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'}`}>
                                     {type.label}
                                 </button>
                             ))}
                         </div>
-                        {errors.letter_type && (
-                            <p className="text-red-500 text-xs mt-1">{errors.letter_type}</p>
-                        )}
                     </div>
 
-                    {/* موضوع */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            موضوع <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            value={data.subject}
-                            onChange={e => setData('subject', e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                        />
-                        {errors.subject && (
-                            <p className="text-red-500 text-xs mt-1">{errors.subject}</p>
-                        )}
+                        <label className="block text-sm font-medium text-gray-700 mb-1">موضوع <span className="text-red-500">*</span></label>
+                        <input type="text" value={data.subject} onChange={e => setData('subject', e.target.value)}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
+                        {errors.subject && <p className="text-red-500 text-xs mt-1">{errors.subject}</p>}
                     </div>
 
-                    {/* خلاصه */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            خلاصه
-                        </label>
-                        <textarea
-                            value={data.summary}
-                            onChange={e => setData('summary', e.target.value)}
-                            rows={2}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                        />
+                        <label className="block text-sm font-medium text-gray-700 mb-1">خلاصه</label>
+                        <textarea value={data.summary} onChange={e => setData('summary', e.target.value)}
+                            rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
                     </div>
 
-                    {/* متن نامه */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            متن نامه
-                        </label>
-                        <textarea
-                            value={data.content}
-                            onChange={e => setData('content', e.target.value)}
-                            rows={6}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                        />
+                        <label className="block text-sm font-medium text-gray-700 mb-1">متن نامه</label>
+                        <textarea value={data.content} onChange={e => setData('content', e.target.value)}
+                            rows={6} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
                     </div>
 
-                    {/* اولویت + سطح امنیت */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                اولویت
-                            </label>
-                            <select
-                                value={data.priority}
-                                onChange={e => setData('priority', e.target.value as LetterForm['priority'])}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                            >
+                            <label className="block text-sm font-medium text-gray-700 mb-1">اولویت</label>
+                            <select value={data.priority} onChange={e => setData('priority', e.target.value as LetterForm['priority'])}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
                                 <option value="low">کم</option>
                                 <option value="normal">عادی</option>
                                 <option value="high">مهم</option>
@@ -159,16 +97,10 @@ export default function Edit({ letter, categories }: Props) {
                                 <option value="very_urgent">خیلی فوری</option>
                             </select>
                         </div>
-
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                سطح امنیت
-                            </label>
-                            <select
-                                value={data.security_level}
-                                onChange={e => setData('security_level', e.target.value as LetterForm['security_level'])}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                            >
+                            <label className="block text-sm font-medium text-gray-700 mb-1">سطح امنیت</label>
+                            <select value={data.security_level} onChange={e => setData('security_level', e.target.value as LetterForm['security_level'])}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
                                 <option value="public">عمومی</option>
                                 <option value="internal">داخلی</option>
                                 <option value="confidential">محرمانه</option>
@@ -178,75 +110,40 @@ export default function Edit({ letter, categories }: Props) {
                         </div>
                     </div>
 
-                    {/* دسته‌بندی + تاریخ */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                دسته‌بندی
-                            </label>
-                            <select
-                                value={data.category_id}
-                                onChange={e => setData('category_id', e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                            >
+                            <label className="block text-sm font-medium text-gray-700 mb-1">دسته‌بندی</label>
+                            <select value={data.category_id} onChange={e => setData('category_id', e.target.value)}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
                                 <option value="">انتخاب کنید</option>
-                                {categories.map(cat => (
-                                    <option key={cat.id} value={cat.id}>
-                                        {cat.name}
-                                    </option>
-                                ))}
+                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
                         </div>
-
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                تاریخ <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="date"
-                                value={data.date}
-                                onChange={e => setData('date', e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                            />
-                            {errors.date && (
-                                <p className="text-red-500 text-xs mt-1">{errors.date}</p>
-                            )}
+                            <label className="block text-sm font-medium text-gray-700 mb-1">تاریخ <span className="text-red-500">*</span></label>
+                            <input type="date" value={data.date} onChange={e => setData('date', e.target.value)}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                         </div>
                     </div>
 
-                    {/* مهلت اقدام */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            مهلت اقدام
-                        </label>
-                        <input
-                            type="date"
-                            value={data.due_date}
-                            onChange={e => setData('due_date', e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                        />
+                        <label className="block text-sm font-medium text-gray-700 mb-1">مهلت اقدام</label>
+                        <input type="date" value={data.due_date} onChange={e => setData('due_date', e.target.value)}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                     </div>
 
-                    {/* دکمه‌ها */}
                     <div className="flex gap-3 pt-2">
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm disabled:opacity-50"
-                        >
+                        <button type="submit" disabled={processing}
+                            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm disabled:opacity-50">
                             {processing ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => router.visit(letters.show(letter.id).url)}
-                            className="bg-gray-100 text-gray-600 px-6 py-2 rounded-lg hover:bg-gray-200 text-sm"
-                        >
+                        <button type="button" onClick={() => router.visit(letters.show(letter.id).url)}
+                            className="bg-gray-100 text-gray-600 px-6 py-2 rounded-lg hover:bg-gray-200 text-sm">
                             انصراف
                         </button>
                     </div>
-
                 </form>
             </div>
-        </>
+        </AuthenticatedLayout>
     );
 }
