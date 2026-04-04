@@ -1,5 +1,4 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import AuthenticatedLayout from '@/layouts/app-layout';
 import { useState } from 'react';
 import TempFileUploader, { type TempFile } from '@/Components/TempFileUploader';
 import * as letters from '@/routes/letters';
@@ -164,10 +163,7 @@ export default function Create({ categories, organizations, departments, positio
     }
 
     return (
-        <AuthenticatedLayout breadcrumbs={[
-            { title: 'نامه‌ها', href: letters.index().url },
-            { title: 'نامه جدید', href: letters.create().url },
-        ]}>
+        <>
             <Head title="نامه جدید" />
             <div className="p-6 max-w-3xl mx-auto">
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -295,6 +291,6 @@ export default function Create({ categories, organizations, departments, positio
                     </div>
                 </form>
             </div>
-        </AuthenticatedLayout>
+        </>
     );
 }

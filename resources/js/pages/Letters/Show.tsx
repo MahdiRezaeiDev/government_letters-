@@ -1,5 +1,4 @@
 import { Head, Link, router } from '@inertiajs/react';
-import AuthenticatedLayout from '@/layouts/app-layout';
 import AttachmentUploader from '@/Components/AttachmentUploader';
 import RoutingPanel from '@/Components/RoutingPanel';
 import * as letters from '@/routes/letters';
@@ -84,10 +83,7 @@ export default function Show({ letter, uploadUrl, storeRoutingUrl, positions, us
     }
 
     return (
-        <AuthenticatedLayout breadcrumbs={[
-            { title: 'نامه‌ها', href: letters.index().url },
-            { title: letter.subject, href: letters.show(letter.id).url },
-        ]}>
+        <>
             <Head title={letter.subject} />
             <div className="p-6 max-w-4xl mx-auto space-y-6">
 
@@ -174,6 +170,6 @@ export default function Show({ letter, uploadUrl, storeRoutingUrl, positions, us
                         positions={positions} users={users} storeUrl={storeRoutingUrl} />
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </>
     );
 }

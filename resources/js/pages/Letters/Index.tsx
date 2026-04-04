@@ -1,5 +1,4 @@
 import { Head, Link, router } from '@inertiajs/react';
-import AuthenticatedLayout from '@/layouts/app-layout';
 import * as letters from '@/routes/letters';
 
 interface Letter {
@@ -54,7 +53,7 @@ export default function Index({ letters: data, filters }: Props) {
     }
 
     return (
-        <AuthenticatedLayout breadcrumbs={[{ title: 'نامه‌ها', href: letters.index().url }]}>
+        <>
             <Head title="نامه‌ها" />
             <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
@@ -135,6 +134,6 @@ export default function Index({ letters: data, filters }: Props) {
                     </div>
                 )}
             </div>
-        </AuthenticatedLayout>
+        </>
     );
 }

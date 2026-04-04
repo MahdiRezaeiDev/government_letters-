@@ -1,5 +1,4 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import AuthenticatedLayout from '@/layouts/app-layout';
 import * as letters from '@/routes/letters';
 
 interface LetterCategory { id: number; name: string; }
@@ -42,10 +41,7 @@ export default function Edit({ letter, categories }: Props) {
     }
 
     return (
-        <AuthenticatedLayout breadcrumbs={[
-            { title: 'نامه‌ها', href: letters.index().url },
-            { title: 'ویرایش نامه', href: letters.edit(letter.id).url },
-        ]}>
+        <>
             <Head title="ویرایش نامه" />
             <div className="p-6 max-w-3xl mx-auto">
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -144,6 +140,6 @@ export default function Edit({ letter, categories }: Props) {
                     </div>
                 </form>
             </div>
-        </AuthenticatedLayout>
+        </>
     );
 }
