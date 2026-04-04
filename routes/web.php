@@ -12,8 +12,11 @@ use App\Http\Controllers\LetterController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoutingController;
+use App\Models\Position;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
+use Symfony\Component\HttpFoundation\Request;
 
 Route::inertia('/', 'welcome', [
     'canRegister' => Features::enabled(Features::registration()),
@@ -72,6 +75,61 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::delete('files/{file}/letters/{letter}',
         [FileController::class, 'detachLetter'])->name('files.letters.detach');
+
+    Route::get('api/organizations/{organization}/departments',
+        fn(\App\Models\Organization $organization) =>
+            $organization->departments()
+                         ->where('status', 'active')
+                         ->get(['id', 'name', 'parent_id'])
+    )->name('api.org.departments');
+
+    // دریافت سمت‌های یه واحد
+    Route::get('api/departments/{department}/positions',
+        fn(\App\Models\Department $department) =>
+            $department->positions()
+                       ->get(['id', 'name', 'level'])
+    )->name('api.dept.positions');
+
+
+   // جستجوی کاربر — فرمت مناسب برای SearchSelect
+Route::get('api/users/search', function (Request $request) {
+    $orgId = auth()->user()->organization_id;
+    $query = $request->get('q', '');
+
+    return User::where('organization_id', $orgId)
+        ->where('status', 'active')
+        ->where(function ($q) use ($query) {
+            $q->where('first_name', 'like', "%{$query}%")
+              ->orWhere('last_name',  'like', "%{$query}%")
+              ->orWhere('username',   'like', "%{$query}%");
+        })
+        ->with('activePosition:id,name')
+        ->take(10)
+        ->get(['id', 'first_name', 'last_name', 'username'])
+        ->map(fn($u) => [
+            'id'       => $u->id,
+            'label'    => "{$u->first_name} {$u->last_name}",
+            'sublabel' => $u->activePosition?->name,
+        ]);
+})->name('api.users.search');
+
+// جستجوی سمت
+Route::get('api/positions/search', function (Request $request) {
+    $orgId = auth()->user()->organization_id;
+    $query = $request->get('q', '');
+
+    return Position::whereHas('department', fn($q) =>
+            $q->where('organization_id', $orgId))
+        ->where('name', 'like', "%{$query}%")
+        ->with('department:id,name')
+        ->take(10)
+        ->get(['id', 'name', 'department_id'])
+        ->map(fn($p) => [
+            'id'       => $p->id,
+            'label'    => $p->name,
+            'sublabel' => $p->department->name,
+        ]);
+})->name('api.positions.search');
          
 });
 
@@ -90,6 +148,9 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
      // Organizations Routes
       Route::resource('organizations', OrganizationController::class)
          ->except(['show', 'edit', 'create']);
+
+
+
 
 });
 

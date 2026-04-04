@@ -1,5 +1,6 @@
-import { useState } from 'react';
 import { useForm } from '@inertiajs/react';
+import { useState } from 'react';
+import SearchSelect from '@/Components/SearchSelect';
 
 interface Position { id: number; name: string; department: { name: string }; }
 interface User { id: number; first_name: string; last_name: string; activePosition: { name: string } | null; }
@@ -116,18 +117,24 @@ export default function RoutingPanel({ letterId, routings, positions, users, sto
                             </button>
                         ))}
                     </div>
-                    {recipientType === 'position' ? (
-                        <select value={data.to_position_id} onChange={e => setData('to_position_id', e.target.value)}
-                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm">
-                            <option value="">انتخاب سمت...</option>
-                            {positions.map(p => <option key={p.id} value={p.id}>{p.name} — {p.department.name}</option>)}
-                        </select>
+                   {recipientType === 'position' ? (
+                        <SearchSelect
+                            placeholder="جستجوی سمت..."
+                            searchUrl="/api/positions/search"
+                            value={data.to_position_id}
+                            onChange={(id, opt) => {
+                                setData('to_position_id', id);
+                            }}
+                        />
                     ) : (
-                        <select value={data.to_user_id} onChange={e => setData('to_user_id', e.target.value)}
-                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm">
-                            <option value="">انتخاب شخص...</option>
-                            {users.map(u => <option key={u.id} value={u.id}>{u.first_name} {u.last_name}{u.activePosition && ` — ${u.activePosition.name}`}</option>)}
-                        </select>
+                        <SearchSelect
+                            placeholder="جستجوی نام یا نام کاربری..."
+                            searchUrl="/api/users/search"
+                            value={data.to_user_id}
+                            onChange={(id, opt) => {
+                                setData('to_user_id', id);
+                            }}
+                        />
                     )}
                     <select value={data.action_type} onChange={e => setData('action_type', e.target.value as typeof data.action_type)}
                         className="w-full border border-gray-300 rounded px-3 py-2 text-sm">

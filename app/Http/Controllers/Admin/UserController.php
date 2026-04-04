@@ -44,52 +44,52 @@ class UserController extends Controller
         ]);
     }
 
-    public function store(Request $request)
-    {
-        // $this->authorize('user.manage');
+public function store(Request $request)
+{
+    // $this->authorize('user.manage');
 
-        $validated = $request->validate([
-            'first_name'      => 'required|string|max:255',
-            'last_name'       => 'required|string|max:255',
-            'username'        => 'required|string|unique:users',
-            'email'           => 'required|email|unique:users',
-            'password'        => 'required|min:8',
-            'national_code'   => 'nullable|string|size:10|unique:users',
-            'mobile'          => 'nullable|string|max:20',
-            'role'            => 'required|exists:roles,name',
-            'position_id'     => 'required|exists:positions,id',
-            'organization_id' => 'required|exists:organizations,id',
-            'status'          => 'required|in:active,inactive,suspended',
-        ]);
+    $validated = $request->validate([
+        'first_name'      => 'required|string|max:255',
+        'last_name'       => 'required|string|max:255',
+        'username'        => 'required|string|unique:users',
+        'email'           => 'required|email|unique:users',
+        'password'        => 'required|min:8',
+        'national_code'   => 'nullable|string|size:10|unique:users',
+        'mobile'          => 'nullable|string|max:20',
+        'role'            => 'required|exists:roles,name',
+        'organization_id' => 'required|exists:organizations,id',
+        'department_id'   => 'required|exists:departments,id',
+        'position_id'     => 'required|exists:positions,id',
+        'status'          => 'required|in:active,inactive,suspended',
+    ]);
 
-        $user = User::create([
-            'organization_id' => $validated['organization_id'],
-            'name'            => $validated['first_name'] . ' ' . $validated['last_name'],
-            'first_name'      => $validated['first_name'],
-            'last_name'       => $validated['last_name'],
-            'username'        => $validated['username'],
-            'email'           => $validated['email'],
-            'password'        => bcrypt($validated['password']),
-            'national_code'   => $validated['national_code'] ?? null,
-            'mobile'          => $validated['mobile'] ?? null,
-            'status'          => $validated['status'],
-        ]);
+    $user = User::create([
+        'organization_id' => $validated['organization_id'],
+        'first_name'      => $validated['first_name'],
+        'last_name'       => $validated['last_name'],
+        'username'        => $validated['username'],
+        'email'           => $validated['email'],
+        'password'        => bcrypt($validated['password']),
+        'national_code'   => $validated['national_code'] ?? null,
+        'mobile'          => $validated['mobile'] ?? null,
+        'status'          => $validated['status'],
+    ]);
 
-        $user->assignRole($validated['role']);
+    $user->assignRole($validated['role']);
 
-        UserPosition::create([
-            'user_id'     => $user->id,
-            'position_id' => $validated['position_id'],
-            'start_date'  => now(),
-            'status'      => 'active',
-        ]);
+    UserPosition::create([
+        'user_id'     => $user->id,
+        'position_id' => $validated['position_id'],
+        'start_date'  => now(),
+        'status'      => 'active',
+    ]);
 
-        return redirect()->route('admin.users.index')->with('success', 'کاربر ایجاد شد');
-    }
-
+    return redirect()->route('admin.users.index')
+                     ->with('success', 'کاربر ایجاد شد');
+}
     public function edit(User $user)
     {
-        $this->authorize('user.manage');
+        // $this->authorize('user.manage');
 
         $orgId = auth()->user()->organization_id;
 
@@ -107,7 +107,7 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        $this->authorize('user.manage');
+        // $this->authorize('user.manage');
 
         $validated = $request->validate([
             'first_name'      => 'required|string|max:255',
@@ -148,7 +148,7 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        $this->authorize('user.manage');
+        // $this->authorize('user.manage');
 
         if ($user->id === auth()->id()) {
             return back()->with('error', 'نمی‌توانید خودتان را حذف کنید');

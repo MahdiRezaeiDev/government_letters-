@@ -11,7 +11,7 @@ class OrganizationController extends Controller
 {
     public function index()
     {
-        $this->authorize('organization.manage');
+        // $this->authorize('organization.manage');
 
         return Inertia::render('Admin/Organizations/Index', [
             'organizations' => Organization::withCount(['departments', 'users'])

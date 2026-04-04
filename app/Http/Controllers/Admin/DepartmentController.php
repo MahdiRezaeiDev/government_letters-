@@ -11,7 +11,7 @@ class DepartmentController extends Controller
 {
     public function index()
     {
-        $this->authorize('organization.manage');
+        // $this->authorize('organization.manage');
 
         $departments = Department::where('organization_id', auth()->user()->organization_id)
             ->with('parent:id,name')

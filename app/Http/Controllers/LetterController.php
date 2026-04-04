@@ -138,9 +138,10 @@ class LetterController extends Controller
                                      $q->where('organization_id', $orgId))
                                      ->with('department:id,name')
                                      ->get(['id', 'name', 'department_id']),
-            'users'           => User::where('organization_id', $orgId)
-                                     ->with('activePosition:id,name')
-                                     ->get(['id', 'first_name', 'last_name']),
+                                     
+            'users'   =>        User::where('organization_id', $orgId)
+                                    ->with('activePosition:positions.id,positions.name')  // ✅ مشخص کردن جدول
+                                    ->get(['users.id', 'first_name', 'last_name']),       // ✅ اصلاح نام جدول
         ]);
     }
 
