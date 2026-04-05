@@ -1,19 +1,23 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { ArrowRight, Paperclip, GitBranch, Clock, Shield, Tag } from 'lucide-react';
 import AttachmentUploader from '@/Components/AttachmentUploader';
 import RoutingPanel from '@/Components/RoutingPanel';
 import * as letters from '@/routes/letters';
 
+// ─── Types ───────────────────────────────
+
 interface Attachment {
     id: number; file_name: string; file_size: number;
-    extension: string; uploader_name: string; created_at: string; download_count: number;
+    extension: string; uploader_name: string;
+    created_at: string; download_count: number;
 }
 
 interface Routing {
     id: number;
     action_type: 'action' | 'approval' | 'information' | 'sign' | 'coordination';
     status: 'pending' | 'in_progress' | 'completed' | 'rejected';
-    instruction: string | null; deadline: string | null; completed_note: string | null;
-    step_order: number;
+    instruction: string | null; deadline: string | null;
+    completed_note: string | null; step_order: number;
     toUser: { first_name: string; last_name: string } | null;
     toPosition: { name: string } | null;
     fromUser: { first_name: string; last_name: string } | null;
@@ -24,7 +28,7 @@ interface Letter {
     letter_type: 'incoming' | 'outgoing' | 'internal';
     subject: string; summary: string | null; content: string | null;
     priority: 'low' | 'normal' | 'high' | 'urgent' | 'very_urgent';
-    security_level: string;
+    security_level: 'public' | 'internal' | 'confidential' | 'secret' | 'top_secret';
     final_status: 'draft' | 'pending' | 'approved' | 'rejected' | 'archived';
     date: string; due_date: string | null;
     sender_name: string | null; sender_position: string | null;
@@ -43,36 +47,76 @@ interface Props {
     positions: Position[]; users: User[];
 }
 
-const PRIORITY_COLOR: Record<Letter['priority'], string> = {
-    low: 'bg-gray-100 text-gray-600', normal: 'bg-blue-100 text-blue-600',
-    high: 'bg-yellow-100 text-yellow-600', urgent: 'bg-orange-100 text-orange-600',
-    very_urgent: 'bg-red-100 text-red-600',
-};
+// ─── Constants ───────────────────────────
 
 const PRIORITY_LABEL: Record<Letter['priority'], string> = {
     low: 'کم', normal: 'عادی', high: 'مهم', urgent: 'فوری', very_urgent: 'خیلی فوری',
 };
 
-const STATUS_COLOR: Record<Letter['final_status'], string> = {
-    draft: 'bg-gray-100 text-gray-600', pending: 'bg-yellow-100 text-yellow-600',
-    approved: 'bg-green-100 text-green-600', rejected: 'bg-red-100 text-red-600',
-    archived: 'bg-purple-100 text-purple-600',
+const PRIORITY_STYLE: Record<Letter['priority'], string> = {
+    low:         'bg-muted text-muted-foreground',
+    normal:      'bg-primary/10 text-primary',
+    high:        'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    urgent:      'bg-orange-500/10 text-orange-600 dark:text-orange-400',
+    very_urgent: 'bg-destructive/10 text-destructive',
 };
 
 const STATUS_LABEL: Record<Letter['final_status'], string> = {
-    draft: 'پیش‌نویس', pending: 'در انتظار تأیید', approved: 'تأیید شده',
-    rejected: 'رد شده', archived: 'بایگانی',
+    draft: 'پیش‌نویس', pending: 'در انتظار تأیید',
+    approved: 'تأیید شده', rejected: 'رد شده', archived: 'بایگانی',
+};
+
+const STATUS_STYLE: Record<Letter['final_status'], string> = {
+    draft:    'bg-muted text-muted-foreground',
+    pending:  'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    approved: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    rejected: 'bg-destructive/10 text-destructive',
+    archived: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
+};
+
+const SECURITY_LABEL: Record<Letter['security_level'], string> = {
+    public: 'عمومی', internal: 'داخلی', confidential: 'محرمانه',
+    secret: 'سری', top_secret: 'بسیار سری',
+};
+
+const SECURITY_STYLE: Record<Letter['security_level'], string> = {
+    public:       'text-muted-foreground',
+    internal:     'text-primary',
+    confidential: 'text-amber-600 dark:text-amber-400',
+    secret:       'text-orange-600 dark:text-orange-400',
+    top_secret:   'text-destructive',
 };
 
 const TYPE_LABEL: Record<Letter['letter_type'], string> = {
     incoming: 'وارده', outgoing: 'صادره', internal: 'داخلی',
 };
 
-function formatFileSize(bytes: number): string {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+// ─── Sub-components ──────────────────────
+
+function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
+    return (
+        <div className="flex gap-2 py-2.5 border-b border-border last:border-0">
+            <span className="text-xs text-muted-foreground w-28 flex-shrink-0 pt-0.5">{label}</span>
+            <span className="text-sm text-foreground flex-1">{value}</span>
+        </div>
+    );
 }
+
+function SectionCard({ title, icon: Icon, children }: {
+    title: string; icon: any; children: React.ReactNode;
+}) {
+    return (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border">
+                <Icon size={14} className="text-primary" />
+                <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+            </div>
+            <div className="p-5">{children}</div>
+        </div>
+    );
+}
+
+// ─── Component ───────────────────────────
 
 export default function Show({ letter, uploadUrl, storeRoutingUrl, positions, users }: Props) {
 
@@ -85,90 +129,147 @@ export default function Show({ letter, uploadUrl, storeRoutingUrl, positions, us
     return (
         <>
             <Head title={letter.subject} />
-            <div className="p-6 max-w-4xl mx-auto space-y-6">
 
-                {/* هدر */}
-                <div className="bg-white rounded-lg shadow p-6">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <h1 className="text-xl font-bold text-gray-800 mb-2">{letter.subject}</h1>
-                            <div className="flex gap-2 flex-wrap">
-                                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">{TYPE_LABEL[letter.letter_type]}</span>
-                                <span className={`text-xs px-2 py-1 rounded-full ${PRIORITY_COLOR[letter.priority]}`}>{PRIORITY_LABEL[letter.priority]}</span>
-                                <span className={`text-xs px-2 py-1 rounded-full ${STATUS_COLOR[letter.final_status]}`}>{STATUS_LABEL[letter.final_status]}</span>
-                                {letter.category && <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-1 rounded-full">{letter.category.name}</span>}
+            <div className="p-6 max-w-4xl mx-auto space-y-5">
+
+                {/* ─── هدر ─── */}
+                <div className="bg-card border border-border rounded-xl p-5">
+
+                    {/* بردکرامب و دکمه‌ها */}
+                    <div className="flex items-start justify-between mb-4">
+                        <Link href={letters.index().url}
+                            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                            <ArrowRight size={12} />
+                            بازگشت به لیست
+                        </Link>
+                        {letter.final_status === 'draft' && (
+                            <div className="flex gap-2">
+                                <Link href={letters.edit(letter.id).url}
+                                    className="text-xs bg-muted hover:bg-muted/80 text-foreground px-3 py-1.5 rounded-lg transition-colors font-medium">
+                                    ویرایش
+                                </Link>
+                                <button onClick={handleDelete}
+                                    className="text-xs bg-destructive/10 hover:bg-destructive/20 text-destructive px-3 py-1.5 rounded-lg transition-colors font-medium">
+                                    حذف
+                                </button>
                             </div>
-                        </div>
-                        <div className="flex gap-2">
-                            {letter.final_status === 'draft' && (
-                                <>
-                                    <Link href={letters.edit(letter.id).url} className="bg-yellow-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-yellow-600">ویرایش</Link>
-                                    <button onClick={handleDelete} className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-red-600">حذف</button>
-                                </>
-                            )}
-                            <Link href={letters.index().url} className="bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-200">بازگشت</Link>
-                        </div>
+                        )}
+                    </div>
+
+                    {/* موضوع */}
+                    <h1 className="text-xl font-bold text-foreground mb-3">
+                        {letter.subject}
+                    </h1>
+
+                    {/* بج‌ها */}
+                    <div className="flex flex-wrap gap-2">
+                        <span className="text-xs bg-muted text-muted-foreground px-2.5 py-1 rounded-full">
+                            {TYPE_LABEL[letter.letter_type]}
+                        </span>
+                        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${PRIORITY_STYLE[letter.priority]}`}>
+                            {PRIORITY_LABEL[letter.priority]}
+                        </span>
+                        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${STATUS_STYLE[letter.final_status]}`}>
+                            {STATUS_LABEL[letter.final_status]}
+                        </span>
+                        {letter.category && (
+                            <span className="text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full flex items-center gap-1">
+                                <Tag size={10} />
+                                {letter.category.name}
+                            </span>
+                        )}
+                        <span className={`text-xs px-2.5 py-1 rounded-full flex items-center gap-1 ${SECURITY_STYLE[letter.security_level]}`}>
+                            <Shield size={10} />
+                            {SECURITY_LABEL[letter.security_level]}
+                        </span>
                     </div>
                 </div>
 
-                {/* اطلاعات */}
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="text-sm font-semibold text-gray-500 mb-4 border-b pb-2">اطلاعات نامه</h2>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div><span className="text-gray-500">شماره نامه:</span><span className="mr-2 font-medium">{letter.letter_number ?? '---'}</span></div>
-                        <div><span className="text-gray-500">شماره پیگیری:</span><span className="mr-2 font-medium">{letter.tracking_number ?? '---'}</span></div>
-                        <div><span className="text-gray-500">تاریخ:</span><span className="mr-2 font-medium">{letter.date}</span></div>
-                        <div><span className="text-gray-500">مهلت اقدام:</span><span className="mr-2 font-medium">{letter.due_date ?? '---'}</span></div>
+                {/* ─── اطلاعات ─── */}
+                <SectionCard title="اطلاعات نامه" icon={Tag}>
+                    <div className="grid grid-cols-2 gap-x-8">
                         <div>
-                            <span className="text-gray-500">فرستنده:</span>
-                            <span className="mr-2 font-medium">{letter.sender_name ?? '---'}
-                                {letter.sender_position && <span className="text-gray-400 text-xs mr-1">({letter.sender_position})</span>}
-                            </span>
+                            <InfoRow label="شماره نامه"
+                                value={letter.letter_number
+                                    ? <span className="font-mono text-sm">{letter.letter_number}</span>
+                                    : <span className="text-muted-foreground">---</span>}
+                            />
+                            <InfoRow label="شماره پیگیری"
+                                value={letter.tracking_number
+                                    ? <span className="font-mono text-xs">{letter.tracking_number}</span>
+                                    : <span className="text-muted-foreground">---</span>}
+                            />
+                            <InfoRow label="تاریخ" value={letter.date} />
+                            <InfoRow label="مهلت اقدام"
+                                value={letter.due_date
+                                    ? <span className={new Date(letter.due_date) < new Date() ? 'text-destructive font-medium' : ''}>{letter.due_date}</span>
+                                    : <span className="text-muted-foreground">---</span>}
+                            />
                         </div>
                         <div>
-                            <span className="text-gray-500">گیرنده:</span>
-                            <span className="mr-2 font-medium">{letter.recipient_name ?? '---'}
-                                {letter.recipient_position && <span className="text-gray-400 text-xs mr-1">({letter.recipient_position})</span>}
-                            </span>
-                        </div>
-                        <div>
-                            <span className="text-gray-500">ثبت‌کننده:</span>
-                            <span className="mr-2 font-medium">
-                                {letter.creator ? `${letter.creator.first_name} ${letter.creator.last_name}` : '---'}
-                            </span>
+                            <InfoRow label="فرستنده"
+                                value={
+                                    <div>
+                                        <span>{letter.sender_name ?? '---'}</span>
+                                        {letter.sender_position && (
+                                            <span className="text-xs text-muted-foreground block">{letter.sender_position}</span>
+                                        )}
+                                    </div>
+                                }
+                            />
+                            <InfoRow label="گیرنده"
+                                value={
+                                    <div>
+                                        <span>{letter.recipient_name ?? '---'}</span>
+                                        {letter.recipient_position && (
+                                            <span className="text-xs text-muted-foreground block">{letter.recipient_position}</span>
+                                        )}
+                                    </div>
+                                }
+                            />
+                            <InfoRow label="ثبت‌کننده"
+                                value={letter.creator
+                                    ? `${letter.creator.first_name} ${letter.creator.last_name}`
+                                    : '---'}
+                            />
                         </div>
                     </div>
-                </div>
+                </SectionCard>
 
-                {/* خلاصه */}
+                {/* ─── خلاصه ─── */}
                 {letter.summary && (
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-sm font-semibold text-gray-500 mb-3 border-b pb-2">خلاصه</h2>
-                        <p className="text-sm text-gray-700 leading-7">{letter.summary}</p>
+                    <div className="bg-primary/5 border border-primary/20 rounded-xl p-5">
+                        <p className="text-xs font-medium text-primary mb-2">خلاصه</p>
+                        <p className="text-sm text-foreground leading-7">{letter.summary}</p>
                     </div>
                 )}
 
-                {/* متن */}
+                {/* ─── متن ─── */}
                 {letter.content && (
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-sm font-semibold text-gray-500 mb-3 border-b pb-2">متن نامه</h2>
-                        <div className="text-sm text-gray-700 leading-8 prose max-w-none"
+                    <SectionCard title="متن نامه" icon={Tag}>
+                        <div className="text-sm text-foreground leading-8 prose dark:prose-invert max-w-none"
                             dangerouslySetInnerHTML={{ __html: letter.content }} />
-                    </div>
+                    </SectionCard>
                 )}
 
-                {/* پیوست‌ها */}
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="text-sm font-semibold text-gray-500 mb-3 border-b pb-2">پیوست‌ها</h2>
-                    <AttachmentUploader letterId={letter.id} attachments={letter.attachments} uploadUrl={uploadUrl} />
-                </div>
+                {/* ─── پیوست‌ها ─── */}
+                <SectionCard title={`پیوست‌ها (${letter.attachments.length})`} icon={Paperclip}>
+                    <AttachmentUploader
+                        letterId={letter.id}
+                        attachments={letter.attachments}
+                        uploadUrl={uploadUrl} />
+                </SectionCard>
 
-                {/* گردش کار */}
-                <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="text-sm font-semibold text-gray-500 mb-4 border-b pb-2">گردش کار</h2>
-                    <RoutingPanel letterId={letter.id} routings={letter.routings}
-                        positions={positions} users={users} storeUrl={storeRoutingUrl} />
-                </div>
+                {/* ─── گردش کار ─── */}
+                <SectionCard title="گردش کار" icon={GitBranch}>
+                    <RoutingPanel
+                        letterId={letter.id}
+                        routings={letter.routings}
+                        positions={positions}
+                        users={users}
+                        storeUrl={storeRoutingUrl} />
+                </SectionCard>
+
             </div>
         </>
     );

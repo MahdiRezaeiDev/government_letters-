@@ -1,7 +1,11 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import TempFileUploader, { type TempFile } from '@/Components/TempFileUploader';
+import AuthenticatedLayout from '@/layouts/app-layout';
 import * as letters from '@/routes/letters';
+
+// ─── Types ───────────────────────────────
 
 interface Category   { id: number; name: string; }
 interface Org        { id: number; name: string; }
@@ -9,14 +13,12 @@ interface Department { id: number; name: string; parent_id: number | null; }
 interface Position   { id: number; name: string; department_id: number; }
 
 interface Props {
-    categories:    Category[];
-    organizations: Org[];
-    departments:   Department[];
-    positions:     Position[];
+    categories: Category[]; organizations: Org[];
+    departments: Department[]; positions: Position[];
 }
 
 interface LetterForm {
-    letter_type:             'incoming' | 'outgoing' | 'internal' | '';
+    letter_type:             'outgoing' | 'internal' | '';
     subject:                 string;
     content:                 string;
     summary:                 string;
@@ -32,39 +34,79 @@ interface LetterForm {
     temp_files:              TempFile[];
 }
 
+// ─── helpers ─────────────────────────────
+
+function Label({ children, required }: { children: React.ReactNode; required?: boolean }) {
+    return (
+        <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+            {children}{required && <span className="text-destructive mr-0.5">*</span>}
+        </label>
+    );
+}
+
+function Input({ error, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { error?: string }) {
+    return (
+        <div>
+            <input {...props}
+                className={`w-full bg-background border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all ${error ? 'border-destructive focus:ring-destructive' : 'border-border'} ${props.className ?? ''}`}
+            />
+            {error && <p className="text-destructive text-xs mt-1">{error}</p>}
+        </div>
+    );
+}
+
+function Select({ error, children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement> & { error?: string }) {
+    return (
+        <div className="relative">
+            <select {...props}
+                className={`w-full appearance-none bg-background border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all pr-8 ${error ? 'border-destructive' : 'border-border'} ${props.className ?? ''}`}>
+                {children}
+            </select>
+            <ChevronDown size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            {error && <p className="text-destructive text-xs mt-1">{error}</p>}
+        </div>
+    );
+}
+
+function Textarea({ error, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { error?: string }) {
+    return (
+        <div>
+            <textarea {...props}
+                className={`w-full bg-background border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all resize-none ${error ? 'border-destructive' : 'border-border'}`}
+            />
+            {error && <p className="text-destructive text-xs mt-1">{error}</p>}
+        </div>
+    );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+    return (
+        <div className="flex items-center gap-2 mb-3">
+            <span className="w-1 h-4 bg-primary rounded-full" />
+            <h3 className="text-sm font-semibold text-foreground">{children}</h3>
+        </div>
+    );
+}
+
+// ─── Component ───────────────────────────
+
 export default function Create({ categories, organizations, departments, positions }: Props) {
 
     const { data, setData, post, processing, errors } = useForm<LetterForm>({
-        letter_type:             '',
-        subject:                 '',
-        content:                 '',
-        summary:                 '',
-        priority:                'normal',
-        security_level:          'internal',
-        category_id:             '',
-        date:                    new Date().toISOString().split('T')[0],
-        due_date:                '',
-        sender_id:               '',
-        sender_department_id:    '',
-        recipient_id:            '',
-        recipient_department_id: '',
-        temp_files:              [],
+        letter_type: '', subject: '', content: '', summary: '',
+        priority: 'normal', security_level: 'internal', category_id: '',
+        date: new Date().toISOString().split('T')[0], due_date: '',
+        sender_id: '', sender_department_id: '',
+        recipient_id: '', recipient_department_id: '',
+        temp_files: [],
     });
 
     const [senderPos,    setSenderPos]    = useState<Position[]>([]);
     const [recipientPos, setRecipientPos] = useState<Position[]>([]);
 
     function handleTypeChange(type: LetterForm['letter_type']) {
-        setData(prev => ({
-            ...prev,
-            letter_type:             type,
-            sender_id:               '',
-            sender_department_id:    '',
-            recipient_id:            '',
-            recipient_department_id: '',
-        }));
-        setSenderPos([]);
-        setRecipientPos([]);
+        setData(prev => ({ ...prev, letter_type: type, sender_id: '', sender_department_id: '', recipient_id: '', recipient_department_id: '' }));
+        setSenderPos([]); setRecipientPos([]);
     }
 
     function handleSenderDeptChange(deptId: string) {
@@ -82,210 +124,184 @@ export default function Create({ categories, organizations, departments, positio
         post(letters.store().url);
     }
 
-    function renderSenderRecipient() {
-        if (!data.letter_type) return null;
-
-        return (
-            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-                <h3 className="text-sm font-semibold text-gray-600">اطلاعات فرستنده و گیرنده</h3>
-
-                {data.letter_type === 'outgoing' && (
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <p className="text-xs font-medium text-gray-500">فرستنده (داخلی)</p>
-                            <select value={data.sender_department_id}
-                                onChange={e => handleSenderDeptChange(e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                <option value="">واحد سازمانی</option>
-                                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                            </select>
-                            {senderPos.length > 0 && (
-                                <select value={data.sender_id}
-                                    onChange={e => setData('sender_id', e.target.value)}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                    <option value="">سمت (اختیاری)</option>
-                                    {senderPos.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                </select>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <p className="text-xs font-medium text-gray-500">گیرنده (خارجی)</p>
-                            <select value={data.recipient_id}
-                                onChange={e => setData('recipient_id', e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                <option value="">وزارتخانه / سازمان</option>
-                                {organizations.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
-                            </select>
-                        </div>
-                    </div>
-                )}
-
-                {data.letter_type === 'internal' && (
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <p className="text-xs font-medium text-gray-500">فرستنده</p>
-                            <select value={data.sender_department_id}
-                                onChange={e => handleSenderDeptChange(e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                <option value="">واحد سازمانی</option>
-                                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                            </select>
-                            {senderPos.length > 0 && (
-                                <select value={data.sender_id}
-                                    onChange={e => setData('sender_id', e.target.value)}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                    <option value="">سمت (اختیاری)</option>
-                                    {senderPos.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                </select>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <p className="text-xs font-medium text-gray-500">گیرنده</p>
-                            <select value={data.recipient_department_id}
-                                onChange={e => handleRecipientDeptChange(e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                <option value="">واحد سازمانی</option>
-                                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                            </select>
-                            {recipientPos.length > 0 && (
-                                <select value={data.recipient_id}
-                                    onChange={e => setData('recipient_id', e.target.value)}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                    <option value="">سمت (اختیاری)</option>
-                                    {recipientPos.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                </select>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </div>
-        );
-    }
-
     return (
         <>
             <Head title="نامه جدید" />
+
             <div className="p-6 max-w-3xl mx-auto">
                 <form onSubmit={handleSubmit} className="space-y-6">
 
-                    {/* نوع نامه */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            نوع نامه <span className="text-red-500">*</span>
-                        </label>
-                        <div className="flex gap-3">
+                    {/* ─── نوع نامه ─── */}
+                    <div className="bg-card border border-border rounded-xl p-5">
+                        <SectionTitle>نوع نامه</SectionTitle>
+                        <div className="grid grid-cols-2 gap-2">
                             {([
-                                { value: 'outgoing', label: 'صادره' },
-                                { value: 'internal', label: 'داخلی' },
+                                { value: 'outgoing', label: 'صادره',  desc: 'ارسال به سازمان دیگر' },
+                                { value: 'internal', label: 'داخلی',  desc: 'بین واحدهای داخلی' },
                             ] as const).map(type => (
                                 <button key={type.value} type="button"
                                     onClick={() => handleTypeChange(type.value)}
-                                    className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${data.letter_type === type.value ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'}`}>
-                                    {type.label}
+                                    className={`flex flex-col items-start p-3 rounded-lg border-2 transition-all text-right ${
+                                        data.letter_type === type.value
+                                            ? 'border-primary bg-primary/5'
+                                            : 'border-border hover:border-primary/40'
+                                    }`}>
+                                    <span className={`text-sm font-semibold ${data.letter_type === type.value ? 'text-primary' : 'text-foreground'}`}>
+                                        {type.label}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground mt-0.5">{type.desc}</span>
                                 </button>
                             ))}
                         </div>
-                        {errors.letter_type && <p className="text-red-500 text-xs mt-1">{errors.letter_type}</p>}
+                        {errors.letter_type && <p className="text-destructive text-xs mt-2">{errors.letter_type}</p>}
                     </div>
 
-                    {renderSenderRecipient()}
+                    {/* ─── فرستنده / گیرنده ─── */}
+                    {data.letter_type && (
+                        <div className="bg-card border border-border rounded-xl p-5">
+                            <SectionTitle>فرستنده و گیرنده</SectionTitle>
+                            <div className="grid grid-cols-2 gap-4">
 
-                    {/* موضوع */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">موضوع <span className="text-red-500">*</span></label>
-                        <input type="text" value={data.subject}
-                            onChange={e => setData('subject', e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                            placeholder="موضوع نامه را وارد کنید" />
-                        {errors.subject && <p className="text-red-500 text-xs mt-1">{errors.subject}</p>}
-                    </div>
+                                {/* فرستنده */}
+                                <div className="space-y-2">
+                                    <Label>فرستنده {data.letter_type === 'outgoing' ? '(داخلی)' : ''}</Label>
+                                    <Select value={data.sender_department_id}
+                                        onChange={e => handleSenderDeptChange(e.target.value)}>
+                                        <option value="">واحد سازمانی...</option>
+                                        {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                                    </Select>
+                                    {senderPos.length > 0 && (
+                                        <Select value={data.sender_id}
+                                            onChange={e => setData('sender_id', e.target.value)}>
+                                            <option value="">سمت (اختیاری)</option>
+                                            {senderPos.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                        </Select>
+                                    )}
+                                </div>
 
-                    {/* خلاصه */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">خلاصه</label>
-                        <textarea value={data.summary} onChange={e => setData('summary', e.target.value)}
-                            rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
-                    </div>
-
-                    {/* متن */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">متن نامه</label>
-                        <textarea value={data.content} onChange={e => setData('content', e.target.value)}
-                            rows={6} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
-                    </div>
-
-                    {/* اولویت + سطح امنیت */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">اولویت</label>
-                            <select value={data.priority}
-                                onChange={e => setData('priority', e.target.value as LetterForm['priority'])}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                <option value="low">کم</option>
-                                <option value="normal">عادی</option>
-                                <option value="high">مهم</option>
-                                <option value="urgent">فوری</option>
-                                <option value="very_urgent">خیلی فوری</option>
-                            </select>
+                                {/* گیرنده */}
+                                <div className="space-y-2">
+                                    <Label>گیرنده {data.letter_type === 'outgoing' ? '(خارجی)' : ''}</Label>
+                                    {data.letter_type === 'outgoing' ? (
+                                        <Select value={data.recipient_id}
+                                            onChange={e => setData('recipient_id', e.target.value)}>
+                                            <option value="">وزارتخانه / سازمان...</option>
+                                            {organizations.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                                        </Select>
+                                    ) : (
+                                        <>
+                                            <Select value={data.recipient_department_id}
+                                                onChange={e => handleRecipientDeptChange(e.target.value)}>
+                                                <option value="">واحد سازمانی...</option>
+                                                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                                            </Select>
+                                            {recipientPos.length > 0 && (
+                                                <Select value={data.recipient_id}
+                                                    onChange={e => setData('recipient_id', e.target.value)}>
+                                                    <option value="">سمت (اختیاری)</option>
+                                                    {recipientPos.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                                </Select>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            </div>
                         </div>
+                    )}
+
+                    {/* ─── محتوا ─── */}
+                    <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+                        <SectionTitle>محتوای نامه</SectionTitle>
+
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">سطح امنیت</label>
-                            <select value={data.security_level}
-                                onChange={e => setData('security_level', e.target.value as LetterForm['security_level'])}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                <option value="public">عمومی</option>
-                                <option value="internal">داخلی</option>
-                                <option value="confidential">محرمانه</option>
-                                <option value="secret">سری</option>
-                                <option value="top_secret">بسیار سری</option>
-                            </select>
+                            <Label required>موضوع</Label>
+                            <Input value={data.subject} onChange={e => setData('subject', e.target.value)}
+                                placeholder="موضوع نامه را وارد کنید" error={errors.subject} />
+                        </div>
+
+                        <div>
+                            <Label>خلاصه</Label>
+                            <Textarea value={data.summary} onChange={e => setData('summary', e.target.value)}
+                                rows={2} placeholder="خلاصه‌ای از نامه..." />
+                        </div>
+
+                        <div>
+                            <Label>متن نامه</Label>
+                            <Textarea value={data.content} onChange={e => setData('content', e.target.value)}
+                                rows={6} placeholder="متن کامل نامه را اینجا بنویسید..." />
                         </div>
                     </div>
 
-                    {/* دسته‌بندی + تاریخ */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">دسته‌بندی</label>
-                            <select value={data.category_id}
-                                onChange={e => setData('category_id', e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                <option value="">انتخاب کنید</option>
-                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">تاریخ <span className="text-red-500">*</span></label>
-                            <input type="date" value={data.date}
-                                onChange={e => setData('date', e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-                            {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date}</p>}
+                    {/* ─── تنظیمات ─── */}
+                    <div className="bg-card border border-border rounded-xl p-5">
+                        <SectionTitle>تنظیمات</SectionTitle>
+                        <div className="grid grid-cols-2 gap-4">
+
+                            <div>
+                                <Label>اولویت</Label>
+                                <Select value={data.priority}
+                                    onChange={e => setData('priority', e.target.value as LetterForm['priority'])}>
+                                    <option value="low">کم</option>
+                                    <option value="normal">عادی</option>
+                                    <option value="high">مهم</option>
+                                    <option value="urgent">فوری</option>
+                                    <option value="very_urgent">خیلی فوری</option>
+                                </Select>
+                            </div>
+
+                            <div>
+                                <Label>سطح امنیت</Label>
+                                <Select value={data.security_level}
+                                    onChange={e => setData('security_level', e.target.value as LetterForm['security_level'])}>
+                                    <option value="public">عمومی</option>
+                                    <option value="internal">داخلی</option>
+                                    <option value="confidential">محرمانه</option>
+                                    <option value="secret">سری</option>
+                                    <option value="top_secret">بسیار سری</option>
+                                </Select>
+                            </div>
+
+                            <div>
+                                <Label>دسته‌بندی</Label>
+                                <Select value={data.category_id}
+                                    onChange={e => setData('category_id', e.target.value)}>
+                                    <option value="">انتخاب کنید</option>
+                                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </Select>
+                            </div>
+
+                            <div>
+                                <Label required>تاریخ</Label>
+                                <Input type="date" value={data.date}
+                                    onChange={e => setData('date', e.target.value)}
+                                    error={errors.date} />
+                            </div>
+
+                            <div className="col-span-2">
+                                <Label>مهلت اقدام</Label>
+                                <Input type="date" value={data.due_date}
+                                    onChange={e => setData('due_date', e.target.value)} />
+                            </div>
                         </div>
                     </div>
 
-                    {/* مهلت */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">مهلت اقدام</label>
-                        <input type="date" value={data.due_date}
-                            onChange={e => setData('due_date', e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-                    </div>
-
-                    {/* پیوست */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">پیوست‌ها</label>
+                    {/* ─── پیوست ─── */}
+                    <div className="bg-card border border-border rounded-xl p-5">
+                        <SectionTitle>پیوست‌ها</SectionTitle>
                         <TempFileUploader
                             value={data.temp_files}
                             onChange={files => setData('temp_files', files)} />
                     </div>
 
-                    {/* دکمه‌ها */}
-                    <div className="flex gap-3 pt-2">
+                    {/* ─── دکمه‌ها ─── */}
+                    <div className="flex gap-3">
                         <button type="submit" disabled={processing}
-                            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-sm disabled:opacity-50">
+                            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
                             {processing ? 'در حال ذخیره...' : 'ذخیره پیش‌نویس'}
                         </button>
-                        <button type="button" onClick={() => router.visit(letters.index().url)}
-                            className="bg-gray-100 text-gray-600 px-6 py-2 rounded-lg hover:bg-gray-200 text-sm">
+                        <button type="button"
+                            onClick={() => router.visit(letters.index().url)}
+                            className="px-6 bg-muted hover:bg-muted/80 text-muted-foreground py-2.5 rounded-lg text-sm font-medium transition-colors">
                             انصراف
                         </button>
                     </div>
