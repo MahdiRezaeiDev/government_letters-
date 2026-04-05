@@ -1,5 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import AuthenticatedLayout from '@/layouts/app-layout';
+import { Plus, Building2, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import * as depts from '@/routes/admin/departments';
 
@@ -11,7 +11,18 @@ interface Department {
 
 interface Props { departments: Department[]; }
 
-export default function DepartmentsIndex({ departments }: Props) {
+function Select({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
+    return (
+        <div className="relative">
+            <select {...props} className="w-full appearance-none bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary pr-8">
+                {children}
+            </select>
+            <ChevronDown size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+        </div>
+    );
+}
+
+export default function Index({ departments }: Props) {
 
     const [showForm, setShowForm] = useState(false);
     const [editing,  setEditing]  = useState<Department | null>(null);
@@ -28,6 +39,7 @@ export default function DepartmentsIndex({ departments }: Props) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        
         if (editing) {
             put(depts.update(editing.id).url, { onSuccess: () => { setShowForm(false); reset(); setEditing(null); } });
         } else {
@@ -35,102 +47,93 @@ export default function DepartmentsIndex({ departments }: Props) {
         }
     }
 
-    function handleDelete(id: number) {
-        if (confirm('واحد حذف شود؟')) router.delete(depts.destroy(id).url);
-    }
-
     return (
-        <AuthenticatedLayout breadcrumbs={[{ title: 'واحدها', href: depts.index().url }]}>
+        <>
             <Head title="واحدها" />
-            <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-lg font-medium text-gray-800">واحدهای سازمانی ({departments.length})</h2>
-                    <button onClick={() => { setEditing(null); reset(); setShowForm(true); }}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">+ واحد جدید</button>
+            <div className="p-6 max-w-5xl mx-auto space-y-5">
+
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-lg font-bold text-foreground">واحدهای سازمانی</h1>
+                        <p className="text-xs text-muted-foreground mt-0.5">{departments.length} واحد</p>
+                    </div>
+                    <button onClick={() => { setEditing(null); reset(); setShowForm(!showForm); }}
+                        className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-sm px-4 py-2 rounded-lg transition-colors font-medium">
+                        <Plus size={14} /> واحد جدید
+                    </button>
                 </div>
 
                 {showForm && (
-                    <div className="bg-blue-50 rounded-lg p-4 mb-6">
+                    <div className="bg-card border border-primary/30 rounded-xl p-5">
+                        <div className="flex items-center gap-2 mb-4">
+                            <span className="w-1 h-4 bg-primary rounded-full" />
+                            <h3 className="text-sm font-semibold text-foreground">{editing ? 'ویرایش واحد' : 'واحد جدید'}</h3>
+                        </div>
                         <form onSubmit={handleSubmit} className="space-y-3">
-                            <h3 className="text-sm font-semibold text-gray-700">{editing ? 'ویرایش واحد' : 'واحد جدید'}</h3>
                             <div className="grid grid-cols-3 gap-3">
                                 <div>
-                                    <input type="text" placeholder="نام واحد *" value={data.name}
-                                        onChange={e => setData('name', e.target.value)}
-                                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
-                                    {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                                    <input placeholder="نام واحد *" value={data.name} onChange={e => setData('name', e.target.value)}
+                                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+                                    {errors.name && <p className="text-destructive text-xs mt-1">{errors.name}</p>}
                                 </div>
-                                <div>
-                                    <input type="text" placeholder="کد" value={data.code}
-                                        onChange={e => setData('code', e.target.value)}
-                                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm" />
-                                </div>
+                                <input placeholder="کد (اختیاری)" value={data.code} onChange={e => setData('code', e.target.value)}
+                                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
                                 {!editing && (
-                                    <div>
-                                        <select value={data.parent_id} onChange={e => setData('parent_id', e.target.value)}
-                                            className="w-full border border-gray-300 rounded px-3 py-2 text-sm">
-                                            <option value="">بدون والد</option>
-                                            {departments.map(d => <option key={d.id} value={d.id}>{'—'.repeat(d.level)} {d.name}</option>)}
-                                        </select>
-                                    </div>
+                                    <Select value={data.parent_id} onChange={e => setData('parent_id', e.target.value)}>
+                                        <option value="">بدون والد</option>
+                                        {departments.map(d => <option key={d.id} value={d.id}>{'—'.repeat(d.level)} {d.name}</option>)}
+                                    </Select>
                                 )}
-                                <div>
-                                    <select value={data.status} onChange={e => setData('status', e.target.value as 'active' | 'inactive')}
-                                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm">
-                                        <option value="active">فعال</option>
-                                        <option value="inactive">غیرفعال</option>
-                                    </select>
-                                </div>
+                                <Select value={data.status} onChange={e => setData('status', e.target.value as 'active' | 'inactive')}>
+                                    <option value="active">فعال</option>
+                                    <option value="inactive">غیرفعال</option>
+                                </Select>
                             </div>
                             <div className="flex gap-2">
-                                <button type="submit" disabled={processing} className="bg-blue-600 text-white px-4 py-2 rounded text-sm">
+                                <button type="submit" disabled={processing}
+                                    className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
                                     {processing ? 'در حال ذخیره...' : 'ذخیره'}
                                 </button>
                                 <button type="button" onClick={() => { setShowForm(false); reset(); setEditing(null); }}
-                                    className="bg-gray-100 text-gray-600 px-4 py-2 rounded text-sm">انصراف</button>
+                                    className="bg-muted hover:bg-muted/80 text-muted-foreground px-4 py-2 rounded-lg text-sm transition-colors">
+                                    انصراف
+                                </button>
                             </div>
                         </form>
                     </div>
                 )}
 
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                    <table className="w-full text-right text-sm">
-                        <thead className="bg-gray-50 text-gray-500">
-                            <tr>
-                                <th className="px-4 py-3 font-medium">نام</th>
-                                <th className="px-4 py-3 font-medium">والد</th>
-                                <th className="px-4 py-3 font-medium">کد</th>
-                                <th className="px-4 py-3 font-medium">سمت‌ها</th>
-                                <th className="px-4 py-3 font-medium">وضعیت</th>
-                                <th className="px-4 py-3 font-medium">عملیات</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {departments.map(dept => (
-                                <tr key={dept.id} className="hover:bg-gray-50">
-                                    <td className="px-4 py-3 font-medium text-gray-800">
-                                        {'　'.repeat(dept.level)}{dept.level > 0 && '└ '}{dept.name}
-                                    </td>
-                                    <td className="px-4 py-3 text-gray-500">{dept.parent?.name ?? '---'}</td>
-                                    <td className="px-4 py-3 text-gray-400">{dept.code ?? '---'}</td>
-                                    <td className="px-4 py-3 text-gray-500">{dept.positions_count}</td>
-                                    <td className="px-4 py-3">
-                                        <span className={`text-xs px-2 py-1 rounded-full ${dept.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                                            {dept.status === 'active' ? 'فعال' : 'غیرفعال'}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex gap-3">
-                                            <button onClick={() => handleEdit(dept)} className="text-yellow-600 hover:underline">ویرایش</button>
-                                            <button onClick={() => handleDelete(dept.id)} className="text-red-600 hover:underline">حذف</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                <div className="bg-card border border-border rounded-xl overflow-hidden">
+                    <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3 bg-muted/50 border-b border-border text-xs font-medium text-muted-foreground">
+                        <span>نام</span><span>والد</span><span>سمت‌ها</span><span>وضعیت</span><span>عملیات</span>
+                    </div>
+                    <div className="divide-y divide-border">
+                        {departments.length === 0 ? (
+                            <div className="flex flex-col items-center py-16 text-muted-foreground/40">
+                                <Building2 size={32} className="mb-2" />
+                                <p className="text-sm">واحدی وجود ندارد</p>
+                            </div>
+                        ) : departments.map(dept => (
+                            <div key={dept.id} className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3.5 items-center hover:bg-muted/30 transition-colors group">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-muted-foreground/40 text-xs">{'│  '.repeat(dept.level)}</span>
+                                    <span className="text-sm font-medium text-foreground">{dept.name}</span>
+                                </div>
+                                <span className="text-sm text-muted-foreground">{dept.parent?.name ?? '---'}</span>
+                                <span className="text-sm text-muted-foreground">{dept.positions_count}</span>
+                                <span className={`text-xs px-2.5 py-1 rounded-full font-medium w-fit ${dept.status === 'active' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
+                                    {dept.status === 'active' ? 'فعال' : 'غیرفعال'}
+                                </span>
+                                <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={() => handleEdit(dept)} className="text-xs text-primary hover:underline">ویرایش</button>
+                                    <button onClick={() => { if (confirm('حذف شود؟')) router.delete(depts.destroy(dept.id).url); }}
+                                        className="text-xs text-destructive/70 hover:text-destructive transition-colors">حذف</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </>
     );
 }
