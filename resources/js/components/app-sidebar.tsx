@@ -46,7 +46,7 @@ const mainNavItems: NavItem[] = [
         icon: Inbox,
     },
     {
-        title: 'نامه‌ها',
+        title: 'مکاتیب',
         href: letters.index(),
         icon: LetterText,
     },
@@ -56,7 +56,7 @@ const mainNavItems: NavItem[] = [
         icon: BarChart2,
     },
     {
-        title: 'بایگانی',
+        title: 'آرشیف',
         href:  archivesRoute.index(),
         icon:  Archive,
     },
@@ -64,17 +64,17 @@ const mainNavItems: NavItem[] = [
 
 const adminNavItems: NavItem[] = [
     {
-        title: 'سازمان‌ها',
+        title: 'وزارتخانه‌ها',
         href:  adminOrgs.index(),
         icon:  Building,
     },
     {
-        title: 'کاربران',
+        title: 'مدیریت کارمندان',
         href: adminUsers.index(),
         icon: Users,
     },
     {
-        title: 'واحدها',
+        title: 'ریاست ها',
         href: adminDepartments.index(),
         icon: Building2,
     },

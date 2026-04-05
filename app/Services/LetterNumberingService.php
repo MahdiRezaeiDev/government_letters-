@@ -7,9 +7,9 @@ use App\Models\Letter;
 class LetterNumberingService
 {
     private array $prefixes = [
-        'incoming' => 'و',
-        'outgoing' => 'ص',
-        'internal' => 'د',
+        'incoming' => 'IN',
+        'outgoing' => 'OUT',
+        'internal' => 'INT',
     ];
 
     public function generate(string $letterType, int $organizationId): string
