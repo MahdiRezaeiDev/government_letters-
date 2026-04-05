@@ -31,5 +31,8 @@ class Position extends Model
         return $this->belongsTo(Department::class);
     }
 
-
+    public function userPositions()
+    {
+        return $this->hasMany(UserPosition::class);
+    }
 }
