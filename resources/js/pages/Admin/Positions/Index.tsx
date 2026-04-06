@@ -60,7 +60,7 @@ export default function Index({ positions: data, departments }: Props) {
     return (
         <>
             <Head title="سمت‌ها" />
-            <div className="p-6 max-w-5xl mx-auto space-y-5">
+            <div className="p-6 w-5xl mx-auto space-y-5">
 
                 <div className="flex items-center justify-between">
                     <div>

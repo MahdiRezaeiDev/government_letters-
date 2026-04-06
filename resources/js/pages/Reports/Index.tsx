@@ -1,18 +1,25 @@
 import { Head, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/layouts/app-layout';
 import { useState } from 'react';
+import { Link } from '@inertiajs/react';
 import * as letterRoutes from '@/routes/letters';
 import * as reportRoutes from '@/routes/reports';
+import { BarChart2, AlertTriangle } from 'lucide-react';
 
-interface Stats { total: number; incoming: number; outgoing: number; internal: number; pending: number; approved: number; }
+interface Stats {
+    total: number; incoming: number; outgoing: number;
+    internal: number; pending: number; approved: number;
+}
 interface CategoryStat { name: string; count: number; }
 interface Letter {
-    id: number; subject: string; due_date: string; final_status: string;
-    category: { name: string } | null; creator: { first_name: string; last_name: string } | null;
+    id: number; subject: string; due_date: string;
+    category: { name: string } | null;
+    creator: { first_name: string; last_name: string } | null;
 }
 interface Props {
-    stats: Stats; byPriority: Record<string, number>; byCategory: CategoryStat[];
-    daily: Record<string, number>; overdue: Letter[]; filters: { from: string; to: string };
+    stats: Stats; byPriority: Record<string, number>;
+    byCategory: CategoryStat[]; daily: Record<string, number>;
+    overdue: Letter[]; filters: { from: string; to: string };
 }
 
 const PRIORITY_LABEL: Record<string, string> = {
@@ -20,83 +27,102 @@ const PRIORITY_LABEL: Record<string, string> = {
 };
 
 const PRIORITY_COLOR: Record<string, string> = {
-    low: 'bg-gray-400', normal: 'bg-blue-400', high: 'bg-yellow-400',
-    urgent: 'bg-orange-400', very_urgent: 'bg-red-500',
+    low: 'bg-muted-foreground/30', normal: 'bg-primary',
+    high: 'bg-amber-400', urgent: 'bg-orange-500', very_urgent: 'bg-destructive',
 };
+
+function StatCard({ label, value, sub }: { label: string; value: number; sub?: string }) {
+    return (
+        <div className="bg-card border border-border rounded-xl p-4">
+            <p className="text-2xl font-bold tabular-nums text-foreground">{value}</p>
+            <p className="text-xs text-muted-foreground mt-1">{label}</p>
+            {sub && <p className="text-xs text-primary mt-0.5">{sub}</p>}
+        </div>
+    );
+}
 
 export default function Index({ stats, byPriority, byCategory, daily, overdue, filters }: Props) {
 
     const [from, setFrom] = useState(filters.from);
     const [to,   setTo]   = useState(filters.to);
 
-    function handleFilter() {
-        router.get(reportRoutes.index().url, { from, to }, { preserveState: true });
-    }
-
     const maxDaily    = Math.max(...Object.values(daily), 1);
     const maxCategory = Math.max(...byCategory.map(c => c.count), 1);
+    const maxPriority = Math.max(...Object.values(byPriority), 1);
 
     return (
         <AuthenticatedLayout breadcrumbs={[{ title: 'گزارش‌ها', href: reportRoutes.index().url }]}>
             <Head title="گزارش‌ها" />
-            <div className="p-6 space-y-6">
+            <div className="p-6 max-w-6xl mx-auto space-y-5">
 
-                <div className="bg-white rounded-lg shadow p-4 flex gap-4 items-end">
+                {/* هدر */}
+                <div className="flex items-center justify-between">
                     <div>
-                        <label className="block text-xs text-gray-500 mb-1">از تاریخ</label>
+                        <h1 className="text-lg font-bold text-foreground">گزارش‌ها</h1>
+                        <p className="text-xs text-muted-foreground mt-0.5">آمار و تحلیل نامه‌ها</p>
+                    </div>
+
+                    {/* فیلتر تاریخ */}
+                    <div className="flex items-center gap-2">
                         <input type="date" value={from} onChange={e => setFrom(e.target.value)}
-                            className="border border-gray-300 rounded px-3 py-2 text-sm" />
-                    </div>
-                    <div>
-                        <label className="block text-xs text-gray-500 mb-1">تا تاریخ</label>
+                            className="bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+                        <span className="text-muted-foreground text-xs">تا</span>
                         <input type="date" value={to} onChange={e => setTo(e.target.value)}
-                            className="border border-gray-300 rounded px-3 py-2 text-sm" />
+                            className="bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" />
+                        <button onClick={() => router.get(reportRoutes.index().url, { from, to }, { preserveState: true })}
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                            اعمال
+                        </button>
                     </div>
-                    <button onClick={handleFilter} className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">اعمال فیلتر</button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                    {[
-                        { label: 'کل نامه‌ها', value: stats.total,    color: 'text-gray-700',   bg: 'bg-gray-50' },
-                        { label: 'وارده',       value: stats.incoming, color: 'text-blue-700',   bg: 'bg-blue-50' },
-                        { label: 'صادره',       value: stats.outgoing, color: 'text-green-700',  bg: 'bg-green-50' },
-                        { label: 'داخلی',       value: stats.internal, color: 'text-purple-700', bg: 'bg-purple-50' },
-                        { label: 'در انتظار',   value: stats.pending,  color: 'text-orange-700', bg: 'bg-orange-50' },
-                        { label: 'تأیید شده',   value: stats.approved, color: 'text-teal-700',   bg: 'bg-teal-50' },
-                    ].map((item, i) => (
-                        <div key={i} className={`${item.bg} rounded-lg p-4 border`}>
-                            <p className={`text-3xl font-bold ${item.color}`}>{item.value}</p>
-                            <p className="text-sm text-gray-500 mt-1">{item.label}</p>
+                {/* آمار کلی */}
+                <div className="grid grid-cols-3 gap-3 lg:grid-cols-6">
+                    <StatCard label="کل نامه‌ها"   value={stats.total} />
+                    <StatCard label="وارده"         value={stats.incoming} />
+                    <StatCard label="صادره"         value={stats.outgoing} />
+                    <StatCard label="داخلی"         value={stats.internal} />
+                    <StatCard label="در انتظار"     value={stats.pending} />
+                    <StatCard label="تأیید شده"     value={stats.approved} />
+                </div>
+
+                {/* نمودار روزانه + اولویت */}
+                <div className="grid grid-cols-3 gap-5">
+
+                    {/* نمودار روزانه */}
+                    <div className="col-span-2 bg-card border border-border rounded-xl p-5">
+                        <div className="flex items-center gap-2 mb-4">
+                            <BarChart2 size={14} className="text-primary" />
+                            <h2 className="text-sm font-semibold text-foreground">نامه‌های ۳۰ روز اخیر</h2>
                         </div>
-                    ))}
-                </div>
-
-                <div className="grid grid-cols-3 gap-6">
-                    <div className="col-span-2 bg-white rounded-lg shadow p-6">
-                        <h2 className="text-sm font-semibold text-gray-600 mb-4">نامه‌های ۳۰ روز اخیر</h2>
-                        <div className="flex items-end gap-1 h-32">
+                        <div className="flex items-end gap-0.5 h-28">
                             {Object.entries(daily).map(([date, count]) => (
-                                <div key={date} className="flex-1 flex flex-col items-center gap-1" title={`${date}: ${count} نامه`}>
-                                    <div className="w-full bg-blue-400 rounded-t transition-all hover:bg-blue-600"
-                                        style={{ height: `${(count / maxDaily) * 100}%`, minHeight: '2px' }} />
+                                <div key={date} className="flex-1 flex flex-col items-center group relative" title={`${date}: ${count}`}>
+                                    <div className="w-full bg-primary/80 hover:bg-primary rounded-t transition-all"
+                                        style={{ height: `${(count / maxDaily) * 100}%`, minHeight: count > 0 ? '3px' : '0' }} />
+                                    {/* tooltip */}
+                                    <div className="absolute bottom-full mb-1 bg-foreground text-background text-xs px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                        {count}
+                                    </div>
                                 </div>
                             ))}
                         </div>
-                        <p className="text-xs text-gray-400 mt-2 text-center">هر ستون = یک روز</p>
+                        <p className="text-xs text-muted-foreground mt-2 text-center">هر ستون = یک روز</p>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-sm font-semibold text-gray-600 mb-4">بر اساس اولویت</h2>
+                    {/* اولویت */}
+                    <div className="bg-card border border-border rounded-xl p-5">
+                        <h2 className="text-sm font-semibold text-foreground mb-4">بر اساس اولویت</h2>
                         <div className="space-y-3">
                             {Object.entries(byPriority).map(([priority, count]) => (
                                 <div key={priority}>
-                                    <div className="flex justify-between text-xs text-gray-600 mb-1">
-                                        <span>{PRIORITY_LABEL[priority] ?? priority}</span>
-                                        <span>{count}</span>
+                                    <div className="flex justify-between text-xs mb-1">
+                                        <span className="text-muted-foreground">{PRIORITY_LABEL[priority] ?? priority}</span>
+                                        <span className="text-foreground font-medium tabular-nums">{count}</span>
                                     </div>
-                                    <div className="bg-gray-100 rounded-full h-2">
-                                        <div className={`${PRIORITY_COLOR[priority] ?? 'bg-gray-400'} h-2 rounded-full`}
-                                            style={{ width: `${(count / stats.total) * 100}%` }} />
+                                    <div className="bg-muted rounded-full h-1.5 overflow-hidden">
+                                        <div className={`${PRIORITY_COLOR[priority]} h-full rounded-full transition-all`}
+                                            style={{ width: `${(count / maxPriority) * 100}%` }} />
                                     </div>
                                 </div>
                             ))}
@@ -104,43 +130,46 @@ export default function Index({ stats, byPriority, byCategory, daily, overdue, f
                     </div>
                 </div>
 
+                {/* دسته‌بندی */}
                 {byCategory.length > 0 && (
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-sm font-semibold text-gray-600 mb-4">بر اساس دسته‌بندی</h2>
+                    <div className="bg-card border border-border rounded-xl p-5">
+                        <h2 className="text-sm font-semibold text-foreground mb-4">بر اساس دسته‌بندی</h2>
                         <div className="space-y-3">
                             {byCategory.map((cat, i) => (
-                                <div key={i}>
-                                    <div className="flex justify-between text-xs text-gray-600 mb-1">
-                                        <span>{cat.name}</span><span>{cat.count}</span>
-                                    </div>
-                                    <div className="bg-gray-100 rounded-full h-2">
-                                        <div className="bg-purple-400 h-2 rounded-full"
+                                <div key={i} className="flex items-center gap-3">
+                                    <span className="text-sm text-foreground w-32 truncate">{cat.name}</span>
+                                    <div className="flex-1 bg-muted rounded-full h-1.5 overflow-hidden">
+                                        <div className="bg-primary h-full rounded-full"
                                             style={{ width: `${(cat.count / maxCategory) * 100}%` }} />
                                     </div>
+                                    <span className="text-xs text-muted-foreground tabular-nums w-8 text-left">{cat.count}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
                 )}
 
+                {/* معوق */}
                 {overdue.length > 0 && (
-                    <div className="bg-white rounded-lg shadow">
-                        <div className="px-6 py-4 border-b">
-                            <h2 className="font-semibold text-red-600">نامه‌های معوق ({overdue.length})</h2>
+                    <div className="bg-card border border-border rounded-xl overflow-hidden">
+                        <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border">
+                            <AlertTriangle size={14} className="text-destructive" />
+                            <h2 className="text-sm font-semibold text-destructive">نامه‌های معوق ({overdue.length})</h2>
                         </div>
-                        <div className="divide-y">
+                        <div className="divide-y divide-border">
                             {overdue.map(letter => (
-                                <div key={letter.id} className="px-6 py-3 flex justify-between items-center hover:bg-gray-50">
+                                <div key={letter.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-muted/30 transition-colors">
                                     <div>
-                                        <p className="text-sm font-medium text-gray-800">{letter.subject}</p>
-                                        <p className="text-xs text-gray-400 mt-0.5">
+                                        <p className="text-sm font-medium text-foreground">{letter.subject}</p>
+                                        <p className="text-xs text-muted-foreground mt-0.5">
                                             {letter.creator ? `${letter.creator.first_name} ${letter.creator.last_name}` : '---'}
-                                            {letter.category && ` · ${letter.category.name}`}
+                                            {letter.category && <span className="mr-2">· {letter.category.name}</span>}
                                         </p>
                                     </div>
                                     <div className="text-left">
-                                        <p className="text-xs text-red-500 font-medium">مهلت: {letter.due_date}</p>
-                                        <a href={letterRoutes.show(letter.id).url} className="text-xs text-blue-600 hover:underline">مشاهده</a>
+                                        <p className="text-xs text-destructive font-medium">مهلت: {letter.due_date}</p>
+                                        <Link href={letterRoutes.show(letter.id).url}
+                                            className="text-xs text-primary hover:underline mt-0.5 block">مشاهده</Link>
                                     </div>
                                 </div>
                             ))}

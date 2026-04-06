@@ -21,14 +21,17 @@ class Letter extends Model
         'final_status', 'created_by', 'updated_by',
     ];
 
-    protected $casts = [
-        'draft_content'     => 'array',
-        'cc_recipients'     => 'array',
-        'date'              => JalaliDateCast::class,
-        'due_date'          => JalaliDateCast::class,
-        'response_deadline' => JalaliDateCast::class,
-        'is_draft'          => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'draft_content'     => 'array',
+            'cc_recipients'     => 'array',
+            'date'              => JalaliDateCast::class,
+            'due_date'          => JalaliDateCast::class,
+            'response_deadline' => JalaliDateCast::class,
+            'is_draft'          => 'boolean',
+        ];
+    }
 
     // ─── سازمان و دسته‌بندی ───────────────
 
