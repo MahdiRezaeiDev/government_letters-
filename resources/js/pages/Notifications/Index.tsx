@@ -1,5 +1,4 @@
 import { Head, router } from '@inertiajs/react';
-import AuthenticatedLayout from '@/layouts/app-layout';
 import { Link } from '@inertiajs/react';
 import { Bell, CheckCheck } from 'lucide-react';
 import * as notifs from '@/routes/notifications';
