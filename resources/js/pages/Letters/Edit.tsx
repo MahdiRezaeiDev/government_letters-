@@ -1,4 +1,6 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import AuthenticatedLayout from '@/layouts/app-layout';
+import { ChevronDown } from 'lucide-react';
 import * as letters from '@/routes/letters';
 
 interface LetterCategory { id: number; name: string; }
@@ -13,41 +15,64 @@ interface Letter {
 interface Props { letter: Letter; categories: LetterCategory[]; }
 
 interface LetterForm {
-    letter_type: 'incoming' | 'outgoing' | 'internal';
+    letter_type: 'outgoing' | 'internal';
     subject: string; content: string; summary: string;
     priority: 'low' | 'normal' | 'high' | 'urgent' | 'very_urgent';
     security_level: 'public' | 'internal' | 'confidential' | 'secret' | 'top_secret';
     category_id: string; date: string; due_date: string; _method: 'PUT';
 }
 
-const priorityColors = {
-    low: { light: 'bg-gray-100 text-gray-700', dark: 'dark:bg-gray-800 dark:text-gray-300' },
-    normal: { light: 'bg-blue-100 text-blue-700', dark: 'dark:bg-blue-900/30 dark:text-blue-300' },
-    high: { light: 'bg-orange-100 text-orange-700', dark: 'dark:bg-orange-900/30 dark:text-orange-300' },
-    urgent: { light: 'bg-red-100 text-red-700', dark: 'dark:bg-red-900/30 dark:text-red-300' },
-    very_urgent: { light: 'bg-purple-100 text-purple-700', dark: 'dark:bg-purple-900/30 dark:text-purple-300' },
-};
+function Label({ children, required }: { children: React.ReactNode; required?: boolean }) {
+    return (
+        <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+            {children}{required && <span className="text-destructive mr-0.5">*</span>}
+        </label>
+    );
+}
 
-const securityLabels = {
-    public: 'عمومی',
-    internal: 'داخلی',
-    confidential: 'محرمانه',
-    secret: 'سری',
-    top_secret: 'بسیار سری',
-};
+function Input({ error, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { error?: string }) {
+    return (
+        <div>
+            <input {...props} className={`w-full bg-background border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all ${error ? 'border-destructive' : 'border-border'}`} />
+            {error && <p className="text-destructive text-xs mt-1">{error}</p>}
+        </div>
+    );
+}
 
-const securityColors = {
-    public: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-    internal: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-    confidential: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
-    secret: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-    top_secret: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-};
+function Select({ error, children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement> & { error?: string }) {
+    return (
+        <div className="relative">
+            <select {...props} className={`w-full appearance-none bg-background border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all pr-8 ${error ? 'border-destructive' : 'border-border'}`}>
+                {children}
+            </select>
+            <ChevronDown size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            {error && <p className="text-destructive text-xs mt-1">{error}</p>}
+        </div>
+    );
+}
+
+function Textarea({ error, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { error?: string }) {
+    return (
+        <div>
+            <textarea {...props} className={`w-full bg-background border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all resize-none ${error ? 'border-destructive' : 'border-border'}`} />
+            {error && <p className="text-destructive text-xs mt-1">{error}</p>}
+        </div>
+    );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+    return (
+        <div className="flex items-center gap-2 mb-4">
+            <span className="w-1 h-4 bg-primary rounded-full" />
+            <h3 className="text-sm font-semibold text-foreground">{children}</h3>
+        </div>
+    );
+}
 
 export default function Edit({ letter, categories }: Props) {
 
     const { data, setData, put, processing, errors } = useForm<LetterForm>({
-        letter_type:    letter.letter_type,
+        letter_type:    letter.letter_type === 'incoming' ? 'outgoing' : letter.letter_type as 'outgoing' | 'internal',
         subject:        letter.subject,
         content:        letter.content ?? '',
         summary:        letter.summary ?? '',
@@ -65,229 +90,130 @@ export default function Edit({ letter, categories }: Props) {
     }
 
     return (
-        <>
+        <AuthenticatedLayout breadcrumbs={[
+            { title: 'نامه‌ها', href: letters.index().url },
+            { title: letter.subject, href: letters.show(letter.id).url },
+            { title: 'ویرایش', href: letters.edit(letter.id).url },
+        ]}>
             <Head title="ویرایش نامه" />
-            <main className="flex-1 overflow-auto p-6 space-y-6 bg-gray-50 dark:bg-gray-900/50">
-                
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ویرایش نامه</h1>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">تغییرات مورد نظر را اعمال کنید</p>
-                    </div>
-                    <button 
-                        onClick={() => router.visit(letters.show(letter.id).url)}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                    >
-                        بازگشت به نامه
-                    </button>
-                </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    
+            <div className="p-6 max-w-3xl mx-auto">
+                <form onSubmit={handleSubmit} className="space-y-5">
+
                     {/* نوع نامه */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
-                            نوع نامه <span className="text-red-500">*</span>
-                        </label>
-                        <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-card border border-border rounded-xl p-5">
+                        <SectionTitle>نوع نامه</SectionTitle>
+                        <div className="grid grid-cols-2 gap-2">
                             {([
-                                { value: 'outgoing', label: 'نامه صادره', icon: '📤' },
-                                { value: 'internal', label: 'نامه داخلی', icon: '🏢' },
+                                { value: 'outgoing', label: 'صادره',  desc: 'ارسال به سازمان دیگر' },
+                                { value: 'internal', label: 'داخلی',  desc: 'بین واحدهای داخلی' },
                             ] as const).map(type => (
                                 <button key={type.value} type="button"
                                     onClick={() => setData('letter_type', type.value)}
-                                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                                        data.letter_type === type.value 
-                                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-                                            : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700'
+                                    className={`flex flex-col items-start p-3 rounded-lg border-2 transition-all text-right ${
+                                        data.letter_type === type.value
+                                            ? 'border-primary bg-primary/5'
+                                            : 'border-border hover:border-primary/40'
                                     }`}>
-                                    <span className="text-xl">{type.icon}</span>
-                                    <span className={`text-sm font-medium ${
-                                        data.letter_type === type.value 
-                                            ? 'text-blue-700 dark:text-blue-400' 
-                                            : 'text-gray-700 dark:text-gray-300'
-                                    }`}>
+                                    <span className={`text-sm font-semibold ${data.letter_type === type.value ? 'text-primary' : 'text-foreground'}`}>
                                         {type.label}
                                     </span>
+                                    <span className="text-xs text-muted-foreground mt-0.5">{type.desc}</span>
                                 </button>
                             ))}
                         </div>
                     </div>
 
-                    {/* موضوع */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            موضوع <span className="text-red-500">*</span>
-                        </label>
-                        <input 
-                            type="text" 
-                            value={data.subject} 
-                            onChange={e => setData('subject', e.target.value)}
-                            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:bg-gray-700 dark:text-white transition-all"
-                            placeholder="موضوع نامه را وارد کنید..."
-                        />
-                        {errors.subject && (
-                            <p className="text-red-500 text-xs mt-1">{errors.subject}</p>
-                        )}
+                    {/* محتوا */}
+                    <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+                        <SectionTitle>محتوای نامه</SectionTitle>
+
+                        <div>
+                            <Label required>موضوع</Label>
+                            <Input value={data.subject} onChange={e => setData('subject', e.target.value)}
+                                error={errors.subject} />
+                        </div>
+
+                        <div>
+                            <Label>خلاصه</Label>
+                            <Textarea value={data.summary} onChange={e => setData('summary', e.target.value)}
+                                rows={2} placeholder="خلاصه‌ای از نامه..." />
+                        </div>
+
+                        <div>
+                            <Label>متن نامه</Label>
+                            <Textarea value={data.content} onChange={e => setData('content', e.target.value)}
+                                rows={8} placeholder="متن کامل نامه..." />
+                        </div>
                     </div>
 
-                    {/* خلاصه */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            خلاصه نامه
-                        </label>
-                        <textarea 
-                            value={data.summary} 
-                            onChange={e => setData('summary', e.target.value)}
-                            rows={3} 
-                            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:bg-gray-700 dark:text-white transition-all resize-none"
-                            placeholder="خلاصه‌ای از نامه را وارد کنید..."
-                        />
-                    </div>
+                    {/* تنظیمات */}
+                    <div className="bg-card border border-border rounded-xl p-5">
+                        <SectionTitle>تنظیمات</SectionTitle>
+                        <div className="grid grid-cols-2 gap-4">
 
-                    {/* متن کامل */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            متن کامل نامه
-                        </label>
-                        <textarea 
-                            value={data.content} 
-                            onChange={e => setData('content', e.target.value)}
-                            rows={8} 
-                            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:bg-gray-700 dark:text-white transition-all font-mono"
-                            placeholder="متن نامه را در اینجا بنویسید..."
-                        />
-                    </div>
+                            <div>
+                                <Label>اولویت</Label>
+                                <Select value={data.priority}
+                                    onChange={e => setData('priority', e.target.value as LetterForm['priority'])}>
+                                    <option value="low">کم</option>
+                                    <option value="normal">عادی</option>
+                                    <option value="high">مهم</option>
+                                    <option value="urgent">فوری</option>
+                                    <option value="very_urgent">خیلی فوری</option>
+                                </Select>
+                            </div>
 
-                    {/* اولویت و سطح امنیت */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* اولویت */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                                اولویت
-                            </label>
-                            <div className="grid grid-cols-2 gap-2">
-                                {(['low', 'normal', 'high', 'urgent', 'very_urgent'] as const).map(priority => {
-                                    const priorityName = {
-                                        low: 'کم',
-                                        normal: 'عادی',
-                                        high: 'مهم',
-                                        urgent: 'فوری',
-                                        very_urgent: 'خیلی فوری'
-                                    }[priority];
-                                    
-                                    const isActive = data.priority === priority;
-                                    const colors = priorityColors[priority];
-                                    
-                                    return (
-                                        <button
-                                            key={priority}
-                                            type="button"
-                                            onClick={() => setData('priority', priority)}
-                                            className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                                                isActive 
-                                                    ? `${colors.light} ${colors.dark} ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-gray-800` 
-                                                    : `bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700`
-                                            }`}
-                                        >
-                                            {priorityName}
-                                        </button>
-                                    );
-                                })}
+                            <div>
+                                <Label>سطح امنیت</Label>
+                                <Select value={data.security_level}
+                                    onChange={e => setData('security_level', e.target.value as LetterForm['security_level'])}>
+                                    <option value="public">عمومی</option>
+                                    <option value="internal">داخلی</option>
+                                    <option value="confidential">محرمانه</option>
+                                    <option value="secret">سری</option>
+                                    <option value="top_secret">بسیار سری</option>
+                                </Select>
+                            </div>
+
+                            <div>
+                                <Label>دسته‌بندی</Label>
+                                <Select value={data.category_id}
+                                    onChange={e => setData('category_id', e.target.value)}>
+                                    <option value="">انتخاب کنید</option>
+                                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </Select>
+                            </div>
+
+                            <div>
+                                <Label required>تاریخ</Label>
+                                <Input type="date" value={data.date}
+                                    onChange={e => setData('date', e.target.value)}
+                                    error={errors.date} />
+                            </div>
+
+                            <div className="col-span-2">
+                                <Label>مهلت اقدام</Label>
+                                <Input type="date" value={data.due_date}
+                                    onChange={e => setData('due_date', e.target.value)} />
                             </div>
                         </div>
-
-                        {/* سطح امنیت */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                                سطح امنیت
-                            </label>
-                            <select 
-                                value={data.security_level} 
-                                onChange={e => setData('security_level', e.target.value as LetterForm['security_level'])}
-                                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:bg-gray-700 dark:text-white cursor-pointer"
-                            >
-                                {Object.entries(securityLabels).map(([value, label]) => (
-                                    <option key={value} value={value}>{label}</option>
-                                ))}
-                            </select>
-                            {data.security_level && (
-                                <div className="mt-2">
-                                    <span className={`inline-block px-2 py-1 rounded text-xs ${securityColors[data.security_level]}`}>
-                                        سطح {securityLabels[data.security_level]}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
                     </div>
 
-                    {/* دسته‌بندی و تاریخ */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* دسته‌بندی */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                دسته‌بندی
-                            </label>
-                            <select 
-                                value={data.category_id} 
-                                onChange={e => setData('category_id', e.target.value)}
-                                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:bg-gray-700 dark:text-white cursor-pointer"
-                            >
-                                <option value="">انتخاب دسته‌بندی</option>
-                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
-                        </div>
-
-                        {/* تاریخ */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                تاریخ نامه <span className="text-red-500">*</span>
-                            </label>
-                            <input 
-                                type="date" 
-                                value={data.date} 
-                                onChange={e => setData('date', e.target.value)}
-                                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:bg-gray-700 dark:text-white transition-all"
-                            />
-                        </div>
-                    </div>
-
-                    {/* مهلت اقدام */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            مهلت اقدام
-                        </label>
-                        <input 
-                            type="date" 
-                            value={data.due_date} 
-                            onChange={e => setData('due_date', e.target.value)}
-                            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:bg-gray-700 dark:text-white transition-all"
-                        />
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            در صورت وارد نکردن مهلت، نامه بدون محدودیت زمانی در کارتابل باقی می‌ماند
-                        </p>
-                    </div>
-
-                    {/* دکمه‌های اقدام */}
-                    <div className="flex gap-3 pt-4">
-                        <button 
-                            type="submit" 
-                            disabled={processing}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                        >
+                    {/* دکمه‌ها */}
+                    <div className="flex gap-3">
+                        <button type="submit" disabled={processing}
+                            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
                             {processing ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
                         </button>
-                        <button 
-                            type="button" 
+                        <button type="button"
                             onClick={() => router.visit(letters.show(letter.id).url)}
-                            className="px-6 py-2.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
-                        >
+                            className="px-6 bg-muted hover:bg-muted/80 text-muted-foreground py-2.5 rounded-lg text-sm font-medium transition-colors">
                             انصراف
                         </button>
                     </div>
                 </form>
-            </main>
-        </>
+            </div>
+        </AuthenticatedLayout>
     );
 }
