@@ -280,7 +280,6 @@ export default function Create({ categories, organizations, departments, positio
                                         // label="تاریخ تولد"
                                         value={data.date}
                                         error={errors.date}
-                                        placeholder="انتخاب کنید..."
                                         onChange={(date) => setData('date', date)}/>
                             </div>
 
@@ -290,7 +289,6 @@ export default function Create({ categories, organizations, departments, positio
                                         // label="تاریخ تولد"
                                         value={data.due_date}
                                         error={errors.due_date}
-                                        placeholder="انتخاب کنید..."
                                         onChange={(date) => setData('due_date', date)} />
                             </div>
                         </div>
