@@ -1,8 +1,8 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
+import PersianDatePicker from '@/components/PersianDatePicker';
 import TempFileUploader, { type TempFile } from '@/Components/TempFileUploader';
-import AuthenticatedLayout from '@/layouts/app-layout';
 import * as letters from '@/routes/letters';
 
 // ─── Types ───────────────────────────────
@@ -272,9 +272,14 @@ export default function Create({ categories, organizations, departments, positio
 
                             <div>
                                 <Label required>تاریخ</Label>
-                                <Input type="date" value={data.date}
-                                    onChange={e => setData('date', e.target.value)}
-                                    error={errors.date} />
+
+                                    <PersianDatePicker
+                                        label="تاریخ تولد"
+                                        value={data.date}
+                                        error={errors.date}
+                                        placeholder="انتخاب کنید..."
+                                        onChange={(date) => setData('date', date)}
+            />
                             </div>
 
                             <div className="col-span-2">
