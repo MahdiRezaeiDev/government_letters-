@@ -95,11 +95,14 @@ export default function Create({ categories, organizations, departments, positio
     const { data, setData, post, processing, errors } = useForm<LetterForm>({
         letter_type: '', subject: '', content: '', summary: '',
         priority: 'normal', security_level: 'internal', category_id: '',
-        date: new Date().toISOString().split('T')[0], due_date: '',
+        date: '', due_date: '',
         sender_id: '', sender_department_id: '',
         recipient_id: '', recipient_department_id: '',
         temp_files: [],
     });
+
+    console.log(data.date);
+    
 
     const [senderPos,    setSenderPos]    = useState<Position[]>([]);
     const [recipientPos, setRecipientPos] = useState<Position[]>([]);
@@ -274,18 +277,21 @@ export default function Create({ categories, organizations, departments, positio
                                 <Label required>تاریخ</Label>
 
                                     <PersianDatePicker
-                                        label="تاریخ تولد"
+                                        // label="تاریخ تولد"
                                         value={data.date}
                                         error={errors.date}
                                         placeholder="انتخاب کنید..."
-                                        onChange={(date) => setData('date', date)}
-            />
+                                        onChange={(date) => setData('date', date)}/>
                             </div>
 
                             <div className="col-span-2">
                                 <Label>مهلت اقدام</Label>
-                                <Input type="date" value={data.due_date}
-                                    onChange={e => setData('due_date', e.target.value)} />
+                                <PersianDatePicker
+                                        // label="تاریخ تولد"
+                                        value={data.due_date}
+                                        error={errors.due_date}
+                                        placeholder="انتخاب کنید..."
+                                        onChange={(date) => setData('due_date', date)} />
                             </div>
                         </div>
                     </div>
