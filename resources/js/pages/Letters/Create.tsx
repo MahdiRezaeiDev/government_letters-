@@ -1,8 +1,10 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
+import Error from "@/components/input-error";
 import PersianDatePicker from '@/components/PersianDatePicker';
 import TempFileUploader, { type TempFile } from '@/Components/TempFileUploader';
+import { getToday } from '@/lib/utils';
 import * as letters from '@/routes/letters';
 
 // ─── Types ───────────────────────────────
@@ -95,13 +97,13 @@ export default function Create({ categories, organizations, departments, positio
     const { data, setData, post, processing, errors } = useForm<LetterForm>({
         letter_type: '', subject: '', content: '', summary: '',
         priority: 'normal', security_level: 'internal', category_id: '',
-        date: '', due_date: '',
+        date: getToday(), due_date: '',
         sender_id: '', sender_department_id: '',
         recipient_id: '', recipient_department_id: '',
         temp_files: [],
     });
 
-    console.log(data.date);
+    console.log(data);
     
 
     const [senderPos,    setSenderPos]    = useState<Position[]>([]);
@@ -126,7 +128,7 @@ export default function Create({ categories, organizations, departments, positio
         e.preventDefault();
         post(letters.store().url);
     }
-
+    
     return (
         <>
             <Head title="نامه جدید" />
@@ -215,7 +217,6 @@ export default function Create({ categories, organizations, departments, positio
                     {/* ─── محتوا ─── */}
                     <div className="bg-card border border-border rounded-xl p-5 space-y-4">
                         <SectionTitle>محتوای نامه</SectionTitle>
-
                         <div>
                             <Label required>موضوع</Label>
                             <Input value={data.subject} onChange={e => setData('subject', e.target.value)}
@@ -276,20 +277,18 @@ export default function Create({ categories, organizations, departments, positio
                             <div>
                                 <Label required>تاریخ</Label>
 
-                                    <PersianDatePicker
-                                        // label="تاریخ تولد"
-                                        value={data.date}
-                                        error={errors.date}
-                                        onChange={(date) => setData('date', date)}/>
+                                <PersianDatePicker
+                                    value={data.date}
+                                    onChange={(date) => setData('date', date)}/>
+                                <Error message={errors.date} />
                             </div>
 
                             <div className="col-span-2">
                                 <Label>مهلت اقدام</Label>
                                 <PersianDatePicker
-                                        // label="تاریخ تولد"
                                         value={data.due_date}
-                                        error={errors.due_date}
                                         onChange={(date) => setData('due_date', date)} />
+                                <Error message={errors.date} />
                             </div>
                         </div>
                     </div>
