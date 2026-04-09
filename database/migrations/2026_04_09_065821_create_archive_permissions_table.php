@@ -15,8 +15,9 @@ return new class extends Migration
             $table->enum('permission_type', ['read', 'write', 'delete', 'manage']);
             $table->timestamps();
             
-            $table->unique(['archive_id', 'position_id', 'permission_type']);
-            $table->index('position_id');
+            // ✅ نام کوتاه‌تر برای unique index
+            $table->unique(['archive_id', 'position_id', 'permission_type'], 'arch_perm_unique');
+            $table->index('position_id', 'arch_perm_pos_idx');
         });
     }
 

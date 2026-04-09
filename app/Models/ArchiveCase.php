@@ -1,4 +1,5 @@
 <?php
+// app/Models/ArchiveCase.php
 
 namespace App\Models;
 
@@ -11,7 +12,7 @@ class ArchiveCase extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'cases';
+    protected $table = 'archive_cases';  // ← نام جدول جدید
 
     protected $fillable = [
         'archive_id',
@@ -31,8 +32,6 @@ class ArchiveCase extends Model
         'retention_period' => 'integer',
     ];
 
-    // ─── Relationships ─────────────────────────────────────────
-
     public function archive(): BelongsTo
     {
         return $this->belongsTo(Archive::class);
@@ -45,42 +44,13 @@ class ArchiveCase extends Model
 
     public function letters(): BelongsToMany
     {
-        return $this->belongsToMany(Letter::class, 'case_letters')
-            ->withPivot('archived_at', 'archived_by')
-            ->withTimestamps();
+        return $this->belongsToMany(Letter::class, 'case_letters', 'archive_case_id', 'letter_id')
+                    ->withPivot('archived_at', 'archived_by')
+                    ->withTimestamps();
     }
-
-    // ─── Scopes ────────────────────────────────────────────────
-
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-
-    public function scopeExpired($query)
-    {
-        return $query->where('expiry_date', '<', now());
-    }
-
-    // ─── Helpers ───────────────────────────────────────────────
 
     public function isExpired(): bool
     {
         return $this->expiry_date && $this->expiry_date < now();
-    }
-
-    public function getRetentionLabelAttribute(): string
-    {
-        if (!$this->retention_period) {
-            return 'دائمی';
-        }
-
-        $units = [
-            'days' => 'روز',
-            'months' => 'ماه',
-            'years' => 'سال',
-        ];
-
-        return $this->retention_period . ' ' . ($units[$this->retention_unit] ?? '');
     }
 }

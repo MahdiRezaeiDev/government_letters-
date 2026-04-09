@@ -8,15 +8,20 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // migration دوم - مطابق با نام جدید
         Schema::create('case_letters', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('archivecase_id')->constrained()->onDelete('cascade');
+            
+            $table->foreignId('archive_case_id')  // ← نام فیلد هم تغییر کرد
+                ->constrained('archive_cases')   // ← نام جدول جدید
+                ->onDelete('cascade');
+            
             $table->foreignId('letter_id')->constrained()->onDelete('cascade');
             $table->timestamp('archived_at')->useCurrent();
             $table->foreignId('archived_by')->constrained('users');
             $table->timestamps();
             
-            $table->unique(['archivecase_id', 'letter_id']);
+            $table->unique(['archive_case_id', 'letter_id']);
             $table->index(['letter_id', 'archived_at']);
         });
     }

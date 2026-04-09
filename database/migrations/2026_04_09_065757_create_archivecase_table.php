@@ -8,7 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('archivecase', function (Blueprint $table) {
+        // migration اول - اصلاح شده
+        Schema::create('archive_cases', function (Blueprint $table) {  // ✅ نام استاندارد
             $table->id();
             $table->foreignId('archive_id')->constrained()->onDelete('cascade');
             $table->string('title');
@@ -29,6 +30,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('archivecase');
+        Schema::dropIfExists('archive_cases');
     }
 };
