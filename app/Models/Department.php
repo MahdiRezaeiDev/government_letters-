@@ -3,8 +3,87 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Department extends Model
 {
-    //
+    use SoftDeletes;
+
+    protected $table = 'departments';
+
+    protected $fillable = [
+        'organization_id',
+        'name',
+        'code',
+        'parent_id',
+        'manager_position_id',
+        'status',
+        'level',
+        'path'
+    ];
+
+    protected $casts = [
+        'status' => 'string',
+        'level' => 'integer',
+    ];
+
+    // ─── Relationships ─────────────────────────────────────────
+
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Department::class, 'parent_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(Department::class, 'parent_id');
+    }
+
+    public function positions(): HasMany
+    {
+        return $this->hasMany(Position::class);
+    }
+
+    public function managerPosition(): BelongsTo
+    {
+        return $this->belongsTo(Position::class, 'manager_position_id');
+    }
+
+    public function archives(): HasMany
+    {
+        return $this->hasMany(Archive::class);
+    }
+
+    // ─── Scopes ────────────────────────────────────────────────
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    // ─── Helpers ───────────────────────────────────────────────
+
+    public function getFullPathAttribute(): string
+    {
+        if (!$this->path) {
+            return $this->name;
+        }
+
+        $parentNames = collect(explode('/', $this->path))
+            ->map(function ($id) {
+                $dept = Department::find($id);
+                return $dept ? $dept->name : null;
+            })
+            ->filter()
+            ->implode(' > ');
+
+        return $parentNames ? $parentNames . ' > ' . $this->name : $this->name;
+    }
 }
