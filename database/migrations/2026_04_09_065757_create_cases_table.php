@@ -6,20 +6,27 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('cases', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('archive_id')->constrained()->onDelete('cascade');
+            $table->string('title');
+            $table->string('case_number', 50)->unique();
+            $table->text('description')->nullable();
+            $table->integer('retention_period')->nullable();
+            $table->enum('retention_unit', ['days', 'months', 'years'])->nullable();
+            $table->date('expiry_date')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->foreignId('created_by')->constrained('users');
             $table->timestamps();
+            $table->softDeletes();
+            
+            $table->index(['archive_id', 'is_active']);
+            $table->index('case_number');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('cases');
