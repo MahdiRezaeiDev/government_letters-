@@ -10,13 +10,13 @@ return new class extends Migration
     {
         Schema::create('case_letters', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('case_id')->constrained()->onDelete('cascade');
+            $table->foreignId('archivecase_id')->constrained()->onDelete('cascade');
             $table->foreignId('letter_id')->constrained()->onDelete('cascade');
             $table->timestamp('archived_at')->useCurrent();
             $table->foreignId('archived_by')->constrained('users');
             $table->timestamps();
             
-            $table->unique(['case_id', 'letter_id']);
+            $table->unique(['archivecase_id', 'letter_id']);
             $table->index(['letter_id', 'archived_at']);
         });
     }

@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('cases', function (Blueprint $table) {
+        Schema::create('archivecase', function (Blueprint $table) {
             $table->id();
             $table->foreignId('archive_id')->constrained()->onDelete('cascade');
             $table->string('title');
@@ -29,6 +29,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('cases');
+        Schema::dropIfExists('archivecase');
     }
 };
