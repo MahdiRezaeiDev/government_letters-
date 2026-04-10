@@ -1,15 +1,5 @@
 import { Link } from '@inertiajs/react';
-import {
-    LayoutGrid,
-    LetterText,
-    Inbox,
-    BarChart2,
-    Archive,
-    Users,
-    Building2,
-    Briefcase,
-} from 'lucide-react';
-import { Building } from 'lucide-react';
+import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -24,64 +14,26 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import adminDepartments from '@/routes/admin/departments';
-import * as adminOrgs from '@/routes/admin/organizations';
-import adminPositions from '@/routes/admin/positions';
-import adminUsers from '@/routes/admin/users';
-import * as archivesRoute from '@/routes/archives';
-import cartable from '@/routes/cartable';
-import letters from '@/routes/letters';
-import reports from '@/routes/reports';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'داشبورد',
+        title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
     },
-    {
-        title: 'کارتابل',
-        href: cartable.index(),
-        icon: Inbox,
-    },
-    {
-        title: 'مکاتیب',
-        href: letters.index(),
-        icon: LetterText,
-    },
-    {
-        title: 'گزارش‌ها',
-        href: reports.index(),
-        icon: BarChart2,
-    },
-    {
-        title: 'آرشیف',
-        href:  archivesRoute.index(),
-        icon:  Archive,
-    },
 ];
 
-const adminNavItems: NavItem[] = [
+const footerNavItems: NavItem[] = [
     {
-        title: 'وزارتخانه‌ها',
-        href:  adminOrgs.index(),
-        icon:  Building,
+        title: 'Repository',
+        href: 'https://github.com/laravel/react-starter-kit',
+        icon: FolderGit2,
     },
     {
-        title: 'مدیریت کارمندان',
-        href: adminUsers.index(),
-        icon: Users,
-    },
-    {
-        title: 'ریاست ها',
-        href: adminDepartments.index(),
-        icon: Building2,
-    },
-    {
-        title: 'سمت‌ها',
-        href: adminPositions.index(),
-        icon: Briefcase,
+        title: 'Documentation',
+        href: 'https://laravel.com/docs/starter-kits#react',
+        icon: BookOpen,
     },
 ];
 
@@ -101,11 +53,11 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} label="عمومی" />
-                <NavMain items={adminNavItems} label="مدیریت" />
+                <NavMain items={mainNavItems} />
             </SidebarContent>
 
             <SidebarFooter>
+                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
