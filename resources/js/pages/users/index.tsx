@@ -221,7 +221,7 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
                                                     <div className="h-9 w-9 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-white font-medium">
-                                                        {user.first_name[0]}{user.last_name[0]}
+                                                        {user.name[0]}{user.last_name[0]}
                                                     </div>
                                                     <div className="mr-3">
                                                         <p className="text-sm font-medium text-gray-900">{user.full_name}</p>

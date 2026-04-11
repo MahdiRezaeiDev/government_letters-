@@ -14,11 +14,6 @@ use App\Enums\RoleEnum;
 
 class UserController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth']);
-    }
-
     /**
      * نمایش لیست کاربران (بر اساس سطح دسترسی)
      */
@@ -86,7 +81,7 @@ class UserController extends Controller
             ])
             : collect();
         
-        return Inertia::render('Users/Index', [
+        return Inertia::render('users/index', [
             'users' => $users,
             'organizations' => $organizations,
             'roles' => $roles,
@@ -108,9 +103,9 @@ class UserController extends Controller
         $currentUser = auth()->user();
         
         // بررسی دسترسی کلی برای ایجاد کاربر
-        if (!$currentUser->can('create-user')) {
-            abort(403, 'شما دسترسی ایجاد کاربر را ندارید.');
-        }
+        // if (!$currentUser->can('create-user')) {
+        //     abort(403, 'شما دسترسی ایجاد کاربر را ندارید.');
+        // }
         
         // تعیین لیست سازمان‌های قابل انتخاب
         if ($currentUser->isSuperAdmin()) {
@@ -135,7 +130,7 @@ class UserController extends Controller
             'label' => $role->label(),
         ]);
         
-        return Inertia::render('Users/Create', [
+        return Inertia::render('users/create', [
             'organizations' => $organizations,
             'departments' => $departments,
             'positions' => $positions,

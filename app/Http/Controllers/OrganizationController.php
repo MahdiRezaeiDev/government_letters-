@@ -11,12 +11,6 @@ use Inertia\Inertia;
 
 class OrganizationController extends Controller
 {
-    public function __construct()
-    {
-        // فقط ادمین کل می‌تواند به این کنترلر دسترسی داشته باشد
-        $this->middleware(['auth', 'role:super-admin']);
-    }
-
     /**
      * نمایش لیست سازمان‌ها
      */

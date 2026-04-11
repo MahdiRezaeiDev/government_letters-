@@ -425,7 +425,7 @@ export default function LettersCreate({
                                 <div className="text-center">
                                     <Paperclip className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                                     <p className="text-sm text-gray-500">برای آپلود فایل کلیک کنید</p>
-                                    <p classname="text-xs text-gray-400">PDF, DOC, DOCX, JPG, PNG (حداکثر 10MB)</p>
+                                    <p className="text-xs text-gray-400">PDF, DOC, DOCX, JPG, PNG (حداکثر 10MB)</p>
                                 </div>
                                 <input
                                     type="file"
