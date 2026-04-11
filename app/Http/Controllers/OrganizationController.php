@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 
@@ -16,27 +15,26 @@ class OrganizationController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Organization::query();
-        
-        // فیلتر جستجو
-        if ($request->has('search') && $request->search) {
-            $query->where(function ($q) use ($request) {
+        $query = Organization::query()
+        ->when($request->filled('search'), function ($q) use ($request) {
                 $q->where('name', 'like', "%{$request->search}%")
                   ->orWhere('code', 'like', "%{$request->search}%")
                   ->orWhere('email', 'like', "%{$request->search}%");
-            });
-        }
-        
-        // فیلتر وضعیت
-        if ($request->has('status') && $request->status) {
-            $query->where('status', $request->status);
-        }
-        
+        })
+        ->when ($request->filled('status'), function ($query) use ($request) {
+                  $query->where('status', $request->status);
+        });
+
         $organizations = $query->with('parent')->paginate(15);
         
         return Inertia::render('organizations/index', [
             'organizations' => $organizations,
             'filters' => $request->only(['search', 'status']),
+            'can' => [
+                "create" => true,
+                "edit" => true,
+                "delete" => true
+            ]
         ]);
     }
 

@@ -66,6 +66,7 @@ export interface Organization {
     children?: Organization[];
     created_at: string;
     updated_at: string;
+    date: string;
 }
 
 export interface Department {

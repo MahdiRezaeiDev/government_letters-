@@ -71,15 +71,15 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                             مدیریت سازمان‌ها و ساختار سازمانی
                         </p>
                     </div>
-                    {/* {can.create && (
+                    {can.create && (
                         <Link
-                            href={route('organizations.create')}
+                            href={organizationsRoute.create()}
                             className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700 transition"
                         >
                             <Plus className="ml-2 h-4 w-4" />
                             سازمان جدید
                         </Link>
-                    )} */}
+                    )}
                 </div>
 
                 {/* Filters */}
@@ -174,7 +174,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                                     <Eye className="h-4 w-4" />
                                                     مشاهده
                                                 </Link>
-                                                {/* {can.edit && ( */}
+                                                {can.edit && (
                                                     <Link
                                                         href={organizationsRoute.edit({ organization: org.id })}
                                                         className="text-yellow-600 hover:text-yellow-900 inline-flex items-center gap-1 mr-3"
@@ -182,8 +182,8 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                                         <Pencil className="h-4 w-4" />
                                                         ویرایش
                                                     </Link>
-                                                {/* )}
-                                                {can.delete && ( */}
+                                                )}
+                                                {can.delete && (
                                                     <button
                                                         onClick={() => handleDelete(org.id, org.name)}
                                                         className="text-red-600 hover:text-red-900 inline-flex items-center gap-1 mr-3"
@@ -191,7 +191,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                                         <Trash2 className="h-4 w-4" />
                                                         حذف
                                                     </button>
-                                                {/* )} */}
+                                                )}
                                             </td>
                                         </tr>
                                     ))
