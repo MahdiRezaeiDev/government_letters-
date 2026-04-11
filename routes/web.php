@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\LetterController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PositionController;
+use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -50,6 +52,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('users.departments-by-organization');
     Route::get('users/positions-by-department', [UserController::class, 'getPositionsByDepartment'])
         ->name('users.positions-by-department');
+
+    // مدیریت نامه‌ها
+    Route::resource('letters', LetterController::class);
+    Route::post('letters/{letter}/publish', [LetterController::class, 'publish'])
+        ->name('letters.publish');
+
+    // کارتابل و ارجاعات
+    Route::get('cartable', [RoutingController::class, 'cartable'])->name('cartable.index');
+    Route::get('letters/{letter}/routing/create', [RoutingController::class, 'create'])->name('routings.create');
+    Route::post('letters/{letter}/routing', [RoutingController::class, 'store'])->name('routings.store');
+    Route::post('routings/{routing}/complete', [RoutingController::class, 'complete'])->name('routings.complete');
+    Route::post('routings/{routing}/reject', [RoutingController::class, 'reject'])->name('routings.reject');
+    Route::get('letters/{letter}/routings-history', [RoutingController::class, 'history'])->name('routings.history');
 });
 
 require __DIR__.'/settings.php';
