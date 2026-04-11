@@ -19,11 +19,6 @@ use App\Enums\PermissionEnum;
 
 class LetterController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth']);
-    }
-
     /**
      * نمایش لیست نامه‌ها (بر اساس سطح دسترسی)
      */

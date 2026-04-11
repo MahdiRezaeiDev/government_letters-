@@ -1,6 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
 import { Inbox, Send, FileText, Clock, Archive, Users, Mail, ChevronLeft } from 'lucide-react';
-import React from 'react';
 import {index as ArchiveIndex} from '@/routes/archives';
 import {index as CartableIndex, } from '@/routes/cartable';
 import {index as LetterIndex, create as LetterCreate, show as LetterShow} from '@/routes/letters';
