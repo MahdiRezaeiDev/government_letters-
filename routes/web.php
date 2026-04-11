@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ArchiveController;
 use App\Http\Controllers\CaseController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\LetterController;
 use App\Http\Controllers\OrganizationController;
@@ -16,7 +17,7 @@ Route::inertia('/', 'welcome', [
 ])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // مدیریت سازمان‌ها (فقط ادمین کل)
     Route::prefix('admin')->middleware(['role:super-admin'])->group(function () {
