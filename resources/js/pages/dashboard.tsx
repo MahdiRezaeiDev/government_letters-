@@ -1,9 +1,10 @@
-// resources/js/pages/dashboard.tsx
-
-import { Head, Link, usePage } from '@inertiajs/react';
-import {letters} from '@routes';
+import { Head, Link } from '@inertiajs/react';
 import { Inbox, Send, FileText, Clock, Archive, Users, Mail, ChevronLeft } from 'lucide-react';
 import React from 'react';
+import {index as ArchiveIndex} from '@/routes/archives';
+import {index as CartableIndex, } from '@/routes/cartable';
+import {index as LetterIndex, create as LetterCreate, show as LetterShow} from '@/routes/letters';
+import {index as UserIndex} from '@/routes/users';
 import type { DashboardStats, Letter } from '@/types';
 
 interface Props {
@@ -12,15 +13,14 @@ interface Props {
 }
 
 export default function Dashboard({ stats, recentLetters }: Props) {
-    console.log(usePage().props);
-    
+    // ✅ route با Wayfinder - type-safe و autocomplete
     const statCards = [
-        { label: 'نامه‌های در انتظار', value: stats.pending_actions, icon: Clock, color: 'bg-yellow-500', href: route('cartable.index') },
-        { label: 'نامه‌های وارده جدید', value: stats.incoming_new, icon: Inbox, color: 'bg-blue-500', href: route('letters.index', { type: 'incoming', status: 'pending' }) },
-        { label: 'نامه‌های صادره جدید', value: stats.outgoing_new, icon: Send, color: 'bg-green-500', href: route('letters.index', { type: 'outgoing', status: 'pending' }) },
-        { label: 'پیش‌نویس‌های من', value: stats.my_drafts, icon: FileText, color: 'bg-purple-500', href: route('letters.index', { status: 'draft' }) },
-        { label: 'نامه‌های بایگانی شده', value: stats.archived_count, icon: Archive, color: 'bg-gray-500', href: route('archives.index') },
-        { label: 'کاربران فعال', value: stats.total_users, icon: Users, color: 'bg-indigo-500', href: route('users.index') },
+        { label: 'نامه‌های در انتظار', value: stats.pending_actions, icon: Clock, color: 'bg-yellow-500', href: CartableIndex() },
+        { label: 'نامه‌های وارده جدید', value: stats.incoming_new, icon: Inbox, color: 'bg-blue-500', href: LetterIndex({query:{ type: 'incoming', status: 'pending' }}) },
+        { label: 'نامه‌های صادره جدید', value: stats.outgoing_new, icon: Send, color: 'bg-green-500', href: LetterIndex({query: { type: 'outgoing', status: 'pending' }}) },
+        { label: 'پیش‌نویس‌های من', value: stats.my_drafts, icon: FileText, color: 'bg-purple-500', href: LetterIndex({query: { status: 'draft' }}) },
+        { label: 'نامه‌های بایگانی شده', value: stats.archived_count, icon: Archive, color: 'bg-gray-500', href: ArchiveIndex() },
+        { label: 'کاربران فعال', value: stats.total_users, icon: Users, color: 'bg-indigo-500', href: UserIndex() },
     ];
 
     return (
@@ -35,7 +35,7 @@ export default function Dashboard({ stats, recentLetters }: Props) {
                         <p className="text-sm text-gray-500 mt-1">خوش آمدید!</p>
                     </div>
                     <Link
-                        href={route('letters.create')}
+                        href={LetterCreate()}
                         className="inline-flex items-center px-4 py-2 bg-blue-600 rounded-lg text-sm font-medium text-white hover:bg-blue-700 transition"
                     >
                         <Mail className="ml-2 h-4 w-4" />
@@ -68,7 +68,7 @@ export default function Dashboard({ stats, recentLetters }: Props) {
                 <div className="bg-white rounded-xl shadow-sm border">
                     <div className="px-6 py-4 border-b flex justify-between items-center">
                         <h2 className="text-lg font-semibold">نامه‌های اخیر</h2>
-                        <Link href={route('letters.index')} className="text-sm text-blue-600">
+                        <Link href={LetterIndex()} className="text-sm text-blue-600">
                             مشاهده همه
                         </Link>
                     </div>
@@ -76,7 +76,7 @@ export default function Dashboard({ stats, recentLetters }: Props) {
                         {recentLetters.map((letter) => (
                             <Link
                                 key={letter.id}
-                                href={route('letters.show', { letter: letter.id })}
+                                href={LetterShow({ letter: letter.id })}
                                 className="block px-6 py-4 hover:bg-gray-50 transition"
                             >
                                 <p className="text-sm font-medium text-gray-900">{letter.subject}</p>
