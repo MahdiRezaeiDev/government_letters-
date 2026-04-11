@@ -3,6 +3,7 @@ import { useForm } from '@inertiajs/react';
 import { Save, X, Briefcase } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import type { Department } from '@/types';
+import positions from '@/routes/positions';
 
 interface Props {
     departments: Department[];
@@ -21,7 +22,7 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('positions.store'));
+        post(positions.store());
     };
 
     return (
@@ -41,7 +42,7 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                         <div className="flex gap-3">
                             <button
                                 type="button"
-                                onClick={() => router.get(route('positions.index'))}
+                                onClick={() => router.get(positions.index())}
                                 className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
                             >
                                 <X className="ml-2 h-4 w-4" />

@@ -13,8 +13,8 @@ class PositionController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth']);
-        $this->middleware(['role:super-admin|org-admin'])->except(['index', 'show']);
+        // $this->middleware(['auth']);
+        // $this->middleware(['role:super-admin|org-admin'])->except(['index', 'show']);
     }
 
     /**
@@ -54,7 +54,7 @@ class PositionController extends Controller
         }
         $departments = $departmentsQuery->get();
         
-        return Inertia::render('Positions/Index', [
+        return Inertia::render('positions/index', [
             'positions' => $positions,
             'departments' => $departments,
             'filters' => $request->only(['search', 'department_id']),
@@ -84,7 +84,7 @@ class PositionController extends Controller
         
         $selectedDepartment = $request->department_id;
         
-        return Inertia::render('Positions/Create', [
+        return Inertia::render('positions/create', [
             'departments' => $departments,
             'selectedDepartment' => $selectedDepartment,
         ]);

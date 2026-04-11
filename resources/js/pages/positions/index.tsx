@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Plus, Pencil, Trash2, Search, Briefcase, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import React, { useState } from 'react';
 import type { Position, Department } from '@/types';
+import positionsRoute from '@/routes/positions';
 
 interface Props {
     positions: {
@@ -30,7 +31,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
     const [selectedDepartment, setSelectedDepartment] = useState(filters.department_id || '');
 
     const handleSearch = () => {
-        router.get(route('positions.index'), {
+        router.get(positionsRoute.index(), {
             search: searchTerm,
             department_id: selectedDepartment,
         }, { preserveState: true, replace: true });
@@ -39,12 +40,12 @@ export default function PositionsIndex({ positions, departments, filters, can }:
     const handleReset = () => {
         setSearchTerm('');
         setSelectedDepartment('');
-        router.get(route('positions.index'), {}, { preserveState: true, replace: true });
+        router.get(positionsRoute.index(), {}, { preserveState: true, replace: true });
     };
 
     const handleDelete = (id: number, name: string) => {
         if (confirm(`آیا از حذف سمت "${name}" اطمینان دارید؟`)) {
-            router.delete(route('positions.destroy', { position: id }));
+            router.delete(positionsRoute.destroy( { position: id }));
         }
     };
 
@@ -63,7 +64,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                     </div>
                     {can.create && (
                         <Link
-                            href={route('positions.create')}
+                            href={positionsRoute.create()}
                             className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700 transition"
                         >
                             <Plus className="ml-2 h-4 w-4" />
@@ -173,7 +174,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-left text-sm font-medium space-x-2 space-x-reverse">
                                                 <Link
-                                                    href={route('positions.show', { position: position.id })}
+                                                    href={positionsRoute.show({ position: position.id })}
                                                     className="text-blue-600 hover:text-blue-900 inline-flex items-center gap-1"
                                                 >
                                                     <Eye className="h-4 w-4" />
@@ -181,7 +182,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                                 </Link>
                                                 {can.edit && (
                                                     <Link
-                                                        href={route('positions.edit', { position: position.id })}
+                                                        href={positionsRoute.edit(position.id)}
                                                         className="text-yellow-600 hover:text-yellow-900 inline-flex items-center gap-1 mr-3"
                                                     >
                                                         <Pencil className="h-4 w-4" />
@@ -213,7 +214,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                             </div>
                             <div className="flex gap-2">
                                 <Link
-                                    href={positions.current_page > 1 ? route('positions.index', { page: positions.current_page - 1, ...filters }) : '#'}
+                                    href={positions.current_page > 1 ? positionsRoute.index({query: { page: positions.current_page - 1, ...filters }}) : '#'}
                                     className={`px-3 py-1 rounded-lg text-sm ${positions.current_page > 1 ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
                                 >
                                     قبلی
@@ -235,7 +236,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                     return pages.map((page) => (
                                         <Link
                                             key={page}
-                                            href={route('positions.index', { page, ...filters })}
+                                            href={positionsRoute.index({query : { page, ...filters }})}
                                             className={`px-3 py-1 rounded-lg text-sm ${positions.current_page === page ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
                                         >
                                             {page}
@@ -243,7 +244,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                     ));
                                 })()}
                                 <Link
-                                    href={positions.current_page < positions.last_page ? route('positions.index', { page: positions.current_page + 1, ...filters }) : '#'}
+                                    href={positions.current_page < positions.last_page ? positionsRoute.index({ query : { page: positions.current_page + 1, ...filters }}) : '#'}
                                     className={`px-3 py-1 rounded-lg text-sm ${positions.current_page < positions.last_page ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
                                 >
                                     بعدی
