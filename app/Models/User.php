@@ -182,4 +182,22 @@ class User extends Authenticatable
     {
         $this->update(['last_activity_at' => now()]);
     }
+
+    // بررسی ادمین کل بودن
+     public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('super-admin');
+    }
+    
+    // بررسی ادمین سازمان بودن
+    public function isOrgAdmin(): bool
+    {
+        return $this->hasRole('org-admin');
+    }
+    
+    // بررسی دسترسی به یک سازمان خاص
+    public function belongsToOrganization(int $orgId): bool
+    {
+        return $this->isSuperAdmin() || $this->organization_id === $orgId;
+    }
 }
