@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Plus, Search, FolderOpen, ChevronLeft, ChevronRight, Eye, Building2 } from 'lucide-react';
+import { useState } from 'react';
 import type { Archive, Department } from '@/types';
 
 interface Props {
