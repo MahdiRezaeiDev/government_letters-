@@ -34,7 +34,7 @@ class OrganizationController extends Controller
         
         $organizations = $query->with('parent')->paginate(15);
         
-        return Inertia::render('Organizations/Index', [
+        return Inertia::render('organizations/index', [
             'organizations' => $organizations,
             'filters' => $request->only(['search', 'status']),
         ]);
@@ -47,7 +47,7 @@ class OrganizationController extends Controller
     {
         $organizations = Organization::all();
         
-        return Inertia::render('Organizations/Create', [
+        return Inertia::render('organizations/create', [
             'organizations' => $organizations,
         ]);
     }
@@ -123,7 +123,7 @@ class OrganizationController extends Controller
             'active_departments' => $organization->departments->where('status', 'active')->count(),
         ];
         
-        return Inertia::render('Organizations/Show', [
+        return Inertia::render('organizations/show', [
             'organization' => $organization,
             'stats' => $stats,
         ]);
@@ -136,7 +136,7 @@ class OrganizationController extends Controller
     {
         $organizations = Organization::where('id', '!=', $organization->id)->get();
         
-        return Inertia::render('Organizations/Edit', [
+        return Inertia::render('organizations/edit', [
             'organization' => $organization,
             'organizations' => $organizations,
         ]);
