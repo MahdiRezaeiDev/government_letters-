@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\ArchiveController;
+use App\Http\Controllers\CaseController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\LetterController;
 use App\Http\Controllers\OrganizationController;
@@ -65,6 +67,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('routings/{routing}/complete', [RoutingController::class, 'complete'])->name('routings.complete');
     Route::post('routings/{routing}/reject', [RoutingController::class, 'reject'])->name('routings.reject');
     Route::get('letters/{letter}/routings-history', [RoutingController::class, 'history'])->name('routings.history');
+
+    // بایگانی‌ها
+    Route::resource('archives', ArchiveController::class);
+    Route::get('archives/{archive}/permissions', [ArchiveController::class, 'permissions'])
+        ->name('archives.permissions');
+    
+    // پرونده‌های بایگانی (نested resource)
+    Route::resource('archives.cases', CaseController::class);
+    Route::post('archives/{archive}/cases/{case}/attach-letter', [CaseController::class, 'attachLetter'])
+        ->name('archives.cases.attach-letter');
+    Route::delete('archives/{archive}/cases/{case}/detach-letter/{letter}', [CaseController::class, 'detachLetter'])
+        ->name('archives.cases.detach-letter');
 });
 
 require __DIR__.'/settings.php';
