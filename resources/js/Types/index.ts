@@ -1,8 +1,31 @@
+// resources/js/types/index.ts
+
 export type * from './auth';
 export type * from './navigation';
 export type * from './ui';
 
+// ============================================
+// تایپ‌های ناوبری (برای سایدبار)
+// ============================================
+
+export interface NavItem {
+    title: string;
+    href: string;
+    icon?: React.ComponentType<{ className?: string }>;
+    active?: boolean;
+    items?: NavItem[];
+}
+
+export interface NavGroup {
+    title: string;
+    icon?: React.ComponentType<{ className?: string }>;
+    items: NavItem[];
+}
+
+// ============================================
 // تایپ‌های اصلی سیستم
+// ============================================
+
 export interface User {
     id: number;
     organization_id: number | null;
@@ -182,7 +205,7 @@ export interface Archive {
     is_active: boolean;
     department?: Department;
     parent?: Archive;
-    children?: Archive[];
+    children?: Archive;
     cases?: Case[];
 }
 
@@ -231,6 +254,10 @@ export interface Attachment {
     user?: User;
 }
 
+// ============================================
+// تایپ‌های پاسخ‌های صفحه‌بندی شده
+// ============================================
+
 export interface PaginatedResponse<T> {
     data: T[];
     current_page: number;
@@ -245,6 +272,10 @@ export interface PaginatedResponse<T> {
         active: boolean;
     }[];
 }
+
+// ============================================
+// تایپ‌های آمار و گزارشات
+// ============================================
 
 export interface CartableStats {
     total: number;
@@ -263,4 +294,87 @@ export interface DashboardStats {
     total_users: number;
     total_departments: number;
     archived_count: number;
+}
+
+export interface ReportStats {
+    total_letters: number;
+    incoming_count: number;
+    outgoing_count: number;
+    internal_count: number;
+    approved_count: number;
+    rejected_count: number;
+    pending_count: number;
+    archived_count: number;
+    monthly_stats: { month: string; count: number }[];
+    department_stats: { department: string; count: number }[];
+    priority_stats: { priority: string; count: number }[];
+}
+
+// ============================================
+// تایپ‌های فرم‌ها
+// ============================================
+
+export interface LoginForm {
+    email: string;
+    password: string;
+    remember: boolean;
+}
+
+export interface RegisterForm {
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+}
+
+export interface ForgotPasswordForm {
+    email: string;
+}
+
+export interface ResetPasswordForm {
+    email: string;
+    password: string;
+    password_confirmation: string;
+    token: string;
+}
+
+export interface ProfileForm {
+    first_name: string;
+    last_name: string;
+    email: string;
+    mobile: string;
+}
+
+export interface PasswordForm {
+    current_password: string;
+    password: string;
+    password_confirmation: string;
+}
+
+// ============================================
+// تایپ‌های کمکی
+// ============================================
+
+export interface BreadcrumbItem {
+    title: string;
+    href: string;
+}
+
+export interface TabItem {
+    id: string;
+    label: string;
+    icon?: React.ComponentType<{ className?: string }>;
+}
+
+export interface SelectOption {
+    value: string | number;
+    label: string;
+}
+
+export interface Column<T = any> {
+    key: keyof T | string;
+    title: string;
+    sortable?: boolean;
+    searchable?: boolean;
+    render?: (value: any, record: T) => React.ReactNode;
 }

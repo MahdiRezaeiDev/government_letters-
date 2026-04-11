@@ -1,24 +1,23 @@
-export type User = {
+// resources/js/types/auth.ts
+
+export interface User {
     id: number;
     name: string;
     email: string;
     avatar?: string;
-    email_verified_at: string | null;
-    two_factor_enabled?: boolean;
-    created_at: string;
-    updated_at: string;
-    [key: string]: unknown;
-};
+    roles?: { id: number; name: string }[];
+    permissions?: { id: number; name: string }[];
+}
 
-export type Auth = {
-    user: User;
-};
+export interface LoginForm {
+    email: string;
+    password: string;
+    remember: boolean;
+}
 
-export type TwoFactorSetupData = {
-    svg: string;
-    url: string;
-};
-
-export type TwoFactorSecretKey = {
-    secretKey: string;
-};
+export interface RegisterForm {
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+}

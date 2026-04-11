@@ -1,21 +1,23 @@
-import type { ReactNode } from 'react';
-import type { BreadcrumbItem } from '@/types/navigation';
+// resources/js/types/ui.ts
 
-export type AppLayoutProps = {
-    children: ReactNode;
-    breadcrumbs?: BreadcrumbItem[];
-};
+export interface PaginatedResponse<T> {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number;
+    to: number;
+}
 
-export type AppVariant = 'header' | 'sidebar';
+export interface SelectOption {
+    value: string | number;
+    label: string;
+}
 
-export type FlashToast = {
-    type: 'success' | 'info' | 'warning' | 'error';
-    message: string;
-};
-
-export type AuthLayoutProps = {
-    children?: ReactNode;
-    name?: string;
-    title?: string;
-    description?: string;
-};
+export interface Column<T = any> {
+    key: keyof T | string;
+    title: string;
+    sortable?: boolean;
+    render?: (value: any, record: T) => React.ReactNode;
+}

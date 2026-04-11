@@ -1,7 +1,8 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Plus, Pencil, Trash2, Search, Building2, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import React, { useState } from 'react';
 import type { Department, Organization } from '@/types';
-
+import departmentRoutes from '@/routes/departments'
 interface Props {
     departments: {
         data: Department[];
@@ -31,7 +32,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
     const [selectedOrganization, setSelectedOrganization] = useState(filters.organization_id || '');
 
     const handleSearch = () => {
-        router.get(route('departments.index'), {
+        router.get(departmentRoutes.index(), {
             search: searchTerm,
             status: selectedStatus,
             organization_id: selectedOrganization,
@@ -42,12 +43,12 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
         setSearchTerm('');
         setSelectedStatus('');
         setSelectedOrganization('');
-        router.get(route('departments.index'), {}, { preserveState: true, replace: true });
+        router.get(departmentRoutes.index(), {}, { preserveState: true, replace: true });
     };
 
     const handleDelete = (id: number, name: string) => {
         if (confirm(`آیا از حذف دپارتمان "${name}" اطمینان دارید؟`)) {
-            router.delete(route('departments.destroy', { department: id }));
+            router.delete(departmentRoutes.destroy({ department: id }));
         }
     };
 
@@ -80,7 +81,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                     </div>
                     {can.create && (
                         <Link
-                            href={route('departments.create')}
+                            href={departmentRoutes.index()}
                             className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700 transition"
                         >
                             <Plus className="ml-2 h-4 w-4" />
@@ -198,7 +199,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-left text-sm font-medium space-x-2 space-x-reverse">
                                                 <Link
-                                                    href={route('departments.show', { department: dept.id })}
+                                                    href={departmentRoutes.show( { department: dept.id })}
                                                     className="text-blue-600 hover:text-blue-900 inline-flex items-center gap-1"
                                                 >
                                                     <Eye className="h-4 w-4" />
@@ -206,7 +207,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                                 </Link>
                                                 {can.edit && (
                                                     <Link
-                                                        href={route('departments.edit', { department: dept.id })}
+                                                        href={departmentRoutes.edit({ department: dept.id })}
                                                         className="text-yellow-600 hover:text-yellow-900 inline-flex items-center gap-1 mr-3"
                                                     >
                                                         <Pencil className="h-4 w-4" />
@@ -238,7 +239,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                             </div>
                             <div className="flex gap-2">
                                 <Link
-                                    href={departments.current_page > 1 ? route('departments.index', { page: departments.current_page - 1, ...filters }) : '#'}
+                                    href={departments.current_page > 1 ? departmentRoutes.index({query:{ page: departments.current_page - 1, ...filters }}) : '#'}
                                     className={`px-3 py-1 rounded-lg text-sm ${departments.current_page > 1 ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
                                 >
                                     قبلی
@@ -260,7 +261,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                     return pages.map((page) => (
                                         <Link
                                             key={page}
-                                            href={route('departments.index', { page, ...filters })}
+                                            href={departmentRoutes.index({query: { page, ...filters }})}
                                             className={`px-3 py-1 rounded-lg text-sm ${departments.current_page === page ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
                                         >
                                             {page}
@@ -268,7 +269,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                     ));
                                 })()}
                                 <Link
-                                    href={departments.current_page < departments.last_page ? route('departments.index', { page: departments.current_page + 1, ...filters }) : '#'}
+                                    href={departments.current_page < departments.last_page ? departmentRoutes.index({query : { page: departments.current_page + 1, ...filters }}) : '#'}
                                     className={`px-3 py-1 rounded-lg text-sm ${departments.current_page < departments.last_page ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
                                 >
                                     بعدی

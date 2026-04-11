@@ -1,16 +1,28 @@
-import AppLayoutTemplate from '@/layouts/app/app-sidebar-layout';
-import type { BreadcrumbItem } from '@/types';
+// resources/js/layouts/app-layout.tsx
 
-export default function AppLayout({
-    breadcrumbs = [],
-    children,
-}: {
-    breadcrumbs?: BreadcrumbItem[];
+import { usePage } from '@inertiajs/react';
+import React from 'react';
+import { AppSidebar } from '@/components/app-sidebar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { Toaster } from '@/components/ui/sonner';
+
+interface AppLayoutProps {
     children: React.ReactNode;
-}) {
+}
+
+export default function AppLayout({ children }: AppLayoutProps) {
+    const { auth } = usePage().props as any;
+    const userRole = auth.user?.roles?.[0]?.name || 'user';
+
     return (
-        <AppLayoutTemplate breadcrumbs={breadcrumbs}>
-            {children}
-        </AppLayoutTemplate>
+        <SidebarProvider>
+            <AppSidebar userRole={userRole} />
+            <SidebarInset>
+                <main className="flex-1 overflow-auto">
+                    {children}
+                </main>
+            </SidebarInset>
+            <Toaster position="top-right" richColors closeButton />
+        </SidebarProvider>
     );
 }

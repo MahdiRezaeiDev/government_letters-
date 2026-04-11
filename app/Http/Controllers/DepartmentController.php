@@ -12,13 +12,6 @@ use Inertia\Inertia;
 
 class DepartmentController extends Controller
 {
-    public function __construct()
-    {
-        // ادمین کل و ادمین سازمان می‌توانند به این کنترلر دسترسی داشته باشند
-        $this->middleware(['auth']);
-        $this->middleware(['role:super-admin|org-admin'])->except(['index', 'show']);
-    }
-
     /**
      * نمایش لیست دپارتمان‌ها
      */
@@ -52,7 +45,7 @@ class DepartmentController extends Controller
         // برای فیلتر سازمان (فقط ادمین کل)
         $organizations = $user->isSuperAdmin() ? Organization::all() : null;
         
-        return Inertia::render('Departments/Index', [
+        return Inertia::render('departments/index', [
             'departments' => $departments,
             'organizations' => $organizations,
             'filters' => $request->only(['search', 'status', 'organization_id']),
@@ -87,7 +80,7 @@ class DepartmentController extends Controller
             ->where('status', 'active')
             ->get();
         
-        return Inertia::render('Departments/Create', [
+        return Inertia::render('departments/create', [
             'organizations' => $organizations,
             'parentDepartments' => $parentDepartments,
             'selectedOrganization' => $selectedOrganization,
