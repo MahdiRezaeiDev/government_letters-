@@ -1,9 +1,8 @@
-// resources/js/pages/organizations/create.tsx
-
-import React from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import { Save, X, Building2 } from 'lucide-react';
+import React from 'react';
+import organizationsRoute from '@/routes/organizations';
 import type { Organization } from '@/types';
 
 interface Props {
@@ -24,7 +23,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('organizations.store'));
+        post(organizationsRoute.store());
     };
 
     return (
@@ -44,7 +43,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
                         <div className="flex gap-3">
                             <button
                                 type="button"
-                                onClick={() => router.get(route('organizations.index'))}
+                                onClick={() => router.get(organizationsRoute.index())}
                                 className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
                             >
                                 <X className="ml-2 h-4 w-4" />

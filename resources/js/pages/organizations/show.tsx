@@ -1,8 +1,9 @@
 // resources/js/pages/organizations/show.tsx
 
-import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowRight, Building2, Users, Mail, Phone, MapPin, Globe, Pencil, Trash2 } from 'lucide-react';
+import React from 'react';
+import organizations from '@/routes/organizations';
 import type { Organization, Department } from '@/types';
 
 interface Props {
@@ -21,7 +22,7 @@ interface Props {
 export default function OrganizationsShow({ organization, stats, can }: Props) {
     const handleDelete = () => {
         if (confirm(`آیا از حذف سازمان "${organization.name}" اطمینان دارید؟`)) {
-            router.delete(route('organizations.destroy', { organization: organization.id }));
+            router.delete(organizations.destroy({ organization: organization.id }));
         }
     };
 
@@ -35,7 +36,7 @@ export default function OrganizationsShow({ organization, stats, can }: Props) {
                     <div>
                         <div className="flex items-center gap-2 mb-2">
                             <Link
-                                href={route('organizations.index')}
+                                href={organizations.index()}
                                 className="text-blue-600 hover:text-blue-700 text-sm inline-flex items-center gap-1"
                             >
                                 <ArrowRight className="h-4 w-4" />
@@ -54,16 +55,16 @@ export default function OrganizationsShow({ organization, stats, can }: Props) {
                     </div>
                     
                     <div className="flex gap-2">
-                        {can.edit && (
+                        {/* {can.edit && ( */}
                             <Link
-                                href={route('organizations.edit', { organization: organization.id })}
+                                href={organizations.edit({ organization: organization.id })}
                                 className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition"
                             >
                                 <Pencil className="ml-2 h-4 w-4" />
                                 ویرایش
                             </Link>
-                        )}
-                        {can.delete && (
+                        {/* )}
+                        {can.delete && ( */}
                             <button
                                 onClick={handleDelete}
                                 className="inline-flex items-center px-3 py-2 border border-red-300 rounded-lg text-sm text-red-600 hover:bg-red-50 transition"
@@ -71,7 +72,7 @@ export default function OrganizationsShow({ organization, stats, can }: Props) {
                                 <Trash2 className="ml-2 h-4 w-4" />
                                 حذف
                             </button>
-                        )}
+                        {/* )} */}
                     </div>
                 </div>
 
@@ -155,7 +156,7 @@ export default function OrganizationsShow({ organization, stats, can }: Props) {
                         </div>
                         <div className="p-6">
                             <Link
-                                href={route('organizations.show', { organization: organization.parent.id })}
+                                href={organizations.show({ organization: organization.parent.id })}
                                 className="text-blue-600 hover:text-blue-700"
                             >
                                 {organization.parent.name}
@@ -170,7 +171,7 @@ export default function OrganizationsShow({ organization, stats, can }: Props) {
                         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                             <h3 className="font-semibold text-gray-900">دپارتمان‌ها</h3>
                             <Link
-                                href={route('departments.create', { organization_id: organization.id })}
+                                href={organizations.create({query: { organization_id: organization.id }})}
                                 className="text-sm text-blue-600 hover:text-blue-700"
                             >
                                 + افزودن دپارتمان
@@ -180,7 +181,7 @@ export default function OrganizationsShow({ organization, stats, can }: Props) {
                             {organization.departments.map((dept) => (
                                 <Link
                                     key={dept.id}
-                                    href={route('departments.show', { department: dept.id })}
+                                    href={organizations.show(dept.id)}
                                     className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition"
                                 >
                                     <div>
