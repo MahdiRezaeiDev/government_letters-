@@ -111,7 +111,7 @@ class LetterController extends Controller
             ->where('status', true)
             ->get();
         
-        return Inertia::render('Letters/Index', [
+        return Inertia::render('letters/Index', [
             'letters' => $letters,
             'categories' => $categories,
             'filters' => $request->only(['search', 'letter_type', 'status', 'priority', 'date_from', 'date_to']),
@@ -177,7 +177,7 @@ class LetterController extends Controller
             $q->where('organization_id', $currentUser->organization_id);
         })->get(['id', 'name', 'department_id']);
         
-        return Inertia::render('Letters/Create', [
+        return Inertia::render('letters/create', [
             'type' => $type,
             'categories' => $categories,
             'users' => $users,
@@ -363,7 +363,7 @@ class LetterController extends Controller
             'ip_address' => request()->ip(),
         ]);
         
-        return Inertia::render('Letters/Show', [
+        return Inertia::render('letters/show', [
             'letter' => $letter,
             'securityLevels' => [
                 'public' => 'عمومی',
@@ -411,7 +411,7 @@ class LetterController extends Controller
             ->with(['primaryPosition', 'department'])
             ->get();
         
-        return Inertia::render('Letters/Edit', [
+        return Inertia::render('letters/edit', [
             'letter' => $letter,
             'categories' => $categories,
             'users' => $users,
