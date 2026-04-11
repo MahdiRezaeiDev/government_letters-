@@ -3,6 +3,7 @@
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PositionController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
@@ -35,6 +36,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('positions.list');
     Route::get('positions-management-list', [PositionController::class, 'getManagementList'])
         ->name('positions.management-list');
+
+
+    // مدیریت کاربران
+    Route::resource('users', UserController::class);
+    Route::post('users/{user}/assign-role', [UserController::class, 'assignRole'])
+        ->name('users.assign-role');
+    Route::post('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
+        ->name('users.toggle-status');
+    
+    // API endpoints برای فرم‌ها
+    Route::get('users/departments-by-organization', [UserController::class, 'getDepartmentsByOrganization'])
+        ->name('users.departments-by-organization');
+    Route::get('users/positions-by-department', [UserController::class, 'getPositionsByDepartment'])
+        ->name('users.positions-by-department');
 });
 
 require __DIR__.'/settings.php';
