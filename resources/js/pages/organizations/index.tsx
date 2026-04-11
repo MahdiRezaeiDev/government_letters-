@@ -1,8 +1,7 @@
-// resources/js/pages/organizations/index.tsx
-
-import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { Plus, Pencil, Trash2, Search, Building2, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import React, { useState } from 'react';
+import organizationsRoute from '@/routes/organizations';
 import type { Organization } from '@/types';
 
 interface Props {
@@ -31,7 +30,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
     const [selectedStatus, setSelectedStatus] = useState(filters.status || '');
 
     const handleSearch = () => {
-        router.get(route('organizations.index'), {
+        router.get(organizationsRoute.index(), {
             search: searchTerm,
             status: selectedStatus,
         }, { preserveState: true, replace: true });
@@ -40,12 +39,12 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
     const handleReset = () => {
         setSearchTerm('');
         setSelectedStatus('');
-        router.get(route('organizations.index'), {}, { preserveState: true, replace: true });
+        router.get(organizationsRoute.index(), {}, { preserveState: true, replace: true });
     };
 
     const handleDelete = (id: number, name: string) => {
         if (confirm(`آیا از حذف سازمان "${name}" اطمینان دارید؟`)) {
-            router.delete(route('organizations.destroy', { organization: id }));
+            router.delete(organizationsRoute.destroy({ organization: id }));
         }
     };
 
@@ -169,7 +168,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-left text-sm font-medium space-x-2 space-x-reverse">
                                                 <Link
-                                                    href={route('organizations.show', { organization: org.id })}
+                                                    href={organizationsRoute.show({ organization: org.id })}
                                                     className="text-blue-600 hover:text-blue-900 inline-flex items-center gap-1"
                                                 >
                                                     <Eye className="h-4 w-4" />
@@ -177,7 +176,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                                 </Link>
                                                 {can.edit && (
                                                     <Link
-                                                        href={route('organizations.edit', { organization: org.id })}
+                                                        href={organizationsRoute.edit({ organization: org.id })}
                                                         className="text-yellow-600 hover:text-yellow-900 inline-flex items-center gap-1 mr-3"
                                                     >
                                                         <Pencil className="h-4 w-4" />
@@ -209,7 +208,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                             </div>
                             <div className="flex gap-2">
                                 <Link
-                                    href={organizations.current_page > 1 ? route('organizations.index', { page: organizations.current_page - 1, ...filters }) : '#'}
+                                    href={organizations.current_page > 1 ? organizationsRoute.index({query : { page: organizations.current_page - 1, ...filters }}) : '#'}
                                     className={`px-3 py-1 rounded-lg text-sm ${organizations.current_page > 1 ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
                                 >
                                     قبلی
@@ -218,7 +217,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                     const pages = [];
                                     const maxVisible = 5;
                                     let start = Math.max(1, organizations.current_page - Math.floor(maxVisible / 2));
-                                    let end = Math.min(organizations.last_page, start + maxVisible - 1);
+                                    const end = Math.min(organizations.last_page, start + maxVisible - 1);
                                     
                                     if (end - start + 1 < maxVisible) {
                                         start = Math.max(1, end - maxVisible + 1);
@@ -231,7 +230,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                     return pages.map((page) => (
                                         <Link
                                             key={page}
-                                            href={route('organizations.index', { page, ...filters })}
+                                            href={organizationsRoute.index({query: { page, ...filters }})}
                                             className={`px-3 py-1 rounded-lg text-sm ${organizations.current_page === page ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
                                         >
                                             {page}
@@ -239,7 +238,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                     ));
                                 })()}
                                 <Link
-                                    href={organizations.current_page < organizations.last_page ? route('organizations.index', { page: organizations.current_page + 1, ...filters }) : '#'}
+                                    href={organizations.current_page < organizations.last_page ? organizationsRoute.index({query: { page: organizations.current_page + 1, ...filters }}) : '#'}
                                     className={`px-3 py-1 rounded-lg text-sm ${organizations.current_page < organizations.last_page ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
                                 >
                                     بعدی
