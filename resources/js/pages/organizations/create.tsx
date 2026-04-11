@@ -76,13 +76,6 @@ export default function OrganizationsCreate({ organizations }: Props) {
                             />
                             {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                         </div>
-                        <PersianDatePicker
-                            label="تاریخ نامه"
-                            value={data.date}
-                            onChange={(date) => setData('date', date)}
-                            required
-                        />
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 کد سازمان <span className="text-red-500">*</span>
