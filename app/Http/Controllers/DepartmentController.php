@@ -185,9 +185,13 @@ class DepartmentController extends Controller
             'child_departments' => $department->children->count(),
         ];
         
-        return Inertia::render('Departments/Show', [
+        return Inertia::render('departments/show', [
             'department' => $department,
             'stats' => $stats,
+            'can' => [
+                'edit' => true,
+                'delete' => true
+            ],
         ]);
     }
 
@@ -221,7 +225,7 @@ class DepartmentController extends Controller
             ->where('is_management', true)
             ->get();
         
-        return Inertia::render('Departments/Edit', [
+        return Inertia::render('departments/edit', [
             'department' => $department,
             'organizations' => $organizations,
             'parentDepartments' => $parentDepartments,
