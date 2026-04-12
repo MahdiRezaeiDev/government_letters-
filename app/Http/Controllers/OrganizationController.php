@@ -124,6 +124,10 @@ class OrganizationController extends Controller
         return Inertia::render('organizations/show', [
             'organization' => $organization,
             'stats' => $stats,
+            'can' => [
+                'edit' => true,
+                'delete' => true
+            ],
         ]);
     }
 
