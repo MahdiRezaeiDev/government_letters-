@@ -16,11 +16,6 @@ use App\Enums\PermissionEnum;
 
 class RoutingController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth']);
-    }
-
     /**
      * کارتابل شخصی (لیست ارجاعات کاربر)
      */

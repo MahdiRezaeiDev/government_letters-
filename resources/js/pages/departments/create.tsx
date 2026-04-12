@@ -4,6 +4,7 @@ import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import { Save, X, Building2, ChevronDown } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+import departments from '@/routes/departments';
 import type { Organization, Department } from '@/types';
 
 interface Props {
@@ -40,7 +41,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('departments.store'));
+        post(departments.store());
     };
 
     return (
@@ -60,7 +61,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                         <div className="flex gap-3">
                             <button
                                 type="button"
-                                onClick={() => router.get(route('departments.index'))}
+                                onClick={() => router.get(departments.index())}
                                 className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
                             >
                                 <X className="ml-2 h-4 w-4" />

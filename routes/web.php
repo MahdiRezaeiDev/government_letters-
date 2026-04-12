@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ArchiveController;
+use App\Http\Controllers\CartableController;
 use App\Http\Controllers\CaseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
@@ -86,6 +87,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/export-excel', [ReportController::class, 'exportExcel'])->name('reports.export-excel');
     Route::get('/reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export-pdf');
+
+    // کارتابل
+    Route::get('/cartable', [CartableController::class, 'index'])->name('cartable.index');
+    Route::post('/cartable/{routing}/complete', [CartableController::class, 'complete'])->name('cartable.complete');
+    Route::post('/cartable/{routing}/reject', [CartableController::class, 'reject'])->name('cartable.reject');
 });
 
 require __DIR__.'/settings.php';

@@ -97,11 +97,13 @@ class User extends Authenticatable
         return $this->belongsTo(Position::class, 'primary_position_id');
     }
 
-    public function positions(): BelongsToMany
+    // app/Models/User.php
+    public function positions()
     {
         return $this->belongsToMany(Position::class, 'user_positions')
-            ->withPivot('is_primary', 'start_date', 'end_date', 'status')
-            ->withTimestamps();
+                    ->select('positions.id', 'positions.name', 'positions.code', 'positions.department_id')
+                    ->withPivot('is_primary', 'start_date', 'end_date', 'status')
+                    ->withTimestamps();
     }
 
     public function activePositions(): BelongsToMany
