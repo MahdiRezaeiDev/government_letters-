@@ -5,6 +5,7 @@ use App\Http\Controllers\CartableController;
 use App\Http\Controllers\CaseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\LetterCategoryController;
 use App\Http\Controllers\LetterController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PositionController;
@@ -92,6 +93,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/cartable', [CartableController::class, 'index'])->name('cartable.index');
     Route::post('/cartable/{routing}/complete', [CartableController::class, 'complete'])->name('cartable.complete');
     Route::post('/cartable/{routing}/reject', [CartableController::class, 'reject'])->name('cartable.reject');
+
+    // مدیریت دسته‌بندی نامه‌ها
+    Route::resource('categories', LetterCategoryController::class);
+    Route::post('categories/{category}/toggle-status', [LetterCategoryController::class, 'toggleStatus'])
+        ->name('categories.toggle-status');
+    Route::get('categories-list', [LetterCategoryController::class, 'getList'])
+        ->name('categories.list');
 });
 
 require __DIR__.'/settings.php';
