@@ -233,11 +233,11 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.username}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.organization?.name || '-'}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                {user.roles.map((role) => (
+                                                {/* {user.roles.map((role) => (
                                                     <span key={role.id} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
                                                         {roleLabels[role.name] || role.name}
                                                     </span>
-                                                ))}
+                                                ))} */}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[user.status]}`}>
