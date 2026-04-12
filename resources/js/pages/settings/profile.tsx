@@ -1,29 +1,28 @@
 // resources/js/pages/settings/profile.tsx
 
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import { Save, UserIcon, Mail, Phone, CreditCard, Shield, Camera, Lock, Eye, EyeOff } from 'lucide-react';
 import React, { useState } from 'react';
 import passwordRoute from '@/routes/password';
 import profile from '@/routes/profile';
 import users from '@/routes/users';
-import type { User } from '@/types';
 
-interface Props {
-    user: User;
-}
-
-export default function ProfileSettings({ user }: Props) {
+export default function ProfileSettings() {
     const [showPassword, setShowPassword] = useState(false);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
 
+
+    const user = usePage().props.auth.user;
+    
+
     // فرم اطلاعات شخصی
     const { data: profileData, setData: setProfileData, patch: patchProfile, processing: profileProcessing, errors: profileErrors } = useForm({
-        first_name: user.first_name,
+        first_name: user.name,
         last_name: user.last_name,
         email: user.email,
-        mobile: user.mobile || '',
+        mobile: user?.mobile || '',
         national_code: user.national_code,
     });
 
@@ -74,7 +73,7 @@ export default function ProfileSettings({ user }: Props) {
     };
 
     const tabs = [
-        { id: 'profile', label: 'اطلاعات شخصی', icon: User },
+        { id: 'profile', label: 'اطلاعات شخصی', icon: UserIcon },
         { id: 'password', label: 'تغییر رمز عبور', icon: Lock },
     ];
 
@@ -102,7 +101,7 @@ export default function ProfileSettings({ user }: Props) {
                                     ) : user.avatar ? (
                                         <img src={user.avatar} alt="Avatar" className="h-full w-full object-cover" />
                                     ) : (
-                                        `${user.first_name[0]}${user.last_name[0]}`
+                                        `${user.name}${user.last_name}`
                                     )}
                                 </div>
                                 <label className="absolute bottom-0 right-0 p-1 bg-blue-600 rounded-full cursor-pointer hover:bg-blue-700 transition">
