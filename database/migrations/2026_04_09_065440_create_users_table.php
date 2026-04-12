@@ -17,7 +17,6 @@ return new class extends Migration
             $table->foreignId('primary_position_id')->nullable()->constrained('positions')->onDelete('set null');
             
             // اطلاعات احراز هویت
-            $table->string('username')->unique();
             $table->string('email')->unique();
             $table->string('password');
             $table->rememberToken();
@@ -31,7 +30,7 @@ return new class extends Migration
             $table->string('avatar')->nullable();
             
             // اطلاعات اضافی
-            $table->enum('gender', ['male', 'female', 'other'])->nullable();
+            $table->enum('gender', ['male', 'female'])->nullable();
             $table->date('birth_date')->nullable();
             $table->string('emergency_phone', 20)->nullable();
             $table->text('address')->nullable();
