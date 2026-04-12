@@ -1,9 +1,12 @@
 // resources/js/pages/settings/profile.tsx
 
-import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
-import { Save, User, Mail, Phone, CreditCard, Shield, Camera, Lock, Eye, EyeOff } from 'lucide-react';
+import { Save, UserIcon, Mail, Phone, CreditCard, Shield, Camera, Lock, Eye, EyeOff } from 'lucide-react';
+import React, { useState } from 'react';
+import passwordRoute from '@/routes/password';
+import profile from '@/routes/profile';
+import users from '@/routes/users';
 import type { User } from '@/types';
 
 interface Props {
@@ -33,7 +36,7 @@ export default function ProfileSettings({ user }: Props) {
 
     const handleProfileSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        patchProfile(route('profile.update'), {
+        patchProfile(users.update, {
             preserveScroll: true,
             onSuccess: () => {
                 // نمایش پیام موفقیت
@@ -43,7 +46,7 @@ export default function ProfileSettings({ user }: Props) {
 
     const handlePasswordSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        postPassword(route('password.update'), {
+        postPassword(passwordRoute.update(), {
             preserveScroll: true,
             onSuccess: () => {
                 resetPassword();
@@ -53,6 +56,7 @@ export default function ProfileSettings({ user }: Props) {
 
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
+
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -63,7 +67,7 @@ export default function ProfileSettings({ user }: Props) {
             // آپلود آواتار
             const formData = new FormData();
             formData.append('avatar', file);
-            router.post(route('profile.avatar'), formData, {
+            router.post(profile.avatar(), formData, {
                 preserveScroll: true,
             });
         }

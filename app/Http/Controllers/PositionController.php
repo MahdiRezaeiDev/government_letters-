@@ -172,7 +172,7 @@ class PositionController extends Controller
             'primary_users' => $position->users()->wherePivot('is_primary', true)->count(),
         ];
         
-        return Inertia::render('Positions/Show', [
+        return Inertia::render('positions/show', [
             'position' => $position,
             'stats' => $stats,
         ]);
@@ -199,7 +199,7 @@ class PositionController extends Controller
         
         $departments = $query->get();
         
-        return Inertia::render('Positions/Edit', [
+        return Inertia::render('positions/edit', [
             'position' => $position->load('department'),
             'departments' => $departments,
         ]);
