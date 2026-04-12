@@ -12,10 +12,6 @@ use App\Enums\PermissionEnum;
 
 class ArchiveController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth']);
-    }
 
     /**
      * نمایش لیست بایگانی‌ها (بر اساس دپارتمان)
@@ -61,7 +57,7 @@ class ArchiveController extends Controller
             ? Department::where('status', 'active')->get()
             : collect();
         
-        return Inertia::render('Archives/Index', [
+        return Inertia::render('archives/index', [
             'archives' => $archives,
             'departments' => $departments,
             'filters' => $request->only(['search', 'department_id']),

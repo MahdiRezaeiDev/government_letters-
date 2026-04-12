@@ -8,7 +8,7 @@ import {
     CheckCircle, AlertTriangle
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
-import { create as LetterCreate } from '@/routes/letters';
+import { store as LetterCreate } from '@/routes/letters';
 import type { LetterCategory, User, Department, Position } from '@/types';
 
 interface Props {
