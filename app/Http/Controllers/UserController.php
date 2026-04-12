@@ -263,7 +263,7 @@ class UserController extends Controller
             'completed_actions' => $user->actions()->count(),
         ];
         
-        return Inertia::render('Users/Show', [
+        return Inertia::render('users/show', [
             'user' => $user,
             'stats' => $stats,
         ]);
@@ -307,7 +307,7 @@ class UserController extends Controller
             'label' => $role->label(),
         ]);
         
-        return Inertia::render('Users/Edit', [
+        return Inertia::render('users/edit', [
             'user' => $user->load(['roles']),
             'organizations' => $organizations,
             'departments' => $departments,
