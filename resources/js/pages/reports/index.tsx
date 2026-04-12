@@ -1,15 +1,26 @@
-// resources/js/pages/reports/index.tsx
-
-import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { 
-    FileText, Download, Calendar, Filter, 
-    TrendingUp, Users, Mail, Clock, CheckCircle, XCircle 
+    FileText, Download, Calendar, Filter, TrendingUp, 
+    Users, Mail, Clock, CheckCircle, XCircle, Archive 
 } from 'lucide-react';
+import React, { useState } from 'react';
 import {
-    LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-    XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+    LineChart,
+    Line,
+    BarChart,
+    Bar,
+    PieChart,
+    Pie,
+    Cell,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    Legend,
+    ResponsiveContainer
 } from 'recharts';
+
+import reports from '@/routes/report'
 
 interface Props {
     stats: {

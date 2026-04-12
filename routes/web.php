@@ -7,6 +7,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\LetterController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PositionController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -80,6 +81,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('archives.cases.attach-letter');
     Route::delete('archives/{archive}/cases/{case}/detach-letter/{letter}', [CaseController::class, 'detachLetter'])
         ->name('archives.cases.detach-letter');
+
+    // گزارشات
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/export-excel', [ReportController::class, 'exportExcel'])->name('reports.export-excel');
+    Route::get('/reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export-pdf');
 });
 
 require __DIR__.'/settings.php';
