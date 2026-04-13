@@ -681,7 +681,20 @@ class LetterController extends Controller
             return back()->with('error', 'خطا در انتشار نامه: ' . $e->getMessage());
         }
     }
-    
+
+    public function downloadAttachment(Attachment $attachment)
+    {
+        // $this->authorize('view', $attachment->letter);
+        
+        if (!Storage::disk('public')->exists($attachment->file_path)) {
+            return back()->with('error', 'فایل یافت نشد.');
+        }
+        
+        $attachment->incrementDownloadCount();
+        
+        return Storage::disk('public')->download($attachment->file_path, $attachment->file_name);
+    }
+        
     // ============================================
     // متدهای کمکی (Helpers)
     // ============================================

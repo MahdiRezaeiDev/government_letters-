@@ -83,6 +83,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('letters/{letter}/publish', [LetterController::class, 'publish'])
         ->name('letters.publish');
 
+    Route::get('/attachments/{attachment}/download', [LetterController::class, 'downloadAttachment'])
+        ->name('attachments.download');
+
     // کارتابل و ارجاعات
     Route::get('cartable', [RoutingController::class, 'cartable'])->name('cartable.index');
     Route::get('letters/{letter}/routing/create', [RoutingController::class, 'create'])->name('routings.create');
