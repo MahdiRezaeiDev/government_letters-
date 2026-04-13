@@ -5,10 +5,11 @@ import { Head, Link, router } from '@inertiajs/react';
 import { 
     ArrowRight, Download, Archive, Send, 
     Printer, Clock, AlertCircle, Users, 
-    Building2, FileText, CheckCircle, XCircle
+    Building2, FileText, CheckCircle, XCircle,
+    Paperclip
 } from 'lucide-react';
 import type { Letter } from '@/types';
-import { show as LetterShow } from '@/routes/letters';
+import letters, { show as LetterShow } from '@/routes/letters';
 
 interface Props {
     letter: Letter;
@@ -53,21 +54,25 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, ca
 
     const handleArchive = () => {
         if (selectedCase) {
-            router.post(route('letters.archive', { letter: letter.id }), { case_id: selectedCase });
+            // router.post(route('letters.archive', { letter: letter.id }), { case_id: selectedCase });
+            router.post(letters.index(), { case_id: selectedCase });
             setShowArchiveModal(false);
         }
     };
 
     const handleApprove = () => {
         if (confirm('آیا از تأیید این نامه اطمینان دارید؟')) {
-            router.post(route('letters.approve', { letter: letter.id }));
+            router.post(letters.index());
+            // router.post(route('letters.approve', { letter: letter.id }));
         }
     };
 
     const handleReject = () => {
         const reason = prompt('لطفاً دلیل رد را وارد کنید:');
+
         if (reason) {
-            router.post(route('letters.reject', { letter: letter.id }), { reason });
+            router.post(letters.index(), { reason });
+            // router.post(route('letters.reject', { letter: letter.id }), { reason });
         }
     };
 
@@ -81,7 +86,7 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, ca
                     <div>
                         <div className="flex items-center gap-2 mb-2">
                             <Link
-                                href={route('letters.index')}
+                                href={letters.index()}
                                 className="text-blue-600 hover:text-blue-700 text-sm inline-flex items-center gap-1"
                             >
                                 <ArrowRight className="h-4 w-4" />
@@ -104,7 +109,7 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, ca
                     <div className="flex gap-2">
                         {can.edit && letter.final_status === 'draft' && (
                             <Link
-                                href={route('letters.edit', { letter: letter.id })}
+                                href={letters.edit({ letter: letter.id })}
                                 className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition"
                             >
                                 ویرایش
@@ -121,7 +126,7 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, ca
                         )}
                         {can.route && letter.final_status === 'pending' && (
                             <Link
-                                href={route('routings.create', { letter: letter.id })}
+                                href={letters.create()}
                                 className="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition"
                             >
                                 <Send className="ml-2 h-4 w-4" />
@@ -218,13 +223,13 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, ca
                                             {(attachment.file_size / 1024).toFixed(1)} KB
                                         </span>
                                     </div>
-                                    <Link
+                                    {/* <Link
                                         href={route('attachments.download', { attachment: attachment.id })}
                                         className="text-blue-600 hover:text-blue-700 text-sm inline-flex items-center gap-1"
                                     >
                                         <Download className="h-4 w-4" />
                                         دانلود
-                                    </Link>
+                                    </Link> */}
                                 </div>
                             ))}
                         </div>
