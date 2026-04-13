@@ -365,7 +365,7 @@ class LetterController extends Controller
             $letterData = [
                 'organization_id' => $currentUser->organization_id,
                 'letter_type' => $request->letter_type,
-                'letter_number' => $letterNumber,
+                'letter_number' => 32,
                 'tracking_number' => $trackingNumber,
                 'security_level' => $request->security_level,
                 'priority' => $request->priority,
@@ -414,7 +414,7 @@ class LetterController extends Controller
                 foreach ($request->file('attachments') as $file) {
                     try {
                         $path = $file->store('attachments/' . $letter->id, 'public');
-                        MailAttachment::create([
+                        Attachment::create([
                             'letter_id' => $letter->id,
                             'user_id' => $currentUser->id,
                             'file_name' => $file->getClientOriginalName(),

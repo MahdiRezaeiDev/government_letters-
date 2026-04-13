@@ -112,6 +112,10 @@ class Letter extends Model
         return $this->belongsTo(Organization::class);
     }
 
+    public function attachments(): HasMany {
+        return $this->hasMany(Attachment::class);
+    }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(LetterCategory::class, 'category_id');
@@ -214,7 +218,7 @@ class Letter extends Model
 
     public function cases(): BelongsToMany
     {
-        return $this->belongsToMany(CaseModel::class, 'case_letters')
+        return $this->belongsToMany(ArchiveCase::class, 'case_letters')
             ->withPivot('archived_at', 'archived_by')
             ->withTimestamps();
     }
