@@ -12,8 +12,11 @@ use App\Http\Controllers\PositionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\UserController;
+use App\Models\Department;
+use App\Models\Position;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
+use Symfony\Component\HttpFoundation\Request;
 
 Route::inertia('/', 'welcome', [
     'canRegister' => Features::enabled(Features::registration()),
@@ -30,6 +33,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('organizations-list', [OrganizationController::class, 'getList'])
             ->name('organizations.list');
     });
+
+    // routes/web.php
+
+    Route::get('/organizations/departments', function (Request $request) {
+        $departments = Department::where('organization_id', $request->organization_id)
+            ->where('status', 'active')
+            ->get(['id', 'name', 'parent_id']);
+        return response()->json(['departments' => $departments]);
+    })->name('organizations.departments');
+
+    Route::get('/departments/positions', function (Request $request) {
+        $positions = Position::where('department_id', $request->department_id)
+            ->get(['id', 'name']);
+        return response()->json(['positions' => $positions]);
+    })->name('departments.positions');
+
 
     // مدیریت دپارتمان‌ها
     Route::resource('departments', DepartmentController::class);

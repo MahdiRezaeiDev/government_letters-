@@ -68,6 +68,11 @@ class Organization extends Model
         return $query->where('status', 'active');
     }
 
+    public function scopeExternal($query, $currentOrganizationId)
+    {
+        return $query->where('id', '!=', $currentOrganizationId)->where('status', 'active');
+    }
+
     // ─── Helpers ───────────────────────────────────────────────
 
     public function getFullHierarchyAttribute(): string
