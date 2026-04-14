@@ -1,11 +1,11 @@
 // resources/js/pages/users/edit.tsx
 
-import React, { useState, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
-import { Save, X, Eye, EyeOff, Building2, Users, Briefcase, Shield, Trash2 } from 'lucide-react';
+import { Save, X, Eye, EyeOff, Building2, Users, Briefcase, Shield } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import users, { update as UserUpdate } from '@/routes/users';
 import type { User, Organization, Department, Position, Role } from '@/types';
-import { update as UserUpdate } from '@/routes/users';
 
 interface Props {
     user: User;
@@ -98,13 +98,13 @@ export default function UsersEdit({
 
     const handleDelete = () => {
         if (confirm(`آیا از حذف کاربر "${user.full_name}" اطمینان دارید؟`)) {
-            router.delete(route('users.destroy', { user: user.id }));
+            router.delete(users.destroy({ user: user.id }));
         }
     };
 
     const handleAssignRole = (roleName: string) => {
         if (confirm(`آیا نقش کاربر به "${roleName}" تغییر کند؟`)) {
-            router.post(route('users.assign-role', { user: user.id }), { role: roleName });
+            router.post(users.assignRole({ user: user.id }), { role: roleName });
         }
     };
 
@@ -132,7 +132,7 @@ export default function UsersEdit({
                         <div className="flex gap-3">
                             <button
                                 type="button"
-                                onClick={() => router.get(route('users.index'))}
+                                onClick={() => router.get(users.index())}
                                 className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
                             >
                                 <X className="ml-2 h-4 w-4" />

@@ -65,14 +65,14 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
         <>
             <Head title="مدیریت سازمان‌ها" />
 
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+            <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     {/* Header Section */}
                     <div className="mb-8">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div>
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                                    <div className="p-2 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
                                         <Building2 className="h-6 w-6 text-white" />
                                     </div>
                                     <div>
@@ -86,7 +86,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                             {can.create && (
                                 <Link
                                     href={organizationsRoute.create()}
-                                    className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 border border-transparent rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                                    className="inline-flex items-center px-5 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 border border-transparent rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                                 >
                                     <Plus className="ml-2 h-4 w-4" />
                                     افزودن سازمان جدید
@@ -230,11 +230,12 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                     ) : (
                                         organizations.data.map((org) => {
                                             const StatusIcon = statusColors[org.status].icon;
+
                                             return (
                                                 <tr key={org.id} className="hover:bg-gray-50 transition-colors group">
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center">
-                                                            <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
+                                                            <div className="shrink-0 h-10 w-10 bg-linear-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
                                                                 <Building2 className="h-5 w-5 text-blue-700" />
                                                             </div>
                                                             <div className="mr-3">
@@ -341,6 +342,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                                     1
                                                 </Link>
                                             );
+
                                             if (start > 2) {
                                                 pages.push(<span key="dots1" className="px-2 text-gray-400">...</span>);
                                             }
@@ -366,6 +368,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                             if (end < organizations.last_page - 1) {
                                                 pages.push(<span key="dots2" className="px-2 text-gray-400">...</span>);
                                             }
+
                                             pages.push(
                                                 <Link
                                                     key={organizations.last_page}

@@ -2,7 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import { Save, X, Eye, EyeOff, Building2, Users, Briefcase, Shield, Mail, Phone, User, Key, Award, AlertCircle, CheckCircle, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { create as UserCreate } from '@/routes/users';
+import users, { create as UserCreate } from '@/routes/users';
 import type { Organization, Department, Position, Role } from '@/types';
 
 interface Props {
@@ -132,15 +132,15 @@ export default function UsersCreate({
         <>
             <Head title="ایجاد کاربر جدید" />
 
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <form onSubmit={handleSubmit}>
                         {/* Header Section */}
                         <div className="mb-8">
                             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                                 <div>
                                     <div className="flex items-center gap-3 mb-2">
-                                        <div className="p-2 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl shadow-lg">
+                                        <div className="p-2 bg-linear-to-br from-cyan-500 to-cyan-600 rounded-xl shadow-lg">
                                             <Users className="h-6 w-6 text-white" />
                                         </div>
                                         <div>
@@ -154,7 +154,7 @@ export default function UsersCreate({
                                 <div className="flex gap-3">
                                     <button
                                         type="button"
-                                        onClick={() => router.get(route('users.index'))}
+                                        onClick={() => router.get(users.index())}
                                         className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
                                     >
                                         <X className="ml-2 h-4 w-4" />
@@ -163,7 +163,7 @@ export default function UsersCreate({
                                     <button
                                         type="submit"
                                         disabled={processing}
-                                        className="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-cyan-600 to-cyan-700 border border-transparent rounded-xl text-sm font-medium text-white hover:from-cyan-700 hover:to-cyan-800 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="inline-flex items-center px-6 py-2.5 bg-linear-to-r from-cyan-600 to-cyan-700 border border-transparent rounded-xl text-sm font-medium text-white hover:from-cyan-700 hover:to-cyan-800 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <Save className="ml-2 h-4 w-4" />
                                         {processing ? 'در حال ثبت...' : 'ایجاد کاربر'}
@@ -176,7 +176,7 @@ export default function UsersCreate({
                         <div className="space-y-6">
                             {/* Personal Information Section */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
                                     <div className="flex items-center gap-2">
                                         <User className="h-5 w-5 text-cyan-600" />
                                         <div>
@@ -281,7 +281,7 @@ export default function UsersCreate({
 
                             {/* Account Information Section */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
                                     <div className="flex items-center gap-2">
                                         <Shield className="h-5 w-5 text-emerald-600" />
                                         <div>
@@ -407,7 +407,7 @@ export default function UsersCreate({
 
                             {/* Organizational Information Section */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
                                     <div className="flex items-center gap-2">
                                         <Building2 className="h-5 w-5 text-purple-600" />
                                         <div>
@@ -499,7 +499,7 @@ export default function UsersCreate({
 
                             {/* Status & Security Section */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
                                     <div className="flex items-center gap-2">
                                         <Shield className="h-5 w-5 text-amber-600" />
                                         <div>
@@ -516,6 +516,7 @@ export default function UsersCreate({
                                             {statusOptions.map((option) => {
                                                 const Icon = option.icon;
                                                 const isSelected = data.status === option.value;
+
                                                 return (
                                                     <button
                                                         key={option.value}
@@ -558,6 +559,7 @@ export default function UsersCreate({
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                             {securityLevels.map((level) => {
                                                 const isSelected = data.security_clearance === level.value;
+
                                                 return (
                                                     <button
                                                         key={level.value}
@@ -617,7 +619,7 @@ export default function UsersCreate({
                             <div className="flex flex-col sm:flex-row gap-3 sm:hidden">
                                 <button
                                     type="button"
-                                    onClick={() => router.get(route('users.index'))}
+                                    onClick={() => router.get(users.index())}
                                     className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all"
                                 >
                                     انصراف
