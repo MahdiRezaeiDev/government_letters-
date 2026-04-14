@@ -25,7 +25,6 @@ Route::inertia('/', 'welcome', [
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // مدیریت سازمان‌ها (فقط ادمین کل)
     Route::prefix('admin')->middleware(['role:super-admin'])->group(function () {
         Route::resource('organizations', OrganizationController::class);
         Route::post('organizations/{organization}/toggle-status', [OrganizationController::class, 'toggleStatus'])
