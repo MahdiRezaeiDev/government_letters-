@@ -1,10 +1,12 @@
-import { Head, router } from '@inertiajs/react';
-import { 
-    CheckCircle, XCircle, Clock, AlertCircle, 
-    Eye, ChevronLeft, Filter 
+// resources/js/pages/cartable/index.tsx
+
+import { Head, Link, router } from '@inertiajs/react';
+import {
+    CheckCircle, XCircle, Clock, AlertCircle,
+    Eye, ChevronLeft, Filter, Loader2, User, Calendar, MessageSquare
 } from 'lucide-react';
 import { useState } from 'react';
-import  cartable  from '@/routes/cartable';
+import cartable from '@/routes/cartable';
 import letters from '@/routes/letters';
 
 interface Routing {
@@ -65,6 +67,11 @@ export default function CartableIndex({ routings, stats, actionTypes, priorities
     const [loading, setLoading] = useState(false);
     const [completingId, setCompletingId] = useState<number | null>(null);
     const [rejectingId, setRejectingId] = useState<number | null>(null);
+
+    // State برای مودال‌ها
+    const [showCompleteModal, setShowCompleteModal] = useState(false);
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [selectedRoutingId, setSelectedRoutingId] = useState<number | null>(null);
     const [note, setNote] = useState('');
     const [reason, setReason] = useState('');
 
@@ -91,36 +98,66 @@ export default function CartableIndex({ routings, stats, actionTypes, priorities
         });
     };
 
-    const handleComplete = (routingId: number) => {
+    const openCompleteModal = (routingId: number) => {
+        setSelectedRoutingId(routingId);
+        setNote('');
+        setShowCompleteModal(true);
+    };
+
+    const openRejectModal = (routingId: number) => {
+        setSelectedRoutingId(routingId);
+        setReason('');
+        setShowRejectModal(true);
+    };
+
+    const handleComplete = () => {
         if (!note.trim()) {
             alert('لطفاً یادداشت اقدام را وارد کنید.');
 
             return;
         }
-        
-        router.post(cartable.complete(routingId), { note }, {
+
+        if (!selectedRoutingId) {
+            return;
+        }
+
+        setCompletingId(selectedRoutingId);
+        router.post(cartable.complete(selectedRoutingId), { note }, {
             preserveScroll: true,
-            onStart: () => setCompletingId(routingId),
+            onSuccess: () => {
+                setShowCompleteModal(false);
+                setSelectedRoutingId(null);
+                setNote('');
+                router.reload();
+            },
             onFinish: () => {
                 setCompletingId(null);
-                setNote('');
             },
         });
     };
 
-    const handleReject = (routingId: number) => {
+    const handleReject = () => {
         if (!reason.trim()) {
             alert('لطفاً دلیل رد را وارد کنید.');
 
             return;
         }
-        
-        router.post(cartable.reject(routingId), { reason }, {
+
+        if (!selectedRoutingId) {
+            return;
+        }
+
+        setRejectingId(selectedRoutingId);
+        router.post(cartable.reject(selectedRoutingId), { reason }, {
             preserveScroll: true,
-            onStart: () => setRejectingId(routingId),
+            onSuccess: () => {
+                setShowRejectModal(false);
+                setSelectedRoutingId(null);
+                setReason('');
+                router.reload();
+            },
             onFinish: () => {
                 setRejectingId(null);
-                setReason('');
             },
         });
     };
@@ -141,6 +178,14 @@ export default function CartableIndex({ routings, stats, actionTypes, priorities
         very_urgent: 'bg-red-100 text-red-600',
     };
 
+    const priorityLabels: Record<string, string> = {
+        low: 'کم',
+        normal: 'عادی',
+        high: 'مهم',
+        urgent: 'فوری',
+        very_urgent: 'خیلی فوری',
+    };
+
     return (
         <>
             <Head title="کارتابل من" />
@@ -156,7 +201,7 @@ export default function CartableIndex({ routings, stats, actionTypes, priorities
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                    <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 transition hover:shadow-md">
                         <div className="flex items-center gap-3">
                             <div className="bg-blue-500 rounded-lg p-2">
                                 <Clock className="h-5 w-5 text-white" />
@@ -167,7 +212,7 @@ export default function CartableIndex({ routings, stats, actionTypes, priorities
                             </div>
                         </div>
                     </div>
-                    <div className="bg-red-50 rounded-xl p-4 border border-red-100">
+                    <div className="bg-red-50 rounded-xl p-4 border border-red-100 transition hover:shadow-md">
                         <div className="flex items-center gap-3">
                             <div className="bg-red-500 rounded-lg p-2">
                                 <AlertCircle className="h-5 w-5 text-white" />
@@ -178,7 +223,7 @@ export default function CartableIndex({ routings, stats, actionTypes, priorities
                             </div>
                         </div>
                     </div>
-                    <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-100">
+                    <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-100 transition hover:shadow-md">
                         <div className="flex items-center gap-3">
                             <div className="bg-yellow-500 rounded-lg p-2">
                                 <Clock className="h-5 w-5 text-white" />
@@ -189,7 +234,7 @@ export default function CartableIndex({ routings, stats, actionTypes, priorities
                             </div>
                         </div>
                     </div>
-                    <div className="bg-green-50 rounded-xl p-4 border border-green-100">
+                    <div className="bg-green-50 rounded-xl p-4 border border-green-100 transition hover:shadow-md">
                         <div className="flex items-center gap-3">
                             <div className="bg-green-500 rounded-lg p-2">
                                 <CheckCircle className="h-5 w-5 text-white" />
@@ -207,14 +252,14 @@ export default function CartableIndex({ routings, stats, actionTypes, priorities
                     <div className="p-4 border-b border-gray-100">
                         <button
                             onClick={() => setShowFilters(!showFilters)}
-                            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+                            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition"
                         >
                             <Filter className="h-4 w-4" />
                             فیلترها
-                            <ChevronLeft className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-0' : 'rotate-180'}`} />
+                            <ChevronLeft className={`h-4 w-4 transition-transform duration-200 ${showFilters ? 'rotate-0' : 'rotate-180'}`} />
                         </button>
                     </div>
-                    
+
                     {showFilters && (
                         <div className="p-4 space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -259,7 +304,7 @@ export default function CartableIndex({ routings, stats, actionTypes, priorities
                             <div className="flex justify-end gap-3">
                                 <button
                                     onClick={resetFilters}
-                                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+                                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition"
                                 >
                                     پاک کردن فیلترها
                                 </button>
@@ -268,7 +313,7 @@ export default function CartableIndex({ routings, stats, actionTypes, priorities
                                     disabled={loading}
                                     className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50"
                                 >
-                                    {loading ? 'در حال اعمال...' : 'اعمال فیلتر'}
+                                    {loading ? <Loader2 className="h-4 w-4 animate-spin inline ml-1" /> : 'اعمال فیلتر'}
                                 </button>
                             </div>
                         </div>
@@ -287,17 +332,17 @@ export default function CartableIndex({ routings, stats, actionTypes, priorities
                         routings.data.map((routing) => {
                             const isOverdue = routing.deadline && new Date(routing.deadline) < new Date();
                             const action = actionTypes[routing.action_type];
-                            const priority = priorities[routing.letter?.priority];
-                            
+                            const priority = priorityLabels[routing.letter?.priority];
+
                             return (
                                 <div
                                     key={routing.id}
-                                    className={`bg-white rounded-xl shadow-sm border p-5 transition ${
-                                        isOverdue ? 'border-red-200 bg-red-50/30' : 'border-gray-100'
-                                    }`}
+                                    className={`bg-white rounded-xl shadow-sm border p-5 transition-all hover:shadow-md ${isOverdue ? 'border-red-200 bg-red-50/30' : 'border-gray-100'
+                                        }`}
                                 >
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="flex-1">
+                                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                                        <div className="flex-1 min-w-0">
+                                            {/* Badges */}
                                             <div className="flex items-center gap-2 mb-2 flex-wrap">
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${actionTypeColors[routing.action_type]}`}>
                                                     {action}
@@ -313,71 +358,70 @@ export default function CartableIndex({ routings, stats, actionTypes, priorities
                                                 )}
                                                 <span className="text-xs text-gray-400">{routing.letter?.letter_number}</span>
                                             </div>
-                                            
-                                            <div className="flex items-start gap-2">
-                                                <span className="text-gray-800 font-semibold">
-                                                    {routing.letter?.subject}
-                                                </span>
-                                            </div>
-                                            
+
+                                            {/* Subject */}
+                                            <Link
+                                                href={letters.show(routing.letter_id)}
+                                                className="text-gray-800 font-semibold hover:text-blue-600 transition line-clamp-2"
+                                            >
+                                                {routing.letter?.subject}
+                                            </Link>
+
+                                            {/* Instruction */}
                                             {routing.instruction && (
-                                                <p className="text-xs text-gray-500 mt-2 bg-gray-50 rounded-lg px-3 py-2">
-                                                    📌 {routing.instruction}
-                                                </p>
+                                                <div className="mt-2 flex items-start gap-1.5 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+                                                    <MessageSquare className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                                                    <span>{routing.instruction}</span>
+                                                </div>
                                             )}
-                                            
-                                            <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
-                                                <span>از: {routing.from_user?.first_name} {routing.from_user?.last_name}</span>
+
+                                            {/* Meta info */}
+                                            <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 flex-wrap">
+                                                <span className="flex items-center gap-1">
+                                                    <User className="h-3 w-3" />
+                                                    از: {routing.from_user?.first_name} {routing.from_user?.last_name}
+                                                </span>
                                                 {routing.deadline_jalali && (
                                                     <span className={`flex items-center gap-1 ${isOverdue ? 'text-red-600 font-medium' : ''}`}>
-                                                        <Clock className="h-3 w-3" />
+                                                        <Calendar className="h-3 w-3" />
                                                         مهلت: {routing.deadline_jalali}
                                                     </span>
                                                 )}
                                             </div>
                                         </div>
-                                        
+
+                                        {/* Actions */}
                                         <div className="flex items-center gap-2 flex-shrink-0">
-                                            <a
+                                            <Link
                                                 href={letters.show(routing.letter_id)}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-600 hover:bg-gray-50 transition"
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition"
                                             >
                                                 <Eye className="h-3.5 w-3.5" />
                                                 مشاهده
-                                            </a>
+                                            </Link>
                                             <button
-                                                onClick={() => {
-                                                    setCompletingId(routing.id);
-                                                    const note = prompt('لطفاً یادداشت اقدام را وارد کنید:');
-
-                                                    if (note) {
-                                                    handleComplete(routing.id);
-                                                    } else {
-                                                    setCompletingId(null);
-                                                    }
-                                                }}
+                                                onClick={() => openCompleteModal(routing.id)}
                                                 disabled={completingId === routing.id}
                                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs transition disabled:opacity-50"
                                             >
-                                                <CheckCircle className="h-3.5 w-3.5" />
-                                                {completingId === routing.id ? 'در حال...' : 'تکمیل'}
+                                                {completingId === routing.id ? (
+                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                ) : (
+                                                    <CheckCircle className="h-3.5 w-3.5" />
+                                                )}
+                                                تکمیل
                                             </button>
                                             <button
-                                                onClick={() => {
-                                                    setRejectingId(routing.id);
-                                                    const reason = prompt('لطفاً دلیل رد را وارد کنید:');
-
-                                                    if (reason) {
-                                                    handleReject(routing.id);
-                                                    } else {
-                                                    setRejectingId(null);
-                                                    }
-                                                }}
+                                                onClick={() => openRejectModal(routing.id)}
                                                 disabled={rejectingId === routing.id}
                                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs transition disabled:opacity-50"
                                             >
-                                                <XCircle className="h-3.5 w-3.5" />
-                                                {rejectingId === routing.id ? 'در حال...' : 'رد'}
+                                                {rejectingId === routing.id ? (
+                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                ) : (
+                                                    <XCircle className="h-3.5 w-3.5" />
+                                                )}
+                                                رد
                                             </button>
                                         </div>
                                     </div>
@@ -389,7 +433,7 @@ export default function CartableIndex({ routings, stats, actionTypes, priorities
 
                 {/* Pagination */}
                 {routings.last_page > 1 && (
-                    <div className="bg-white px-6 py-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div className="bg-white px-6 py-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between flex-wrap gap-4">
                         <div className="text-sm text-gray-500">
                             نمایش {routings.from} تا {routings.to} از {routings.total} نتیجه
                         </div>
@@ -401,33 +445,40 @@ export default function CartableIndex({ routings, stats, actionTypes, priorities
                                     }
                                 }}
                                 disabled={routings.current_page === 1}
-                                className={`px-3 py-1 rounded-lg text-sm ${routings.current_page > 1 ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
+                                className={`px-3 py-1 rounded-lg text-sm transition ${routings.current_page > 1
+                                    ? 'text-gray-700 hover:bg-gray-100'
+                                    : 'text-gray-300 cursor-not-allowed'
+                                    }`}
                             >
                                 قبلی
                             </button>
-                            {[...Array(Math.min(5, routings.last_page))].map((_, i) => {
-                                let pageNum;
+                            {(() => {
+                                const pages = [];
+                                const maxVisible = 5;
+                                let start = Math.max(1, routings.current_page - Math.floor(maxVisible / 2));
+                                const end = Math.min(routings.last_page, start + maxVisible - 1);
 
-                                if (routings.last_page <= 5) {
-                                    pageNum = i + 1;
-                                } else if (routings.current_page <= 3) {
-                                    pageNum = i + 1;
-                                } else if (routings.current_page >= routings.last_page - 2) {
-                                    pageNum = routings.last_page - 4 + i;
-                                } else {
-                                    pageNum = routings.current_page - 2 + i;
+                                if (end - start + 1 < maxVisible) {
+                                    start = Math.max(1, end - maxVisible + 1);
                                 }
 
-                                return (
+                                for (let i = start; i <= end; i++) {
+                                    pages.push(i);
+                                }
+
+                                return pages.map((page) => (
                                     <button
-                                        key={pageNum}
-                                        onClick={() => router.get(cartable.index(), { page: pageNum, ...filters })}
-                                        className={`px-3 py-1 rounded-lg text-sm ${routings.current_page === pageNum ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+                                        key={page}
+                                        onClick={() => router.get(cartable.index(), { page, ...filters })}
+                                        className={`px-3 py-1 rounded-lg text-sm transition ${routings.current_page === page
+                                            ? 'bg-blue-600 text-white'
+                                            : 'text-gray-700 hover:bg-gray-100'
+                                            }`}
                                     >
-                                        {pageNum}
+                                        {page}
                                     </button>
-                                );
-                            })}
+                                ));
+                            })()}
                             <button
                                 onClick={() => {
                                     if (routings.current_page < routings.last_page) {
@@ -435,7 +486,10 @@ export default function CartableIndex({ routings, stats, actionTypes, priorities
                                     }
                                 }}
                                 disabled={routings.current_page === routings.last_page}
-                                className={`px-3 py-1 rounded-lg text-sm ${routings.current_page < routings.last_page ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
+                                className={`px-3 py-1 rounded-lg text-sm transition ${routings.current_page < routings.last_page
+                                    ? 'text-gray-700 hover:bg-gray-100'
+                                    : 'text-gray-300 cursor-not-allowed'
+                                    }`}
                             >
                                 بعدی
                             </button>
@@ -443,6 +497,78 @@ export default function CartableIndex({ routings, stats, actionTypes, priorities
                     </div>
                 )}
             </div>
+
+            {/* Complete Modal */}
+            {showCompleteModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+                        <h3 className="text-lg font-semibold mb-4">تکمیل اقدام</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                            لطفاً یادداشت اقدام را وارد کنید
+                        </p>
+                        <textarea
+                            value={note}
+                            onChange={(e) => setNote(e.target.value)}
+                            rows={4}
+                            placeholder="نتیجه اقدام انجام شده را بنویسید..."
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                            autoFocus
+                        />
+                        <div className="flex justify-end gap-3 mt-4">
+                            <button
+                                onClick={() => setShowCompleteModal(false)}
+                                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition"
+                            >
+                                انصراف
+                            </button>
+                            <button
+                                onClick={handleComplete}
+                                disabled={!note.trim()}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition disabled:opacity-50"
+                            >
+                                {completingId && <Loader2 className="h-4 w-4 animate-spin" />}
+                                تأیید و تکمیل
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Reject Modal */}
+            {showRejectModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+                        <h3 className="text-lg font-semibold mb-4">رد اقدام</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                            لطفاً دلیل رد را وارد کنید
+                        </p>
+                        <textarea
+                            value={reason}
+                            onChange={(e) => setReason(e.target.value)}
+                            rows={4}
+                            placeholder="دلیل رد را بنویسید..."
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                            autoFocus
+                        />
+                        <div className="flex justify-end gap-3 mt-4">
+                            <button
+                                onClick={() => setShowRejectModal(false)}
+                                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition"
+                            >
+                                انصراف
+                            </button>
+                            <button
+                                onClick={handleReject}
+                                disabled={!reason.trim()}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition disabled:opacity-50"
+                            >
+                                {rejectingId && <Loader2 className="h-4 w-4 animate-spin" />}
+                                تأیید و رد
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
