@@ -4,7 +4,7 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutDashboard,
     Building2,
-    Map,
+    Map as Sitemap,
     Briefcase,
     Users,
     Mail,
@@ -20,15 +20,16 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { dashboard } from '@/routes';
-import archives from '@/routes/archives';
-import cartable from '@/routes/cartable';
-import categories from '@/routes/categories';
-import { positions } from '@/routes/departments';
-import letters from '@/routes/letters';
-import organizations from '@/routes/organizations';
-import profile from '@/routes/profile';
-import reports from '@/routes/reports';
-import users from '@/routes/users';
+import { index as archivesIndex } from '@/routes/archives';
+import { index as cartableIndex } from '@/routes/cartable';
+import { index as categoriesIndex } from '@/routes/categories';
+import { index as departmentsIndex, positions as positionsList } from '@/routes/departments';
+import { index as lettersIndex, create as lettersCreate } from '@/routes/letters';
+import { index as organizationsIndex } from '@/routes/organizations';
+import { edit as profileEdit } from '@/routes/profile';
+import { index as reportsIndex } from '@/routes/reports';
+import { index as usersIndex } from '@/routes/users';
+import { index as settingsIndex } from '@/routes/users';
 
 interface NavItem {
     title: string;
@@ -38,14 +39,38 @@ interface NavItem {
     permission?: string;
 }
 
+// کامپوننت Tooltip ساده
+function Tooltip({ children, text }: { children: React.ReactNode; text: string }) {
+    if (!text) {
+        return <>{children}</>;
+    }
+
+    return (
+        <div className="relative group">
+            {children}
+            <div className="absolute right-full top-1/2 -translate-y-1/2 mr-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                {text}
+            </div>
+        </div>
+    );
+}
+
 export function Sidebar() {
     const { auth, url } = usePage().props as any;
     const [collapsed, setCollapsed] = useState(false);
     const [openMenus, setOpenMenus] = useState<string[]>(['نامه‌ها']);
+    
 
     const userRole = auth.user?.roles?.[0]?.name || 'user';
+    const isSuperAdmin = userRole === 'super-admin';
+    const isOrgAdmin = userRole === 'org-admin';
+    const isDeptManager = userRole === 'dept-manager';
 
     const toggleMenu = (title: string) => {
+        if (collapsed) {
+            return;
+        }
+
         setOpenMenus(prev =>
             prev.includes(title)
                 ? prev.filter(t => t !== title)
@@ -64,36 +89,36 @@ export function Sidebar() {
             icon: Building2,
             permission: 'super-admin',
             children: [
-                { title: 'سازمان‌ها', href: organizations.index(), icon: Building2 },
-                { title: 'دپارتمان‌ها', href: organizations.index(), icon: Map },
-                { title: 'سمت‌ها', href: positions, icon: Briefcase },
-                { title: 'کاربران', href: users.index(), icon: Users },
-                { title: 'دسته‌بندی نامه‌ها', href: categories.index(), icon: FolderTree },
+                { title: 'سازمان‌ها', href: organizationsIndex(), icon: Building2 },
+                { title: 'دپارتمان‌ها', href: departmentsIndex(), icon: Sitemap },
+                { title: 'سمت‌ها', href: positionsList(), icon: Briefcase },
+                { title: 'کاربران', href: usersIndex(), icon: Users },
+                { title: 'دسته‌بندی نامه‌ها', href: categoriesIndex(), icon: FolderTree },
             ],
         },
         {
             title: 'نامه‌ها',
             icon: Mail,
             children: [
-                { title: 'نامه‌های وارده', href: letters.index({ query: { type: 'incoming' } }), icon: Inbox },
-                { title: 'نامه‌های صادره', href: letters.index({ query: { type: 'outgoing' } }), icon: Send },
-                { title: 'نامه‌های داخلی', href: letters.index({ query: { type: 'internal' } }), icon: FileText },
-                { title: 'نامه جدید', href: letters.create(), icon: Mail },
+                { title: 'نامه‌های وارده', href: lettersIndex({ type: 'incoming' }), icon: Inbox },
+                { title: 'نامه‌های صادره', href: lettersIndex({ type: 'outgoing' }), icon: Send },
+                { title: 'نامه‌های داخلی', href: lettersIndex({ type: 'internal' }), icon: FileText },
+                { title: 'نامه جدید', href: lettersCreate(), icon: Mail },
             ],
         },
         {
             title: 'کارتابل',
-            href: cartable.index(),
+            href: cartableIndex(),
             icon: Inbox,
         },
         {
             title: 'بایگانی',
-            href: archives.index(),
+            href: archivesIndex(),
             icon: Archive,
         },
         {
             title: 'گزارشات',
-            href: reports.index(),
+            href: reportsIndex(),
             icon: BarChart3,
             permission: 'dept-manager',
         },
@@ -101,8 +126,8 @@ export function Sidebar() {
             title: 'تنظیمات',
             icon: Settings,
             children: [
-                { title: 'پروفایل', href: profile.edit(), icon: Users },
-                { title: 'تنظیمات سیستم', href: profile.edit(), icon: Settings },
+                { title: 'پروفایل', href: profileEdit(), icon: Users },
+                { title: 'تنظیمات سیستم', href: settingsIndex(), icon: Settings },
             ],
         },
     ];
@@ -111,15 +136,15 @@ export function Sidebar() {
     const filterByRole = (items: NavItem[]): NavItem[] => {
         return items.filter(item => {
             if (item.permission) {
-                if (item.permission === 'super-admin' && !auth.user?.is_super_admin) {
+                if (item.permission === 'super-admin' && !isSuperAdmin) {
                     return false;
                 }
 
-                if (item.permission === 'org-admin' && !auth.user?.is_org_admin) {
+                if (item.permission === 'org-admin' && !isSuperAdmin && !isOrgAdmin) {
                     return false;
                 }
 
-                if (item.permission === 'dept-manager' && !auth.user?.is_dept_manager) {
+                if (item.permission === 'dept-manager' && !isSuperAdmin && !isOrgAdmin && !isDeptManager) {
                     return false;
                 }
             }
@@ -141,8 +166,7 @@ export function Sidebar() {
             return false;
         }
 
-        // return url === href || url.startsWith(href + '?') || (href !== '/' && url.startsWith(href));
-        return true;
+        return false;
     };
 
     return (
@@ -168,13 +192,13 @@ export function Sidebar() {
             {/* دکمه جمع کردن */}
             <button
                 onClick={() => setCollapsed(!collapsed)}
-                className="absolute -left-3 top-20 bg-white border border-gray-200 rounded-full p-1 shadow-md hover:bg-gray-50"
+                className="absolute -left-3 top-20 bg-white border border-gray-200 rounded-full p-1 shadow-md hover:bg-gray-50 transition-colors z-50"
             >
                 <ChevronLeft className={`h-4 w-4 text-gray-500 transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* منوی ناوبری */}
-            <nav className="p-3 space-y-1 overflow-y-auto h-[calc(100%-4rem)]">
+            {/* منوی ناوبری - استفاده از map به جای every */}
+            <nav className="p-3 space-y-1 overflow-hidden h-[calc(100%-4rem)]">
                 {filteredNavItems.map((item) => (
                     <div key={item.title}>
                         {item.children ? (
@@ -182,12 +206,12 @@ export function Sidebar() {
                             <div>
                                 <button
                                     onClick={() => toggleMenu(item.title)}
-                                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${openMenus.includes(item.title)
-                                        ? 'text-blue-600 bg-blue-50'
-                                        : 'text-gray-700 hover:bg-gray-100'
-                                        }`}
+                                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${openMenus.includes(item.title) && !collapsed
+                                            ? 'text-blue-600 bg-blue-50'
+                                            : 'text-gray-700 hover:bg-gray-100'
+                                        } ${collapsed ? 'justify-center' : ''}`}
                                 >
-                                    <div className="flex items-center gap-3">
+                                    <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
                                         <item.icon className="h-5 w-5" />
                                         {!collapsed && <span>{item.title}</span>}
                                     </div>
@@ -196,6 +220,7 @@ export function Sidebar() {
                                     )}
                                 </button>
 
+                                {/* زیرمنو */}
                                 {!collapsed && openMenus.includes(item.title) && (
                                     <div className="mr-8 mt-1 space-y-1">
                                         {item.children.map((child) => (
@@ -203,8 +228,8 @@ export function Sidebar() {
                                                 key={child.title}
                                                 href={child.href!}
                                                 className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive(child.href)
-                                                    ? 'text-blue-600 bg-blue-50'
-                                                    : 'text-gray-600 hover:bg-gray-100'
+                                                        ? 'text-blue-600 bg-blue-50'
+                                                        : 'text-gray-600 hover:bg-gray-100'
                                                     }`}
                                             >
                                                 <child.icon className="h-4 w-4" />
@@ -216,16 +241,18 @@ export function Sidebar() {
                             </div>
                         ) : (
                             // آیتم ساده
-                            <Link
-                                href={item.href!}
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${isActive(item.href)
-                                    ? 'text-blue-600 bg-blue-50'
-                                    : 'text-gray-700 hover:bg-gray-100'
-                                    } ${collapsed ? 'justify-center' : ''}`}
-                            >
-                                <item.icon className="h-5 w-5" />
-                                {!collapsed && <span>{item.title}</span>}
-                            </Link>
+                            <Tooltip text={collapsed ? item.title : ''}>
+                                <Link
+                                    href={item.href!}
+                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${isActive(item.href)
+                                            ? 'text-blue-600 bg-blue-50'
+                                            : 'text-gray-700 hover:bg-gray-100'
+                                        } ${collapsed ? 'justify-center' : ''}`}
+                                >
+                                    <item.icon className="h-5 w-5" />
+                                    {!collapsed && <span>{item.title}</span>}
+                                </Link>
+                            </Tooltip>
                         )}
                     </div>
                 ))}

@@ -54,27 +54,13 @@ export function Header({ onMenuClick, isMobile }: HeaderProps) {
                     </Link>
                 </div>
 
-                {/* وسط: جستجو (فقط دسکتاپ) */}
-                {!isMobile && (
-                    <div className="flex-1 max-w-md mx-4">
-                        <div className="relative">
-                            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="جستجو در نامه‌ها، کاربران..."
-                                className="w-full pr-10 pl-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                        </div>
-                    </div>
-                )}
-
                 {/* سمت چپ: نوتیفیکیشن و پروفایل */}
                 <div className="flex items-center gap-2">
                     {/* دکمه نوتیفیکیشن */}
                     <div className="relative">
                         <button
                             onClick={() => setNotificationsOpen(!notificationsOpen)}
-                            className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
+                            className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative cursor-pointer"
                         >
                             <Bell className="h-5 w-5 text-gray-600" />
                             {unreadCount > 0 && (
@@ -107,22 +93,11 @@ export function Header({ onMenuClick, isMobile }: HeaderProps) {
                     <div className="relative">
                         <button
                             onClick={() => setUserMenuOpen(!userMenuOpen)}
-                            className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                            className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                         >
                             <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-white font-medium text-sm">
-                                {auth.user?.first_name?.[0]}{auth.user?.last_name?.[0]}
+                                {auth.user?.name?.[0]}{auth.user?.last_name?.[0]}
                             </div>
-                            {!isMobile && (
-                                <>
-                                    <div className="text-right hidden md:block">
-                                        <p className="text-sm font-medium text-gray-800">
-                                            {auth.user?.first_name} {auth.user?.last_name}
-                                        </p>
-                                        <p className="text-xs text-gray-500">{auth.user?.email}</p>
-                                    </div>
-                                    <ChevronDown className="h-4 w-4 text-gray-500" />
-                                </>
-                            )}
                         </button>
 
                         {/* منوی کشویی کاربر */}
@@ -130,7 +105,7 @@ export function Header({ onMenuClick, isMobile }: HeaderProps) {
                             <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 z-50">
                                 <div className="p-3 border-b border-gray-100">
                                     <p className="text-sm font-medium text-gray-900">
-                                        {auth.user?.first_name} {auth.user?.last_name}
+                                        {auth.user?.name} {auth.user?.last_name}
                                     </p>
                                     <p className="text-xs text-gray-500">{auth.user?.email}</p>
                                 </div>
