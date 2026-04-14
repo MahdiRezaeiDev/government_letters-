@@ -2,7 +2,7 @@
 
 import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
-import { Save, X, FolderTree } from 'lucide-react';
+import { Save, X } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import categories from '@/routes/categories';
 import type { Organization, LetterCategory } from '@/types';
@@ -49,7 +49,7 @@ export default function CategoriesCreate({ organizations, parentCategories }: Pr
         <>
             <Head title="ایجاد دسته‌بندی جدید" />
 
-            <div className="max-w-2xl mx-auto py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Header */}
                     <div className="flex justify-between items-center">

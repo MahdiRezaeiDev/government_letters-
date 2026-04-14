@@ -1,9 +1,9 @@
 // resources/js/pages/settings/index.tsx
 
-import React, { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
-import { Save, Bell, Shield, Globe, Database, Mail, Lock, Users } from 'lucide-react';
+import { Save, Shield, Globe, Database, Mail } from 'lucide-react';
+import { useState } from 'react';
 
 interface Props {
     settings: {
@@ -38,7 +38,7 @@ export default function SystemSettings({ settings }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        patch(route('settings.update'), {
+        patch(settings.update('settings.update'), {
             preserveScroll: true,
         });
     };

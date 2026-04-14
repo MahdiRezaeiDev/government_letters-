@@ -1,7 +1,8 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Search, FolderOpen, ChevronLeft, ChevronRight, Eye, Building2 } from 'lucide-react';
+import { Plus, Search, FolderOpen, Eye } from 'lucide-react';
 import { useState } from 'react';
 import type { Archive, Department } from '@/types';
+import archivesRoute from '@/routes/archives';
 
 interface Props {
     archives: {
@@ -28,7 +29,7 @@ export default function ArchivesIndex({ archives, departments, filters, can }: P
     const [selectedDepartment, setSelectedDepartment] = useState(filters.department_id || '');
 
     const handleSearch = () => {
-        router.get(route('archives.index'), {
+        router.get(archivesRoute.index(), {
             search: searchTerm,
             department_id: selectedDepartment,
         }, { preserveState: true, replace: true });
@@ -37,11 +38,14 @@ export default function ArchivesIndex({ archives, departments, filters, can }: P
     const handleReset = () => {
         setSearchTerm('');
         setSelectedDepartment('');
-        router.get(route('archives.index'), {}, { preserveState: true, replace: true });
+        router.get(archivesRoute.index(), {}, { preserveState: true, replace: true });
     };
 
     const getLevelPrefix = (level?: number) => {
-        if (!level) return '';
+        if (!level) {
+            return '';
+        }
+
         return '—'.repeat(level) + (level > 0 ? ' ' : '');
     };
 
@@ -60,7 +64,7 @@ export default function ArchivesIndex({ archives, departments, filters, can }: P
                     </div>
                     {can.create && (
                         <Link
-                            href={route('archives.create')}
+                            href={archivesRoute.create()}
                             className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700 transition"
                         >
                             <Plus className="ml-2 h-4 w-4" />
@@ -170,7 +174,7 @@ export default function ArchivesIndex({ archives, departments, filters, can }: P
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">
                                                 <Link
-                                                    href={route('archives.show', { archive: archive.id })}
+                                                    href={archivesRoute.show({ archive: archive.id })}
                                                     className="text-blue-600 hover:text-blue-900 inline-flex items-center gap-1"
                                                 >
                                                     <Eye className="h-4 w-4" />
@@ -192,7 +196,7 @@ export default function ArchivesIndex({ archives, departments, filters, can }: P
                             </div>
                             <div className="flex gap-2">
                                 <Link
-                                    href={archives.current_page > 1 ? route('archives.index', { page: archives.current_page - 1, ...filters }) : '#'}
+                                    href={archives.current_page > 1 ? archivesRoute.index({query: { page: archives.current_page - 1, ...filters }}) : '#'}
                                     className={`px-3 py-1 rounded-lg text-sm ${archives.current_page > 1 ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
                                 >
                                     قبلی
@@ -201,20 +205,20 @@ export default function ArchivesIndex({ archives, departments, filters, can }: P
                                     const pages = [];
                                     const maxVisible = 5;
                                     let start = Math.max(1, archives.current_page - Math.floor(maxVisible / 2));
-                                    let end = Math.min(archives.last_page, start + maxVisible - 1);
-                                    
+                                    const end = Math.min(archives.last_page, start + maxVisible - 1);
+
                                     if (end - start + 1 < maxVisible) {
                                         start = Math.max(1, end - maxVisible + 1);
                                     }
-                                    
+
                                     for (let i = start; i <= end; i++) {
                                         pages.push(i);
                                     }
-                                    
+
                                     return pages.map((page) => (
                                         <Link
                                             key={page}
-                                            href={route('archives.index', { page, ...filters })}
+                                            href={archivesRoute.index({query : { page, ...filters }})}
                                             className={`px-3 py-1 rounded-lg text-sm ${archives.current_page === page ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
                                         >
                                             {page}
@@ -222,7 +226,7 @@ export default function ArchivesIndex({ archives, departments, filters, can }: P
                                     ));
                                 })()}
                                 <Link
-                                    href={archives.current_page < archives.last_page ? route('archives.index', { page: archives.current_page + 1, ...filters }) : '#'}
+                                    href={archives.current_page < archives.last_page ? archivesRoute.index({query: { page: archives.current_page + 1, ...filters }}) : '#'}
                                     className={`px-3 py-1 rounded-lg text-sm ${archives.current_page < archives.last_page ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
                                 >
                                     بعدی

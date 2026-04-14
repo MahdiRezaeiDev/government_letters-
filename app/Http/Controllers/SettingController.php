@@ -9,12 +9,6 @@ use Inertia\Inertia;
 
 class SettingController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth']);
-        $this->middleware(['role:super-admin'])->except(['index']);
-    }
-
     /**
      * نمایش صفحه تنظیمات سیستم
      */

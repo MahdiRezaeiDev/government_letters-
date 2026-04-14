@@ -1,9 +1,9 @@
 import { Head, router } from '@inertiajs/react';
 import { 
     CheckCircle, XCircle, Clock, AlertCircle, 
-    Eye, ChevronLeft, ChevronRight, Filter 
+    Eye, ChevronLeft, Filter 
 } from 'lucide-react';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import  cartable  from '@/routes/cartable';
 import letters from '@/routes/letters';
 
@@ -145,7 +145,7 @@ export default function CartableIndex({ routings, stats, actionTypes, priorities
         <>
             <Head title="کارتابل من" />
 
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header */}
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">کارتابل من</h1>

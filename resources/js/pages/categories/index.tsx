@@ -1,13 +1,13 @@
 // resources/js/pages/categories/index.tsx
 
-import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import { 
-    Plus, Pencil, Trash2, Search, FolderTree, 
-    ChevronLeft, ChevronRight, Eye, Power, PowerOff 
+import {
+    Plus, Pencil, Trash2, Search, FolderTree,
+    Eye, Power, PowerOff
 } from 'lucide-react';
-import type { LetterCategory, Organization } from '@/types';
+import { useState } from 'react';
 import categoriesRoute from '@/routes/categories';
+import type { LetterCategory, Organization } from '@/types';
 
 interface Props {
     categories: {
@@ -63,7 +63,10 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
     };
 
     const getLevelPrefix = (level?: number) => {
-        if (!level) return '';
+        if (!level) {
+            return '';
+        }
+
         return '—'.repeat(level) + (level > 0 ? ' ' : '');
     };
 
@@ -71,7 +74,7 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
         <>
             <Head title="مدیریت دسته‌بندی نامه‌ها" />
 
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header */}
                 <div className="flex justify-between items-center">
                     <div>
@@ -193,8 +196,8 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-2">
-                                                    <div 
-                                                        className="w-6 h-6 rounded-full border border-gray-200" 
+                                                    <div
+                                                        className="w-6 h-6 rounded-full border border-gray-200"
                                                         style={{ backgroundColor: category.color }}
                                                     />
                                                     <span className="text-sm text-gray-500">{category.color}</span>
@@ -206,11 +209,10 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <button
                                                     onClick={() => handleToggleStatus(category.id)}
-                                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                                        category.status 
-                                                            ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${category.status
+                                                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
                                                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {category.status ? (
                                                         <><Power className="h-3 w-3 ml-1" /> فعال</>
@@ -261,13 +263,14 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
                             </div>
                             <div className="flex gap-2">
                                 <Link
-                                    href={categories.current_page > 1 ? categoriesRoute.index({query: { page: categories.current_page - 1, ...filters }}) : '#'}
+                                    href={categories.current_page > 1 ? categoriesRoute.index({ query: { page: categories.current_page - 1, ...filters } }) : '#'}
                                     className={`px-3 py-1 rounded-lg text-sm ${categories.current_page > 1 ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
                                 >
                                     قبلی
                                 </Link>
                                 {[...Array(Math.min(5, categories.last_page))].map((_, i) => {
                                     let pageNum;
+
                                     if (categories.last_page <= 5) {
                                         pageNum = i + 1;
                                     } else if (categories.current_page <= 3) {
@@ -277,10 +280,11 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
                                     } else {
                                         pageNum = categories.current_page - 2 + i;
                                     }
+
                                     return (
                                         <Link
                                             key={pageNum}
-                                            href={categoriesRoute.index({query : { page: pageNum, ...filters }})}
+                                            href={categoriesRoute.index({ query: { page: pageNum, ...filters } })}
                                             className={`px-3 py-1 rounded-lg text-sm ${categories.current_page === pageNum ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
                                         >
                                             {pageNum}
@@ -288,7 +292,7 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
                                     );
                                 })}
                                 <Link
-                                    href={categories.current_page < categories.last_page ? categoriesRoute.index({query:  { page: categories.current_page + 1, ...filters }}) : '#'}
+                                    href={categories.current_page < categories.last_page ? categoriesRoute.index({ query: { page: categories.current_page + 1, ...filters } }) : '#'}
                                     className={`px-3 py-1 rounded-lg text-sm ${categories.current_page < categories.last_page ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
                                 >
                                     بعدی
