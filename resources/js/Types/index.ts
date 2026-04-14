@@ -286,6 +286,8 @@ export interface CartableStats {
 }
 
 export interface DashboardStats {
+    rejected_count: number;
+    approved_count: number;
     pending_actions: number;
     incoming_new: number;
     outgoing_new: number;
