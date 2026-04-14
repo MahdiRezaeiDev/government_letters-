@@ -97,15 +97,9 @@ export default function Welcome() {
                             <div className="flex gap-4">
                                 <Link
                                     href={login()}
-                                    className="text-sm font-medium text-gray-600 hover:text-blue-600 transition"
-                                >
-                                    ورود
-                                </Link>
-                                <Link
-                                    href={register()}
                                     className="text-sm font-medium px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-sm"
                                 >
-                                    شروع رایگان
+                                  ورود
                                 </Link>
                             </div>
                         </div>
@@ -115,7 +109,7 @@ export default function Welcome() {
                 {/* Hero Section */}
                 <div className="relative overflow-hidden pt-20">
                     {/* Background Pattern */}
-                    <div className="absolute inset-0 bg-grid-slate-100 [mask-image:radial-gradient(ellipse_at_center,white,transparent)] opacity-50" />
+                    <div className="absolute inset-0 bg-grid-slate-100 mask-[radial-gradient(ellipse_at_center,white,transparent)] opacity-50" />
                     
                     <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
                         <div className="text-center">
@@ -132,12 +126,6 @@ export default function Welcome() {
                                 سیستمی کامل برای ثبت، پیگیری و بایگانی نامه‌های اداری با گردش کار هوشمند و امنیت بالا
                             </p>
                             <div className="mt-10 flex items-center justify-center gap-x-6">
-                                <Link
-                                    href={register()}
-                                    className="rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 transform hover:-translate-y-0.5"
-                                >
-                                    شروع کنید
-                                </Link>
                                 <Link
                                     href={login()}
                                     className="text-sm font-semibold leading-6 text-gray-900 hover:text-blue-600 transition flex items-center gap-1"
@@ -178,9 +166,9 @@ export default function Welcome() {
                                     key={feature.title} 
                                     className="group relative bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                                 >
-                                    <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-5 rounded-2xl transition-opacity duration-300`} />
+                                    <div className={`absolute inset-0 bg-linear-to-br ${feature.color} opacity-0 group-hover:opacity-5 rounded-2xl transition-opacity duration-300`} />
                                     <div className="relative">
-                                        <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.color} shadow-lg mb-4`}>
+                                        <div className={`inline-flex p-3 rounded-xl bg-linear-to-br ${feature.color} shadow-lg mb-4`}>
                                             <feature.icon className="h-6 w-6 text-white" />
                                         </div>
                                         <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -197,7 +185,7 @@ export default function Welcome() {
                 </div>
 
                 {/* CTA Section */}
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 py-16">
+                <div className="bg-linear-to-r from-blue-600 to-indigo-700 py-16">
                     <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
                         <h2 className="text-3xl font-bold text-white mb-4">
                             آماده شروع هستید؟
@@ -222,9 +210,6 @@ export default function Welcome() {
                             <div className="flex justify-center gap-6 mb-6">
                                 <Link href={login()} className="text-sm text-gray-500 hover:text-gray-700">
                                     ورود
-                                </Link>
-                                <Link href={register()} className="text-sm text-gray-500 hover:text-gray-700">
-                                    ثبت‌نام
                                 </Link>
                                 <a href="#" className="text-sm text-gray-500 hover:text-gray-700">
                                     تماس با ما
