@@ -119,7 +119,7 @@ export default function UsersEdit({
         <>
             <Head title={`ویرایش کاربر - ${user.full_name}`} />
 
-            <div className="max-w-4xl mx-auto py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Header */}
                     <div className="flex justify-between items-center">

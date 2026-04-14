@@ -360,15 +360,15 @@ export default function LettersCreate({
         <>
             <Head title={getTitle()} />
 
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <form onSubmit={(e) => handleSubmit(e, false)}>
                         {/* Header Section */}
                         <div className="mb-8">
                             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                                 <div>
                                     <div className="flex items-center gap-3 mb-2">
-                                        <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg text-white">
+                                        <div className="p-2 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg text-white">
                                             {getTypeIcon()}
                                         </div>
                                         <div>
@@ -390,7 +390,7 @@ export default function LettersCreate({
                                     <button
                                         type="submit"
                                         disabled={processing}
-                                        className="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 border border-transparent rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="inline-flex items-center px-6 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 border border-transparent rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <Send className="ml-2 h-4 w-4" />
                                         {processing ? 'در حال ارسال...' : 'ثبت و ارسال'}
@@ -403,7 +403,7 @@ export default function LettersCreate({
                         <div className="space-y-6">
                             {/* Basic Information Section */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
                                     <div className="flex items-center gap-2">
                                         <FileSignature className="h-5 w-5 text-blue-600" />
                                         <div>
@@ -535,7 +535,7 @@ export default function LettersCreate({
 
                             {/* Sender Information (Read-only - Current User) */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
                                     <div className="flex items-center gap-2">
                                         <UserIcon className="h-5 w-5 text-emerald-600" />
                                         <div>
@@ -547,7 +547,7 @@ export default function LettersCreate({
                                 <div className="p-6">
                                     <div className="bg-gray-50 rounded-lg p-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-bold">
+                                            <div className="h-10 w-10 rounded-full bg-linear-to-r from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-bold">
                                                 {currentUser.full_name?.charAt(0) || 'U'}
                                             </div>
                                             <div>
@@ -565,7 +565,7 @@ export default function LettersCreate({
 
                             {/* Recipient Information Section */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
                                     <div className="flex items-center gap-2">
                                         {data.recipient_type === 'internal' ? (
                                             <UserCheck className="h-5 w-5 text-purple-600" />
@@ -770,7 +770,7 @@ export default function LettersCreate({
 
                             {/* Letter Content Section */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
                                     <div className="flex items-center gap-2">
                                         <FileText className="h-5 w-5 text-amber-600" />
                                         <div>
@@ -792,7 +792,7 @@ export default function LettersCreate({
 
                             {/* Attachments Section */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
                                     <div className="flex items-center gap-2">
                                         <Paperclip className="h-5 w-5 text-indigo-600" />
                                         <div>
@@ -845,7 +845,7 @@ export default function LettersCreate({
 
                             {/* Instruction Section */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
                                     <div className="flex items-center gap-2">
                                         <AlertCircle className="h-5 w-5 text-orange-600" />
                                         <div>

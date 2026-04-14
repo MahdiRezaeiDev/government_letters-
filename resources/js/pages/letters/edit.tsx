@@ -7,10 +7,11 @@ import {
     AlertCircle, ChevronDown, FileText,
     Calendar, UserIcon, Building2, Briefcase, Shield,
     Flag, FolderTree, FileSignature, Clock, Users,
-    Building, Globe, UserCheck, CheckCircle, ChevronRight
+    Building, Globe, UserCheck, CheckCircle, ChevronRight,
+    Download
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
-import { update as LetterUpdate } from '@/routes/letters';
+import letters, { update as LetterUpdate } from '@/routes/letters';
 import type { LetterCategory, User, Department, Position, Organization, Letter, Attachment } from '@/types';
 
 interface Props {
@@ -46,14 +47,14 @@ interface FormData {
 }
 
 export default function LettersEdit({ 
-    letter, categories, users, departments, positions, 
-    externalOrganizations, externalOrganizationsTree,
+    letter, categories, 
+    
     securityLevels, priorityLevels 
 }: Props) {
     const { auth } = usePage().props as any;
     const currentUser = auth.user;
     
-    const { data, setData, put, processing, errors, reset } = useForm<FormData>({
+    const { data, setData, processing, errors, reset } = useForm<FormData>({
         category_id: letter.category_id,
         subject: letter.subject,
         summary: letter.summary || '',
@@ -137,34 +138,21 @@ export default function LettersEdit({
         window.open(route('attachments.download', { attachment: attachment.id }), '_blank');
     };
 
-    const priorityConfig: Record<string, { label: string; color: string; bg: string; text: string }> = {
-        low: { label: 'کم', color: 'gray', bg: 'bg-gray-50', text: 'text-gray-600' },
-        normal: { label: 'معمولی', color: 'blue', bg: 'bg-blue-50', text: 'text-blue-700' },
-        high: { label: 'بالا', color: 'yellow', bg: 'bg-yellow-50', text: 'text-yellow-700' },
-        urgent: { label: 'فوری', color: 'orange', bg: 'bg-orange-50', text: 'text-orange-700' },
-        very_urgent: { label: 'خیلی فوری', color: 'red', bg: 'bg-red-50', text: 'text-red-700' },
-    };
 
-    const securityConfig: Record<string, { label: string; color: string; bg: string; text: string }> = {
-        public: { label: 'عمومی', color: 'gray', bg: 'bg-gray-50', text: 'text-gray-600' },
-        internal: { label: 'داخلی', color: 'blue', bg: 'bg-blue-50', text: 'text-blue-700' },
-        confidential: { label: 'محرمانه', color: 'amber', bg: 'bg-amber-50', text: 'text-amber-700' },
-        secret: { label: 'سری', color: 'red', bg: 'bg-red-50', text: 'text-red-700' },
-    };
 
     return (
         <>
             <Head title={`ویرایش نامه - ${letter.subject}`} />
 
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <form onSubmit={handleSubmit}>
                         {/* Header Section */}
                         <div className="mb-8">
                             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                                 <div>
                                     <div className="flex items-center gap-3 mb-2">
-                                        <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg text-white">
+                                        <div className="p-2 bg-linear-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg text-white">
                                             <FileText className="h-6 w-6" />
                                         </div>
                                         <div>
@@ -178,7 +166,7 @@ export default function LettersEdit({
                                 <div className="flex gap-3">
                                     <button
                                         type="button"
-                                        onClick={() => router.get(route('letters.show', { letter: letter.id }))}
+                                        onClick={() => router.get(letters.show({ letter: letter.id }))}
                                         className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
                                     >
                                         <X className="ml-2 h-4 w-4" />
@@ -187,7 +175,7 @@ export default function LettersEdit({
                                     <button
                                         type="submit"
                                         disabled={processing}
-                                        className="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 border border-transparent rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="inline-flex items-center px-6 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 border border-transparent rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <Save className="ml-2 h-4 w-4" />
                                         {processing ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
@@ -200,7 +188,7 @@ export default function LettersEdit({
                         <div className="space-y-6">
                             {/* Basic Information Section */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
                                     <div className="flex items-center gap-2">
                                         <FileSignature className="h-5 w-5 text-blue-600" />
                                         <div>
@@ -321,7 +309,7 @@ export default function LettersEdit({
 
                             {/* Sender Information (Read-only - Current User) */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
                                     <div className="flex items-center gap-2">
                                         <UserIcon className="h-5 w-5 text-emerald-600" />
                                         <div>
@@ -333,7 +321,7 @@ export default function LettersEdit({
                                 <div className="p-6">
                                     <div className="bg-gray-50 rounded-lg p-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-bold">
+                                            <div className="h-10 w-10 rounded-full bg-linear-to-r from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-bold">
                                                 {currentUser.full_name?.charAt(0) || 'U'}
                                             </div>
                                             <div>
@@ -351,7 +339,7 @@ export default function LettersEdit({
 
                             {/* Recipient Information (Read-only) */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
                                     <div className="flex items-center gap-2">
                                         <UserCheck className="h-5 w-5 text-purple-600" />
                                         <div>
@@ -363,7 +351,7 @@ export default function LettersEdit({
                                 <div className="p-6">
                                     <div className="bg-gray-50 rounded-lg p-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                                            <div className="h-10 w-10 rounded-full bg-linear-to-r from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold">
                                                 {letter.recipient_name?.charAt(0) || 'R'}
                                             </div>
                                             <div>
@@ -379,7 +367,7 @@ export default function LettersEdit({
 
                             {/* Letter Content Section */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
                                     <div className="flex items-center gap-2">
                                         <FileText className="h-5 w-5 text-amber-600" />
                                         <div>
@@ -401,7 +389,7 @@ export default function LettersEdit({
 
                             {/* Attachments Section */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
                                     <div className="flex items-center gap-2">
                                         <Paperclip className="h-5 w-5 text-indigo-600" />
                                         <div>
