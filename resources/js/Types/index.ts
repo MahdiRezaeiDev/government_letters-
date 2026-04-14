@@ -102,6 +102,7 @@ export interface Position {
 }
 
 export interface Letter {
+    [x: string]: number;
     id: number;
     organization_id: number;
     letter_type: 'incoming' | 'outgoing' | 'internal';
