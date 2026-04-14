@@ -100,9 +100,9 @@ export function Sidebar() {
             title: 'نامه‌ها',
             icon: Mail,
             children: [
-                { title: 'نامه‌های وارده', href: lettersIndex({ type: 'incoming' }), icon: Inbox },
-                { title: 'نامه‌های صادره', href: lettersIndex({ type: 'outgoing' }), icon: Send },
-                { title: 'نامه‌های داخلی', href: lettersIndex({ type: 'internal' }), icon: FileText },
+                { title: 'نامه‌های وارده', href: lettersIndex({query: { type: 'incoming' }}), icon: Inbox },
+                { title: 'نامه‌های صادره', href: lettersIndex({query: { type: 'outgoing' }}), icon: Send },
+                { title: 'نامه‌های داخلی', href: lettersIndex({query: { type: 'internal' }}), icon: FileText },
                 { title: 'نامه جدید', href: lettersCreate(), icon: Mail },
             ],
         },
@@ -175,14 +175,14 @@ export function Sidebar() {
             <div className={`h-16 flex items-center ${collapsed ? 'justify-center' : 'px-4'} border-b border-gray-200`}>
                 {!collapsed ? (
                     <Link href={dashboard()} className="flex items-center gap-2">
-                        <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                        <div className="h-8 w-8 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
                             <span className="text-white font-bold text-sm">م</span>
                         </div>
                         <span className="font-bold text-gray-800">سیستم مکاتبات</span>
                     </Link>
                 ) : (
                     <Link href={dashboard()}>
-                        <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                        <div className="h-8 w-8 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
                             <span className="text-white font-bold text-sm">م</span>
                         </div>
                     </Link>
@@ -197,12 +197,10 @@ export function Sidebar() {
                 <ChevronLeft className={`h-4 w-4 text-gray-500 transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* منوی ناوبری - استفاده از map به جای every */}
             <nav className="p-3 space-y-1 overflow-hidden h-[calc(100%-4rem)]">
                 {filteredNavItems.map((item) => (
                     <div key={item.title}>
                         {item.children ? (
-                            // آیتم با زیرمنو
                             <div>
                                 <button
                                     onClick={() => toggleMenu(item.title)}

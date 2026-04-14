@@ -11,6 +11,7 @@ use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoutingController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\UserController;
 use App\Models\Department;
 use App\Models\Position;
@@ -121,6 +122,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('categories.toggle-status');
     Route::get('categories-list', [LetterCategoryController::class, 'getList'])
         ->name('categories.list');
+
+         // تنظیمات سیستم
+    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
 });
 
 require __DIR__.'/settings.php';
