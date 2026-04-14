@@ -1,11 +1,13 @@
 // resources/js/components/layout/Header.tsx
 
-import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { 
-    Menu, Bell, Search, User, ChevronDown, 
-    LogOut, Settings, UserCircle, Shield 
+    Menu, Bell, Search, ChevronDown, 
+    LogOut, Settings, UserCircle 
 } from 'lucide-react';
+import React, { useState } from 'react';
+import { dashboard, logout } from '@/routes';
+import profile from '@/routes/profile';
 
 interface HeaderProps {
     onMenuClick: () => void;
@@ -40,7 +42,7 @@ export function Header({ onMenuClick, isMobile }: HeaderProps) {
                         </button>
                     )}
                     
-                    <Link href={route('dashboard')} className="flex items-center gap-2">
+                    <Link href={dashboard()} className="flex items-center gap-2">
                         <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
                             <span className="text-white font-bold text-sm">م</span>
                         </div>
@@ -134,7 +136,7 @@ export function Header({ onMenuClick, isMobile }: HeaderProps) {
                                 </div>
                                 <div className="py-2">
                                     <Link
-                                        href={route('profile.edit')}
+                                        href={profile.edit()}
                                         className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                                         onClick={() => setUserMenuOpen(false)}
                                     >
@@ -142,7 +144,7 @@ export function Header({ onMenuClick, isMobile }: HeaderProps) {
                                         پروفایل
                                     </Link>
                                     <Link
-                                        href={route('settings.index')}
+                                        href={profile.edit()}
                                         className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                                         onClick={() => setUserMenuOpen(false)}
                                     >
@@ -151,7 +153,7 @@ export function Header({ onMenuClick, isMobile }: HeaderProps) {
                                     </Link>
                                     <div className="border-t border-gray-100 my-1"></div>
                                     <Link
-                                        href={route('logout')}
+                                        href={logout()}
                                         method="post"
                                         as="button"
                                         className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
