@@ -66,16 +66,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
     // مدیریت کاربران
-    // Route::post('users/{user}/assign-role', [UserController::class, 'assignRole'])
-    //     ->name('users.assign-role');
-    // Route::post('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
-    //     ->name('users.toggle-status');
+    Route::post('users/{user}/assign-role', [UserController::class, 'assignRole'])
+        ->name('users.assign-role');
+    Route::post('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
+        ->name('users.toggle-status');
 
-    // // API endpoints برای فرم‌ها
-    // Route::get('users/departments-by-organization', [UserController::class, 'getDepartmentsByOrganization'])
-    //     ->name('users.departments-by-organization');
-    // Route::get('users/positions-by-department', [UserController::class, 'getPositionsByDepartment'])
-    //     ->name('users.positions-by-department');
+    // API endpoints برای فرم‌ها
+    Route::get('users/departments-by-organization', [UserController::class, 'getDepartmentsByOrganization'])
+        ->name('users.departments-by-organization');
+    Route::get('users/positions-by-department', [UserController::class, 'getPositionsByDepartment'])
+        ->name('users.positions-by-department');
     Route::resource('users', UserController::class);
 
 
