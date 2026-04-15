@@ -2,16 +2,16 @@
 
 import { Head, router, usePage } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
-import { 
-    Save, Paperclip, Send, Trash2, 
-    AlertCircle, ChevronDown, FileText,
-    Calendar, UserIcon, Building2, Briefcase, Shield,
-    Flag, FolderTree, FileSignature, Clock, Users,
-    Building, Globe, UserCheck, CheckCircle, ChevronRight
+import {
+    Save, Paperclip, Send, Trash2, AlertCircle,
+    Calendar, UserIcon, Building2, Briefcase,
+    Shield, Flag, FolderTree, Users, Building,
+    Globe, Printer, ArrowLeft, CheckCircle2,
+    FileText, Upload
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { store as LetterCreate } from '@/routes/letters';
-import type { LetterCategory, User, Department, Position, Organization } from '@/types';
+import type { LetterCategory, Organization } from '@/types';
 
 interface Props {
     type: 'incoming' | 'outgoing' | 'internal';
@@ -45,32 +45,30 @@ interface FormData {
     response_deadline: string | null;
     sheet_count: number;
     is_draft: boolean;
-    
-    // گیرنده
+
     recipient_type: 'internal' | 'external';
     recipient_user_id: number | null;
     recipient_department_id: number | null;
     recipient_position_id: number | null;
     recipient_name: string;
     recipient_position_name: string;
-    
-    // برای گیرنده خارجی
+
     external_organization_id: number | null;
     external_department_id: number | null;
     external_position_id: number | null;
-    
+
     cc_recipients: number[];
     instruction: string;
 }
 
-export default function LettersCreate({ 
-    type, categories, users, departments, positions, 
+export default function LettersCreate({
+    type, categories, users, departments, positions,
     externalOrganizations, externalOrganizationsTree,
-    securityLevels, priorityLevels 
+    securityLevels, priorityLevels
 }: Props) {
     const { auth } = usePage().props as any;
     const currentUser = auth.user;
-    
+
     const { data, setData, post, processing, errors, reset } = useForm<FormData>({
         letter_type: type,
         category_id: null,
@@ -84,18 +82,18 @@ export default function LettersCreate({
         response_deadline: null,
         sheet_count: 1,
         is_draft: true,
-        
+
         recipient_type: 'internal',
         recipient_user_id: null,
         recipient_department_id: null,
         recipient_position_id: null,
         recipient_name: '',
         recipient_position_name: '',
-        
+
         external_organization_id: null,
         external_department_id: null,
         external_position_id: null,
-        
+
         cc_recipients: [],
         instruction: '',
     });
@@ -106,18 +104,11 @@ export default function LettersCreate({
     const [selectedExternalDept, setSelectedExternalDept] = useState<number | null>(null);
     const [attachments, setAttachments] = useState<File[]>([]);
     const [touched, setTouched] = useState<Record<string, boolean>>({});
-    
-    // پست‌های دپارتمان انتخاب شده برای گیرنده داخلی
-    const [recipientPositions, setRecipientPositions] = useState<{ id: number; name: string }[]>([]);
-    
-    // دپارتمان‌های سازمان خارجی انتخاب شده
-    const [externalDepartments, setExternalDepartments] = useState<{ id: number; name: string; parent_id: number | null }[]>([]);
-    
-    // پست‌های دپارتمان خارجی انتخاب شده
-    const [externalPositions, setExternalPositions] = useState<{ id: number; name: string }[]>([]);
+    const [isDragging, setIsDragging] = useState(false);
 
-    // پیدا کردن سازمان انتخاب شده با دپارتمان‌هایش
-    const selectedExternalOrgData = externalOrganizationsTree.find(org => org.id === selectedExternalOrg);
+    const [recipientPositions, setRecipientPositions] = useState<{ id: number; name: string }[]>([]);
+    const [externalDepartments, setExternalDepartments] = useState<{ id: number; name: string; parent_id: number | null }[]>([]);
+    const [externalPositions, setExternalPositions] = useState<{ id: number; name: string }[]>([]);
 
     const handleBlur = (field: string) => {
         setTouched(prev => ({ ...prev, [field]: true }));
@@ -127,7 +118,7 @@ export default function LettersCreate({
         return touched[field] && errors[field] ? errors[field] : null;
     };
 
-    // دریافت پست‌های دپارتمان انتخاب شده برای گیرنده داخلی
+    // Effects
     useEffect(() => {
         if (selectedRecipientDepartment) {
             const deptPositions = positions.filter(p => p.department_id === selectedRecipientDepartment);
@@ -137,11 +128,9 @@ export default function LettersCreate({
         }
     }, [selectedRecipientDepartment, positions]);
 
-    // دریافت دپارتمان‌های سازمان خارجی انتخاب شده
     useEffect(() => {
         if (selectedExternalOrg && data.recipient_type === 'external') {
-            // دریافت دپارتمان‌های سازمان خارجی (از طریق API)
-            router.get('/organizations/departments', 
+            router.get('/organizations/departments',
                 { organization_id: selectedExternalOrg },
                 {
                     preserveState: true,
@@ -157,7 +146,6 @@ export default function LettersCreate({
         }
     }, [selectedExternalOrg, data.recipient_type]);
 
-    // دریافت پست‌های دپارتمان خارجی انتخاب شده
     useEffect(() => {
         if (selectedExternalDept && data.recipient_type === 'external') {
             router.get('/departments/positions',
@@ -174,7 +162,6 @@ export default function LettersCreate({
         }
     }, [selectedExternalDept, data.recipient_type]);
 
-    // پر کردن خودکار اطلاعات گیرنده داخلی هنگام انتخاب کاربر
     useEffect(() => {
         if (selectedRecipientUser && data.recipient_type === 'internal') {
             const user = users.find(u => u.id === selectedRecipientUser);
@@ -194,7 +181,6 @@ export default function LettersCreate({
         }
     }, [selectedRecipientUser, data.recipient_type]);
 
-    // پر کردن اطلاعات گیرنده خارجی هنگام انتخاب سازمان و دپارتمان
     useEffect(() => {
         if (selectedExternalOrg && data.recipient_type === 'external') {
             const org = externalOrganizations.find(o => o.id === selectedExternalOrg);
@@ -213,7 +199,6 @@ export default function LettersCreate({
         }
     }, [selectedExternalDept, externalDepartments]);
 
-    // وقتی نوع گیرنده تغییر می‌کند، فیلدها را ریست کن
     useEffect(() => {
         setData('recipient_user_id', null);
         setData('recipient_department_id', null);
@@ -234,10 +219,9 @@ export default function LettersCreate({
     const handleSubmit = (e: React.FormEvent, isDraft: boolean) => {
         e.preventDefault();
         setData('is_draft', isDraft);
-        
+
         const formData = new FormData();
-        
-        // اطلاعات پایه
+
         formData.append('letter_type', data.letter_type);
         formData.append('category_id', String(data.category_id || ''));
         formData.append('subject', data.subject);
@@ -250,16 +234,14 @@ export default function LettersCreate({
         formData.append('response_deadline', data.response_deadline || '');
         formData.append('sheet_count', String(data.sheet_count));
         formData.append('is_draft', String(isDraft));
-        
-        // فرستنده (کاربر فعلی)
+
         formData.append('sender_user_id', String(currentUser.id));
         formData.append('sender_name', currentUser.full_name);
         formData.append('sender_position_name', currentUser.primary_position?.name || '');
         formData.append('sender_department_id', String(currentUser.department_id || ''));
-        
-        // گیرنده
+
         formData.append('recipient_type', data.recipient_type);
-        
+
         if (data.recipient_type === 'internal') {
             formData.append('recipient_user_id', String(data.recipient_user_id || ''));
             formData.append('recipient_department_id', String(data.recipient_department_id || ''));
@@ -279,16 +261,14 @@ export default function LettersCreate({
             formData.append('external_department_id', String(data.external_department_id || ''));
             formData.append('external_position_id', String(data.external_position_id || ''));
         }
-        
-        // رونوشت و دستورالعمل
+
         formData.append('cc_recipients', JSON.stringify(data.cc_recipients));
         formData.append('instruction', data.instruction);
-        
-        // پیوست‌ها
+
         attachments.forEach(file => {
             formData.append('attachments[]', file);
         });
-        
+
         post(LetterCreate(), {
             data: formData,
             preserveScroll: true,
@@ -311,11 +291,27 @@ export default function LettersCreate({
         }
     };
 
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = () => {
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        if (e.dataTransfer.files) {
+            setAttachments([...attachments, ...Array.from(e.dataTransfer.files)]);
+        }
+    };
+
     const removeAttachment = (index: number) => {
         setAttachments(attachments.filter((_, i) => i !== index));
     };
 
-    // رندر درختی سازمان‌های خارجی
     const renderOrganizationTree = (organizations: Organization[], level = 0) => {
         return organizations.map(org => (
             <React.Fragment key={org.id}>
@@ -338,266 +334,137 @@ export default function LettersCreate({
 
     const getTypeIcon = () => {
         switch (type) {
-            case 'incoming': return <AlertCircle className="h-6 w-6" />;
-            case 'outgoing': return <Send className="h-6 w-6" />;
-            case 'internal': return <FileText className="h-6 w-6" />;
+            case 'incoming': return <AlertCircle className="h-5 w-5" />;
+            case 'outgoing': return <Send className="h-5 w-5" />;
+            case 'internal': return <FileText className="h-5 w-5" />;
         }
     };
 
-    const getTypeDescription = () => {
-        switch (type) {
-            case 'incoming':
-                return 'نامه‌ای که از سازمان/شخص دیگری دریافت کرده‌اید';
-            case 'outgoing':
-                return 'نامه‌ای که به سازمان/شخص دیگری ارسال می‌کنید';
-            case 'internal':
-                return 'نامه‌ای که بین واحدهای داخلی سازمان رد و بدل می‌شود';
-            default: return '';
-        }
+    const formatDate = (dateStr: string) => {
+        if (!dateStr) return '';
+        return new Date(dateStr).toLocaleDateString('fa-IR');
     };
 
     return (
         <>
             <Head title={getTitle()} />
 
-            <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <form onSubmit={(e) => handleSubmit(e, false)}>
-                        {/* Header Section */}
-                        <div className="mb-8">
-                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                <div>
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="p-2 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg text-white">
+            <div className="min-h-screen bg-[#F5F7FA] py-8 px-4 sm:px-6 lg:px-8 font-sans">
+                <form onSubmit={(e) => handleSubmit(e, false)} className="max-w-5xl mx-auto">
+
+                    {/* نوار ابزار بالا */}
+                    <div className="flex items-center justify-between mb-6 print:hidden">
+                        <button
+                            type="button"
+                            onClick={() => window.history.back()}
+                            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                        >
+                            <ArrowLeft className="ml-1 h-4 w-4" />
+                            بازگشت
+                        </button>
+
+                        <div className="flex items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={(e) => handleSubmit(e, true)}
+                                disabled={processing}
+                                className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm disabled:opacity-50"
+                            >
+                                <Save className="ml-2 h-4 w-4" />
+                                پیش‌نویس
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => window.print()}
+                                className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+                            >
+                                <Printer className="ml-2 h-4 w-4" />
+                                چاپ
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="inline-flex items-center px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 border border-transparent rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg disabled:opacity-50"
+                            >
+                                <Send className="ml-2 h-4 w-4" />
+                                {processing ? 'در حال ارسال...' : 'ثبت و ارسال'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* برگه نامه */}
+                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 print:shadow-none print:border-0 print:rounded-none">
+
+                        {/* هدر لوکس */}
+                        <div className="relative px-10 pt-10 pb-6 border-b border-gray-100 print:border-black/20">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 print:hidden"></div>
+
+                            <div className="flex justify-between items-start">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2 text-gray-500 text-sm">
+                                        <Building className="h-4 w-4" />
+                                        <span>جمهوری اسلامی ایران</span>
+                                    </div>
+                                    <h2 className="text-2xl font-bold text-gray-800 tracking-tight">وزارت امور خارجه</h2>
+                                    <p className="text-sm text-gray-500 font-light">معاونت ارتباطات و فناوری اطلاعات</p>
+                                </div>
+
+                                <div className="text-left space-y-4">
+                                    {/* برچسب نوع نامه */}
+                                    <div className="flex items-center justify-end gap-2">
+                                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
                                             {getTypeIcon()}
+                                            <span className="mr-1.5">{getTitle()}</span>
+                                        </span>
+                                    </div>
+
+                                    {/* شماره و تاریخ */}
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">شماره نامه</p>
+                                            <p className="font-mono text-lg font-medium text-gray-700 tracking-wide">پیش‌نویس</p>
                                         </div>
                                         <div>
-                                            <h1 className="text-2xl font-bold text-gray-900">{getTitle()}</h1>
-                                            <p className="text-sm text-gray-500 mt-0.5">{getTypeDescription()}</p>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">تاریخ</p>
+                                            <div className="relative group">
+                                                <div className="flex items-center gap-1 text-gray-700">
+                                                    <Calendar className="h-4 w-4 text-gray-400" />
+                                                    <input
+                                                        type="date"
+                                                        value={data.date}
+                                                        onChange={(e) => setData('date', e.target.value)}
+                                                        className="text-sm font-medium bg-transparent border-0 p-0 focus:ring-0 cursor-pointer w-auto"
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="flex gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={(e) => handleSubmit(e, true)}
-                                        disabled={processing}
-                                        className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
-                                    >
-                                        <Save className="ml-2 h-4 w-4" />
-                                        ذخیره پیش‌نویس
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className="inline-flex items-center px-6 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 border border-transparent rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        <Send className="ml-2 h-4 w-4" />
-                                        {processing ? 'در حال ارسال...' : 'ثبت و ارسال'}
-                                    </button>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Form Sections */}
-                        <div className="space-y-6">
-                            {/* Basic Information Section */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
-                                    <div className="flex items-center gap-2">
-                                        <FileSignature className="h-5 w-5 text-blue-600" />
-                                        <div>
-                                            <h2 className="text-lg font-semibold text-gray-900">اطلاعات پایه</h2>
-                                            <p className="text-sm text-gray-500 mt-0.5">مشخصات اصلی نامه</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="p-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                دسته‌بندی <span className="text-red-500">*</span>
-                                            </label>
-                                            <div className="relative">
-                                                <FolderTree className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                <select
-                                                    value={data.category_id || ''}
-                                                    onChange={(e) => setData('category_id', parseInt(e.target.value) || null)}
-                                                    onBlur={() => handleBlur('category_id')}
-                                                    className={`w-full pr-9 pl-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all appearance-none bg-white ${
-                                                        getFieldError('category_id')
-                                                            ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                                                            : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'
-                                                    }`}
-                                                >
-                                                    <option value="">انتخاب کنید...</option>
-                                                    {categories.map(cat => (
-                                                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                                    ))}
-                                                </select>
-                                                <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                                            </div>
-                                            {getFieldError('category_id') && (
-                                                <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                                                    <AlertCircle className="h-3 w-3" />
-                                                    {errors.category_id}
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                اولویت <span className="text-red-500">*</span>
-                                            </label>
-                                            <div className="relative">
-                                                <Flag className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                <select
-                                                    value={data.priority}
-                                                    onChange={(e) => setData('priority', e.target.value)}
-                                                    className="w-full pr-9 pl-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none bg-white"
-                                                >
-                                                    {Object.entries(priorityLevels).map(([key, label]) => (
-                                                        <option key={key} value={key}>{label}</option>
-                                                    ))}
-                                                </select>
-                                                <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                سطح امنیتی <span className="text-red-500">*</span>
-                                            </label>
-                                            <div className="relative">
-                                                <Shield className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                <select
-                                                    value={data.security_level}
-                                                    onChange={(e) => setData('security_level', e.target.value)}
-                                                    className="w-full pr-9 pl-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none bg-white"
-                                                >
-                                                    {Object.entries(securityLevels).map(([key, label]) => (
-                                                        <option key={key} value={key}>{label}</option>
-                                                    ))}
-                                                </select>
-                                                <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                تاریخ نامه <span className="text-red-500">*</span>
-                                            </label>
-                                            <div className="relative">
-                                                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                <input
-                                                    type="date"
-                                                    value={data.date}
-                                                    onChange={(e) => setData('date', e.target.value)}
-                                                    className="w-full pr-9 pl-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                موضوع <span className="text-red-500">*</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={data.subject}
-                                                onChange={(e) => setData('subject', e.target.value)}
-                                                onBlur={() => handleBlur('subject')}
-                                                placeholder="موضوع نامه را وارد کنید..."
-                                                className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all ${
-                                                    getFieldError('subject')
-                                                        ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                                                        : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'
-                                                }`}
-                                            />
-                                            {getFieldError('subject') && (
-                                                <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                                                    <AlertCircle className="h-3 w-3" />
-                                                    {errors.subject}
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                خلاصه
-                                            </label>
-                                            <textarea
-                                                value={data.summary}
-                                                onChange={(e) => setData('summary', e.target.value)}
-                                                rows={3}
-                                                placeholder="خلاصه نامه..."
-                                                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        {/* محتوای اصلی */}
+                        <div className="px-10 py-8 space-y-8">
 
-                            {/* Sender Information (Read-only - Current User) */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
-                                    <div className="flex items-center gap-2">
-                                        <UserIcon className="h-5 w-5 text-emerald-600" />
-                                        <div>
-                                            <h2 className="text-lg font-semibold text-gray-900">اطلاعات فرستنده</h2>
-                                            <p className="text-sm text-gray-500 mt-0.5">شما به عنوان فرستنده نامه ثبت می‌شوید</p>
+                            {/* بخش گیرنده */}
+                            <div className="grid grid-cols-12 gap-8">
+                                <div className="col-span-12 lg:col-span-8">
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                            <UserIcon className="h-3.5 w-3.5" />
+                                            گیرنده
                                         </div>
-                                    </div>
-                                </div>
-                                <div className="p-6">
-                                    <div className="bg-gray-50 rounded-lg p-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-full bg-linear-to-r from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-bold">
-                                                {currentUser.full_name?.charAt(0) || 'U'}
-                                            </div>
-                                            <div>
-                                                <p className="font-medium text-gray-900">{currentUser.full_name}</p>
-                                                <p className="text-sm text-gray-500">
-                                                    {currentUser.primary_position?.name || 'بدون سمت'} • 
-                                                    {currentUser.department?.name || 'بدون دپارتمان'}
-                                                </p>
-                                            </div>
-                                            <CheckCircle className="mr-auto h-5 w-5 text-green-500" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
 
-                            {/* Recipient Information Section */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
-                                    <div className="flex items-center gap-2">
-                                        {data.recipient_type === 'internal' ? (
-                                            <UserCheck className="h-5 w-5 text-purple-600" />
-                                        ) : (
-                                            <Globe className="h-5 w-5 text-purple-600" />
-                                        )}
-                                        <div>
-                                            <h2 className="text-lg font-semibold text-gray-900">
-                                                اطلاعات گیرنده
-                                            </h2>
-                                            <p className="text-sm text-gray-500 mt-0.5">
-                                                مشخصات فرد یا سازمان دریافت‌کننده نامه
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="p-6">
-                                    {/* نوع گیرنده */}
-                                    <div className="mb-6">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            نوع گیرنده <span className="text-red-500">*</span>
-                                        </label>
-                                        <div className="flex gap-3">
+                                        <div className="flex gap-6 text-sm border-b border-gray-100 pb-3">
                                             <label className="flex items-center gap-2 cursor-pointer">
                                                 <input
                                                     type="radio"
                                                     value="internal"
                                                     checked={data.recipient_type === 'internal'}
                                                     onChange={(e) => setData('recipient_type', e.target.value as 'internal')}
-                                                    className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                                                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                                                 />
-                                                <span className="text-sm text-gray-700">داخلی (کاربر سازمان)</span>
+                                                <span className="text-gray-700">گیرنده داخلی</span>
                                             </label>
                                             <label className="flex items-center gap-2 cursor-pointer">
                                                 <input
@@ -605,288 +472,336 @@ export default function LettersCreate({
                                                     value="external"
                                                     checked={data.recipient_type === 'external'}
                                                     onChange={(e) => setData('recipient_type', e.target.value as 'external')}
-                                                    className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                                                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                                                 />
-                                                <span className="text-sm text-gray-700">خارجی (سازمان دیگر)</span>
+                                                <span className="text-gray-700">سازمان خارجی</span>
                                             </label>
                                         </div>
-                                    </div>
 
-                                    {/* گیرنده داخلی */}
-                                    {data.recipient_type === 'internal' && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    انتخاب از کاربران <span className="text-red-500">*</span>
-                                                </label>
-                                                <div className="relative">
-                                                    <Users className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                    <select
-                                                        value={selectedRecipientUser || ''}
-                                                        onChange={(e) => setSelectedRecipientUser(parseInt(e.target.value) || null)}
-                                                        onBlur={() => handleBlur('recipient_user_id')}
-                                                        className={`w-full pr-9 pl-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all appearance-none bg-white ${
-                                                            getFieldError('recipient_user_id')
-                                                                ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                                                                : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'
-                                                        }`}
-                                                    >
-                                                        <option value="">انتخاب کاربر...</option>
-                                                        {users.map(user => (
-                                                            <option key={user.id} value={user.id}>
-                                                                {user.name} - {user.position || 'بدون سمت'}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                    <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                                                </div>
-                                                {getFieldError('recipient_user_id') && (
-                                                    <p className="text-red-500 text-xs mt-1">{errors.recipient_user_id}</p>
-                                                )}
+                                        {data.recipient_type === 'internal' ? (
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                <select
+                                                    value={selectedRecipientUser || ''}
+                                                    onChange={(e) => setSelectedRecipientUser(parseInt(e.target.value) || null)}
+                                                    className="w-full px-0 py-2 text-sm border-0 border-b border-gray-200 focus:border-blue-500 focus:ring-0 bg-transparent transition-colors"
+                                                >
+                                                    <option value="">انتخاب کاربر...</option>
+                                                    {users.map(user => (
+                                                        <option key={user.id} value={user.id}>{user.name}</option>
+                                                    ))}
+                                                </select>
+
+                                                <select
+                                                    value={selectedRecipientDepartment || ''}
+                                                    onChange={(e) => setSelectedRecipientDepartment(parseInt(e.target.value) || null)}
+                                                    className="w-full px-0 py-2 text-sm border-0 border-b border-gray-200 focus:border-blue-500 focus:ring-0 bg-transparent transition-colors"
+                                                >
+                                                    <option value="">دپارتمان</option>
+                                                    {departments.map(dept => (
+                                                        <option key={dept.id} value={dept.id}>{dept.name}</option>
+                                                    ))}
+                                                </select>
+
+                                                <select
+                                                    value={data.recipient_position_id || ''}
+                                                    onChange={(e) => setData('recipient_position_id', parseInt(e.target.value) || null)}
+                                                    className="w-full px-0 py-2 text-sm border-0 border-b border-gray-200 focus:border-blue-500 focus:ring-0 bg-transparent transition-colors"
+                                                >
+                                                    <option value="">سمت</option>
+                                                    {recipientPositions.map(pos => (
+                                                        <option key={pos.id} value={pos.id}>{pos.name}</option>
+                                                    ))}
+                                                </select>
                                             </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    دپارتمان
-                                                </label>
-                                                <div className="relative">
-                                                    <Building2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        ) : (
+                                            <div className="space-y-3">
+                                                <select
+                                                    value={selectedExternalOrg || ''}
+                                                    onChange={(e) => {
+                                                        const orgId = parseInt(e.target.value) || null;
+                                                        setSelectedExternalOrg(orgId);
+                                                        setData('external_organization_id', orgId);
+                                                    }}
+                                                    className="w-full px-0 py-2 text-sm border-0 border-b border-gray-200 focus:border-blue-500 focus:ring-0 bg-transparent transition-colors"
+                                                >
+                                                    <option value="">انتخاب سازمان...</option>
+                                                    {renderOrganizationTree(externalOrganizationsTree)}
+                                                </select>
+
+                                                {externalDepartments.length > 0 && (
                                                     <select
-                                                        value={selectedRecipientDepartment || ''}
-                                                        onChange={(e) => setSelectedRecipientDepartment(parseInt(e.target.value) || null)}
-                                                        className="w-full pr-9 pl-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none bg-white"
+                                                        value={selectedExternalDept || ''}
+                                                        onChange={(e) => {
+                                                            const deptId = parseInt(e.target.value) || null;
+                                                            setSelectedExternalDept(deptId);
+                                                            setData('external_department_id', deptId);
+                                                        }}
+                                                        className="w-full px-0 py-2 text-sm border-0 border-b border-gray-200 focus:border-blue-500 focus:ring-0 bg-transparent transition-colors"
                                                     >
                                                         <option value="">انتخاب دپارتمان...</option>
-                                                        {departments.map(dept => (
+                                                        {externalDepartments.map(dept => (
                                                             <option key={dept.id} value={dept.id}>{dept.name}</option>
                                                         ))}
                                                     </select>
-                                                    <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    سمت
-                                                </label>
-                                                <div className="relative">
-                                                    <Briefcase className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                                )}
+
+                                                {externalPositions.length > 0 && (
                                                     <select
-                                                        value={data.recipient_position_id || ''}
-                                                        onChange={(e) => setData('recipient_position_id', parseInt(e.target.value) || null)}
-                                                        className="w-full pr-9 pl-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none bg-white"
+                                                        value={data.external_position_id || ''}
+                                                        onChange={(e) => setData('external_position_id', parseInt(e.target.value) || null)}
+                                                        className="w-full px-0 py-2 text-sm border-0 border-b border-gray-200 focus:border-blue-500 focus:ring-0 bg-transparent transition-colors"
                                                     >
                                                         <option value="">انتخاب سمت...</option>
-                                                        {recipientPositions.map(pos => (
+                                                        {externalPositions.map(pos => (
                                                             <option key={pos.id} value={pos.id}>{pos.name}</option>
                                                         ))}
                                                     </select>
-                                                    <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                                                </div>
+                                                )}
                                             </div>
-                                        </div>
-                                    )}
-
-                                    {/* گیرنده خارجی */}
-                                    {data.recipient_type === 'external' && (
-                                        <div className="grid grid-cols-1 gap-5">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    سازمان <span className="text-red-500">*</span>
-                                                </label>
-                                                <div className="relative">
-                                                    <Building className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                    <select
-                                                        value={selectedExternalOrg || ''}
-                                                        onChange={(e) => {
-                                                            const orgId = parseInt(e.target.value) || null;
-                                                            setSelectedExternalOrg(orgId);
-                                                            setData('external_organization_id', orgId);
-                                                            setSelectedExternalDept(null);
-                                                            setData('external_department_id', null);
-                                                            setData('external_position_id', null);
-                                                        }}
-                                                        className="w-full pr-9 pl-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none bg-white"
-                                                    >
-                                                        <option value="">انتخاب سازمان...</option>
-                                                        {renderOrganizationTree(externalOrganizationsTree)}
-                                                    </select>
-                                                    <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                                                </div>
-                                            </div>
-                                            
-                                            {externalDepartments.length > 0 && (
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        دپارتمان/ریاست
-                                                    </label>
-                                                    <div className="relative">
-                                                        <Building2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                        <select
-                                                            value={selectedExternalDept || ''}
-                                                            onChange={(e) => {
-                                                                const deptId = parseInt(e.target.value) || null;
-                                                                setSelectedExternalDept(deptId);
-                                                                setData('external_department_id', deptId);
-                                                                setData('external_position_id', null);
-                                                            }}
-                                                            className="w-full pr-9 pl-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none bg-white"
-                                                        >
-                                                            <option value="">انتخاب دپارتمان...</option>
-                                                            {externalDepartments.map(dept => (
-                                                                <option key={dept.id} value={dept.id}>
-                                                                    {'—'.repeat(dept.parent_id ? 1 : 0)} {dept.name}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                        <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                                                    </div>
-                                                </div>
-                                            )}
-                                            
-                                            {externalPositions.length > 0 && (
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        سمت
-                                                    </label>
-                                                    <div className="relative">
-                                                        <Briefcase className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                        <select
-                                                            value={data.external_position_id || ''}
-                                                            onChange={(e) => setData('external_position_id', parseInt(e.target.value) || null)}
-                                                            className="w-full pr-9 pl-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none bg-white"
-                                                        >
-                                                            <option value="">انتخاب سمت...</option>
-                                                            {externalPositions.map(pos => (
-                                                                <option key={pos.id} value={pos.id}>{pos.name}</option>
-                                                            ))}
-                                                        </select>
-                                                        <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Letter Content Section */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
-                                    <div className="flex items-center gap-2">
-                                        <FileText className="h-5 w-5 text-amber-600" />
-                                        <div>
-                                            <h2 className="text-lg font-semibold text-gray-900">متن نامه</h2>
-                                            <p className="text-sm text-gray-500 mt-0.5">متن اصلی نامه</p>
-                                        </div>
+                                        )}
                                     </div>
                                 </div>
-                                <div className="p-6">
-                                    <textarea
-                                        value={data.content}
-                                        onChange={(e) => setData('content', e.target.value)}
-                                        rows={12}
-                                        placeholder="متن نامه را وارد کنید..."
-                                        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-y"
-                                    />
-                                </div>
-                            </div>
 
-                            {/* Attachments Section */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
-                                    <div className="flex items-center gap-2">
-                                        <Paperclip className="h-5 w-5 text-indigo-600" />
-                                        <div>
-                                            <h2 className="text-lg font-semibold text-gray-900">پیوست‌ها</h2>
-                                            <p className="text-sm text-gray-500 mt-0.5">فایل‌های ضمیمه نامه</p>
+                                {/* متادیتای سریع - اولویت و سطح امنیتی به صورت Pill Toggle */}
+                                <div className="col-span-12 lg:col-span-4 space-y-5">
+
+                                    {/* بخش اولویت به صورت Pill Toggle */}
+                                    <div>
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                                            <Flag className="h-3.5 w-3.5" />
+                                            اولویت نامه
                                         </div>
-                                    </div>
-                                </div>
-                                <div className="p-6">
-                                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all">
-                                        <div className="text-center">
-                                            <Paperclip className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                                            <p className="text-sm text-gray-500">برای آپلود فایل کلیک کنید</p>
-                                            <p className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, JPG, PNG (حداکثر 10MB)</p>
-                                        </div>
-                                        <input
-                                            type="file"
-                                            multiple
-                                            onChange={handleFileChange}
-                                            className="hidden"
-                                        />
-                                    </label>
-                                    
-                                    {attachments.length > 0 && (
-                                        <div className="mt-4 space-y-2">
-                                            {attachments.map((file, index) => (
-                                                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                                    <div className="flex items-center gap-3">
-                                                        <FileText className="h-5 w-5 text-blue-500" />
-                                                        <div>
-                                                            <p className="text-sm font-medium text-gray-700">{file.name}</p>
-                                                            <p className="text-xs text-gray-400">
-                                                                {(file.size / 1024).toFixed(1)} KB
-                                                            </p>
-                                                        </div>
-                                                    </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {Object.entries(priorityLevels).map(([key, label]) => {
+                                                let activeClass = '';
+                                                if (data.priority === key) {
+                                                    if (key === 'normal') activeClass = 'bg-gray-100 text-gray-800 border-gray-300 shadow-sm';
+                                                    else if (key === 'urgent') activeClass = 'bg-amber-50 text-amber-700 border-amber-300 shadow-sm';
+                                                    else if (key === 'critical') activeClass = 'bg-red-50 text-red-700 border-red-300 shadow-sm';
+                                                } else {
+                                                    activeClass = 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50';
+                                                }
+
+                                                return (
                                                     <button
+                                                        key={key}
                                                         type="button"
-                                                        onClick={() => removeAttachment(index)}
-                                                        className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                                                        onClick={() => setData('priority', key)}
+                                                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 flex items-center gap-1.5 ${activeClass}`}
                                                     >
-                                                        <Trash2 className="h-4 w-4" />
+                                                        {key === 'critical' && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>}
+                                                        {label}
                                                     </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Instruction Section */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
-                                    <div className="flex items-center gap-2">
-                                        <AlertCircle className="h-5 w-5 text-orange-600" />
-                                        <div>
-                                            <h2 className="text-lg font-semibold text-gray-900">دستورالعمل</h2>
-                                            <p className="text-sm text-gray-500 mt-0.5">دستورالعمل‌های لازم برای گیرنده (در صورت ارجاع)</p>
+                                                );
+                                            })}
                                         </div>
                                     </div>
-                                </div>
-                                <div className="p-6">
-                                    <textarea
-                                        value={data.instruction}
-                                        onChange={(e) => setData('instruction', e.target.value)}
-                                        rows={4}
-                                        placeholder="در صورت نیاز، دستورالعمل‌های لازم برای گیرنده را وارد کنید..."
-                                        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
-                                    />
+
+                                    {/* بخش سطح امنیتی به صورت Pill Toggle */}
+                                    <div>
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                                            <Shield className="h-3.5 w-3.5" />
+                                            طبقه‌بندی امنیتی
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {Object.entries(securityLevels).map(([key, label]) => {
+                                                let activeClass = '';
+                                                if (data.security_level === key) {
+                                                    if (key === 'internal') activeClass = 'bg-gray-100 text-gray-800 border-gray-300 shadow-sm';
+                                                    else if (key === 'confidential') activeClass = 'bg-purple-50 text-purple-700 border-purple-300 shadow-sm';
+                                                    else if (key === 'secret') activeClass = 'bg-blue-50 text-blue-700 border-blue-300 shadow-sm';
+                                                    else if (key === 'top_secret') activeClass = 'bg-slate-800 text-white border-slate-800 shadow-sm';
+                                                } else {
+                                                    activeClass = 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50';
+                                                }
+
+                                                return (
+                                                    <button
+                                                        key={key}
+                                                        type="button"
+                                                        onClick={() => setData('security_level', key)}
+                                                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 flex items-center gap-1.5 ${activeClass}`}
+                                                    >
+                                                        {key === 'top_secret' && <Shield className="h-3 w-3 fill-white" />}
+                                                        {label}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        {data.security_level === 'top_secret' && (
+                                            <p className="text-[10px] text-red-500 font-medium flex items-center gap-1 mt-2">
+                                                <AlertCircle className="h-3 w-3" />
+                                                این نامه جزو اسناد طبقه‌بندی شده است
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Form Actions for Mobile */}
-                            <div className="flex flex-col sm:flex-row gap-3 sm:hidden">
-                                <button
-                                    type="button"
-                                    onClick={(e) => handleSubmit(e, true)}
-                                    disabled={processing}
-                                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all"
-                                >
-                                    ذخیره پیش‌نویس
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all disabled:opacity-50"
-                                >
-                                    {processing ? 'در حال ارسال...' : 'ثبت و ارسال'}
-                                </button>
+                            {/* موضوع */}
+                            <div>
+                                <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                                    موضوع نامه
+                                </div>
+                                <input
+                                    type="text"
+                                    value={data.subject}
+                                    onChange={(e) => setData('subject', e.target.value)}
+                                    placeholder="عنوان اصلی نامه را وارد کنید..."
+                                    className={`w-full px-0 py-2 text-lg font-medium border-0 border-b-2 bg-transparent placeholder:text-gray-300 focus:ring-0 transition-colors ${getFieldError('subject')
+                                        ? 'border-red-300 focus:border-red-500'
+                                        : 'border-gray-200 focus:border-blue-500'
+                                        }`}
+                                />
+                                {getFieldError('subject') && (
+                                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                                        <AlertCircle className="h-3 w-3" />
+                                        {errors.subject}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* متن نامه */}
+                            <div className="mt-8">
+                                <textarea
+                                    value={data.content}
+                                    onChange={(e) => setData('content', e.target.value)}
+                                    rows={10}
+                                    placeholder="متن نامه خود را اینجا بنویسید..."
+                                    className="w-full px-0 py-2 text-gray-700 leading-8 border-0 focus:ring-0 bg-transparent resize-y placeholder:text-gray-300 text-justify"
+                                    style={{ lineHeight: '2.2rem' }}
+                                />
+                            </div>
+
+                            {/* بخش امضا و تایید */}
+                            <div className="flex justify-between items-end mt-12 pt-8 border-t border-gray-100">
+                                <div className="text-xs text-gray-400">
+                                    <p>تعداد پیوست: {attachments.length} فایل</p>
+                                </div>
+
+                                <div className="text-center space-y-2">
+                                    <div className="flex items-center justify-end gap-2 text-sm text-gray-600 mb-4">
+                                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                        <span>امضاء کننده: {currentUser.full_name}</span>
+                                    </div>
+                                    <div className="h-12 w-48 border-b-2 border-gray-300"></div>
+                                    <p className="font-medium text-gray-800">{currentUser.full_name}</p>
+                                    <p className="text-sm text-gray-500">{currentUser.primary_position?.name || 'کارشناس'}</p>
+                                </div>
                             </div>
                         </div>
-                    </form>
-                </div>
+
+                        {/* فوتر - اطلاعات تکمیلی */}
+                        <div className="px-10 py-5 bg-gray-50/50 border-t border-gray-100 flex flex-wrap items-center justify-between text-xs text-gray-500 print:bg-transparent">
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-1">
+                                    <FolderTree className="h-3.5 w-3.5" />
+                                    <span>دسته‌بندی:</span>
+                                    <select
+                                        value={data.category_id || ''}
+                                        onChange={(e) => setData('category_id', parseInt(e.target.value) || null)}
+                                        className="ml-1 px-1 py-0.5 border-0 border-b border-gray-300 bg-transparent text-xs focus:border-blue-500 focus:ring-0"
+                                    >
+                                        <option value="">بدون دسته</option>
+                                        {categories.map(cat => (
+                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span>تاریخ ثبت: {formatDate(data.date)}</span>
+                                <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                <span>شماره پیگیری: در انتظار ثبت</span>
+                            </div>
+                        </div>
+
+                        {/* بخش آپلود پیوست */}
+                        <div className="px-10 py-6 border-t border-gray-100 bg-white">
+                            <div className="flex items-center gap-2 mb-4 text-sm font-medium text-gray-700">
+                                <Paperclip className="h-4 w-4" />
+                                پیوست‌ها
+                            </div>
+
+                            <div
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={handleDrop}
+                                className={`relative border-2 border-dashed rounded-xl p-6 transition-all text-center ${isDragging
+                                    ? 'border-blue-400 bg-blue-50/50'
+                                    : 'border-gray-200 hover:border-gray-300 bg-gray-50/30'
+                                    }`}
+                            >
+                                <input
+                                    type="file"
+                                    id="file-upload"
+                                    multiple
+                                    onChange={handleFileChange}
+                                    className="hidden"
+                                />
+                                <label htmlFor="file-upload" className="cursor-pointer">
+                                    <div className="space-y-2">
+                                        <Upload className="h-8 w-8 mx-auto text-gray-400" />
+                                        <p className="text-sm text-gray-600">
+                                            فایل‌ها را اینجا رها کنید یا <span className="text-blue-600 font-medium">انتخاب کنید</span>
+                                        </p>
+                                        <p className="text-xs text-gray-400">حداکثر حجم هر فایل 10 مگابایت</p>
+                                    </div>
+                                </label>
+                            </div>
+
+                            {attachments.length > 0 && (
+                                <div className="mt-4 space-y-2">
+                                    {attachments.map((file, index) => (
+                                        <div key={index} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-lg shadow-sm group hover:border-gray-200 transition-all">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-blue-50 rounded-lg">
+                                                    <FileText className="h-4 w-4 text-blue-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-700">{file.name}</p>
+                                                    <p className="text-xs text-gray-400">{(file.size / 1024).toFixed(1)} KB</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeAttachment(index)}
+                                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </form>
             </div>
+
+            {/* استایل‌های پرینت */}
+            <style>{`
+                @media print {
+                    body { background: white; }
+                    .bg-\\[\\#F5F7FA\\] { background: white; }
+                    .shadow-xl { box-shadow: none; }
+                    .border { border-color: #ddd !important; }
+                    .print\\:hidden { display: none !important; }
+                    .print\\:shadow-none { box-shadow: none; }
+                    .print\\:border-0 { border: none; }
+                    .print\\:bg-transparent { background: transparent !important; }
+                    input, select, textarea { 
+                        border: none !important; 
+                        background: transparent !important;
+                        -webkit-appearance: none;
+                        appearance: none;
+                        padding: 0 !important;
+                        resize: none;
+                    }
+                    select { opacity: 1; }
+                    button { display: none; }
+                }
+            `}</style>
         </>
     );
 }
