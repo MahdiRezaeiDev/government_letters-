@@ -23,9 +23,10 @@ import { dashboard } from '@/routes';
 import { index as archivesIndex } from '@/routes/archives';
 import { index as cartableIndex } from '@/routes/cartable';
 import { index as categoriesIndex } from '@/routes/categories';
-import { index as departmentsIndex, positions as positionsList } from '@/routes/departments';
+import { index as departmentsIndex } from '@/routes/departments';
 import { index as lettersIndex, create as lettersCreate } from '@/routes/letters';
 import { index as organizationsIndex } from '@/routes/organizations';
+import positions from '@/routes/positions';
 import { edit as profileEdit } from '@/routes/profile';
 import { index as reportsIndex } from '@/routes/reports';
 import { index as usersIndex } from '@/routes/users';
@@ -91,7 +92,7 @@ export function Sidebar() {
             children: [
                 { title: 'سازمان‌ها', href: organizationsIndex(), icon: Building2 },
                 { title: 'دپارتمان‌ها', href: departmentsIndex(), icon: Sitemap },
-                { title: 'سمت‌ها', href: positionsList(), icon: Briefcase },
+                { title: 'سمت‌ها', href: positions.index(), icon: Briefcase },
                 { title: 'کاربران', href: usersIndex(), icon: Users },
                 { title: 'دسته‌بندی نامه‌ها', href: categoriesIndex(), icon: FolderTree },
             ],

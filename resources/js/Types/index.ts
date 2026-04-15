@@ -199,6 +199,7 @@ export interface Action {
 }
 
 export interface Archive {
+    cases_count: number;
     id: number;
     department_id: number;
     name: string;
