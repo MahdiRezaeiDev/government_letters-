@@ -19,13 +19,27 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Symfony\Component\HttpFoundation\Request;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
 Route::inertia('/', 'welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
 
+// ============================================
+// Routes نیازمند احراز هویت
+// ============================================
 Route::middleware(['auth', 'verified'])->group(function () {
+    
+    // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // ============================================
+    // مدیریت سازمان‌ها (فقط ادمین کل)
+    // ============================================
     Route::prefix('admin')->middleware(['role:super-admin'])->group(function () {
         Route::resource('organizations', OrganizationController::class);
         Route::post('organizations/{organization}/toggle-status', [OrganizationController::class, 'toggleStatus'])
@@ -34,61 +48,73 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('organizations.list');
     });
 
-    // routes/web.php
-
-    Route::get('/organizations/departments', function (Request $request) {
+    // ============================================
+    // API endpoints برای فرم‌ها (JSON responses)
+    // ============================================
+    Route::get('organizations/departments', function (Request $request) {
         $departments = Department::where('organization_id', $request->organization_id)
             ->where('status', 'active')
             ->get(['id', 'name', 'parent_id']);
         return response()->json(['departments' => $departments]);
     })->name('organizations.departments');
 
-    Route::get('/departments/positions', function (Request $request) {
+    Route::get('departments/positions', function (Request $request) {
         $positions = Position::where('department_id', $request->department_id)
             ->get(['id', 'name']);
         return response()->json(['positions' => $positions]);
     })->name('departments.positions');
 
+    // ============================================
+    // مدیریت دپارتمان‌ها (ادمین کل و ادمین سازمان)
+    // ============================================
+    Route::middleware(['role:super-admin|org-admin'])->group(function () {
+        Route::resource('departments', DepartmentController::class);
+        Route::post('departments/{department}/toggle-status', [DepartmentController::class, 'toggleStatus'])
+            ->name('departments.toggle-status');
+        Route::get('departments-list', [DepartmentController::class, 'getList'])
+            ->name('departments.list');
+    });
 
-    // مدیریت دپارتمان‌ها
-    Route::post('departments/{department}/toggle-status', [DepartmentController::class, 'toggleStatus'])
-        ->name('departments.toggle-status');
-    Route::get('departments-list', [DepartmentController::class, 'getList'])
-        ->name('departments.list');
-    Route::resource('departments', DepartmentController::class);
- 
+    // ============================================
+    // مدیریت سمت‌ها (ادمین کل و ادمین سازمان)
+    // ============================================
+    Route::middleware(['role:super-admin|org-admin'])->group(function () {
+        Route::resource('positions', PositionController::class);
+        Route::get('positions-list', [PositionController::class, 'getList'])
+            ->name('positions.list');
+        Route::get('positions-management-list', [PositionController::class, 'getManagementList'])
+            ->name('positions.management-list');
+    });
 
-    // مدیریت سمت‌ها
-    Route::resource('positions', PositionController::class);
-    Route::get('positions-list', [PositionController::class, 'getList'])
-        ->name('positions.list');
-    Route::get('positions-management-list', [PositionController::class, 'getManagementList'])
-        ->name('positions.management-list');
+    // ============================================
+    // مدیریت کاربران (ادمین کل و ادمین سازمان)
+    // ============================================
+    Route::middleware(['role:super-admin|org-admin'])->group(function () {
+        Route::resource('users', UserController::class);
+        Route::post('users/{user}/assign-role', [UserController::class, 'assignRole'])
+            ->name('users.assign-role');
+        Route::post('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
+            ->name('users.toggle-status');
+    });
 
-
-    // مدیریت کاربران
-    Route::post('users/{user}/assign-role', [UserController::class, 'assignRole'])
-        ->name('users.assign-role');
-    Route::post('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
-        ->name('users.toggle-status');
-
-    // API endpoints برای فرم‌ها
+    // API endpoints برای فرم‌های کاربران (JSON responses)
     Route::get('users/departments-by-organization', [UserController::class, 'getDepartmentsByOrganization'])
         ->name('users.departments-by-organization');
     Route::get('users/positions-by-department', [UserController::class, 'getPositionsByDepartment'])
         ->name('users.positions-by-department');
-    Route::resource('users', UserController::class);
 
-
-    // مدیریت نامه‌ها
+    // ============================================
+    // مدیریت نامه‌ها (همه کاربران لاگین شده)
+    // ============================================
     Route::resource('letters', LetterController::class);
     Route::post('letters/{letter}/publish', [LetterController::class, 'publish'])
         ->name('letters.publish');
-
-    Route::get('/attachments/{attachment}/download', [LetterController::class, 'downloadAttachment'])
+    Route::get('attachments/{attachment}/download', [LetterController::class, 'downloadAttachment'])
         ->name('attachments.download');
 
-    // کارتابل و ارجاعات
+    // ============================================
+    // کارتابل و ارجاعات (همه کاربران)
+    // ============================================
     Route::get('cartable', [RoutingController::class, 'cartable'])->name('cartable.index');
     Route::get('letters/{letter}/routing/create', [RoutingController::class, 'create'])->name('routings.create');
     Route::post('letters/{letter}/routing', [RoutingController::class, 'store'])->name('routings.store');
@@ -96,38 +122,50 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('routings/{routing}/reject', [RoutingController::class, 'reject'])->name('routings.reject');
     Route::get('letters/{letter}/routings-history', [RoutingController::class, 'history'])->name('routings.history');
 
-    // بایگانی‌ها
-    Route::resource('archives', ArchiveController::class);
-    Route::get('archives/{archive}/permissions', [ArchiveController::class, 'permissions'])
-        ->name('archives.permissions');
+    // ============================================
+    // مدیریت بایگانی (ادمین کل و ادمین سازمان)
+    // ============================================
+    Route::middleware(['role:super-admin|org-admin'])->group(function () {
+        Route::resource('archives', ArchiveController::class);
+        Route::get('archives/{archive}/permissions', [ArchiveController::class, 'permissions'])
+            ->name('archives.permissions');
+    });
 
-    // پرونده‌های بایگانی (نested resource)
+    // پرونده‌های بایگانی (nested resource)
     Route::resource('archives.cases', CaseController::class);
     Route::post('archives/{archive}/cases/{case}/attach-letter', [CaseController::class, 'attachLetter'])
         ->name('archives.cases.attach-letter');
     Route::delete('archives/{archive}/cases/{case}/detach-letter/{letter}', [CaseController::class, 'detachLetter'])
         ->name('archives.cases.detach-letter');
 
-    // گزارشات
-    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('/reports/export-excel', [ReportController::class, 'exportExcel'])->name('reports.export-excel');
-    Route::get('/reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export-pdf');
+    // ============================================
+    // مدیریت دسته‌بندی نامه‌ها (ادمین کل و ادمین سازمان)
+    // ============================================
+    Route::middleware(['role:super-admin|org-admin'])->group(function () {
+        Route::resource('categories', LetterCategoryController::class);
+        Route::post('categories/{category}/toggle-status', [LetterCategoryController::class, 'toggleStatus'])
+            ->name('categories.toggle-status');
+        Route::get('categories-list', [LetterCategoryController::class, 'getList'])
+            ->name('categories.list');
+    });
 
-    // کارتابل
-    Route::get('/cartable', [CartableController::class, 'index'])->name('cartable.index');
-    Route::post('/cartable/{routing}/complete', [CartableController::class, 'complete'])->name('cartable.complete');
-    Route::post('/cartable/{routing}/reject', [CartableController::class, 'reject'])->name('cartable.reject');
+    // ============================================
+    // گزارشات (مدیر دپارتمان و بالاتر)
+    // ============================================
+    Route::middleware(['role:super-admin|org-admin|dept-manager'])->group(function () {
+        Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('reports/export-excel', [ReportController::class, 'exportExcel'])->name('reports.export-excel');
+        Route::get('reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export-pdf');
+    });
 
-    // مدیریت دسته‌بندی نامه‌ها
-    Route::resource('categories', LetterCategoryController::class);
-    Route::post('categories/{category}/toggle-status', [LetterCategoryController::class, 'toggleStatus'])
-        ->name('categories.toggle-status');
-    Route::get('categories-list', [LetterCategoryController::class, 'getList'])
-        ->name('categories.list');
-
-    // تنظیمات سیستم
-    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
-    Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
+    // ============================================
+    // تنظیمات سیستم (فقط ادمین کل)
+    // ============================================
+    Route::middleware(['role:super-admin'])->group(function () {
+        Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+        Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
+    });
 });
 
+// فایل تنظیمات اضافی
 require __DIR__ . '/settings.php';
