@@ -22,7 +22,7 @@ class UserController extends Controller
         $currentUser = auth()->user();
 
         $query = User::query()
-            ->with(['organization', 'department', 'primaryPosition', 'positions']);
+            ->with(['organization', 'department', 'primaryPosition', 'positions', 'roles']);
         
         // ============================================
         // فیلتر بر اساس سطح دسترسی (مهم)

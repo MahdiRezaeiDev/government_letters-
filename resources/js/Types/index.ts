@@ -27,6 +27,8 @@ export interface NavGroup {
 // ============================================
 
 export interface User {
+    [x: string]: any;
+    name: any;
     id: number;
     organization_id: number | null;
     department_id: number | null;
