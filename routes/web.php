@@ -51,11 +51,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
     // مدیریت دپارتمان‌ها
-    Route::resource('departments', DepartmentController::class);
     Route::post('departments/{department}/toggle-status', [DepartmentController::class, 'toggleStatus'])
         ->name('departments.toggle-status');
     Route::get('departments-list', [DepartmentController::class, 'getList'])
         ->name('departments.list');
+    Route::resource('departments', DepartmentController::class);
+ 
 
     // مدیریت سمت‌ها
     Route::resource('positions', PositionController::class);

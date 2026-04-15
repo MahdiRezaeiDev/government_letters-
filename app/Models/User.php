@@ -75,7 +75,7 @@ class User extends Authenticatable
 
     public function getAvatarUrlAttribute(): string
     {
-        return $this->avatar 
+        return $this->avatar
             ? asset('storage/' . $this->avatar)
             : 'https://ui-avatars.com/api/?name=' . urlencode($this->full_name) . '&background=random';
     }
@@ -101,9 +101,9 @@ class User extends Authenticatable
     public function positions()
     {
         return $this->belongsToMany(Position::class, 'user_positions')
-                    ->select('positions.id', 'positions.name', 'positions.code', 'positions.department_id')
-                    ->withPivot('is_primary', 'start_date', 'end_date', 'status')
-                    ->withTimestamps();
+            ->select('positions.id', 'positions.name', 'positions.code', 'positions.department_id')
+            ->withPivot('is_primary', 'start_date', 'end_date', 'status')
+            ->withTimestamps();
     }
 
     public function activePositions(): BelongsToMany
@@ -186,17 +186,21 @@ class User extends Authenticatable
     }
 
     // بررسی ادمین کل بودن
-     public function isSuperAdmin(): bool
+    public function isSuperAdmin(): bool
     {
         return $this->hasRole('super-admin');
     }
-    
+
     // بررسی ادمین سازمان بودن
     public function isOrgAdmin(): bool
     {
         return $this->hasRole('org-admin');
     }
-    
+    public function isDeptManager(): bool
+    {
+        return $this->hasRole('dep-admin');
+    }
+
     // بررسی دسترسی به یک سازمان خاص
     public function belongsToOrganization(int $orgId): bool
     {
