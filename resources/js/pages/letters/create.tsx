@@ -1,14 +1,14 @@
 import { Head, usePage } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
-import axios from 'axios';
 import {
-    Save, Paperclip, Send, Trash2, FileText, 
-    UserCheck, Info, Loader2, PenLine, Tag, Search, X
+    Save, Paperclip, Send, Trash2, AlertCircle,
+    Calendar, UserIcon, Building2, Briefcase,
+    Shield, Flag, FolderTree, Users, Building,
+    Globe, Printer, ArrowLeft, CheckCircle2,
+    FileText, Upload
 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
-import PersianDatePicker from '@/components/PersianDatePicker';
-import TextEditor from '@/components/TextEditor';
-import LetterRoute from '@/routes/letters';
+import React, { useState, useEffect } from 'react';
+import { store as LetterCreate } from '@/routes/letters';
 import type { LetterCategory, Organization } from '@/types';
 
 const inputClass = "w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white";
@@ -34,40 +34,56 @@ interface Reception {
     reception_user?: { id: number; first_name: string; last_name: string };
 }
 
-interface DepartmentOption {
-    id: number;
-    name: string;
-    parent_id: number | null;
-}
+interface FormData {
+    letter_type: string;
+    category_id: number | null;
+    subject: string;
+    summary: string;
+    content: string;
+    security_level: string;
+    priority: string;
+    date: string;
+    due_date: string | null;
+    response_deadline: string | null;
+    sheet_count: number;
+    is_draft: boolean;
 
-interface Props {
-    categories: LetterCategory[];
-    receptions: Reception[];
-    departments: DepartmentOption[];
-    externalOrganizations?: Organization[];
-    securityLevels: Record<string, SecurityLevel>;
-    priorityLevels: Record<string, PriorityLevel>;
+    recipient_type: 'internal' | 'external';
+    recipient_user_id: number | null;
+    recipient_department_id: number | null;
+    recipient_position_id: number | null;
+    recipient_name: string;
+    recipient_position_name: string;
+
+    external_organization_id: number | null;
+    external_department_id: number | null;
+    external_position_id: number | null;
+
+    cc_recipients: number[];
+    instruction: string;
 }
 
 export default function LettersCreate({
-    receptions,
-    departments,
-    externalOrganizations = [],
-    securityLevels,
-    priorityLevels,
+    type, categories, users, departments, positions,
+    externalOrganizations, externalOrganizationsTree,
+    securityLevels, priorityLevels
 }: Props) {
     const { auth } = usePage().props as any;
     const currentUser = auth.user;
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors, reset } = useForm<FormData>({
+        letter_type: type,
         category_id: null,
         subject: "",
         content: "",
         security_level: 'internal',
         priority: 'normal',
-        date: new Date().toLocaleDateString('fa-Af', { calendar: 'persian', year: 'numeric', month: '2-digit', day: '2-digit' }),
-        attachments: [],
-        is_draft: false,
+        date: new Date().toISOString().split('T')[0],
+        due_date: null,
+        response_deadline: null,
+        sheet_count: 1,
+        is_draft: true,
+
         recipient_type: 'internal',
         root_department_id: null,
         recipient_organization_id: currentUser.organization_id,
@@ -76,118 +92,188 @@ export default function LettersCreate({
         recipient_user_id: null,
         recipient_name: '',
         recipient_position_name: '',
+
+        external_organization_id: null,
+        external_department_id: null,
+        external_position_id: null,
+
+        cc_recipients: [],
+        instruction: '',
     });
 
-    // State برای سرچ
-    const [searchTerm, setSearchTerm] = useState('');
-    const [isSearchOpen, setIsSearchOpen] = useState(false);
-    const [searchType, setSearchType] = useState<'internal' | 'external'>('internal');
+    const [selectedRecipientUser, setSelectedRecipientUser] = useState<number | null>(null);
+    const [selectedRecipientDepartment, setSelectedRecipientDepartment] = useState<number | null>(null);
+    const [selectedExternalOrg, setSelectedExternalOrg] = useState<number | null>(null);
+    const [selectedExternalDept, setSelectedExternalDept] = useState<number | null>(null);
+    const [attachments, setAttachments] = useState<File[]>([]);
+    const [touched, setTouched] = useState<Record<string, boolean>>({});
+    const [isDragging, setIsDragging] = useState(false);
 
-    const [extDepartments, setExtDepartments] = useState<{ id: number; name: string }[]>([]);
-    const [extPositions, setExtPositions] = useState<{ id: number; name: string; department_id: number }[]>([]);
-    const [loadingExtDepts, setLoadingExtDepts] = useState(false);
-    const [loadingExtPositions, setLoadingExtPositions] = useState(false);
+    const [recipientPositions, setRecipientPositions] = useState<{ id: number; name: string }[]>([]);
+    const [externalDepartments, setExternalDepartments] = useState<{ id: number; name: string; parent_id: number | null }[]>([]);
+    const [externalPositions, setExternalPositions] = useState<{ id: number; name: string }[]>([]);
 
-    const selectedReception = useMemo(
-        () => receptions.find(r => r.id === Number(data.root_department_id)),
-        [receptions, data.root_department_id]
-    );
+    const handleBlur = (field: string) => {
+        setTouched(prev => ({ ...prev, [field]: true }));
+    };
 
-    const targetDepartments = useMemo(() => {
-        if (!data.root_department_id) {
-            return [];
-        }
+    const getFieldError = (field: string) => {
+        return touched[field] && errors[field] ? errors[field] : null;
+    };
 
-        const rootId = Number(data.root_department_id);
-        const result: DepartmentOption[] = [];
-        const root = departments.find(d => d.id === rootId);
-
-        if (root) {
-            result.push(root);
-        }
-
-        const collectChildren = (parentId: number) => {
-            departments
-                .filter(d => d.parent_id === parentId)
-                .forEach((child) => {
-                    result.push(child);
-                    collectChildren(child.id);
-                });
-        };
-
-        collectChildren(rootId);
-
-        return result;
-    }, [data.root_department_id, departments]);
-
-    // نتایج جستجوی داخلی - غیرفعال (ارسال فقط از طریق دبیرخانه)
-    const internalSearchResults = useMemo(() => [], []);
-
-    // نتایج جستجوی خارجی
-    const externalSearchResults = useMemo(() => {
-        if (!searchTerm.trim() || searchType !== 'external') return [];
-
-        const term = searchTerm.toLowerCase().trim();
-
-        // جستجو در وزارت‌ها
-        const orgResults = externalOrganizations
-            .filter(org => org.name.toLowerCase().includes(term))
-            .map(org => ({
-                id: org.id,
-                name: org.name,
-                type: 'organization' as const,
-                parentName: null,
-                organizationId: org.id,
-                departmentId: null,
-                positionId: null
-            }));
-
-        // جستجو در ریاست‌ها (نیاز به API جداگانه دارد)
-        // برای سادگی، فعلاً فقط وزارت‌ها را نمایش می‌دهیم
-
-        return orgResults;
-    }, [searchTerm, externalOrganizations, searchType]);
-
-    // دریافت ریاست / آمریت‌های وزارت خارجی
+    // Effects
     useEffect(() => {
-        if (data.recipient_organization_id && data.recipient_type === 'external') {
-            setLoadingExtDepts(true);
-            axios.get('/organizations/departments', { params: { organization_id: data.recipient_organization_id } })
-                .then(res => {
-                    setExtDepartments(res.data.departments || []);
-                    setLoadingExtDepts(false);
-                })
-                .catch(() => {
-                    setExtDepartments([]);
-                    setLoadingExtDepts(false);
-                });
-        }
-    }, [data.recipient_organization_id, data.recipient_type]);
-
-    // دریافت پست‌های ریاست / آمریت خارجی
-    useEffect(() => {
-        if (data.recipient_department_id && data.recipient_type === 'external') {
-            setLoadingExtPositions(true);
-            axios.get('/departments/positions', { params: { department_id: data.recipient_department_id } })
-                .then(res => {
-                    setExtPositions(res.data.positions || []);
-                    setLoadingExtPositions(false);
-                })
-                .catch(() => {
-                    setExtPositions([]);
-                    setLoadingExtPositions(false);
-                });
+        if (selectedRecipientDepartment) {
+            const deptPositions = positions.filter(p => p.department_id === selectedRecipientDepartment);
+            setRecipientPositions(deptPositions);
         } else {
-            setExtPositions([]);
+            setRecipientPositions([]);
         }
-    }, [data.recipient_department_id, data.recipient_type]);
+    }, [selectedRecipientDepartment, positions]);
+
+    useEffect(() => {
+        if (selectedExternalOrg && data.recipient_type === 'external') {
+            router.get('/organizations/departments',
+                { organization_id: selectedExternalOrg },
+                {
+                    preserveState: true,
+                    onSuccess: (page) => {
+                        setExternalDepartments(page.props.departments as any[]);
+                    }
+                }
+            );
+        } else {
+            setExternalDepartments([]);
+            setSelectedExternalDept(null);
+            setExternalPositions([]);
+        }
+    }, [selectedExternalOrg, data.recipient_type]);
+
+    useEffect(() => {
+        if (selectedExternalDept && data.recipient_type === 'external') {
+            router.get('/departments/positions',
+                { department_id: selectedExternalDept },
+                {
+                    preserveState: true,
+                    onSuccess: (page) => {
+                        setExternalPositions(page.props.positions as any[]);
+                    }
+                }
+            );
+        } else {
+            setExternalPositions([]);
+        }
+    }, [selectedExternalDept, data.recipient_type]);
+
+    useEffect(() => {
+        if (selectedRecipientUser && data.recipient_type === 'internal') {
+            const user = users.find(u => u.id === selectedRecipientUser);
+            if (user) {
+                setData('recipient_name', user.name);
+                setData('recipient_position_name', user.position || '');
+                setData('recipient_department_id', user.department_id || null);
+                setSelectedRecipientDepartment(user.department_id || null);
+                setData('recipient_user_id', user.id);
+            }
+        } else if (data.recipient_type !== 'internal') {
+            setData('recipient_user_id', null);
+            setData('recipient_department_id', null);
+            setData('recipient_position_id', null);
+            setSelectedRecipientUser(null);
+            setSelectedRecipientDepartment(null);
+        }
+    }, [selectedRecipientUser, data.recipient_type]);
+
+    useEffect(() => {
+        if (selectedExternalOrg && data.recipient_type === 'external') {
+            const org = externalOrganizations.find(o => o.id === selectedExternalOrg);
+            if (org) {
+                setData('recipient_name', org.name);
+            }
+        }
+    }, [selectedExternalOrg, externalOrganizations]);
+
+    useEffect(() => {
+        if (selectedExternalDept && data.recipient_type === 'external') {
+            const dept = externalDepartments.find(d => d.id === selectedExternalDept);
+            if (dept) {
+                setData('recipient_position_name', dept.name);
+            }
+        }
+    }, [selectedExternalDept, externalDepartments]);
+
+    useEffect(() => {
+        setData('recipient_user_id', null);
+        setData('recipient_department_id', null);
+        setData('recipient_position_id', null);
+        setData('recipient_name', '');
+        setData('recipient_position_name', '');
+        setData('external_organization_id', null);
+        setData('external_department_id', null);
+        setData('external_position_id', null);
+        setSelectedRecipientUser(null);
+        setSelectedRecipientDepartment(null);
+        setSelectedExternalOrg(null);
+        setSelectedExternalDept(null);
+        setExternalDepartments([]);
+        setExternalPositions([]);
+    }, [data.recipient_type]);
 
     const handleSubmit = (e: React.FormEvent, isDraft: boolean) => {
         e.preventDefault();
+        setData('is_draft', isDraft);
 
-        const submittedData = { ...data, is_draft: isDraft };
-        post(LetterRoute.store().url, {
-            data: submittedData,
+        const formData = new FormData();
+
+        formData.append('letter_type', data.letter_type);
+        formData.append('category_id', String(data.category_id || ''));
+        formData.append('subject', data.subject);
+        formData.append('summary', data.summary || '');
+        formData.append('content', data.content || '');
+        formData.append('security_level', data.security_level);
+        formData.append('priority', data.priority);
+        formData.append('date', data.date);
+        formData.append('due_date', data.due_date || '');
+        formData.append('response_deadline', data.response_deadline || '');
+        formData.append('sheet_count', String(data.sheet_count));
+        formData.append('is_draft', String(isDraft));
+
+        formData.append('sender_user_id', String(currentUser.id));
+        formData.append('sender_name', currentUser.full_name);
+        formData.append('sender_position_name', currentUser.primary_position?.name || '');
+        formData.append('sender_department_id', String(currentUser.department_id || ''));
+
+        formData.append('recipient_type', data.recipient_type);
+
+        if (data.recipient_type === 'internal') {
+            formData.append('recipient_user_id', String(data.recipient_user_id || ''));
+            formData.append('recipient_department_id', String(data.recipient_department_id || ''));
+            formData.append('recipient_position_id', String(data.recipient_position_id || ''));
+            formData.append('recipient_name', data.recipient_name);
+            formData.append('recipient_position_name', data.recipient_position_name);
+            formData.append('external_organization_id', '');
+            formData.append('external_department_id', '');
+            formData.append('external_position_id', '');
+        } else {
+            formData.append('recipient_user_id', '');
+            formData.append('recipient_department_id', '');
+            formData.append('recipient_position_id', '');
+            formData.append('recipient_name', data.recipient_name);
+            formData.append('recipient_position_name', data.recipient_position_name);
+            formData.append('external_organization_id', String(data.external_organization_id || ''));
+            formData.append('external_department_id', String(data.external_department_id || ''));
+            formData.append('external_position_id', String(data.external_position_id || ''));
+        }
+
+        formData.append('cc_recipients', JSON.stringify(data.cc_recipients));
+        formData.append('instruction', data.instruction);
+
+        attachments.forEach(file => {
+            formData.append('attachments[]', file);
+        });
+
+        post(LetterCreate(), {
+            data: formData,
             preserveScroll: true,
             onSuccess: () => {
                 if (!isDraft) {
@@ -207,635 +293,534 @@ export default function LettersCreate({
         }
     };
 
-    const removeAttachment = (index: number) =>
-        setData('attachments', data.attachments.filter((_, i) => i !== index));
-
-    const formatFileSize = (bytes: number): string => {
-        if (bytes === 0) {
-            return '0 Bytes';
-        }
-
-        const k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
     };
 
-    // هندلر انتخاب از جستجو (داخلی)
-    const handleInternalSearchSelect = (result: any) => {
-        if (result.type === 'department') {
-            // انتخاب ریاست
-            setData('recipient_department_id', result.id);
-            setData('recipient_position_id', null);
-            setData('recipient_position_name', '');
-            setData('recipient_user_id', null);
-            setData('recipient_name', '');
-        } else if (result.type === 'position') {
-            // انتخاب بست
-            setData('recipient_department_id', result.departmentId);
-            setData('recipient_position_id', result.id);
-            setData('recipient_position_name', result.name);
-            setData('recipient_user_id', result.userId || null);
-            setData('recipient_name', result.userName || '');
-        }
-
-        setIsSearchOpen(false);
-        setSearchTerm('');
+    const handleDragLeave = () => {
+        setIsDragging(false);
     };
 
-    // هندلر انتخاب از جستجو (خارجی)
-    const handleExternalSearchSelect = (result: any) => {
-        if (result.type === 'organization') {
-            // انتخاب وزارت
-            const org = externalOrganizations.find(o => o.id === result.id);
-            setData('recipient_organization_id', result.id);
-            setData('recipient_name', org?.name || '');
-            setData('recipient_department_id', null);
-            setData('recipient_position_id', null);
-            setData('recipient_position_name', '');
-            setExtDepartments([]);
-            setExtPositions([]);
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        if (e.dataTransfer.files) {
+            setAttachments([...attachments, ...Array.from(e.dataTransfer.files)]);
         }
+    };
 
-        setIsSearchOpen(false);
-        setSearchTerm('');
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = () => {
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        if (e.dataTransfer.files) {
+            setAttachments([...attachments, ...Array.from(e.dataTransfer.files)]);
+        }
+    };
+
+    const removeAttachment = (index: number) => {
+        setAttachments(attachments.filter((_, i) => i !== index));
+    };
+
+    const renderOrganizationTree = (organizations: Organization[], level = 0) => {
+        return organizations.map(org => (
+            <React.Fragment key={org.id}>
+                <option value={org.id} style={{ paddingRight: `${level * 20}px` }}>
+                    {'—'.repeat(level)} {org.name}
+                </option>
+                {org.children && renderOrganizationTree(org.children, level + 1)}
+            </React.Fragment>
+        ));
+    };
+
+    const getTitle = () => {
+        switch (type) {
+            case 'incoming': return 'ثبت نامه وارده';
+            case 'outgoing': return 'ایجاد نامه صادره';
+            case 'internal': return 'ایجاد نامه داخلی';
+            default: return 'نامه جدید';
+        }
+    };
+
+    const getTypeIcon = () => {
+        switch (type) {
+            case 'incoming': return <AlertCircle className="h-5 w-5" />;
+            case 'outgoing': return <Send className="h-5 w-5" />;
+            case 'internal': return <FileText className="h-5 w-5" />;
+        }
+    };
+
+    const formatDate = (dateStr: string) => {
+        if (!dateStr) return '';
+        return new Date(dateStr).toLocaleDateString('fa-IR');
     };
 
     return (
         <>
             <Head title="ایجاد مکتوب / استعلام  جدید" />
 
-            <div className="min-h-screen">
+            <div className="min-h-screen bg-[#F5F7FA] py-8 px-4 sm:px-6 lg:px-8 font-sans">
+                <form onSubmit={(e) => handleSubmit(e, false)} className="max-w-5xl mx-auto">
 
-                {/* ─── Body ─── */}
-                <div className="max-w-7xl mx-auto px-3 lg:px-6 py-6">
-                    <form id="letter-form" onSubmit={(e) => handleSubmit(e, false)}>
-                        <div className="grid grid-cols-12 gap-5">
+                    {/* نوار ابزار بالا */}
+                    <div className="flex items-center justify-between mb-6 print:hidden">
+                        <button
+                            type="button"
+                            onClick={() => window.history.back()}
+                            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                        >
+                            <ArrowLeft className="ml-1 h-4 w-4" />
+                            بازگشت
+                        </button>
 
-                            {/* ══ ستون اصلی ══ */}
-                            <div className="col-span-12 lg:col-span-8 space-y-5">
-                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5 flex gap-3 items-center">
-                                    <div className="h-9 w-9 rounded-xl bg-teal-50 flex items-center justify-center flex-shrink-0">
-                                        <Tag className="h-4 w-4 text-teal-600" />
+                        <div className="flex items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={(e) => handleSubmit(e, true)}
+                                disabled={processing}
+                                className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm disabled:opacity-50"
+                            >
+                                <Save className="ml-2 h-4 w-4" />
+                                پیش‌نویس
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => window.print()}
+                                className="inline-flex items-center px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+                            >
+                                <Printer className="ml-2 h-4 w-4" />
+                                چاپ
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="inline-flex items-center px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 border border-transparent rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg disabled:opacity-50"
+                            >
+                                <Send className="ml-2 h-4 w-4" />
+                                {processing ? 'در حال ارسال...' : 'ثبت و ارسال'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* برگه نامه */}
+                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 print:shadow-none print:border-0 print:rounded-none">
+
+                        {/* هدر لوکس */}
+                        <div className="relative px-10 pt-10 pb-6 border-b border-gray-100 print:border-black/20">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 print:hidden"></div>
+
+                            <div className="flex justify-between items-start">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2 text-gray-500 text-sm">
+                                        <Building className="h-4 w-4" />
+                                        <span>جمهوری اسلامی ایران</span>
                                     </div>
-                                    <div>
-                                        <h2 className="text-sm font-bold text-slate-800">ثبت مکتوب / استعلام  جدید</h2>
-                                        <p className="text-xs text-slate-400 mt-0.5">برای ثبت مکتوب / استعلام  جدید فورم ذیل را با دقت پرکنید.</p>
-                                    </div>
+                                    <h2 className="text-2xl font-bold text-gray-800 tracking-tight">وزارت امور خارجه</h2>
+                                    <p className="text-sm text-gray-500 font-light">معاونت ارتباطات و فناوری اطلاعات</p>
                                 </div>
 
-                                {/* اطلاعات مکتوب / استعلام  */}
-                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-                                    <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
-                                        <PenLine className="h-4 w-4 text-slate-500" />
-                                        <h3 className="text-sm font-bold text-slate-700">معلومات مکتوب / استعلام </h3>
+                                <div className="text-left space-y-4">
+                                    {/* برچسب نوع نامه */}
+                                    <div className="flex items-center justify-end gap-2">
+                                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
+                                            {getTypeIcon()}
+                                            <span className="mr-1.5">{getTitle()}</span>
+                                        </span>
                                     </div>
-                                    <div className="p-5 space-y-4">
 
-                                        {/* موضوع + تاریخ */}
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div className="md:col-span-2">
-                                                <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                                                    موضوع مکتوب / استعلام  <span className="text-red-500">*</span>
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={data.subject}
-                                                    onChange={(e) => setData('subject', e.target.value)}
-                                                    placeholder="موضوع مکتوب / استعلام  را وارد نمایید..."
-                                                    className={`${inputClass} py-3 placeholder:text-slate-400`}
-                                                />
-                                                {errors.subject && <p className="text-red-500 text-xs mt-1">{errors.subject}</p>}
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                                                    تاریخ مکتوب / استعلام  <span className="text-red-500">*</span>
-                                                </label>
-                                                <PersianDatePicker
-                                                    value={data.date}
-                                                    onChange={(date) => setData('date', date as string)}
-                                                />
-                                                {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date}</p>}
-                                            </div>
-                                        </div>
-
-                                        {/* متن مکتوب / استعلام  */}
+                                    {/* شماره و تاریخ */}
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
                                         <div>
-                                            <TextEditor
-                                                content={data.content}
-                                                onChange={(content) => setData('content', content)}
-                                                placeholder="متن مکتوب / استعلام  را اینجا بنویسید..."
-                                                label="متن مکتوب / استعلام "
-                                                required={true}
-                                                error={errors.content}
-                                            />
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">شماره نامه</p>
+                                            <p className="font-mono text-lg font-medium text-gray-700 tracking-wide">پیش‌نویس</p>
                                         </div>
-                                    </div>
-                                </div>
-
-                                {/* پیوست‌ها */}
-                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-                                    <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
-                                        <Paperclip className="h-4 w-4 text-slate-500" />
-                                        <h3 className="text-sm font-bold text-slate-700">ضمایم</h3>
-                                    </div>
-                                    <div className="p-5">
-                                        <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all">
-                                            <Paperclip className="h-5 w-5 text-slate-400 mb-1" />
-                                            <p className="text-xs text-slate-500">کلیک کنید یا فایل را بکشید و رها کنید</p>
-                                            <p className="text-[10px] text-slate-400 mt-0.5">PDF, DOC, DOCX, JPG, PNG (حداکثر 10MB)</p>
-                                            <input type="file" multiple onChange={handleFileChange}
-                                                className="hidden" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" />
-                                        </label>
-
-                                        {data.attachments.length > 0 && (
-                                            <div className="mt-3 space-y-1.5">
-                                                {data.attachments.map((file, i) => (
-                                                    <div key={i} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-md">
-                                                        <div className="flex items-center gap-2 truncate">
-                                                            <FileText className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                                                            <span className="text-xs text-slate-700 truncate">{file.name}</span>
-                                                            <span className="text-[10px] text-slate-400">({formatFileSize(file.size)})</span>
-                                                        </div>
-                                                        <button type="button" onClick={() => removeAttachment(i)}
-                                                            className="text-slate-400 hover:text-red-500 transition p-1">
-                                                            <Trash2 className="h-3.5 w-3.5" />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        {/* نمایش خطای attachments */}
-                                        {errors && Object.entries(errors).some(([key]) => key.startsWith('attachments.')) && (
-                                            <div className="mt-2">
-                                                {Object.entries(errors)
-                                                    .filter(([key]) => key.startsWith('attachments.'))
-                                                    .map(([key, message]) => (
-                                                        <p key={key} className="text-xs text-red-500 mt-1">
-                                                            {message}
-                                                        </p>
-                                                    ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="hidden md:flex gap-5 col-span-12 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden p-5">
-                                    <button type="submit" form="letter-form" disabled={processing}
-                                        className="cursor-pointer px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm flex items-center gap-2 disabled:opacity-50">
-                                        {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                                        {processing ? 'در حال ارسال...' : 'ثبت و ارسال '}
-                                    </button>
-                                    <button type="button" onClick={(e) => handleSubmit(e, true)} disabled={processing}
-                                        className="cursor-pointer px-5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-sm flex items-center gap-2 disabled:opacity-50">
-                                        <Save className="h-4 w-4" /> پیش‌نویس
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* ══ ستون کناری ══ */}
-                            <div className="col-span-12 lg:col-span-4 space-y-5">
-
-                                {/* گیرنده با قابلیت سرچ */}
-                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-                                    <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
-                                        <UserCheck className="h-4 w-4 text-slate-500" />
-                                        <h3 className="text-sm font-bold text-slate-700">گیرنده</h3>
-                                    </div>
-                                    <div className="p-5 space-y-4">
-
-                                        {/* دکمه جستجو - فقط برای خارجی */}
-                                        {data.recipient_type === 'external' && (
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setSearchType(data.recipient_type);
-                                                    setIsSearchOpen(true);
-                                                }}
-                                                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-all duration-200 border border-blue-200"
-                                            >
-                                                <Search className="h-4 w-4" />
-                                                <span className="text-sm font-medium">جستجوی گیرنده</span>
-                                            </button>
-                                        )}
-
-                                        {/* مودال جستجو */}
-                                        {isSearchOpen && (
-                                            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setIsSearchOpen(false)}>
-                                                <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-                                                    <div className="flex items-center justify-between p-4 border-b">
-                                                        <h3 className="text-lg font-bold text-slate-800">
-                                                            جستجوی گیرنده - {searchType === 'internal' ? 'داخلی' : 'خارج از وزارت'}
-                                                        </h3>
-                                                        <button
-                                                            onClick={() => setIsSearchOpen(false)}
-                                                            className="p-1 hover:bg-slate-100 rounded-lg transition"
-                                                        >
-                                                            <X className="h-5 w-5 text-slate-500" />
-                                                        </button>
-                                                    </div>
-
-                                                    <div className="p-4 border-b">
-                                                        <div className="relative">
-                                                            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                                            <input
-                                                                type="text"
-                                                                value={searchTerm}
-                                                                onChange={(e) => setSearchTerm(e.target.value)}
-                                                                placeholder={searchType === 'internal' ?
-                                                                    "جستجو بر اساس نام ریاست یا بست..." :
-                                                                    "جستجو بر اساس نام وزارت..."
-                                                                }
-                                                                className="w-full pr-10 pl-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                                                                autoFocus
-                                                            />
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                                                        {searchType === 'internal' && internalSearchResults.length === 0 && searchTerm && (
-                                                            <div className="text-center py-8 text-slate-500">
-                                                                <p>نتیجه‌ای یافت نشد</p>
-                                                            </div>
-                                                        )}
-
-                                                        {searchType === 'external' && externalSearchResults.length === 0 && searchTerm && (
-                                                            <div className="text-center py-8 text-slate-500">
-                                                                <p>نتیجه‌ای یافت نشد</p>
-                                                            </div>
-                                                        )}
-
-                                                        {/* نتایج داخلی */}
-                                                        {searchType === 'internal' && internalSearchResults.map((result, index) => (
-                                                            <div
-                                                                key={`${result.type}-${result.id}-${index}`}
-                                                                onClick={() => handleInternalSearchSelect(result)}
-                                                                className="p-3 border border-slate-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all"
-                                                            >
-                                                                <div className="flex items-start justify-between">
-                                                                    <div>
-                                                                        <p className="font-medium text-slate-800 text-sm">
-                                                                            {result.name}
-                                                                        </p>
-                                                                        <p className="text-xs text-slate-500 mt-1">
-                                                                            {result.type === 'department' ? 'ریاست / آمریت' : 'بست'}
-                                                                            {result.parentName && (
-                                                                                <span className="mr-2">
-                                                                                    • {result.parentName}
-                                                                                </span>
-                                                                            )}
-                                                                        </p>
-                                                                        {result.type === 'position' && result.userName && (
-                                                                            <p className="text-xs text-green-600 mt-1">
-                                                                                مسئول: {result.userName}
-                                                                            </p>
-                                                                        )}
-                                                                    </div>
-                                                                    <div className="text-xs px-2 py-1 bg-slate-100 rounded text-slate-600">
-                                                                        {result.type === 'department' ? 'ریاست' : 'بست'}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-
-                                                        {/* نتایج خارجی */}
-                                                        {searchType === 'external' && externalSearchResults.map((result) => (
-                                                            <div
-                                                                key={`org-${result.id}`}
-                                                                onClick={() => handleExternalSearchSelect(result)}
-                                                                className="p-3 border border-slate-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all"
-                                                            >
-                                                                <div className="flex items-start justify-between">
-                                                                    <div>
-                                                                        <p className="font-medium text-slate-800 text-sm">
-                                                                            {result.name}
-                                                                        </p>
-                                                                        <p className="text-xs text-slate-500 mt-1">
-                                                                            وزارت / اداره
-                                                                        </p>
-                                                                    </div>
-                                                                    <div className="text-xs px-2 py-1 bg-slate-100 rounded text-slate-600">
-                                                                        وزارت
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-
-                                                    <div className="p-4 border-t bg-slate-50">
-                                                        <button
-                                                            onClick={() => setIsSearchOpen(false)}
-                                                            className="w-full px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50"
-                                                        >
-                                                            بستن
-                                                        </button>
-                                                    </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">تاریخ</p>
+                                            <div className="relative group">
+                                                <div className="flex items-center gap-1 text-gray-700">
+                                                    <Calendar className="h-4 w-4 text-gray-400" />
+                                                    <input
+                                                        type="date"
+                                                        value={data.date}
+                                                        onChange={(e) => setData('date', e.target.value)}
+                                                        className="text-sm font-medium bg-transparent border-0 p-0 focus:ring-0 cursor-pointer w-auto"
+                                                    />
                                                 </div>
                                             </div>
-                                        )}
-
-                                        {/* toggle داخلی / خارجی */}
-                                        <div className="flex gap-2">
-                                            {(['internal', 'external'] as const).map(type => (
-                                                <button key={type} type="button"
-                                                    onClick={() => {
-                                                        setData('recipient_type', type);
-                                                        setSearchType(type);
-
-                                                        if (type === 'internal') {
-                                                            setData('recipient_organization_id', currentUser.organization_id);
-                                                            setData('root_department_id', null);
-                                                            setData('recipient_department_id', null);
-                                                            setData('recipient_position_id', null);
-                                                            setData('recipient_user_id', null);
-                                                            setData('recipient_name', '');
-                                                            setData('recipient_position_name', '');
-                                                        } else {
-                                                            setData('recipient_organization_id', null);
-                                                            setData('recipient_department_id', null);
-                                                            setData('recipient_position_id', null);
-                                                            setData('recipient_user_id', null);
-                                                            setData('recipient_name', '');
-                                                            setData('recipient_position_name', '');
-                                                        }
-                                                    }}
-                                                    className={`flex-1 py-2 text-xs font-medium rounded-md border transition
-                                                        ${data.recipient_type === type
-                                                            ? 'bg-blue-600 text-white border-blue-600'
-                                                            : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}>
-                                                    {type === 'internal' ? 'داخلی' : 'خارج از وزارت'}
-                                                </button>
-                                            ))}
-                                        </div>
-
-                                        {/* ── گیرنده داخلی (فقط دبیرخانه) ── */}
-                                        {data.recipient_type === 'internal' && (
-                                            <div className="space-y-3">
-                                                <div className="bg-indigo-50 border border-indigo-100 rounded-md p-3 text-xs text-indigo-800">
-                                                    نامه ابتدا به دبیرخانه ریاست ارسال می‌شود و سپس توسط دبیرخانه به واحد مقصد ارجاع می‌گردد.
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-xs font-medium text-slate-600 mb-1">
-                                                        دبیرخانه (ریاست) <span className="text-red-500">*</span>
-                                                    </label>
-                                                    <select
-                                                        value={data.root_department_id || ''}
-                                                        onChange={(e) => {
-                                                            const id = parseInt(e.target.value) || null;
-                                                            const reception = receptions.find(r => r.id === id);
-
-                                                            setData('root_department_id', id);
-                                                            setData('recipient_department_id', null);
-                                                            setData('recipient_name', reception
-                                                                ? `دبیرخانه ${reception.name}`
-                                                                : '');
-                                                        }}
-                                                        className={inputClass}
-                                                    >
-                                                        <option value="">انتخاب دبیرخانه...</option>
-                                                        {receptions.map(r => (
-                                                            <option key={r.id} value={r.id}>
-                                                                {r.name}
-                                                                {r.reception_user
-                                                                    ? ` — ${r.reception_user.first_name} ${r.reception_user.last_name}`
-                                                                    : ''}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                    {(errors as any).root_department_id && (
-                                                        <p className="text-red-500 text-xs mt-1">{(errors as any).root_department_id}</p>
-                                                    )}
-                                                    {receptions.length === 0 && (
-                                                        <p className="text-amber-600 text-xs mt-1">
-                                                            هیچ ریاستی با کاربر دبیرخانه تعریف نشده است.
-                                                        </p>
-                                                    )}
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-xs font-medium text-slate-600 mb-1">
-                                                        واحد مقصد (ریاست یا زیرمجموعه) <span className="text-red-500">*</span>
-                                                    </label>
-                                                    <select
-                                                        value={data.recipient_department_id || ''}
-                                                        onChange={(e) => {
-                                                            const id = parseInt(e.target.value) || null;
-                                                            const dept = targetDepartments.find(d => d.id === id);
-
-                                                            setData('recipient_department_id', id);
-                                                            if (dept && selectedReception) {
-                                                                setData('recipient_name', `دبیرخانه ${selectedReception.name} ← ${dept.name}`);
-                                                            }
-                                                        }}
-                                                        disabled={!data.root_department_id}
-                                                        className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400`}
-                                                    >
-                                                        <option value="">انتخاب واحد مقصد...</option>
-                                                        {targetDepartments.map(d => (
-                                                            <option key={d.id} value={d.id}>
-                                                                {d.parent_id ? '↳ ' : ''}{d.name}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                    {errors.recipient_department_id && (
-                                                        <p className="text-red-500 text-xs mt-1">{errors.recipient_department_id}</p>
-                                                    )}
-                                                </div>
-
-                                                {selectedReception && data.recipient_department_id && (
-                                                    <div className="bg-green-50 border border-green-200 rounded-md p-3 text-xs text-green-800">
-                                                        <p className="font-medium mb-1">مسیر ارسال:</p>
-                                                        <p>دبیرخانه: {selectedReception.name}</p>
-                                                        <p className="mt-1">
-                                                            واحد مقصد: {targetDepartments.find(d => d.id === Number(data.recipient_department_id))?.name}
-                                                        </p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* ── گیرنده خارجی ── */}
-                                        {data.recipient_type === 'external' && (
-                                            <div className="space-y-3">
-                                                <div>
-                                                    <label className="block text-xs font-medium text-slate-600 mb-1">
-                                                        وزارت <span className="text-red-500">*</span>
-                                                    </label>
-                                                    <select
-                                                        value={data.recipient_organization_id || ''}
-                                                        onChange={(e) => {
-                                                            const id = parseInt(e.target.value) || null;
-                                                            const org = externalOrganizations.find(o => o.id === id);
-
-                                                            setData('recipient_organization_id', id);
-                                                            setData('recipient_name', org?.name || '');
-                                                            setData('recipient_department_id', null);
-                                                            setData('recipient_position_id', null);
-                                                            setData('recipient_position_name', '');
-                                                            setExtDepartments([]);
-                                                            setExtPositions([]);
-                                                        }}
-                                                        className={inputClass}>
-                                                        <option value="">انتخاب وزارت...</option>
-                                                        {externalOrganizations.map(o => (
-                                                            <option key={o.id} value={o.id}>{o.name}</option>
-                                                        ))}
-                                                    </select>
-                                                    {errors.recipient_name && (
-                                                        <p className="text-red-500 text-xs mt-1">{errors.recipient_name}</p>
-                                                    )}
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-xs font-medium text-slate-600 mb-1">
-                                                        ریاست
-                                                    </label>
-                                                    <div className="relative">
-                                                        <select
-                                                            value={data.recipient_department_id || ''}
-                                                            onChange={(e) => {
-                                                                const id = parseInt(e.target.value) || null;
-                                                                setData('recipient_department_id', id);
-                                                                setData('recipient_position_id', null);
-                                                                setData('recipient_position_name', '');
-                                                                setExtPositions([]);
-                                                            }}
-                                                            disabled={!data.recipient_organization_id || loadingExtDepts}
-                                                            className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}>
-                                                            <option value="">انتخاب ریاست...</option>
-                                                            {extDepartments.map(d => (
-                                                                <option key={d.id} value={d.id}>{d.name}</option>
-                                                            ))}
-                                                        </select>
-                                                        {loadingExtDepts && (
-                                                            <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                                                                <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-xs font-medium text-slate-600 mb-1">
-                                                        بست
-                                                    </label>
-                                                    <div className="relative">
-                                                        <select
-                                                            value={data.recipient_position_id || ''}
-                                                            onChange={(e) => {
-                                                                const id = parseInt(e.target.value) || null;
-                                                                const position = extPositions.find(p => p.id === id);
-
-                                                                setData('recipient_position_id', id);
-                                                                setData('recipient_user_id', position?.user_id || null);
-                                                                setData('recipient_position_name', position?.name || '');
-                                                            }}
-                                                            disabled={!data.recipient_department_id || loadingExtPositions}
-                                                            className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}>
-                                                            <option value="">انتخاب بست...</option>
-                                                            {extPositions.map(p => (
-                                                                <option key={p.id} value={p.id}>{p.name}</option>
-                                                            ))}
-                                                        </select>
-                                                        {loadingExtPositions && (
-                                                            <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                                                                <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    {errors.recipient_position_name && (
-                                                        <p className="text-red-500 text-xs mt-1">{errors.recipient_position_name}</p>
-                                                    )}
-                                                </div>
-
-                                                {/* نمایش خلاصه گیرنده خارجی */}
-                                                {data.recipient_organization_id && (
-                                                    <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800 space-y-1">
-                                                        <p className="font-medium">گیرنده انتخاب شده:</p>
-                                                        <p>وزارت: {data.recipient_name}</p>
-                                                        {data.recipient_department_id && (
-                                                            <p>ریاست: {extDepartments.find(d => d.id === data.recipient_department_id)?.name}</p>
-                                                        )}
-                                                        {data.recipient_position_name && (
-                                                            <p>بست: {data.recipient_position_name}</p>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* خلاصه وضعیت */}
-                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-                                    <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
-                                        <Info className="h-4 w-4 text-slate-500" />
-                                        <h3 className="text-sm font-bold text-slate-700">خلاصه وضعیت</h3>
-                                    </div>
-                                    <div className="p-5 space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs text-slate-500">اولویت:</span>
-                                            <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${priorityLevels[data.priority]?.activeColor.split(' ').slice(0, 2).join(' ')
-                                                }`}>
-                                                {priorityLevels[data.priority]?.label ?? 'معمولی'}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs text-slate-500">سطح امنیتی:</span>
-                                            <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${securityLevels[data.security_level]?.activeColor ?? 'bg-blue-100 text-blue-700'
-                                                }`}>
-                                                {securityLevels[data.security_level]?.label ?? 'داخلی'}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs text-slate-500">تاریخ:</span>
-                                            <span className="text-xs font-medium text-slate-700">{data.date}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs text-slate-500">گیرنده:</span>
-                                            <span className="text-xs font-medium text-slate-700">
-                                                {data.recipient_type === 'internal' ? 'داخلی' : 'خارج وزارت'}
-                                            </span>
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* راهنما */}
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 overflow-hidden">
-                                    <div className="flex items-start gap-2">
-                                        <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                                        <div className="text-xs text-blue-800">
-                                            <p className="font-medium mb-1">راهنمای ثبت مکتوب / استعلام </p>
-                                            <ul className="space-y-1 text-blue-700">
-                                                <li>• فیلدهای ستاره‌دار الزامی هستند</li>
-                                                <li>• پس از ثبت، مکتوب / استعلام  به کارتابل گیرنده ارسال می‌شود</li>
-                                                <li>• می‌توانید مکتوب / استعلام  را به صورت پیش‌نویس ذخیره کنید</li>
-                                                <li>• از دکمه جستجو برای یافتن سریع گیرنده استفاده کنید</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-
-                            {/* دکمه‌های موبایل */}
-                            <div className="md:hidden col-span-12 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex justify-between p-5">
-                                <button type="submit" form="letter-form" disabled={processing}
-                                    className="cursor-pointer px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm flex items-center gap-2 disabled:opacity-50">
-                                    {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                                    {processing ? 'در حال ارسال...' : 'ثبت و ارسال '}
-                                </button>
-                                <button type="button" onClick={(e) => handleSubmit(e, true)} disabled={processing}
-                                    className="cursor-pointer px-5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-sm flex items-center gap-2 disabled:opacity-50">
-                                    <Save className="h-4 w-4" /> پیش‌نویس
-                                </button>
                             </div>
                         </div>
-                    </form>
-                </div>
+
+                        {/* محتوای اصلی */}
+                        <div className="px-10 py-8 space-y-8">
+
+                            {/* بخش گیرنده */}
+                            <div className="grid grid-cols-12 gap-8">
+                                <div className="col-span-12 lg:col-span-8">
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                            <UserIcon className="h-3.5 w-3.5" />
+                                            گیرنده
+                                        </div>
+
+                                        <div className="flex gap-6 text-sm border-b border-gray-100 pb-3">
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    value="internal"
+                                                    checked={data.recipient_type === 'internal'}
+                                                    onChange={(e) => setData('recipient_type', e.target.value as 'internal')}
+                                                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                                />
+                                                <span className="text-gray-700">گیرنده داخلی</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    value="external"
+                                                    checked={data.recipient_type === 'external'}
+                                                    onChange={(e) => setData('recipient_type', e.target.value as 'external')}
+                                                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                                />
+                                                <span className="text-gray-700">سازمان خارجی</span>
+                                            </label>
+                                        </div>
+
+                                        {data.recipient_type === 'internal' ? (
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                <select
+                                                    value={selectedRecipientUser || ''}
+                                                    onChange={(e) => setSelectedRecipientUser(parseInt(e.target.value) || null)}
+                                                    className="w-full px-0 py-2 text-sm border-0 border-b border-gray-200 focus:border-blue-500 focus:ring-0 bg-transparent transition-colors"
+                                                >
+                                                    <option value="">انتخاب کاربر...</option>
+                                                    {users.map(user => (
+                                                        <option key={user.id} value={user.id}>{user.name}</option>
+                                                    ))}
+                                                </select>
+
+                                                <select
+                                                    value={selectedRecipientDepartment || ''}
+                                                    onChange={(e) => setSelectedRecipientDepartment(parseInt(e.target.value) || null)}
+                                                    className="w-full px-0 py-2 text-sm border-0 border-b border-gray-200 focus:border-blue-500 focus:ring-0 bg-transparent transition-colors"
+                                                >
+                                                    <option value="">دپارتمان</option>
+                                                    {departments.map(dept => (
+                                                        <option key={dept.id} value={dept.id}>{dept.name}</option>
+                                                    ))}
+                                                </select>
+
+                                                <select
+                                                    value={data.recipient_position_id || ''}
+                                                    onChange={(e) => setData('recipient_position_id', parseInt(e.target.value) || null)}
+                                                    className="w-full px-0 py-2 text-sm border-0 border-b border-gray-200 focus:border-blue-500 focus:ring-0 bg-transparent transition-colors"
+                                                >
+                                                    <option value="">سمت</option>
+                                                    {recipientPositions.map(pos => (
+                                                        <option key={pos.id} value={pos.id}>{pos.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                <select
+                                                    value={selectedExternalOrg || ''}
+                                                    onChange={(e) => {
+                                                        const orgId = parseInt(e.target.value) || null;
+                                                        setSelectedExternalOrg(orgId);
+                                                        setData('external_organization_id', orgId);
+                                                    }}
+                                                    className="w-full px-0 py-2 text-sm border-0 border-b border-gray-200 focus:border-blue-500 focus:ring-0 bg-transparent transition-colors"
+                                                >
+                                                    <option value="">انتخاب سازمان...</option>
+                                                    {renderOrganizationTree(externalOrganizationsTree)}
+                                                </select>
+
+                                                {externalDepartments.length > 0 && (
+                                                    <select
+                                                        value={selectedExternalDept || ''}
+                                                        onChange={(e) => {
+                                                            const deptId = parseInt(e.target.value) || null;
+                                                            setSelectedExternalDept(deptId);
+                                                            setData('external_department_id', deptId);
+                                                        }}
+                                                        className="w-full px-0 py-2 text-sm border-0 border-b border-gray-200 focus:border-blue-500 focus:ring-0 bg-transparent transition-colors"
+                                                    >
+                                                        <option value="">انتخاب دپارتمان...</option>
+                                                        {externalDepartments.map(dept => (
+                                                            <option key={dept.id} value={dept.id}>{dept.name}</option>
+                                                        ))}
+                                                    </select>
+                                                )}
+
+                                                {externalPositions.length > 0 && (
+                                                    <select
+                                                        value={data.external_position_id || ''}
+                                                        onChange={(e) => setData('external_position_id', parseInt(e.target.value) || null)}
+                                                        className="w-full px-0 py-2 text-sm border-0 border-b border-gray-200 focus:border-blue-500 focus:ring-0 bg-transparent transition-colors"
+                                                    >
+                                                        <option value="">انتخاب سمت...</option>
+                                                        {externalPositions.map(pos => (
+                                                            <option key={pos.id} value={pos.id}>{pos.name}</option>
+                                                        ))}
+                                                    </select>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* متادیتای سریع - اولویت و سطح امنیتی به صورت Pill Toggle */}
+                                <div className="col-span-12 lg:col-span-4 space-y-5">
+
+                                    {/* بخش اولویت به صورت Pill Toggle */}
+                                    <div>
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                                            <Flag className="h-3.5 w-3.5" />
+                                            اولویت نامه
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {Object.entries(priorityLevels).map(([key, label]) => {
+                                                let activeClass = '';
+                                                if (data.priority === key) {
+                                                    if (key === 'normal') activeClass = 'bg-gray-100 text-gray-800 border-gray-300 shadow-sm';
+                                                    else if (key === 'urgent') activeClass = 'bg-amber-50 text-amber-700 border-amber-300 shadow-sm';
+                                                    else if (key === 'critical') activeClass = 'bg-red-50 text-red-700 border-red-300 shadow-sm';
+                                                } else {
+                                                    activeClass = 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50';
+                                                }
+
+                                                return (
+                                                    <button
+                                                        key={key}
+                                                        type="button"
+                                                        onClick={() => setData('priority', key)}
+                                                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 flex items-center gap-1.5 ${activeClass}`}
+                                                    >
+                                                        {key === 'critical' && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>}
+                                                        {label}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* بخش سطح امنیتی به صورت Pill Toggle */}
+                                    <div>
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                                            <Shield className="h-3.5 w-3.5" />
+                                            طبقه‌بندی امنیتی
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {Object.entries(securityLevels).map(([key, label]) => {
+                                                let activeClass = '';
+                                                if (data.security_level === key) {
+                                                    if (key === 'internal') activeClass = 'bg-gray-100 text-gray-800 border-gray-300 shadow-sm';
+                                                    else if (key === 'confidential') activeClass = 'bg-purple-50 text-purple-700 border-purple-300 shadow-sm';
+                                                    else if (key === 'secret') activeClass = 'bg-blue-50 text-blue-700 border-blue-300 shadow-sm';
+                                                    else if (key === 'top_secret') activeClass = 'bg-slate-800 text-white border-slate-800 shadow-sm';
+                                                } else {
+                                                    activeClass = 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50';
+                                                }
+
+                                                return (
+                                                    <button
+                                                        key={key}
+                                                        type="button"
+                                                        onClick={() => setData('security_level', key)}
+                                                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 flex items-center gap-1.5 ${activeClass}`}
+                                                    >
+                                                        {key === 'top_secret' && <Shield className="h-3 w-3 fill-white" />}
+                                                        {label}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        {data.security_level === 'top_secret' && (
+                                            <p className="text-[10px] text-red-500 font-medium flex items-center gap-1 mt-2">
+                                                <AlertCircle className="h-3 w-3" />
+                                                این نامه جزو اسناد طبقه‌بندی شده است
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* موضوع */}
+                            <div>
+                                <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                                    موضوع نامه
+                                </div>
+                                <input
+                                    type="text"
+                                    value={data.subject}
+                                    onChange={(e) => setData('subject', e.target.value)}
+                                    placeholder="عنوان اصلی نامه را وارد کنید..."
+                                    className={`w-full px-0 py-2 text-lg font-medium border-0 border-b-2 bg-transparent placeholder:text-gray-300 focus:ring-0 transition-colors ${getFieldError('subject')
+                                        ? 'border-red-300 focus:border-red-500'
+                                        : 'border-gray-200 focus:border-blue-500'
+                                        }`}
+                                />
+                                {getFieldError('subject') && (
+                                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                                        <AlertCircle className="h-3 w-3" />
+                                        {errors.subject}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* متن نامه */}
+                            <div className="mt-8">
+                                <textarea
+                                    value={data.content}
+                                    onChange={(e) => setData('content', e.target.value)}
+                                    rows={10}
+                                    placeholder="متن نامه خود را اینجا بنویسید..."
+                                    className="w-full px-0 py-2 text-gray-700 leading-8 border-0 focus:ring-0 bg-transparent resize-y placeholder:text-gray-300 text-justify"
+                                    style={{ lineHeight: '2.2rem' }}
+                                />
+                            </div>
+
+                            {/* بخش امضا و تایید */}
+                            <div className="flex justify-between items-end mt-12 pt-8 border-t border-gray-100">
+                                <div className="text-xs text-gray-400">
+                                    <p>تعداد پیوست: {attachments.length} فایل</p>
+                                </div>
+
+                                <div className="text-center space-y-2">
+                                    <div className="flex items-center justify-end gap-2 text-sm text-gray-600 mb-4">
+                                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                        <span>امضاء کننده: {currentUser.full_name}</span>
+                                    </div>
+                                    <div className="h-12 w-48 border-b-2 border-gray-300"></div>
+                                    <p className="font-medium text-gray-800">{currentUser.full_name}</p>
+                                    <p className="text-sm text-gray-500">{currentUser.primary_position?.name || 'کارشناس'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* فوتر - اطلاعات تکمیلی */}
+                        <div className="px-10 py-5 bg-gray-50/50 border-t border-gray-100 flex flex-wrap items-center justify-between text-xs text-gray-500 print:bg-transparent">
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-1">
+                                    <FolderTree className="h-3.5 w-3.5" />
+                                    <span>دسته‌بندی:</span>
+                                    <select
+                                        value={data.category_id || ''}
+                                        onChange={(e) => setData('category_id', parseInt(e.target.value) || null)}
+                                        className="ml-1 px-1 py-0.5 border-0 border-b border-gray-300 bg-transparent text-xs focus:border-blue-500 focus:ring-0"
+                                    >
+                                        <option value="">بدون دسته</option>
+                                        {categories.map(cat => (
+                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span>تاریخ ثبت: {formatDate(data.date)}</span>
+                                <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                <span>شماره پیگیری: در انتظار ثبت</span>
+                            </div>
+                        </div>
+
+                        {/* بخش آپلود پیوست */}
+                        <div className="px-10 py-6 border-t border-gray-100 bg-white">
+                            <div className="flex items-center gap-2 mb-4 text-sm font-medium text-gray-700">
+                                <Paperclip className="h-4 w-4" />
+                                پیوست‌ها
+                            </div>
+
+                            <div
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={handleDrop}
+                                className={`relative border-2 border-dashed rounded-xl p-6 transition-all text-center ${isDragging
+                                    ? 'border-blue-400 bg-blue-50/50'
+                                    : 'border-gray-200 hover:border-gray-300 bg-gray-50/30'
+                                    }`}
+                            >
+                                <input
+                                    type="file"
+                                    id="file-upload"
+                                    multiple
+                                    onChange={handleFileChange}
+                                    className="hidden"
+                                />
+                                <label htmlFor="file-upload" className="cursor-pointer">
+                                    <div className="space-y-2">
+                                        <Upload className="h-8 w-8 mx-auto text-gray-400" />
+                                        <p className="text-sm text-gray-600">
+                                            فایل‌ها را اینجا رها کنید یا <span className="text-blue-600 font-medium">انتخاب کنید</span>
+                                        </p>
+                                        <p className="text-xs text-gray-400">حداکثر حجم هر فایل 10 مگابایت</p>
+                                    </div>
+                                </label>
+                            </div>
+
+                            {attachments.length > 0 && (
+                                <div className="mt-4 space-y-2">
+                                    {attachments.map((file, index) => (
+                                        <div key={index} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-lg shadow-sm group hover:border-gray-200 transition-all">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-blue-50 rounded-lg">
+                                                    <FileText className="h-4 w-4 text-blue-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-700">{file.name}</p>
+                                                    <p className="text-xs text-gray-400">{(file.size / 1024).toFixed(1)} KB</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeAttachment(index)}
+                                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </form>
             </div>
+
+            {/* استایل‌های پرینت */}
+            <style>{`
+                @media print {
+                    body { background: white; }
+                    .bg-\\[\\#F5F7FA\\] { background: white; }
+                    .shadow-xl { box-shadow: none; }
+                    .border { border-color: #ddd !important; }
+                    .print\\:hidden { display: none !important; }
+                    .print\\:shadow-none { box-shadow: none; }
+                    .print\\:border-0 { border: none; }
+                    .print\\:bg-transparent { background: transparent !important; }
+                    input, select, textarea { 
+                        border: none !important; 
+                        background: transparent !important;
+                        -webkit-appearance: none;
+                        appearance: none;
+                        padding: 0 !important;
+                        resize: none;
+                    }
+                    select { opacity: 1; }
+                    button { display: none; }
+                }
+            `}</style>
         </>
     );
 }
