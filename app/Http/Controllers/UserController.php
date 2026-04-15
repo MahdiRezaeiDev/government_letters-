@@ -20,6 +20,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $currentUser = auth()->user();
+
         $query = User::query()
             ->with(['organization', 'department', 'primaryPosition', 'positions']);
         
@@ -87,10 +88,10 @@ class UserController extends Controller
             'roles' => $roles,
             'filters' => $request->only(['search', 'status', 'organization_id', 'role']),
             'can' => [
-                'create' => $currentUser->can('create-user'),
-                'edit' => $currentUser->can('edit-user'),
-                'delete' => $currentUser->can('delete-user'),
-                'assign_role' => $currentUser->can('assign-role'),
+                'create' => $currentUser->can('create-user-in-org'),
+                'edit' => $currentUser->can('edit-user-in-org'),
+                'delete' => $currentUser->can('delete-user-in-org'),
+                'assign_role' => $currentUser->can('assign-role-to-user'),
             ],
         ]);
     }
