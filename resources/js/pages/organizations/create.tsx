@@ -46,7 +46,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
             <Head title="ایجاد سازمان جدید" />
 
             <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <form onSubmit={handleSubmit}>
                         {/* Header Section */}
                         <div className="mb-8">

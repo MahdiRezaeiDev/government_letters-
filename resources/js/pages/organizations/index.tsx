@@ -1,13 +1,11 @@
-// resources/js/pages/organizations/index.tsx
-
 import { Head, Link, router } from '@inertiajs/react';
 import {
     Plus, Pencil, Trash2, Search, Building2, ChevronLeft, ChevronRight,
-    Eye, Filter, X, MoreVertical, CheckCircle, XCircle, Calendar,
-    Mail, Phone, Globe, MapPin, Users, Briefcase, TrendingUp,
-    Sparkles, Zap, Award, Star, Database, Layers, Hash
+    Eye, Filter, X, CheckCircle, XCircle, Calendar,
+    Mail, Phone, Globe, MapPin, TrendingUp,
+    Sparkles, Layers, Hash
 } from 'lucide-react';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import organizationsRoute from '@/routes/organizations';
 import type { Organization } from '@/types';

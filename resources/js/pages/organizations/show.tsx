@@ -37,7 +37,7 @@ export default function OrganizationsShow({ organization, stats, can }: Props) {
             <Head title={organization.name} />
 
             <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="space-y-6">
                         {/* Navigation */}
                         <div className="flex items-center gap-2 text-sm">
