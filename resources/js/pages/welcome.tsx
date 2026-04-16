@@ -6,7 +6,7 @@ import {
     Mail, Send, Archive, CheckCircle, Shield, Zap,
     ChevronLeft, Award} from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { login, register } from '@/routes';
+import { login } from '@/routes';
 
 export default function Welcome() {
     const [scrolled, setScrolled] = useState(false);
@@ -193,13 +193,6 @@ export default function Welcome() {
                         <p className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
                             امروز شروع کنید و مدیریت مکاتبات خود را متحول کنید
                         </p>
-                        <Link
-                            href={register()}
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
-                        >
-                            ثبت‌نام رایگان
-                            <ArrowLeft className="h-4 w-4" />
-                        </Link>
                     </div>
                 </div>
 
