@@ -54,8 +54,8 @@ const SECURITY_LEVELS = [
 
 const ROLE_LABELS: Record<string, string> = {
     'super-admin': 'ادمین کل',
-    'org-admin':   'ادمین سازمان',
-    'dept-manager':'مدیر دپارتمان',
+    'org-admin':   'ادمین وزارت',
+    'dept-manager':'مدیر ریاست',
     'user':        'کاربر عادی',
 };
 
@@ -401,10 +401,10 @@ export default function UsersCreate({
                             </SectionCard>
 
                             {/* ── 3. Org Info ── */}
-                            <SectionCard icon={Building2} iconColor="#8b5cf6" title="اطلاعات سازمانی" subtitle="ساختار سازمانی کاربر">
+                            <SectionCard icon={Building2} iconColor="#8b5cf6" title="اطلاعات وزارتی" subtitle="ساختار وزارتی کاربر">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
-                                        <FieldLabel required>سازمان</FieldLabel>
+                                        <FieldLabel required>وزارت</FieldLabel>
                                         <SelectField
                                             icon={Building2}
                                             value={data.organization_id}
@@ -416,7 +416,7 @@ export default function UsersCreate({
                                         </SelectField>
                                     </div>
                                     <div>
-                                        <FieldLabel>دپارتمان</FieldLabel>
+                                        <FieldLabel>ریاست</FieldLabel>
                                         <SelectField
                                             icon={Briefcase}
                                             value={data.department_id || ''}
@@ -430,7 +430,7 @@ export default function UsersCreate({
                                         </SelectField>
                                     </div>
                                     <div>
-                                        <FieldLabel>سمت اصلی</FieldLabel>
+                                        <FieldLabel>وظیفه اصلی</FieldLabel>
                                         <SelectField
                                             icon={Award}
                                             value={data.primary_position_id || ''}
@@ -446,7 +446,7 @@ export default function UsersCreate({
                                         {!data.department_id && (
                                             <div className="mt-2.5 inline-flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-100 px-3 py-1.5 rounded-full">
                                                 <AlertCircle className="h-3 w-3 flex-shrink-0" />
-                                                ابتدا دپارتمان را انتخاب کنید
+                                                ابتدا ریاست را انتخاب کنید
                                             </div>
                                         )}
                                     </div>
