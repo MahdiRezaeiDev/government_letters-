@@ -254,7 +254,7 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
                                                     </div>
                                                     {organizations.length > 0 && (
                                                         <div>
-                                                            <label className="block text-sm font-medium text-gray-700 mb-2">سازمان</label>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-2">وزارت</label>
                                                             <select
                                                                 value={selectedOrganization}
                                                                 onChange={(e) => setSelectedOrganization(e.target.value)}
@@ -294,7 +294,7 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
                                             <tr>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">دسته‌بندی</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">کد</th>
-                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سازمان</th>
+                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">وزارت</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">رنگ</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">ترتیب</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">وضعیت</th>
@@ -532,7 +532,7 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
 
                                                 <div className="space-y-2.5">
                                                     <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-gray-500">سازمان:</span>
+                                                        <span className="text-gray-500">وزارت:</span>
                                                         <span className="text-gray-700">{category.organization?.name || '-'}</span>
                                                     </div>
                                                     <div className="flex items-center justify-between text-sm">

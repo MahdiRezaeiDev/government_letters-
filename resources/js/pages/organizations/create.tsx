@@ -5,7 +5,6 @@ import {
     Link2, ChevronDown, CheckCircle, AlertCircle, Hash, RefreshCw
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
-import persianJs from 'persianjs';
 import organizationsRoute from '@/routes/organizations';
 import type { Organization } from '@/types';
 
@@ -16,8 +15,10 @@ interface Props {
 // ─── Utility Functions ─────────────────────────────────────────────────────
 
 const generateOrgCode = (persianName: string): string => {
-    if (!persianName) return '';
-    
+    if (!persianName) {
+        return '';
+    }
+
     // لیست کلمات کلیدی و معادل انگلیسی آنها
     const keywords: Record<string, string> = {
         'وزارت': 'MO',
@@ -85,33 +86,34 @@ const generateOrgCode = (persianName: string): string => {
         'استانی': 'PROVINCE',
         'شهرستانی': 'COUNTY',
     };
-    
+
     try {
         // تبدیل اعداد فارسی به انگلیسی و حذف کاراکترهای خاص
-        let processedName = persianJs(persianName)
+        const processedName = persianJs(persianName)
             .toEnglishNumber()
             .arabicChar()
             .toString();
-        
+
         // جستجوی کلمات کلیدی در نام
         let prefix = '';
         let remainingName = processedName;
-        
+
         for (const [persian, english] of Object.entries(keywords)) {
             if (persianName.includes(persian)) {
                 if (!prefix) {
                     prefix = english;
                 }
+
                 // حذف کلمه کلیدی از نام
                 remainingName = remainingName.replace(new RegExp(persian, 'g'), '');
             }
         }
-        
+
         // اگر پیشوندی پیدا نشد، از پیشوند پیش‌فرض استفاده کن
         if (!prefix) {
             prefix = 'ORG';
         }
-        
+
         // تبدیل حروف فارسی باقیمانده به انگلیسی
         const persianToEnglishMap: Record<string, string> = {
             'ا': 'A', 'آ': 'A', 'ب': 'B', 'پ': 'P', 'ت': 'T', 'ث': 'S',
@@ -122,32 +124,34 @@ const generateOrgCode = (persianName: string): string => {
             'گ': 'G', 'ل': 'L', 'م': 'M', 'ن': 'N', 'و': 'V',
             'ه': 'H', 'ی': 'Y', 'ئ': 'E', 'ء': ''
         };
-        
+
         let englishName = '';
+
         for (const char of remainingName.trim()) {
             englishName += persianToEnglishMap[char] || char;
         }
-        
+
         // پاکسازی نهایی
         const cleanName = englishName
             .replace(/[^A-Z0-9]/g, '') // فقط حروف بزرگ و اعداد
             .replace(/\s+/g, '')
             .trim();
-        
+
         // ترکیب پیشوند و نام
-        const finalCode = cleanName 
+        const finalCode = cleanName
             ? `${prefix}-${cleanName}`
             : prefix;
-        
+
         // محدودیت طول و حذف خط تیره اضافی
         return finalCode
             .replace(/-+/g, '-')
             .replace(/^-|-$/g, '')
             .toUpperCase()
             .slice(0, 20);
-            
+
     } catch (error) {
         console.error('Error generating org code:', error);
+
         // در صورت خطا، یک کد پیش‌فرض برگردان
         return `ORG-${Date.now().toString().slice(-6)}`;
     }
@@ -171,18 +175,15 @@ function InputField({
     onBlur?: () => void; error?: string | null; placeholder?: string;
     type?: string; textarea?: boolean; rows?: number; readOnly?: boolean;
 }) {
-    const baseClass = `w-full ${Icon ? 'pr-10' : 'pr-4'} pl-4 py-3 text-sm bg-transparent focus:outline-none text-slate-700 placeholder-slate-300 ${
-        readOnly ? 'bg-slate-50 cursor-not-allowed' : ''
-    }`;
-    const wrapClass = `relative flex items-start rounded-xl border transition-all duration-200 ${
-        readOnly ? 'bg-slate-50' : 'bg-white'
-    } ${
-        error
+    const baseClass = `w-full ${Icon ? 'pr-10' : 'pr-4'} pl-4 py-3 text-sm bg-transparent focus:outline-none text-slate-700 placeholder-slate-300 ${readOnly ? 'bg-slate-50 cursor-not-allowed' : ''
+        }`;
+    const wrapClass = `relative flex items-start rounded-xl border transition-all duration-200 ${readOnly ? 'bg-slate-50' : 'bg-white'
+        } ${error
             ? 'border-rose-300 ring-1 ring-rose-300'
-            : readOnly 
-                ? 'border-slate-200' 
+            : readOnly
+                ? 'border-slate-200'
                 : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
-    }`;
+        }`;
 
     return (
         <div>
@@ -229,11 +230,10 @@ function SelectField({
 }) {
     return (
         <div>
-            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${
-                error
+            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${error
                     ? 'border-rose-300 ring-1 ring-rose-300'
                     : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
-            }`}>
+                }`}>
                 {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
                 <select
                     value={value}
@@ -294,6 +294,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
 
     const handleCodeChange = (value: string) => {
         setData('code', value);
+
         // اگر کاربر دستی کد را تغییر داد، autoGenerate را غیرفعال کن
         if (value !== generateOrgCode(data.name)) {
             setAutoGenerateCode(false);
@@ -538,7 +539,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                         {statusOptions.map(opt => {
                                             const Icon = opt.icon;
                                             const isSelected = data.status === opt.value;
-                                            
+
                                             return (
                                                 <button
                                                     key={opt.value}
@@ -549,11 +550,10 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                                         backgroundColor: opt.bg,
                                                         boxShadow: `0 0 0 3px ${opt.bg}`,
                                                     } : {}}
-                                                    className={`relative p-4 rounded-xl border-2 transition-all duration-200 text-right focus:outline-none ${
-                                                        isSelected
+                                                    className={`relative p-4 rounded-xl border-2 transition-all duration-200 text-right focus:outline-none ${isSelected
                                                             ? 'border-transparent'
                                                             : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <div
