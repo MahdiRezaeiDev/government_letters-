@@ -3,7 +3,7 @@ import { useForm } from '@inertiajs/react';
 import {
     Save, X, Briefcase, Layers, Hash, Award, FileText,
     AlertCircle, CheckCircle, TrendingUp, Shield, Star,
-    Sparkles, Zap, Crown, Users, Building2, Info
+    Zap, Crown, Users, Building2, Info
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import positions from '@/routes/positions';
@@ -13,6 +13,119 @@ interface Props {
     departments: Department[];
     selectedDepartment?: number;
 }
+
+// ─── Level config ──────────────────────────────────────────────────────────
+
+const LEVELS = [
+    { min: 0, max: 0, label: 'پایه',        icon: Users,     color: '#94a3b8', bg: '#f1f5f9' },
+    { min: 1, max: 1, label: 'کارشناس',     icon: Shield,    color: '#3b82f6', bg: '#eff6ff' },
+    { min: 2, max: 2, label: 'کارشناس ارشد',icon: Star,      color: '#10b981', bg: '#ecfdf5' },
+    { min: 3, max: 3, label: 'مدیر',        icon: Crown,     color: '#f59e0b', bg: '#fffbeb' },
+    { min: 4, max: 4, label: 'مدیر ارشد',   icon: Zap,       color: '#f97316', bg: '#fff7ed' },
+    { min: 5, max: 99,label: 'سطح بالا',    icon: TrendingUp,color: '#8b5cf6', bg: '#f5f3ff' },
+];
+
+function getLevelInfo(level: number) {
+    return LEVELS.find(l => level >= l.min && level <= l.max) ?? LEVELS[0];
+}
+
+// ─── Shared Field Components ───────────────────────────────────────────────
+
+function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+    return (
+        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            {children}
+            {required && <span className="text-rose-400 mr-1">*</span>}
+        </label>
+    );
+}
+
+function InputField({
+    icon: Icon, value, onChange, onBlur, error, placeholder, type = 'text',
+    min, max, textarea = false, rows = 4
+}: {
+    icon?: React.ElementType; value: string | number; onChange: (v: string) => void;
+    onBlur?: () => void; error?: string | null; placeholder?: string; type?: string;
+    min?: number; max?: number; textarea?: boolean; rows?: number;
+}) {
+    const wrapClass = `relative flex items-start rounded-xl border bg-white transition-all duration-200 ${
+        error
+            ? 'border-rose-300 ring-1 ring-rose-300'
+            : 'border-slate-200 hover:border-slate-300 focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-100'
+    }`;
+    const inputClass = `w-full ${Icon ? 'pr-10' : 'pr-4'} pl-4 py-3 text-sm bg-transparent focus:outline-none text-slate-700 placeholder-slate-300`;
+
+    return (
+        <div>
+            <div className={wrapClass}>
+                {Icon && <Icon className="absolute right-3.5 top-3.5 h-4 w-4 text-slate-400 pointer-events-none flex-shrink-0" />}
+                {textarea ? (
+                    <textarea
+                        value={value as string}
+                        onChange={e => onChange(e.target.value)}
+                        onBlur={onBlur}
+                        placeholder={placeholder}
+                        rows={rows}
+                        className={`${inputClass} resize-none leading-7 pt-3`}
+                    />
+                ) : (
+                    <input
+                        type={type}
+                        value={value}
+                        onChange={e => onChange(e.target.value)}
+                        onBlur={onBlur}
+                        placeholder={placeholder}
+                        min={min}
+                        max={max}
+                        className={inputClass}
+                    />
+                )}
+            </div>
+            {error && (
+                <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" />{error}
+                </p>
+            )}
+        </div>
+    );
+}
+
+function SelectField({
+    icon: Icon, value, onChange, onBlur, error, children
+}: {
+    icon?: React.ElementType; value: string | number; onChange: (v: string) => void;
+    onBlur?: () => void; error?: string | null; children: React.ReactNode;
+}) {
+    return (
+        <div>
+            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${
+                error
+                    ? 'border-rose-300 ring-1 ring-rose-300'
+                    : 'border-slate-200 hover:border-slate-300 focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-100'
+            }`}>
+                {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
+                <select
+                    value={value}
+                    onChange={e => onChange(e.target.value)}
+                    onBlur={onBlur}
+                    className={`w-full ${Icon ? 'pr-10' : 'pr-4'} pl-9 py-3 text-sm bg-transparent focus:outline-none appearance-none text-slate-700`}
+                >
+                    {children}
+                </select>
+                <svg className="absolute left-3.5 h-4 w-4 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+            </div>
+            {error && (
+                <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />{error}
+                </p>
+            )}
+        </div>
+    );
+}
+
+// ─── Main Component ────────────────────────────────────────────────────────
 
 export default function PositionsCreate({ departments, selectedDepartment }: Props) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -26,376 +139,325 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
 
     const [touched, setTouched] = useState<Record<string, boolean>>({});
     const [selectedDeptName, setSelectedDeptName] = useState('');
-    const [showPreview, setShowPreview] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(positions.store(), {
-            onSuccess: () => {
-                reset();
-            },
-        });
+        post(positions.store(), { onSuccess: () => reset() });
     };
 
-    const handleBlur = (field: string) => {
-        setTouched(prev => ({ ...prev, [field]: true }));
-    };
+    const handleBlur = (field: string) => setTouched(prev => ({ ...prev, [field]: true }));
+    const getFieldError = (field: string) => touched[field] && errors[field] ? errors[field] : null;
 
-    const getFieldError = (field: string) => {
-        return touched[field] && errors[field] ? errors[field] : null;
-    };
-
-    // Update selected department name when department changes
     useEffect(() => {
-        const selectedDept = departments.find(d => d.id === Number(data.department_id));
-        setSelectedDeptName(selectedDept?.name || '');
+        const dept = departments.find(d => d.id === Number(data.department_id));
+        setSelectedDeptName(dept?.name || '');
     }, [data.department_id, departments]);
 
-    // Show preview when form has basic info
-    useEffect(() => {
-        if (data.name && data.code) {
-            setShowPreview(true);
-        } else {
-            setShowPreview(false);
-        }
-    }, [data.name, data.code]);
-
-    const getLevelLabel = (level: number) => {
-        if (level === 0) {
-            return { label: 'پایه', color: 'gray', icon: Users };
-        }
-
-        if (level === 1) {
-            return { label: 'کارشناس', color: 'blue', icon: Shield };
-        }
-
-        if (level === 2) {
-            return { label: 'کارشناس ارشد', color: 'emerald', icon: Star };
-        }
-
-        if (level === 3) {
-            return { label: 'مدیر', color: 'amber', icon: Crown };
-        }
-
-        if (level === 4) {
-            return { label: 'مدیر ارشد', color: 'orange', icon: Zap };
-        }
-
-        if (level >= 5) {
-            return { label: `سطح ${level}`, color: 'purple', icon: TrendingUp };
-        }
-
-        return { label: `سطح ${level}`, color: 'gray', icon: TrendingUp };
-    };
-
-    const levelBadge = getLevelLabel(data.level);
-    const LevelIcon = levelBadge.icon;
+    const levelInfo = getLevelInfo(data.level);
+    const LevelIcon = levelInfo.icon;
+    const hasPreview = !!(data.name && data.code);
 
     return (
         <>
             <Head title="ایجاد سمت جدید" />
 
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <form onSubmit={handleSubmit}>
-                        {/* Header Section */}
-                        <div className="mb-8">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                <div>
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="relative">
-                                            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl blur-lg opacity-50"></div>
-                                            <div className="relative p-2.5 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl shadow-lg">
-                                                <Briefcase className="h-6 w-6 text-white" />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <h1 className="text-2xl font-bold text-gray-900">ایجاد سمت جدید</h1>
-                                            <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
-                                                <Sparkles className="h-3 w-3 text-purple-500" />
-                                                اطلاعات سمت سازمانی را در فرم زیر وارد کنید
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => router.get(positions.index())}
-                                        className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
-                                    >
-                                        <X className="ml-2 h-4 w-4" />
-                                        انصراف
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 border border-transparent rounded-xl text-sm font-medium text-white hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        <Save className="ml-2 h-4 w-4" />
-                                        {processing ? 'در حال ذخیره...' : 'ایجاد سمت'}
-                                    </button>
-                                </div>
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
+                * { font-family: 'Vazirmatn', sans-serif; }
+                :root { direction: rtl; }
+                @keyframes fadeUp {
+                    from { opacity: 0; transform: translateY(8px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                }
+                .fade-up { animation: fadeUp 0.25s ease-out both; }
+            `}</style>
+
+            <div className="min-h-screen bg-slate-50/70" dir="rtl">
+
+                {/* ── Sticky Top Bar ── */}
+                <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-16">
+                            <div className="flex items-center gap-3">
+                                <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-violet-50 text-violet-600 tracking-wide">
+                                    سمت‌ها
+                                </span>
+                                <span className="text-slate-300 text-lg font-light">/</span>
+                                <h1 className="text-sm font-bold text-slate-800">ایجاد سمت جدید</h1>
+                            </div>
+                            <div className="flex items-center gap-2.5">
+                                <button
+                                    type="button"
+                                    onClick={() => router.get(positions.index())}
+                                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200"
+                                >
+                                    <X className="h-4 w-4" />
+                                    انصراف
+                                </button>
+                                <button
+                                    type="submit"
+                                    form="pos-form"
+                                    disabled={processing}
+                                    className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-violet-600 hover:bg-violet-700 rounded-xl transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <Save className="h-4 w-4" />
+                                    {processing ? 'در حال ذخیره...' : 'ایجاد سمت'}
+                                </button>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        {/* Form Sections */}
-                        <div className="space-y-6">
-                            {/* Basic Information Section */}
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                                    <div className="flex items-center gap-2">
-                                        <Info className="h-5 w-5 text-purple-600" />
-                                        <div>
-                                            <h2 className="text-lg font-semibold text-gray-900">اطلاعات پایه</h2>
-                                            <p className="text-sm text-gray-500 mt-0.5">اطلاعات اصلی سمت سازمانی</p>
-                                        </div>
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <form id="pos-form" onSubmit={handleSubmit}>
+                        <div className="space-y-5">
+
+                            {/* ── Intro strip ── */}
+                            <div className="rounded-2xl border border-violet-100 bg-gradient-to-l from-violet-50 to-purple-50 px-6 py-5 flex items-center gap-4">
+                                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                                    <Briefcase className="h-6 w-6 text-white" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-slate-800">ایجاد سمت سازمانی جدید</p>
+                                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                                        اطلاعات سمت را تکمیل کنید. فیلدهای ستاره‌دار الزامی هستند.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* ── Main Form Card ── */}
+                            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                                <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-gradient-to-l from-white to-slate-50/60">
+                                    <div className="h-9 w-9 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
+                                        <Info className="h-4 w-4 text-violet-600" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-sm font-bold text-slate-800">اطلاعات پایه</h2>
+                                        <p className="text-xs text-slate-400 mt-0.5">مشخصات اصلی سمت سازمانی</p>
                                     </div>
                                 </div>
+
                                 <div className="p-6 space-y-5">
-                                    {/* Department Selection */}
+
+                                    {/* Department */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            دپارتمان <span className="text-red-500">*</span>
-                                        </label>
-                                        <div className="relative">
-                                            <Building2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                            <select
-                                                value={data.department_id}
-                                                onChange={(e) => setData('department_id', e.target.value)}
-                                                onBlur={() => handleBlur('department_id')}
-                                                className={`w-full pr-9 pl-3 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all appearance-none bg-white ${getFieldError('department_id')
-                                                        ? 'border-red-300 focus:ring-red-500'
-                                                        : 'border-gray-200 focus:ring-purple-500'
-                                                    }`}
-                                            >
-                                                <option value="">انتخاب دپارتمان...</option>
-                                                {departments.map(dept => (
-                                                    <option key={dept.id} value={dept.id}>{dept.name}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        {getFieldError('department_id') && (
-                                            <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                                                <AlertCircle className="h-3 w-3" />
-                                                {errors.department_id}
-                                            </p>
-                                        )}
-                                        {selectedDeptName && (
-                                            <div className="mt-2 flex items-center gap-2 text-xs text-purple-600 bg-purple-50 p-2 rounded-lg">
+                                        <FieldLabel required>دپارتمان</FieldLabel>
+                                        <SelectField
+                                            icon={Building2}
+                                            value={data.department_id}
+                                            onChange={v => setData('department_id', v)}
+                                            onBlur={() => handleBlur('department_id')}
+                                            error={getFieldError('department_id')}
+                                        >
+                                            <option value="">انتخاب دپارتمان...</option>
+                                            {departments.map(dept => (
+                                                <option key={dept.id} value={dept.id}>{dept.name}</option>
+                                            ))}
+                                        </SelectField>
+                                        {selectedDeptName && !getFieldError('department_id') && (
+                                            <div className="mt-2.5 inline-flex items-center gap-2 text-xs font-medium text-violet-600 bg-violet-50 border border-violet-100 px-3 py-1.5 rounded-full">
                                                 <Layers className="h-3 w-3" />
-                                                ایجاد سمت برای دپارتمان {selectedDeptName}
+                                                سمت برای: {selectedDeptName}
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        {/* Position Name */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                نام سمت <span className="text-red-500">*</span>
-                                            </label>
-                                            <div className="relative">
-                                                <Briefcase className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                <input
-                                                    type="text"
-                                                    value={data.name}
-                                                    onChange={(e) => setData('name', e.target.value)}
-                                                    onBlur={() => handleBlur('name')}
-                                                    placeholder="مثال: مدیر مالی"
-                                                    className={`w-full pr-9 pl-3 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all ${getFieldError('name')
-                                                            ? 'border-red-300 focus:ring-red-500'
-                                                            : 'border-gray-200 focus:ring-purple-500'
-                                                        }`}
-                                                />
-                                            </div>
-                                            {getFieldError('name') && (
-                                                <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                                                    <AlertCircle className="h-3 w-3" />
-                                                    {errors.name}
-                                                </p>
-                                            )}
-                                        </div>
+                                    <div className="border-t border-slate-100" />
 
-                                        {/* Position Code */}
+                                    {/* Name + Code */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                کد سمت <span className="text-red-500">*</span>
-                                            </label>
-                                            <div className="relative">
-                                                <Hash className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                <input
-                                                    type="text"
-                                                    value={data.code}
-                                                    onChange={(e) => setData('code', e.target.value)}
-                                                    onBlur={() => handleBlur('code')}
-                                                    placeholder="مثال: FIN-MGR-001"
-                                                    className={`w-full pr-9 pl-3 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all ${getFieldError('code')
-                                                            ? 'border-red-300 focus:ring-red-500'
-                                                            : 'border-gray-200 focus:ring-purple-500'
-                                                        }`}
-                                                />
-                                            </div>
-                                            {getFieldError('code') && (
-                                                <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                                                    <AlertCircle className="h-3 w-3" />
-                                                    {errors.code}
-                                                </p>
-                                            )}
+                                            <FieldLabel required>نام سمت</FieldLabel>
+                                            <InputField
+                                                icon={Briefcase}
+                                                value={data.name}
+                                                onChange={v => setData('name', v)}
+                                                onBlur={() => handleBlur('name')}
+                                                error={getFieldError('name')}
+                                                placeholder="مثال: مدیر مالی"
+                                            />
+                                        </div>
+                                        <div>
+                                            <FieldLabel required>کد سمت</FieldLabel>
+                                            <InputField
+                                                icon={Hash}
+                                                value={data.code}
+                                                onChange={v => setData('code', v)}
+                                                onBlur={() => handleBlur('code')}
+                                                error={getFieldError('code')}
+                                                placeholder="مثال: FIN-MGR-001"
+                                            />
                                         </div>
                                     </div>
 
+                                    <div className="border-t border-slate-100" />
+
+                                    {/* Level + Management Type */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        {/* Level */}
+                                        {/* Level number input with live badge */}
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                سطح سمت
-                                            </label>
-                                            <div className="relative">
-                                                <TrendingUp className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                <input
-                                                    type="number"
-                                                    value={data.level}
-                                                    onChange={(e) => setData('level', parseInt(e.target.value) || 0)}
-                                                    min="0"
-                                                    max="10"
-                                                    className="w-full pr-9 pl-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
-                                                />
+                                            <FieldLabel>سطح سمت</FieldLabel>
+                                            <InputField
+                                                icon={TrendingUp}
+                                                type="number"
+                                                value={data.level}
+                                                onChange={v => setData('level', parseInt(v) || 0)}
+                                                min={0}
+                                                max={10}
+                                                placeholder="0"
+                                            />
+                                            {/* Live level badge */}
+                                            <div className="mt-2.5 flex items-center gap-2">
+                                                <div
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all duration-300"
+                                                    style={{
+                                                        backgroundColor: levelInfo.bg,
+                                                        color: levelInfo.color,
+                                                        borderColor: levelInfo.color + '40',
+                                                    }}
+                                                >
+                                                    <LevelIcon className="h-3 w-3" />
+                                                    {levelInfo.label}
+                                                </div>
+                                                <span className="text-xs text-slate-400">هرچه عدد بزرگتر، سطح بالاتر (۰–۱۰)</span>
                                             </div>
-                                            <div className="mt-2 flex items-center gap-1.5">
-                                                <LevelIcon className={`h-3.5 w-3.5 text-${levelBadge.color}-500`} />
-                                                <span className={`text-xs text-${levelBadge.color}-600`}>
-                                                    {levelBadge.label}
-                                                </span>
-                                            </div>
-                                            <p className="text-xs text-gray-500 mt-1">
-                                                عدد بین 0 تا 10 - هرچه عدد بزرگتر، سطح بالاتر
-                                            </p>
                                         </div>
 
-                                        {/* Management Toggle */}
+                                        {/* Management toggle card */}
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                نوع سمت
-                                            </label>
+                                            <FieldLabel>نوع سمت</FieldLabel>
                                             <button
                                                 type="button"
                                                 onClick={() => setData('is_management', !data.is_management)}
-                                                className={`relative w-full p-4 rounded-xl border-2 transition-all duration-200 text-right ${data.is_management
-                                                        ? 'border-amber-500 bg-amber-50 shadow-sm'
-                                                        : 'border-gray-200 bg-white hover:border-gray-300'
-                                                    }`}
+                                                style={data.is_management ? {
+                                                    borderColor: '#fbbf24',
+                                                    backgroundColor: '#fffbeb',
+                                                } : {}}
+                                                className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-right focus:outline-none ${
+                                                    data.is_management
+                                                        ? ''
+                                                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                                                }`}
                                             >
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={`p-2 rounded-lg ${data.is_management ? 'bg-amber-100' : 'bg-gray-100'
-                                                            }`}>
-                                                            <Award className={`h-5 w-5 ${data.is_management ? 'text-amber-600' : 'text-gray-500'
-                                                                }`} />
-                                                        </div>
-                                                        <div>
-                                                            <p className={`text-sm font-medium ${data.is_management ? 'text-amber-900' : 'text-gray-900'
-                                                                }`}>
-                                                                {data.is_management ? 'سمت مدیریتی' : 'سمت عادی'}
-                                                            </p>
-                                                            <p className="text-xs text-gray-500 mt-0.5">
-                                                                {data.is_management
-                                                                    ? 'دارای مسئولیت مدیریتی و تصمیم‌گیری'
-                                                                    : 'سمت عملیاتی و اجرایی'}
-                                                            </p>
-                                                        </div>
+                                                <div className="flex items-center gap-3">
+                                                    <div
+                                                        className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
+                                                        style={{ backgroundColor: data.is_management ? '#fef3c7' : '#f1f5f9' }}
+                                                    >
+                                                        <Award
+                                                            className="h-5 w-5 transition-colors"
+                                                            style={{ color: data.is_management ? '#d97706' : '#94a3b8' }}
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1 text-right">
+                                                        <p
+                                                            className="text-sm font-bold transition-colors"
+                                                            style={{ color: data.is_management ? '#92400e' : '#334155' }}
+                                                        >
+                                                            {data.is_management ? 'سمت مدیریتی' : 'سمت عادی'}
+                                                        </p>
+                                                        <p className="text-xs text-slate-500 mt-0.5">
+                                                            {data.is_management
+                                                                ? 'دارای مسئولیت مدیریتی و تصمیم‌گیری'
+                                                                : 'سمت عملیاتی و اجرایی'}
+                                                        </p>
                                                     </div>
                                                     {data.is_management && (
-                                                        <CheckCircle className="h-5 w-5 text-amber-500" />
+                                                        <div className="h-5 w-5 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
+                                                            <CheckCircle className="h-3.5 w-3.5 text-white" />
+                                                        </div>
                                                     )}
                                                 </div>
                                             </button>
                                         </div>
                                     </div>
 
+                                    <div className="border-t border-slate-100" />
+
                                     {/* Description */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            توضیحات
-                                        </label>
-                                        <div className="relative">
-                                            <FileText className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
-                                            <textarea
-                                                value={data.description}
-                                                onChange={(e) => setData('description', e.target.value)}
-                                                rows={4}
-                                                placeholder="شرح وظایف، مسئولیت‌ها و اختیارات این سمت..."
-                                                className="w-full pr-9 pl-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all resize-none"
-                                            />
-                                        </div>
+                                        <FieldLabel>توضیحات</FieldLabel>
+                                        <InputField
+                                            icon={FileText}
+                                            value={data.description}
+                                            onChange={v => setData('description', v)}
+                                            placeholder="شرح وظایف، مسئولیت‌ها و اختیارات این سمت..."
+                                            textarea
+                                            rows={4}
+                                        />
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Information Preview */}
-                            {showPreview && (
-                                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100 p-4 animate-fade-in">
-                                    <div className="flex items-start gap-3">
-                                        <div className="p-2 bg-purple-100 rounded-lg">
-                                            <Briefcase className="h-5 w-5 text-purple-600" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <p className="text-sm font-medium text-purple-900">خلاصه اطلاعات</p>
-                                            <div className="flex flex-wrap gap-3 mt-1 text-xs text-purple-700">
-                                                <span className="inline-flex items-center gap-1">
-                                                    <Briefcase className="h-3 w-3" />
-                                                    نام: {data.name}
-                                                </span>
-                                                <span>•</span>
-                                                <span className="inline-flex items-center gap-1">
-                                                    <Hash className="h-3 w-3" />
-                                                    کد: {data.code}
-                                                </span>
-                                                {data.level > 0 && (
-                                                    <>
-                                                        <span>•</span>
-                                                        <span className="inline-flex items-center gap-1">
-                                                            <TrendingUp className="h-3 w-3" />
-                                                            سطح: {data.level} ({levelBadge.label})
-                                                        </span>
-                                                    </>
-                                                )}
-                                                {data.is_management && (
-                                                    <>
-                                                        <span>•</span>
-                                                        <span className="inline-flex items-center gap-1">
-                                                            <Crown className="h-3 w-3" />
-                                                            سمت مدیریتی
-                                                        </span>
-                                                    </>
-                                                )}
-                                            </div>
+                            {/* ── Live Preview strip ── */}
+                            {hasPreview && (
+                                <div className="rounded-2xl border border-violet-100 bg-gradient-to-l from-violet-600 to-purple-700 px-6 py-4 flex items-center gap-4 fade-up">
+                                    <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center flex-shrink-0">
+                                        <Briefcase className="h-5 w-5 text-white" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-semibold text-white/70 mb-1">پیش‌نمایش سمت</p>
+                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                            <span className="text-sm font-bold text-white">{data.name}</span>
+                                            <span className="text-white/40 text-xs">•</span>
+                                            <span className="text-xs font-mono text-violet-200 bg-white/10 px-2 py-0.5 rounded-md">{data.code}</span>
+                                            {data.level > 0 && (
+                                                <>
+                                                    <span className="text-white/40 text-xs">•</span>
+                                                    <span
+                                                        className="text-xs font-bold px-2 py-0.5 rounded-full"
+                                                        style={{ backgroundColor: levelInfo.color + '33', color: '#fff' }}
+                                                    >
+                                                        {levelInfo.label}
+                                                    </span>
+                                                </>
+                                            )}
+                                            {data.is_management && (
+                                                <>
+                                                    <span className="text-white/40 text-xs">•</span>
+                                                    <span className="text-xs font-bold text-amber-300 flex items-center gap-1">
+                                                        <Crown className="h-3 w-3" />مدیریتی
+                                                    </span>
+                                                </>
+                                            )}
                                             {selectedDeptName && (
-                                                <p className="text-xs text-purple-600 mt-2 flex items-center gap-1">
-                                                    <Building2 className="h-3 w-3" />
-                                                    دپارتمان: {selectedDeptName}
-                                                </p>
+                                                <>
+                                                    <span className="text-white/40 text-xs">•</span>
+                                                    <span className="text-xs text-white/70 flex items-center gap-1">
+                                                        <Building2 className="h-3 w-3" />{selectedDeptName}
+                                                    </span>
+                                                </>
                                             )}
                                         </div>
-                                        <CheckCircle className="h-5 w-5 text-emerald-500" />
                                     </div>
+                                    <CheckCircle className="h-5 w-5 text-emerald-300 flex-shrink-0" />
                                 </div>
                             )}
+
+                            {/* ── Mobile Actions ── */}
+                            <div className="flex gap-3 sm:hidden pb-4">
+                                <button
+                                    type="button"
+                                    onClick={() => router.get(positions.index())}
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-all"
+                                >
+                                    <X className="h-4 w-4" />
+                                    انصراف
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-white bg-violet-600 hover:bg-violet-700 transition-all shadow-md disabled:opacity-50"
+                                >
+                                    <Save className="h-4 w-4" />
+                                    {processing ? 'در حال ذخیره...' : 'ایجاد سمت'}
+                                </button>
+                            </div>
+
                         </div>
                     </form>
                 </div>
             </div>
-
-            {/* CSS Animations */}
-            <style>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .animate-fade-in {
-                    animation: fadeIn 0.3s ease-out;
-                }
-            `}</style>
         </>
     );
 }
