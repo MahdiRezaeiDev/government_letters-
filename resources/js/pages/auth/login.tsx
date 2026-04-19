@@ -4,7 +4,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
 import type { FormEventHandler} from 'react';
 import { useState } from 'react';
-import { login, register } from '@/routes';
+import { login } from '@/routes';
 import password from '@/routes/password';
 
 export default function Login() {

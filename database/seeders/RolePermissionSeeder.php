@@ -116,7 +116,6 @@ class RolePermissionSeeder extends Seeder
         
         $superUser = User::create([
             'organization_id' => null,
-            'username' => 'superadmin',
             'email' => 'superadmin@system.com',
             'password' => bcrypt('password'),
             'first_name' => 'مدیر',
