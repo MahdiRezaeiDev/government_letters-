@@ -290,6 +290,8 @@ export interface CartableStats {
 }
 
 export interface DashboardStats {
+    [x: string]: number;
+    today_views: number;
     rejected_count: number;
     approved_count: number;
     pending_actions: number;

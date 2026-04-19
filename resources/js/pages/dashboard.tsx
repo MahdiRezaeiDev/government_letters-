@@ -1,20 +1,18 @@
-// resources/js/pages/dashboard.tsx
-
 import { Head, Link } from '@inertiajs/react';
-import { 
+import {
     Inbox, Send, FileText, Clock, Archive, Users, Mail,
-    TrendingUp, TrendingDown, CheckCircle, XCircle, 
-    Eye, Download, UserCheck, FileSignature, Activity,
-    Calendar, Bell, ChevronRight, MoreHorizontal,
-    Zap, Target, Award, Briefcase, Building2, Layers
+    TrendingUp, TrendingDown, CheckCircle, XCircle,
+    Eye, FileSignature, Activity,
+    Calendar, ChevronRight,
+    Zap, Target, Building2
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { index as ArchiveIndex } from '@/routes/archives';
 import { index as CartableIndex } from '@/routes/cartable';
 import { index as LetterIndex, create as LetterCreate, show as LetterShow } from '@/routes/letters';
 import { index as UserIndex } from '@/routes/users';
 import type { DashboardStats, Letter } from '@/types';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { useState, useEffect } from 'react';
 
 interface Props {
     stats: DashboardStats;
@@ -24,21 +22,26 @@ interface Props {
     priorityStats?: { priority: string; count: number }[];
 }
 
-export default function Dashboard({ 
-    stats, 
-    recentLetters, 
-    monthlyStats = [], 
-    departmentStats = [], 
-    priorityStats = [] 
+export default function Dashboard({
+    stats,
+    recentLetters,
+    monthlyStats = [],
+    departmentStats = [],
+    priorityStats = []
 }: Props) {
     const [greeting, setGreeting] = useState('');
     const [currentTime, setCurrentTime] = useState('');
 
     useEffect(() => {
         const hour = new Date().getHours();
-        if (hour < 12) setGreeting('صبح بخیر');
-        else if (hour < 18) setGreeting('بعد از ظهر بخیر');
-        else setGreeting('شب بخیر');
+
+        if (hour < 12) {
+            setGreeting('صبح بخیر');
+        } else if (hour < 18) {
+            setGreeting('بعد از ظهر بخیر');
+        } else {
+            setGreeting('شب بخیر');
+        }
 
         setCurrentTime(new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }));
     }, []);
@@ -61,10 +64,10 @@ export default function Dashboard({
 
     // کارت‌های آمار اصلی
     const mainStatCards = [
-        { 
-            label: 'در انتظار اقدام', 
-            value: stats.pending_actions, 
-            icon: Clock, 
+        {
+            label: 'در انتظار اقدام',
+            value: stats.pending_actions,
+            icon: Clock,
             color: 'from-yellow-500 to-yellow-600',
             bgColor: 'bg-yellow-50',
             textColor: 'text-yellow-700',
@@ -73,10 +76,10 @@ export default function Dashboard({
             trend: '+12%',
             trendUp: true
         },
-        { 
-            label: 'نامه‌های وارده', 
-            value: stats.incoming_new, 
-            icon: Inbox, 
+        {
+            label: 'مکاتیب وارده',
+            value: stats.incoming_new,
+            icon: Inbox,
             color: 'from-blue-500 to-blue-600',
             bgColor: 'bg-blue-50',
             textColor: 'text-blue-700',
@@ -85,10 +88,10 @@ export default function Dashboard({
             trend: '+8%',
             trendUp: true
         },
-        { 
-            label: 'نامه‌های صادره', 
-            value: stats.outgoing_new, 
-            icon: Send, 
+        {
+            label: 'مکاتیب صادره',
+            value: stats.outgoing_new,
+            icon: Send,
             color: 'from-green-500 to-green-600',
             bgColor: 'bg-green-50',
             textColor: 'text-green-700',
@@ -97,10 +100,10 @@ export default function Dashboard({
             trend: '-3%',
             trendUp: false
         },
-        { 
-            label: 'پیش‌نویس‌ها', 
-            value: stats.my_drafts, 
-            icon: FileText, 
+        {
+            label: 'پیش‌نویس‌ها',
+            value: stats.my_drafts,
+            icon: FileText,
             color: 'from-purple-500 to-purple-600',
             bgColor: 'bg-purple-50',
             textColor: 'text-purple-700',
@@ -113,35 +116,35 @@ export default function Dashboard({
 
     // کارت‌های آمار ثانویه
     const secondaryStatCards = [
-        { 
-            label: 'کل نامه‌ها', 
-            value: stats.total_letters, 
-            icon: FileSignature, 
+        {
+            label: 'کل مکاتیب',
+            value: stats.total_letters,
+            icon: FileSignature,
             color: 'from-indigo-500 to-indigo-600',
             bgColor: 'bg-indigo-50',
             iconBg: 'bg-indigo-500',
         },
-        { 
-            label: 'کاربران فعال', 
-            value: stats.total_users, 
-            icon: Users, 
+        {
+            label: 'کاربران فعال',
+            value: stats.total_users,
+            icon: Users,
             color: 'from-emerald-500 to-emerald-600',
             bgColor: 'bg-emerald-50',
             iconBg: 'bg-emerald-500',
             href: UserIndex()
         },
-        { 
-            label: 'دپارتمان‌ها', 
-            value: stats.total_departments, 
-            icon: Building2, 
+        {
+            label: 'دپارتمان‌ها',
+            value: stats.total_departments,
+            icon: Building2,
             color: 'from-rose-500 to-rose-600',
             bgColor: 'bg-rose-50',
             iconBg: 'bg-rose-500',
         },
-        { 
-            label: 'بایگانی شده', 
-            value: stats.archived_count, 
-            icon: Archive, 
+        {
+            label: 'بایگانی شده',
+            value: stats.archived_count,
+            icon: Archive,
             color: 'from-gray-500 to-gray-600',
             bgColor: 'bg-gray-50',
             iconBg: 'bg-gray-500',
@@ -158,21 +161,21 @@ export default function Dashboard({
 
     // اقدامات سریع
     const quickActions = [
-        { title: 'نامه وارده جدید', icon: Inbox, href: LetterCreate({ query: { type: 'incoming' } }), color: 'blue' },
-        { title: 'نامه صادره جدید', icon: Send, href: LetterCreate({ query: { type: 'outgoing' } }), color: 'green' },
-        { title: 'نامه داخلی جدید', icon: FileText, href: LetterCreate({ query: { type: 'internal' } }), color: 'purple' },
+        { title: 'مکتوب وارده جدید', icon: Inbox, href: LetterCreate({ query: { type: 'incoming' } }), color: 'blue' },
+        { title: 'مکتوب صادره جدید', icon: Send, href: LetterCreate({ query: { type: 'outgoing' } }), color: 'green' },
+        { title: 'مکتوب داخلی جدید', icon: FileText, href: LetterCreate({ query: { type: 'internal' } }), color: 'purple' },
         { title: 'مدیریت کاربران', icon: Users, href: UserIndex(), color: 'indigo' },
         { title: 'کارتابل من', icon: Clock, href: CartableIndex(), color: 'yellow' },
-        { title: 'بایگانی', icon: Archive, href: ArchiveIndex(), color: 'gray' },
+        { title: 'آرشبف', icon: Archive, href: ArchiveIndex(), color: 'gray' },
     ];
 
     return (
         <>
             <Head title="داشبورد" />
 
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+            <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    
+
                     {/* Header with Greeting */}
                     <div className="mb-8">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -193,7 +196,7 @@ export default function Dashboard({
                                 className="inline-flex items-center px-5 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                             >
                                 <Mail className="ml-2 h-5 w-5" />
-                                ایجاد نامه جدید
+                                ایجاد مکتوب جدید
                             </Link>
                         </div>
                     </div>
@@ -238,7 +241,7 @@ export default function Dashboard({
                                 <div className="flex items-center justify-between mb-4">
                                     <div>
                                         <h3 className="font-semibold text-gray-900">آمار ماهیانه</h3>
-                                        <p className="text-xs text-gray-500 mt-1">تغییرات نامه‌ها در ۶ ماه اخیر</p>
+                                        <p className="text-xs text-gray-500 mt-1">تغییرات مکاتیب در ۶ ماه اخیر</p>
                                     </div>
                                     <div className="flex items-center gap-1 text-xs text-gray-400">
                                         <Activity className="h-3 w-3" />
@@ -250,23 +253,23 @@ export default function Dashboard({
                                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                                         <XAxis dataKey="month" stroke="#9ca3af" fontSize={12} />
                                         <YAxis stroke="#9ca3af" fontSize={12} />
-                                        <Tooltip 
-                                            contentStyle={{ 
-                                                backgroundColor: 'white', 
+                                        <Tooltip
+                                            contentStyle={{
+                                                backgroundColor: 'white',
                                                 borderRadius: '12px',
                                                 border: '1px solid #e5e7eb',
                                                 fontSize: '12px'
-                                            }} 
+                                            }}
                                         />
                                         <Legend />
-                                        <Line 
-                                            type="monotone" 
-                                            dataKey="count" 
-                                            stroke="#3b82f6" 
+                                        <Line
+                                            type="monotone"
+                                            dataKey="count"
+                                            stroke="#3b82f6"
                                             strokeWidth={2}
                                             dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
                                             activeDot={{ r: 6 }}
-                                            name="تعداد نامه‌ها"
+                                            name="تعداد مکاتیب"
                                         />
                                     </LineChart>
                                 </ResponsiveContainer>
@@ -278,7 +281,7 @@ export default function Dashboard({
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
                                 <div>
                                     <h3 className="font-semibold text-gray-900">توزیع اولویت‌ها</h3>
-                                    <p className="text-xs text-gray-500 mt-1">بر اساس اولویت نامه‌ها</p>
+                                    <p className="text-xs text-gray-500 mt-1">بر اساس اولویت مکاتیب</p>
                                 </div>
                                 <ResponsiveContainer width="100%" height={260}>
                                     <PieChart>
@@ -332,8 +335,8 @@ export default function Dashboard({
                         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                             <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-linear-to-r from-gray-50 to-white">
                                 <div>
-                                    <h3 className="font-semibold text-gray-900">نامه‌های اخیر</h3>
-                                    <p className="text-xs text-gray-500 mt-0.5">آخرین نامه‌های ثبت شده</p>
+                                    <h3 className="font-semibold text-gray-900">مکاتیب اخیر</h3>
+                                    <p className="text-xs text-gray-500 mt-0.5">آخرین مکاتیب ثبت شده</p>
                                 </div>
                                 <Link href={LetterIndex()} className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1">
                                     مشاهده همه
@@ -344,7 +347,7 @@ export default function Dashboard({
                                 {recentLetters.length === 0 ? (
                                     <div className="px-5 py-12 text-center">
                                         <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                                        <p className="text-gray-500">هیچ نامه‌ای وجود ندارد</p>
+                                        <p className="text-gray-500">هیچ مکتوب‌ای وجود ندارد</p>
                                     </div>
                                 ) : (
                                     recentLetters.map((letter, index) => (
@@ -355,12 +358,10 @@ export default function Dashboard({
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className="flex-shrink-0">
-                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                                                        index % 2 === 0 ? 'bg-blue-50' : 'bg-purple-50'
-                                                    } group-hover:scale-105 transition`}>
-                                                        <FileText className={`h-5 w-5 ${
-                                                            index % 2 === 0 ? 'text-blue-500' : 'text-purple-500'
-                                                        }`} />
+                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${index % 2 === 0 ? 'bg-blue-50' : 'bg-purple-50'
+                                                        } group-hover:scale-105 transition`}>
+                                                        <FileText className={`h-5 w-5 ${index % 2 === 0 ? 'text-blue-500' : 'text-purple-500'
+                                                            }`} />
                                                     </div>
                                                 </div>
                                                 <div className="flex-1 min-w-0">

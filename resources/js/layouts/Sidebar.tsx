@@ -86,7 +86,7 @@ export function Sidebar() {
             icon: LayoutDashboard,
         },
         {
-            title: 'مدیریت',
+            title: 'مدیریت بخش ها',
             icon: Building2,
             permission: 'super-admin',
             children: [
