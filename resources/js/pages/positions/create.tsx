@@ -159,7 +159,7 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
 
     return (
         <>
-            <Head title="ایجاد سمت جدید" />
+            <Head title="ایجاد وظیفه جدید" />
 
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
@@ -180,10 +180,10 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                         <div className="flex items-center justify-between h-16">
                             <div className="flex items-center gap-3">
                                 <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-violet-50 text-violet-600 tracking-wide">
-                                    سمت‌ها
+                                    وظایف
                                 </span>
                                 <span className="text-slate-300 text-lg font-light">/</span>
-                                <h1 className="text-sm font-bold text-slate-800">ایجاد سمت جدید</h1>
+                                <h1 className="text-sm font-bold text-slate-800">ایجاد وظیفه جدید</h1>
                             </div>
                             <div className="flex items-center gap-2.5">
                                 <button
@@ -201,7 +201,7 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                                     className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-violet-600 hover:bg-violet-700 rounded-xl transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <Save className="h-4 w-4" />
-                                    {processing ? 'در حال ذخیره...' : 'ایجاد سمت'}
+                                    {processing ? 'در حال ذخیره...' : 'ایجاد وظیفه'}
                                 </button>
                             </div>
                         </div>
@@ -218,9 +218,9 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                                     <Briefcase className="h-6 w-6 text-white" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-bold text-slate-800">ایجاد سمت سازمانی جدید</p>
+                                    <p className="text-sm font-bold text-slate-800">ایجاد وظیفه جدید</p>
                                     <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                                        اطلاعات سمت را تکمیل کنید. فیلدهای ستاره‌دار الزامی هستند.
+                                        اطلاعات وظیفه را تکمیل کنید. فیلدهای ستاره‌دار الزامی هستند.
                                     </p>
                                 </div>
                             </div>
@@ -233,7 +233,7 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                                     </div>
                                     <div>
                                         <h2 className="text-sm font-bold text-slate-800">اطلاعات پایه</h2>
-                                        <p className="text-xs text-slate-400 mt-0.5">مشخصات اصلی سمت سازمانی</p>
+                                        <p className="text-xs text-slate-400 mt-0.5">مشخصات اصلی وظیفه </p>
                                     </div>
                                 </div>
 
@@ -241,7 +241,7 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
 
                                     {/* Department */}
                                     <div>
-                                        <FieldLabel required>دپارتمان</FieldLabel>
+                                        <FieldLabel required>ریاست</FieldLabel>
                                         <SelectField
                                             icon={Building2}
                                             value={data.department_id}
@@ -249,7 +249,7 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                                             onBlur={() => handleBlur('department_id')}
                                             error={getFieldError('department_id')}
                                         >
-                                            <option value="">انتخاب دپارتمان...</option>
+                                            <option value="">انتخاب ریاست...</option>
                                             {departments.map(dept => (
                                                 <option key={dept.id} value={dept.id}>{dept.name}</option>
                                             ))}
@@ -257,7 +257,7 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                                         {selectedDeptName && !getFieldError('department_id') && (
                                             <div className="mt-2.5 inline-flex items-center gap-2 text-xs font-medium text-violet-600 bg-violet-50 border border-violet-100 px-3 py-1.5 rounded-full">
                                                 <Layers className="h-3 w-3" />
-                                                سمت برای: {selectedDeptName}
+                                                وظیفه برای: {selectedDeptName}
                                             </div>
                                         )}
                                     </div>
@@ -267,7 +267,7 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                                     {/* Name + Code */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         <div>
-                                            <FieldLabel required>نام سمت</FieldLabel>
+                                            <FieldLabel required>نام وظیفه</FieldLabel>
                                             <InputField
                                                 icon={Briefcase}
                                                 value={data.name}
@@ -278,7 +278,7 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                                             />
                                         </div>
                                         <div>
-                                            <FieldLabel required>کد سمت</FieldLabel>
+                                            <FieldLabel required>کد وظیفه</FieldLabel>
                                             <InputField
                                                 icon={Hash}
                                                 value={data.code}
@@ -296,7 +296,7 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         {/* Level number input with live badge */}
                                         <div>
-                                            <FieldLabel>سطح سمت</FieldLabel>
+                                            <FieldLabel>سطح وظیفه</FieldLabel>
                                             <InputField
                                                 icon={TrendingUp}
                                                 type="number"
@@ -325,7 +325,7 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
 
                                         {/* Management toggle card */}
                                         <div>
-                                            <FieldLabel>نوع سمت</FieldLabel>
+                                            <FieldLabel>نوع وظیفه</FieldLabel>
                                             <button
                                                 type="button"
                                                 onClick={() => setData('is_management', !data.is_management)}
@@ -354,12 +354,12 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                                                             className="text-sm font-bold transition-colors"
                                                             style={{ color: data.is_management ? '#92400e' : '#334155' }}
                                                         >
-                                                            {data.is_management ? 'سمت مدیریتی' : 'سمت عادی'}
+                                                            {data.is_management ? 'وظیفه مدیریتی' : 'وظیفه عادی'}
                                                         </p>
                                                         <p className="text-xs text-slate-500 mt-0.5">
                                                             {data.is_management
                                                                 ? 'دارای مسئولیت مدیریتی و تصمیم‌گیری'
-                                                                : 'سمت عملیاتی و اجرایی'}
+                                                                : 'وظیفه عملیاتی و اجرایی'}
                                                         </p>
                                                     </div>
                                                     {data.is_management && (
@@ -381,7 +381,7 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                                             icon={FileText}
                                             value={data.description}
                                             onChange={v => setData('description', v)}
-                                            placeholder="شرح وظایف، مسئولیت‌ها و اختیارات این سمت..."
+                                            placeholder="شرح وظایف، مسئولیت‌ها و اختیارات این وظیفه..."
                                             textarea
                                             rows={4}
                                         />
@@ -396,7 +396,7 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                                         <Briefcase className="h-5 w-5 text-white" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-semibold text-white/70 mb-1">پیش‌نمایش سمت</p>
+                                        <p className="text-xs font-semibold text-white/70 mb-1">پیش‌نمایش وظیفه</p>
                                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                             <span className="text-sm font-bold text-white">{data.name}</span>
                                             <span className="text-white/40 text-xs">•</span>
@@ -450,7 +450,7 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-white bg-violet-600 hover:bg-violet-700 transition-all shadow-md disabled:opacity-50"
                                 >
                                     <Save className="h-4 w-4" />
-                                    {processing ? 'در حال ذخیره...' : 'ایجاد سمت'}
+                                    {processing ? 'در حال ذخیره...' : 'ایجاد وظیفه'}
                                 </button>
                             </div>
 

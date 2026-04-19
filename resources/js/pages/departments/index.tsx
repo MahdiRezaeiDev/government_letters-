@@ -103,9 +103,9 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
     const hasActiveFilters = filters.search || filters.status || filters.organization_id;
 
     const stats = [
-        { label: 'کل دپارتمان‌ها', value: departments.total, icon: Layers, color: 'indigo', gradient: 'from-indigo-500 to-purple-600', change: '+12%' },
-        { label: 'دپارتمان‌های فعال', value: departments.data.filter(d => d.status === 'active').length, icon: CheckCircle, color: 'emerald', gradient: 'from-emerald-500 to-teal-600', change: '+8%' },
-        { label: 'سازمان‌ها', value: new Set(departments.data.map(d => d.organization_id)).size, icon: Building2, color: 'blue', gradient: 'from-blue-500 to-cyan-600', change: '+5%' },
+        { label: 'کل ریاست ها', value: departments.total, icon: Layers, color: 'indigo', gradient: 'from-indigo-500 to-purple-600', change: '+12%' },
+        { label: 'ریاست های فعال', value: departments.data.filter(d => d.status === 'active').length, icon: CheckCircle, color: 'emerald', gradient: 'from-emerald-500 to-teal-600', change: '+8%' },
+        { label: 'وزارت ها', value: new Set(departments.data.map(d => d.organization_id)).size, icon: Building2, color: 'blue', gradient: 'from-blue-500 to-cyan-600', change: '+5%' },
         { label: 'سطوح', value: Math.max(...departments.data.map(d => d.level), 0), icon: GitBranch, color: 'purple', gradient: 'from-purple-500 to-pink-600', change: '-' },
     ];
 
@@ -126,7 +126,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
 
     return (
         <>
-            <Head title="مدیریت دپارتمان‌ها" />
+            <Head title="مدیریت ریاست ها" />
 
             <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
                 <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -142,7 +142,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                         </div>
                                     </div>
                                     <div>
-                                        <h1 className="text-2xl font-bold text-gray-900">مدیریت دپارتمان‌ها</h1>
+                                        <h1 className="text-2xl font-bold text-gray-900">مدیریت ریاست ها</h1>
                                         <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
                                             <Sparkles className="h-3 w-3 text-indigo-500" />
                                             مدیریت واحدهای سازمانی و ساختار سازمانی
@@ -178,7 +178,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                         className="group relative inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl text-sm font-medium text-white hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                                     >
                                         <Plus className="ml-2 h-4 w-4 transition-transform group-hover:rotate-90 duration-200" />
-                                        دپارتمان جدید
+                                        ریاست جدید
                                         <span className="absolute inset-0 rounded-xl bg-white opacity-0 group-hover:opacity-10 transition-opacity"></span>
                                     </Link>
                                 )}
@@ -273,7 +273,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                                                 onChange={(e) => setSelectedOrganization(e.target.value)}
                                                                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                             >
-                                                                <option value="">همه سازمان‌ها</option>
+                                                                <option value="">همه وزارت ها</option>
                                                                 {organizations.map((org) => (
                                                                     <option key={org.id} value={org.id}>{org.name}</option>
                                                                 ))}
@@ -305,7 +305,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gradient-to-r from-gray-50 to-white">
                                             <tr>
-                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">دپارتمان</th>
+                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">ریاست</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">کد</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سازمان</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">والد</th>
@@ -321,7 +321,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                                             <div className="p-4 bg-gray-100 rounded-full mb-4">
                                                                 <FolderTree className="h-12 w-12 text-gray-400" />
                                                             </div>
-                                                            <p className="text-gray-500 font-medium">هیچ دپارتمانی یافت نشد</p>
+                                                            <p className="text-gray-500 font-medium">هیچ ریاستی یافت نشد</p>
                                                             <p className="text-sm text-gray-400 mt-1">سعی کنید معیارهای جستجوی خود را تغییر دهید</p>
                                                             {hasActiveFilters && (
                                                                 <button
@@ -537,7 +537,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                             <div className="p-4 bg-gray-100 rounded-full mb-4">
                                                 <FolderTree className="h-12 w-12 text-gray-400" />
                                             </div>
-                                            <p className="text-gray-500 font-medium">هیچ دپارتمانی یافت نشد</p>
+                                            <p className="text-gray-500 font-medium">هیچ ریاستی یافت نشد</p>
                                             <p className="text-sm text-gray-400 mt-1">سعی کنید معیارهای جستجوی خود را تغییر دهید</p>
                                         </div>
                                     </div>
@@ -738,8 +738,8 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                         setSelectedDepartment(null);
                     }}
                     onConfirm={confirmDelete}
-                    title="حذف دپارتمان"
-                    message="آیا از حذف این دپارتمان اطمینان دارید؟"
+                    title="حذف ریاست"
+                    message="آیا از حذف این ریاست اطمینان دارید؟"
                     itemName={selectedDepartment.name}
                     type="department"
                     isLoading={deleting}

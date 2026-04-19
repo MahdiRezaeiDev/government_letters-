@@ -21,7 +21,7 @@ const generateOrgCode = (persianName: string): string => {
     // لیست کلمات کلیدی و معادل انگلیسی آنها
     const keywords: Record<string, string> = {
         'وزارت': 'MO',
-        'سازمان': 'ORG',
+        'وزارت': 'ORG',
         'شرکت': 'CO',
         'موسسه': 'INS',
         'بانک': 'BANK',
@@ -312,7 +312,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
         {
             value: 'active',
             label: 'فعال',
-            desc: 'سازمان فعال و قابل استفاده است',
+            desc: 'وزارت فعال و قابل استفاده است',
             icon: CheckCircle,
             color: '#10b981',
             bg: '#d1fae5',
@@ -321,7 +321,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
         {
             value: 'inactive',
             label: 'غیرفعال',
-            desc: 'سازمان غیرفعال و در دسترس نیست',
+            desc: 'وزارت غیرفعال و در دسترس نیست',
             icon: AlertCircle,
             color: '#94a3b8',
             bg: '#f1f5f9',
@@ -331,7 +331,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
 
     return (
         <>
-            <Head title="ایجاد سازمان جدید" />
+            <Head title="ایجاد وزارت جدید" />
 
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
@@ -347,10 +347,10 @@ export default function OrganizationsCreate({ organizations }: Props) {
                         <div className="flex items-center justify-between h-16">
                             <div className="flex items-center gap-3">
                                 <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 tracking-wide">
-                                    سازمان‌ها
+                                    وزارت‌ها
                                 </span>
                                 <span className="text-slate-300 text-lg font-light">/</span>
-                                <h1 className="text-sm font-bold text-slate-800">ایجاد سازمان جدید</h1>
+                                <h1 className="text-sm font-bold text-slate-800">ایجاد وزارت جدید</h1>
                             </div>
                             <div className="flex items-center gap-2.5">
                                 <button
@@ -368,7 +368,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                     className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <Save className="h-4 w-4" />
-                                    {processing ? 'در حال ذخیره...' : 'ایجاد سازمان'}
+                                    {processing ? 'در حال ذخیره...' : 'ایجاد وزارت'}
                                 </button>
                             </div>
                         </div>
@@ -386,9 +386,9 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                     <Building2 className="h-6 w-6 text-white" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-bold text-slate-800">ایجاد سازمان جدید</p>
+                                    <p className="text-sm font-bold text-slate-800">ایجاد وزارت جدید</p>
                                     <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                                        اطلاعات سازمان را در فرم زیر وارد کنید. فیلدهای ستاره‌دار الزامی هستند.
+                                        اطلاعات وزارت را در فرم زیر وارد کنید. فیلدهای ستاره‌دار الزامی هستند.
                                     </p>
                                 </div>
                             </div>
@@ -401,7 +401,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                     </div>
                                     <div>
                                         <h2 className="text-sm font-bold text-slate-800">اطلاعات پایه</h2>
-                                        <p className="text-xs text-slate-400 mt-0.5">مشخصات اصلی سازمان</p>
+                                        <p className="text-xs text-slate-400 mt-0.5">مشخصات اصلی وزارت</p>
                                     </div>
                                 </div>
 
@@ -409,7 +409,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                     {/* Name + Code */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         <div>
-                                            <FieldLabel required>نام سازمان</FieldLabel>
+                                            <FieldLabel required>نام وزارت</FieldLabel>
                                             <InputField
                                                 icon={Building2}
                                                 value={data.name}
@@ -420,7 +420,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                             />
                                         </div>
                                         <div>
-                                            <FieldLabel required>کد سازمان</FieldLabel>
+                                            <FieldLabel required>کد وزارت</FieldLabel>
                                             <div className="relative">
                                                 <InputField
                                                     icon={Hash}
@@ -435,7 +435,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                                         type="button"
                                                         onClick={handleRegenerateCode}
                                                         className="absolute left-3 top-3 p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
-                                                        title="تولید مجدد کد از نام سازمان"
+                                                        title="تولید مجدد کد از نام وزارت"
                                                     >
                                                         <RefreshCw className="h-3.5 w-3.5" />
                                                     </button>
@@ -444,7 +444,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                             {autoGenerateCode && data.name && (
                                                 <p className="text-xs text-slate-400 mt-1.5 flex items-center gap-1">
                                                     <CheckCircle className="h-3 w-3 text-green-500" />
-                                                    کد به صورت خودکار از نام سازمان تولید می‌شود
+                                                    کد به صورت خودکار از نام وزارت تولید می‌شود
                                                 </p>
                                             )}
                                         </div>
@@ -483,7 +483,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                             icon={MapPin}
                                             value={data.address}
                                             onChange={v => setData('address', v)}
-                                            placeholder="آدرس کامل سازمان..."
+                                            placeholder="آدرس کامل وزارت..."
                                             textarea
                                             rows={3}
                                         />
@@ -505,7 +505,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                             />
                                         </div>
                                         <div>
-                                            <FieldLabel>سازمان والد</FieldLabel>
+                                            <FieldLabel>وزارت والد</FieldLabel>
                                             <SelectField
                                                 icon={Link2}
                                                 value={data.parent_id}
@@ -528,8 +528,8 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                         <CheckCircle className="h-4 w-4 text-emerald-600" />
                                     </div>
                                     <div>
-                                        <h2 className="text-sm font-bold text-slate-800">وضعیت سازمان</h2>
-                                        <p className="text-xs text-slate-400 mt-0.5">وضعیت فعال یا غیرفعال بودن سازمان را تعیین کنید</p>
+                                        <h2 className="text-sm font-bold text-slate-800">وضعیت وزارت</h2>
+                                        <p className="text-xs text-slate-400 mt-0.5">وضعیت فعال یا غیرفعال بودن وزارت را تعیین کنید</p>
                                     </div>
                                 </div>
 
@@ -603,7 +603,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md disabled:opacity-50"
                                 >
                                     <Save className="h-4 w-4" />
-                                    {processing ? 'در حال ذخیره...' : 'ایجاد سازمان'}
+                                    {processing ? 'در حال ذخیره...' : 'ایجاد وزارت'}
                                 </button>
                             </div>
 

@@ -1,11 +1,9 @@
-// resources/js/pages/positions/index.tsx
-
 import { Head, Link, router } from '@inertiajs/react';
 import {
     Plus, Pencil, Trash2, Search, Briefcase, ChevronLeft, ChevronRight,
-    Eye, Filter, X, Award, Users, TrendingUp, CheckCircle, AlertCircle,
-    Layers, Sparkles, Hash, Star, Crown, Shield, Zap, Building2,
-    GitBranch, UserCheck, Clock, Calendar, MoreHorizontal
+    Eye, Filter, X, Users, TrendingUp,
+    Layers, Sparkles, Hash, Star, Crown, Shield, Building2,
+    UserCheck
 } from 'lucide-react';
 import { useState } from 'react';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
@@ -80,9 +78,9 @@ export default function PositionsIndex({ positions, departments, filters, can }:
     const hasActiveFilters = filters.search || filters.department_id;
 
     const stats = [
-        { label: 'کل سمت‌ها', value: positions.total, icon: Briefcase, color: 'purple', gradient: 'from-purple-500 to-pink-600', change: '+12%' },
-        { label: 'سمت‌های مدیریتی', value: positions.data.filter(p => p.is_management).length, icon: Crown, color: 'amber', gradient: 'from-amber-500 to-orange-600', change: '+5%' },
-        { label: 'دپارتمان‌ها', value: new Set(positions.data.map(p => p.department_id)).size, icon: Layers, color: 'indigo', gradient: 'from-indigo-500 to-blue-600', change: '+8%' },
+        { label: 'کل وظایف', value: positions.total, icon: Briefcase, color: 'purple', gradient: 'from-purple-500 to-pink-600', change: '+12%' },
+        { label: 'وظایف مدیریتی', value: positions.data.filter(p => p.is_management).length, icon: Crown, color: 'amber', gradient: 'from-amber-500 to-orange-600', change: '+5%' },
+        { label: 'ریاست ها', value: new Set(positions.data.map(p => p.department_id)).size, icon: Layers, color: 'indigo', gradient: 'from-indigo-500 to-blue-600', change: '+8%' },
         { label: 'میانگین سطح', value: (positions.data.reduce((acc, p) => acc + p.level, 0) / positions.data.length || 0).toFixed(1), icon: TrendingUp, color: 'emerald', gradient: 'from-emerald-500 to-teal-600', change: '-' },
     ];
 
@@ -124,9 +122,9 @@ export default function PositionsIndex({ positions, departments, filters, can }:
 
     return (
         <>
-            <Head title="مدیریت سمت‌ها" />
+            <Head title="مدیریت وظایف" />
 
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+            <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-slate-100">
                 <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="space-y-6">
                         {/* Header Section */}
@@ -134,16 +132,16 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                             <div>
                                 <div className="flex items-center gap-3">
                                     <div className="relative">
-                                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl blur-lg opacity-50"></div>
-                                        <div className="relative p-2.5 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl shadow-lg">
+                                        <div className="absolute inset-0 bg-linear-to-r from-purple-500 to-pink-600 rounded-xl blur-lg opacity-50"></div>
+                                        <div className="relative p-2.5 bg-linear-to-r from-purple-500 to-pink-600 rounded-xl shadow-lg">
                                             <Briefcase className="h-6 w-6 text-white" />
                                         </div>
                                     </div>
                                     <div>
-                                        <h1 className="text-2xl font-bold text-gray-900">سمت‌های سازمانی</h1>
+                                        <h1 className="text-2xl font-bold text-gray-900">وظایف </h1>
                                         <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
                                             <Sparkles className="h-3 w-3 text-purple-500" />
-                                            مدیریت پست‌های سازمانی و سطوح دسترسی
+                                            مدیریت وظایف و سطوح دسترسی
                                         </p>
                                     </div>
                                 </div>
@@ -173,10 +171,10 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                 {can.create && (
                                     <Link
                                         href={positionsRoute.create()}
-                                        className="group relative inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-sm font-medium text-white hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                                        className="group relative inline-flex items-center px-5 py-2.5 bg-linear-to-r from-purple-600 to-pink-600 rounded-xl text-sm font-medium text-white hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                                     >
                                         <Plus className="ml-2 h-4 w-4 transition-transform group-hover:rotate-90 duration-200" />
-                                        سمت جدید
+                                        وظیفه جدید
                                         <span className="absolute inset-0 rounded-xl bg-white opacity-0 group-hover:opacity-10 transition-opacity"></span>
                                     </Link>
                                 )}
@@ -217,7 +215,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                                                placeholder="جستجو بر اساس نام، کد، دپارتمان..."
+                                                placeholder="جستجو بر اساس نام، کد، ریاست..."
                                                 className="w-full pr-10 pl-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                                             />
                                         </div>
@@ -258,7 +256,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                                             onChange={(e) => setSelectedDepartment(e.target.value)}
                                                             className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                                                         >
-                                                            <option value="">همه دپارتمان‌ها</option>
+                                                            <option value="">همه ریاست ها</option>
                                                             {departments.map((dept) => (
                                                                 <option key={dept.id} value={dept.id}>{dept.name}</option>
                                                             ))}
@@ -289,9 +287,9 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gradient-to-r from-gray-50 to-white">
                                             <tr>
-                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سمت</th>
+                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">وظیفه</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">کد</th>
-                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">دپارتمان</th>
+                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">ریاست</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سطح</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نوع</th>
                                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">عملیات</th>
@@ -305,7 +303,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                                             <div className="p-4 bg-gray-100 rounded-full mb-4">
                                                                 <Briefcase className="h-12 w-12 text-gray-400" />
                                                             </div>
-                                                            <p className="text-gray-500 font-medium">هیچ سمت سازمانی یافت نشد</p>
+                                                            <p className="text-gray-500 font-medium">هیچ وظیفه ای یافت نشد</p>
                                                             <p className="text-sm text-gray-400 mt-1">سعی کنید معیارهای جستجوی خود را تغییر دهید</p>
                                                             {hasActiveFilters && (
                                                                 <button
@@ -522,7 +520,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                             <div className="p-4 bg-gray-100 rounded-full mb-4">
                                                 <Briefcase className="h-12 w-12 text-gray-400" />
                                             </div>
-                                            <p className="text-gray-500 font-medium">هیچ سمت سازمانی یافت نشد</p>
+                                            <p className="text-gray-500 font-medium">هیچ وظیفه ای یافت نشد</p>
                                             <p className="text-sm text-gray-400 mt-1">سعی کنید معیارهای جستجوی خود را تغییر دهید</p>
                                         </div>
                                     </div>

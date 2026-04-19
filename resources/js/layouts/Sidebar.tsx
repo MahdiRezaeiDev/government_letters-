@@ -92,7 +92,7 @@ export function Sidebar() {
             children: [
                 { title: 'وزارت خانه ها', href: organizationsIndex(), icon: Building2 },
                 { title: 'ریاست ها', href: departmentsIndex(), icon: Sitemap },
-                { title: 'پوزیشن ها', href: positions.index(), icon: Briefcase },
+                { title: 'وظایف', href: positions.index(), icon: Briefcase },
                 { title: 'کاربران', href: usersIndex(), icon: Users },
                 { title: 'دسته‌بندی مکاتیب', href: categoriesIndex(), icon: FolderTree },
             ],

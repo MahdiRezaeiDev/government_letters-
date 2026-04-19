@@ -33,11 +33,10 @@ function InputField({
 }) {
     return (
         <div>
-            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${
-                error
-                    ? 'border-rose-300 ring-1 ring-rose-300'
-                    : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
-            }`}>
+            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${error
+                ? 'border-rose-300 ring-1 ring-rose-300'
+                : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
+                }`}>
                 {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
                 <input
                     type={type}
@@ -65,12 +64,11 @@ function SelectField({
 }) {
     return (
         <div>
-            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${
-                disabled ? 'opacity-60 cursor-not-allowed bg-slate-50' :
+            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${disabled ? 'opacity-60 cursor-not-allowed bg-slate-50' :
                 error
                     ? 'border-rose-300 ring-1 ring-rose-300'
                     : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
-            }`}>
+                }`}>
                 {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
                 <select
                     value={value}
@@ -132,12 +130,12 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
     const statusOptions = [
         {
             value: 'active', label: 'فعال',
-            desc: 'دپارتمان فعال و قابل استفاده است',
+            desc: 'ریاست فعال و قابل استفاده است',
             icon: CheckCircle, color: '#10b981', bg: '#d1fae5', ring: '#6ee7b7',
         },
         {
             value: 'inactive', label: 'غیرفعال',
-            desc: 'دپارتمان غیرفعال و در دسترس نیست',
+            desc: 'ریاست غیرفعال و در دسترس نیست',
             icon: AlertCircle, color: '#94a3b8', bg: '#f1f5f9', ring: '#cbd5e1',
         },
     ];
@@ -152,7 +150,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
 
     return (
         <>
-            <Head title="ایجاد دپارتمان جدید" />
+            <Head title="ایجاد ریاست جدید" />
 
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
@@ -173,10 +171,10 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                         <div className="flex items-center justify-between h-16">
                             <div className="flex items-center gap-3">
                                 <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 tracking-wide">
-                                    دپارتمان‌ها
+                                    ریاست‌ها
                                 </span>
                                 <span className="text-slate-300 text-lg font-light">/</span>
-                                <h1 className="text-sm font-bold text-slate-800">ایجاد دپارتمان جدید</h1>
+                                <h1 className="text-sm font-bold text-slate-800">ایجاد ریاست جدید</h1>
                             </div>
                             <div className="flex items-center gap-2.5">
                                 <button
@@ -194,7 +192,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                                     className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <Save className="h-4 w-4" />
-                                    {processing ? 'در حال ذخیره...' : 'ایجاد دپارتمان'}
+                                    {processing ? 'در حال ذخیره...' : 'ایجاد ریاست'}
                                 </button>
                             </div>
                         </div>
@@ -206,14 +204,14 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                         <div className="space-y-5">
 
                             {/* ── Intro strip ── */}
-                            <div className="rounded-2xl border border-indigo-100 bg-gradient-to-l from-indigo-50 to-violet-50 px-6 py-5 flex items-center gap-4">
-                                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                            <div className="rounded-2xl border border-indigo-100 bg-linear-to-l from-indigo-50 to-violet-50 px-6 py-5 flex items-center gap-4">
+                                <div className="h-12 w-12 rounded-xl bg-linear-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg flex-shrink-0">
                                     <Layers className="h-6 w-6 text-white" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-bold text-slate-800">ایجاد دپارتمان جدید</p>
+                                    <p className="text-sm font-bold text-slate-800">ایجاد ریاست جدید</p>
                                     <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                                        اطلاعات دپارتمان را تکمیل کنید. فیلدهای ستاره‌دار الزامی هستند.
+                                        اطلاعات ریاست را تکمیل کنید. فیلدهای ستاره‌دار الزامی هستند.
                                     </p>
                                 </div>
                             </div>
@@ -225,11 +223,10 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                                         key={tab.id}
                                         type="button"
                                         onClick={() => setActiveTab(tab.id as any)}
-                                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 ${
-                                            activeTab === tab.id
-                                                ? 'bg-indigo-600 text-white shadow-md'
-                                                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-                                        }`}
+                                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 ${activeTab === tab.id
+                                            ? 'bg-indigo-600 text-white shadow-md'
+                                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                            }`}
                                     >
                                         <tab.icon className="h-4 w-4" />
                                         {tab.label}
@@ -240,20 +237,20 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                             {/* ── Basic Info Tab ── */}
                             {activeTab === 'basic' && (
                                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden fade-up">
-                                    <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-gradient-to-l from-white to-slate-50/60">
-                                        <div className="h-9 w-9 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                                    <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-linear-to-l from-white to-slate-50/60">
+                                        <div className="h-9 w-9 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
                                             <FolderTree className="h-4 w-4 text-indigo-600" />
                                         </div>
                                         <div>
                                             <h2 className="text-sm font-bold text-slate-800">اطلاعات پایه</h2>
-                                            <p className="text-xs text-slate-400 mt-0.5">مشخصات اصلی دپارتمان</p>
+                                            <p className="text-xs text-slate-400 mt-0.5">مشخصات اصلی ریاست</p>
                                         </div>
                                     </div>
 
                                     <div className="p-6 space-y-5">
                                         {/* Organization */}
                                         <div>
-                                            <FieldLabel required>سازمان</FieldLabel>
+                                            <FieldLabel required>وزارت</FieldLabel>
                                             <SelectField
                                                 icon={Building2}
                                                 value={data.organization_id}
@@ -270,7 +267,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                                             {selectedOrgName && !getFieldError('organization_id') && (
                                                 <div className="mt-2.5 inline-flex items-center gap-2 text-xs font-medium text-indigo-600 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-full">
                                                     <Building2 className="h-3 w-3" />
-                                                    دپارتمان برای: {selectedOrgName}
+                                                    ریاست برای: {selectedOrgName}
                                                 </div>
                                             )}
                                         </div>
@@ -280,7 +277,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                                         {/* Name + Code */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             <div>
-                                                <FieldLabel required>نام دپارتمان</FieldLabel>
+                                                <FieldLabel required>نام ریاست</FieldLabel>
                                                 <InputField
                                                     icon={FolderTree}
                                                     value={data.name}
@@ -291,7 +288,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                                                 />
                                             </div>
                                             <div>
-                                                <FieldLabel required>کد دپارتمان</FieldLabel>
+                                                <FieldLabel required>کد ریاست</FieldLabel>
                                                 <InputField
                                                     icon={Hash}
                                                     value={data.code}
@@ -307,7 +304,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
 
                                         {/* Parent Department */}
                                         <div>
-                                            <FieldLabel>دپارتمان والد</FieldLabel>
+                                            <FieldLabel>ریاست والد</FieldLabel>
                                             <div className="relative">
                                                 <SelectField
                                                     icon={Layers}
@@ -334,7 +331,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                                             {availableParentDepts.length === 0 && data.organization_id && !loadingParents && (
                                                 <div className="mt-2.5 flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5">
                                                     <AlertCircle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-amber-500" />
-                                                    <span>هیچ دپارتمان والدی یافت نشد. این دپارتمان به عنوان سطح اول ایجاد می‌شود.</span>
+                                                    <span>هیچ ریاست والدی یافت نشد. این ریاست به عنوان سطح اول ایجاد می‌شود.</span>
                                                 </div>
                                             )}
                                         </div>
@@ -350,7 +347,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                                             <Shield className="h-4 w-4 text-amber-600" />
                                         </div>
                                         <div>
-                                            <h2 className="text-sm font-bold text-slate-800">وضعیت دپارتمان</h2>
+                                            <h2 className="text-sm font-bold text-slate-800">وضعیت ریاست</h2>
                                             <p className="text-xs text-slate-400 mt-0.5">وضعیت فعال یا غیرفعال بودن را تعیین کنید</p>
                                         </div>
                                     </div>
@@ -369,9 +366,8 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                                                             borderColor: opt.ring,
                                                             backgroundColor: opt.bg,
                                                         } : {}}
-                                                        className={`p-4 rounded-xl border-2 transition-all duration-200 text-right focus:outline-none ${
-                                                            isSelected ? '' : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
-                                                        }`}
+                                                        className={`p-4 rounded-xl border-2 transition-all duration-200 text-right focus:outline-none ${isSelected ? '' : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
+                                                            }`}
                                                     >
                                                         <div className="flex items-center gap-3">
                                                             <div
@@ -427,7 +423,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                                         <Layers className="h-5 w-5 text-white" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-semibold text-white/70 mb-1">پیش‌نمایش دپارتمان</p>
+                                        <p className="text-xs font-semibold text-white/70 mb-1">پیش‌نمایش ریاست</p>
                                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                             <span className="text-sm font-bold text-white">{data.name}</span>
                                             <span className="text-white/40 text-xs">•</span>
@@ -472,7 +468,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-md disabled:opacity-50"
                                 >
                                     <Save className="h-4 w-4" />
-                                    {processing ? 'در حال ذخیره...' : 'ایجاد دپارتمان'}
+                                    {processing ? 'در حال ذخیره...' : 'ایجاد ریاست'}
                                 </button>
                             </div>
 
