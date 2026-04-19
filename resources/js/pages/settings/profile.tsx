@@ -16,7 +16,7 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
     return (
         <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
             {children}
-            {required && <span className="text-rose-400 mr-1">*</span>}
+            {required && <span className="text-teal-400 mr-1">*</span>}
         </label>
     );
 }
@@ -30,10 +30,10 @@ function Field({
     return (
         <div>
             <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${disabled
-                    ? 'opacity-60 bg-slate-50 border-slate-200'
-                    : error
-                        ? 'border-rose-300 ring-1 ring-rose-300'
-                        : 'border-slate-200 hover:border-slate-300 focus-within:border-rose-400 focus-within:ring-2 focus-within:ring-rose-100'
+                ? 'opacity-60 bg-slate-50 border-slate-200'
+                : error
+                    ? 'border-teal-300 ring-1 ring-teal-300'
+                    : 'border-slate-200 hover:border-slate-300 focus-within:border-teal-400 focus-within:ring-2 focus-within:ring-teal-100'
                 }`}>
                 {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none flex-shrink-0" />}
                 <input
@@ -47,7 +47,7 @@ function Field({
                 {suffix && <div className="absolute left-3.5">{suffix}</div>}
             </div>
             {error && (
-                <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                <p className="text-teal-500 text-xs mt-1.5 flex items-center gap-1">
                     <AlertCircle className="h-3 w-3 flex-shrink-0" />{error}
                 </p>
             )}
@@ -92,7 +92,9 @@ export default function ProfileSettings() {
         e.preventDefault();
         patchProfile(users.update, {
             preserveScroll: true,
-            onSuccess: () => { setProfileSaved(true); setTimeout(() => setProfileSaved(false), 3000); },
+            onSuccess: () => {
+                setProfileSaved(true); setTimeout(() => setProfileSaved(false), 3000);
+            },
         });
     };
 
@@ -110,7 +112,11 @@ export default function ProfileSettings() {
 
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file) return;
+
+        if (!file) {
+            return;
+        }
+
         const reader = new FileReader();
         reader.onloadend = () => setAvatarPreview(reader.result as string);
         reader.readAsDataURL(file);
@@ -154,7 +160,7 @@ export default function ProfileSettings() {
                     <div className="max-w-3xl mx-auto px-4 sm:px-6">
                         <div className="flex items-center h-16">
                             <div className="flex items-center gap-3">
-                                <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-rose-50 text-rose-600 tracking-wide">
+                                <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-teal-50 text-teal-600 tracking-wide">
                                     تنظیمات
                                 </span>
                                 <span className="text-slate-300 text-lg font-light">/</span>
@@ -170,7 +176,7 @@ export default function ProfileSettings() {
                         {/* ── User Identity Card ── */}
                         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                             {/* Decorative gradient bar */}
-                            <div className="h-20 bg-gradient-to-l from-rose-500 to-pink-600 relative">
+                            <div className="h-20 bg-gradient-to-l from-teal-500 to-teal-600 relative">
                                 <div className="absolute inset-0 opacity-20">
                                     <div className="absolute -top-8 -right-8 w-32 h-32 bg-white rounded-full blur-2xl" />
                                     <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white rounded-full blur-2xl" />
@@ -181,13 +187,13 @@ export default function ProfileSettings() {
                                 {/* Avatar — overlaps gradient */}
                                 <div className="flex items-end gap-5 -mt-8 mb-4">
                                     <div className="relative flex-shrink-0">
-                                        <div className="h-20 w-20 rounded-2xl border-4 border-white shadow-lg bg-gradient-to-br from-rose-400 to-pink-600 flex items-center justify-center text-white text-2xl font-black overflow-hidden">
+                                        <div className="h-20 w-20 rounded-2xl border-4 border-white shadow-lg bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-2xl font-black overflow-hidden">
                                             {avatarSrc
                                                 ? <img src={avatarSrc} alt="Avatar" className="h-full w-full object-cover" />
                                                 : initials
                                             }
                                         </div>
-                                        <label className="absolute -bottom-1.5 -left-1.5 h-7 w-7 bg-rose-600 hover:bg-rose-700 rounded-xl flex items-center justify-center cursor-pointer shadow-md transition-colors">
+                                        <label className="absolute -bottom-1.5 -left-1.5 h-7 w-7 bg-teal-600 hover:bg-teal-700 rounded-xl flex items-center justify-center cursor-pointer shadow-md transition-colors">
                                             <Camera className="h-3.5 w-3.5 text-white" />
                                             <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
                                         </label>
@@ -228,8 +234,8 @@ export default function ProfileSettings() {
                                     type="button"
                                     onClick={() => setActiveTab(tab.id as any)}
                                     className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 ${activeTab === tab.id
-                                            ? 'bg-rose-600 text-white shadow-md'
-                                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                        ? 'bg-teal-600 text-white shadow-md'
+                                        : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                                         }`}
                                 >
                                     <tab.icon className="h-4 w-4" />
@@ -242,8 +248,8 @@ export default function ProfileSettings() {
                         {activeTab === 'profile' && (
                             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden fade-up">
                                 <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-gradient-to-l from-white to-slate-50/60">
-                                    <div className="h-9 w-9 rounded-xl bg-rose-50 flex items-center justify-center flex-shrink-0">
-                                        <UserIcon className="h-4 w-4 text-rose-600" />
+                                    <div className="h-9 w-9 rounded-xl bg-teal-50 flex items-center justify-center flex-shrink-0">
+                                        <UserIcon className="h-4 w-4 text-teal-600" />
                                     </div>
                                     <div>
                                         <h2 className="text-sm font-bold text-slate-800">اطلاعات شخصی</h2>
@@ -319,7 +325,7 @@ export default function ProfileSettings() {
                                             <button
                                                 type="submit"
                                                 disabled={profileProcessing}
-                                                className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-xl transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 <Save className="h-4 w-4" />
                                                 {profileProcessing ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
