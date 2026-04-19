@@ -189,9 +189,6 @@ class LetterController extends Controller
         // دریافت سازمان‌های خارجی با ساختار سلسله‌مراتبی
         $externalOrganizationsTree = Organization::where('id', '!=', $currentUser->organization_id)
             ->where('status', 'active')
-            ->with(['children' => function($q) {
-                $q->where('status', 'active');
-            }])
             ->get();
         
         return Inertia::render('letters/create', [

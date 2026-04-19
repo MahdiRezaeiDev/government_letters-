@@ -86,7 +86,6 @@ class OrganizationController extends Controller
             'phone' => $request->phone,
             'address' => $request->address,
             'website' => $request->website,
-            'parent_id' => $request->parent_id,
             'status' => $request->status,
         ]);
         
