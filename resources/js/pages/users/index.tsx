@@ -69,7 +69,9 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
     };
 
     const confirmDelete = () => {
-        if (!selectedUser) return;
+        if (!selectedUser) {
+            return;
+        }
 
         setDeleting(true);
         router.delete(usersRoute.destroy({ user: selectedUser.id }), {
@@ -117,7 +119,7 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
 
     const roleLabels: Record<string, string> = {
         'super-admin': 'ادمین کل',
-        'org-admin': 'ادمین سازمان',
+        'org-admin': 'ادمین وزارت',
         'dept-manager': 'مدیر دپارتمان',
         user: 'کاربر عادی',
     };
@@ -128,7 +130,7 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
         { label: 'کل کاربران', value: users.total, icon: Users, color: 'cyan', gradient: 'from-cyan-500 to-cyan-600', change: '+12%' },
         { label: 'کاربران فعال', value: users.data.filter(u => u.status === 'active').length, icon: UserCheck, color: 'emerald', gradient: 'from-emerald-500 to-emerald-600', change: '+8%' },
         { label: 'کاربران تعلیق', value: users.data.filter(u => u.status === 'suspended').length, icon: UserCog, color: 'red', gradient: 'from-red-500 to-red-600', change: '-3%' },
-        { label: 'سازمان‌ها', value: new Set(users.data.map(u => u.organization_id)).size, icon: Building2, color: 'purple', gradient: 'from-purple-500 to-purple-600', change: '+5%' },
+        { label: 'وزارت‌ها', value: new Set(users.data.map(u => u.organization_id)).size, icon: Building2, color: 'purple', gradient: 'from-purple-500 to-purple-600', change: '+5%' },
     ];
 
     const getInitials = (user: User) => {
@@ -143,6 +145,7 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
             'from-rose-500 to-pink-500',
             'from-amber-500 to-orange-500',
         ];
+
         return gradients[id % gradients.length];
     };
 
@@ -168,7 +171,7 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
                                         <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
                                             <span className="inline-flex items-center gap-1">
                                                 <Sparkles className="h-3 w-3 text-cyan-500" />
-                                                مدیریت کاربران سیستم، تعیین نقش و دسترسی‌ها
+                                                مدیریت کاربران سیستم، تعیین وظیفه و دسترسی‌ها
                                             </span>
                                         </p>
                                     </div>
@@ -292,13 +295,13 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
                                                     </div>
                                                     {organizations.length > 0 && (
                                                         <div>
-                                                            <label className="block text-sm font-medium text-gray-700 mb-2">سازمان</label>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-2"> وزارت</label>
                                                             <select
                                                                 value={selectedOrganization}
                                                                 onChange={(e) => setSelectedOrganization(e.target.value)}
                                                                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
                                                             >
-                                                                <option value="">همه سازمان‌ها</option>
+                                                                <option value="">همه وزارت‌ها</option>
                                                                 {organizations.map((org) => (
                                                                     <option key={org.id} value={org.id}>{org.name}</option>
                                                                 ))}
@@ -307,13 +310,13 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
                                                     )}
                                                     {roles.length > 0 && (
                                                         <div>
-                                                            <label className="block text-sm font-medium text-gray-700 mb-2">نقش</label>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-2">وظیفه</label>
                                                             <select
                                                                 value={selectedRole}
                                                                 onChange={(e) => setSelectedRole(e.target.value)}
                                                                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
                                                             >
-                                                                <option value="">همه نقش‌ها</option>
+                                                                <option value="">همه وظیفه‌ها</option>
                                                                 {roles.map((role) => (
                                                                     <option key={role.name} value={role.name}>{role.label}</option>
                                                                 ))}
@@ -347,8 +350,8 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
                                             <tr>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">کاربر</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">ایمیل</th>
-                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سازمان</th>
-                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نقش</th>
+                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"> وزارت</th>
+                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">وظیفه</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">وضعیت</th>
                                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">عملیات</th>
                                             </tr>
@@ -504,7 +507,10 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
                                                             1
                                                         </Link>
                                                     );
-                                                    if (start > 2) pages.push(<span key="dots1" className="px-2 text-gray-400">...</span>);
+
+                                                    if (start > 2) {
+                                                        pages.push(<span key="dots1" className="px-2 text-gray-400">...</span>);
+                                                    }
                                                 }
 
                                                 for (let i = start; i <= end; i++) {
@@ -523,7 +529,10 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
                                                 }
 
                                                 if (end < users.last_page) {
-                                                    if (end < users.last_page - 1) pages.push(<span key="dots2" className="px-2 text-gray-400">...</span>);
+                                                    if (end < users.last_page - 1) {
+                                                        pages.push(<span key="dots2" className="px-2 text-gray-400">...</span>);
+                                                    }
+
                                                     pages.push(
                                                         <Link
                                                             key={users.last_page}
@@ -534,6 +543,7 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
                                                         </Link>
                                                     );
                                                 }
+
                                                 return pages;
                                             })()}
                                             <Link
@@ -677,6 +687,7 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
                                     </Link>
                                     {[...Array(Math.min(5, users.last_page))].map((_, i) => {
                                         let pageNum;
+
                                         if (users.last_page <= 5) {
                                             pageNum = i + 1;
                                         } else if (users.current_page <= 3) {
@@ -686,6 +697,7 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
                                         } else {
                                             pageNum = users.current_page - 2 + i;
                                         }
+
                                         return (
                                             <Link
                                                 key={pageNum}

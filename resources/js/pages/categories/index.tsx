@@ -95,7 +95,7 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
     const stats = [
         { label: 'کل دسته‌بندی‌ها', value: categories.total, icon: FolderTree, color: 'cyan', gradient: 'from-cyan-500 to-blue-500', change: '+8%' },
         { label: 'دسته‌بندی‌های فعال', value: categories.data.filter(c => c.status).length, icon: Tag, color: 'emerald', gradient: 'from-emerald-500 to-teal-500', change: '+5%' },
-        { label: 'سازمان‌ها', value: organizations.length, icon: Building2, color: 'purple', gradient: 'from-purple-500 to-pink-500', change: '+2%' },
+        { label: 'وزارت ها', value: organizations.length, icon: Building2, color: 'purple', gradient: 'from-purple-500 to-pink-500', change: '+2%' },
         { label: 'سطوح', value: Math.max(...categories.data.map(c => c.level || 0), 0), icon: Layers, color: 'amber', gradient: 'from-amber-500 to-orange-500', change: '-' },
     ];
 
@@ -260,7 +260,7 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
                                                                 onChange={(e) => setSelectedOrganization(e.target.value)}
                                                                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
                                                             >
-                                                                <option value="">همه سازمان‌ها</option>
+                                                                <option value="">همه وزارت ها</option>
                                                                 {organizations.map((org) => (
                                                                     <option key={org.id} value={org.id}>{org.name}</option>
                                                                 ))}
