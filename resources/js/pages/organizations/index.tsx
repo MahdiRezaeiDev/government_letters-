@@ -93,10 +93,10 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
     const hasActiveFilters = filters.search || filters.status;
 
     const stats = [
-        { label: 'کل سازمان‌ها', value: organizations.total, icon: Building2, color: 'blue', gradient: 'from-blue-500 to-indigo-600', change: '+12%' },
-        { label: 'سازمان‌های فعال', value: organizations.data.filter(o => o.status === 'active').length, icon: CheckCircle, color: 'emerald', gradient: 'from-emerald-500 to-teal-600', change: '+8%' },
-        { label: 'سازمان‌های غیرفعال', value: organizations.data.filter(o => o.status === 'inactive').length, icon: XCircle, color: 'gray', gradient: 'from-gray-500 to-slate-600', change: '-3%' },
-        { label: 'دپارتمان‌ها', value: organizations.data.reduce((acc, org) => acc + (org.departments_count || 0), 0), icon: Layers, color: 'purple', gradient: 'from-purple-500 to-pink-600', change: '+5%' },
+        { label: 'کل وزارت ها', value: organizations.total, icon: Building2, color: 'blue', gradient: 'from-blue-500 to-indigo-600', change: '+12%' },
+        { label: 'وزارت های فعال', value: organizations.data.filter(o => o.status === 'active').length, icon: CheckCircle, color: 'emerald', gradient: 'from-emerald-500 to-teal-600', change: '+8%' },
+        { label: 'وزارت های غیرفعال', value: organizations.data.filter(o => o.status === 'inactive').length, icon: XCircle, color: 'gray', gradient: 'from-gray-500 to-slate-600', change: '-3%' },
+        { label: 'ریاست ها', value: organizations.data.reduce((acc, org) => acc + (org.departments_count || 0), 0), icon: Layers, color: 'purple', gradient: 'from-purple-500 to-pink-600', change: '+5%' },
     ];
 
     const getRandomGradient = (id: number) => {
@@ -117,9 +117,9 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
 
     return (
         <>
-            <Head title="مدیریت سازمان‌ها" />
+            <Head title="مدیریت وزارت ها" />
 
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+            <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-slate-100">
                 <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="space-y-6">
                         {/* Header Section */}
@@ -133,10 +133,10 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                         </div>
                                     </div>
                                     <div>
-                                        <h1 className="text-2xl font-bold text-gray-900">مدیریت سازمان‌ها</h1>
+                                        <h1 className="text-2xl font-bold text-gray-900">مدیریت وزارت ها</h1>
                                         <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
                                             <Sparkles className="h-3 w-3 text-blue-500" />
-                                            مدیریت و نظارت بر تمام سازمان‌های سیستم
+                                            مدیریت و نظارت بر تمام وزارت های سیستم
                                         </p>
                                     </div>
                                 </div>
@@ -169,7 +169,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                         className="group relative inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                                     >
                                         <Plus className="ml-2 h-4 w-4 transition-transform group-hover:rotate-90 duration-200" />
-                                        سازمان جدید
+                                        وزارت جدید
                                         <span className="absolute inset-0 rounded-xl bg-white opacity-0 group-hover:opacity-10 transition-opacity"></span>
                                     </Link>
                                 )}
@@ -281,7 +281,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gradient-to-r from-gray-50 to-white">
                                             <tr>
-                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سازمان</th>
+                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">وزارت</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">کد</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">اطلاعات تماس</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">وضعیت</th>
@@ -296,7 +296,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                                             <div className="p-4 bg-gray-100 rounded-full mb-4">
                                                                 <Building2 className="h-12 w-12 text-gray-400" />
                                                             </div>
-                                                            <p className="text-gray-500 font-medium">هیچ سازمانی یافت نشد</p>
+                                                            <p className="text-gray-500 font-medium">هیچ وزارتی یافت نشد</p>
                                                             <p className="text-sm text-gray-400 mt-1">سعی کنید معیارهای جستجوی خود را تغییر دهید</p>
                                                             {hasActiveFilters && (
                                                                 <button
@@ -503,7 +503,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                             <div className="p-4 bg-gray-100 rounded-full mb-4">
                                                 <Building2 className="h-12 w-12 text-gray-400" />
                                             </div>
-                                            <p className="text-gray-500 font-medium">هیچ سازمانی یافت نشد</p>
+                                            <p className="text-gray-500 font-medium">هیچ وزارتی یافت نشد</p>
                                             <p className="text-sm text-gray-400 mt-1">سعی کنید معیارهای جستجوی خود را تغییر دهید</p>
                                         </div>
                                     </div>

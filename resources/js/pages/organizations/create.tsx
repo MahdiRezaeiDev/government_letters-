@@ -2,15 +2,156 @@ import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import {
     Save, X, Building2, Mail, Phone, MapPin, Globe,
-    Link2, ChevronDown, CheckCircle, AlertCircle, Hash
+    Link2, ChevronDown, CheckCircle, AlertCircle, Hash, RefreshCw
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import persianJs from 'persianjs';
 import organizationsRoute from '@/routes/organizations';
 import type { Organization } from '@/types';
 
 interface Props {
     organizations: Organization[];
 }
+
+// ─── Utility Functions ─────────────────────────────────────────────────────
+
+const generateOrgCode = (persianName: string): string => {
+    if (!persianName) return '';
+    
+    // لیست کلمات کلیدی و معادل انگلیسی آنها
+    const keywords: Record<string, string> = {
+        'وزارت': 'MO',
+        'سازمان': 'ORG',
+        'شرکت': 'CO',
+        'موسسه': 'INS',
+        'بانک': 'BANK',
+        'دانشگاه': 'UNI',
+        'بیمه': 'INS',
+        'صندوق': 'FUND',
+        'ستاد': 'HQ',
+        'مرکز': 'CENTER',
+        'پژوهشکده': 'RSCH',
+        'پژوهشگاه': 'RSCH',
+        'اداره': 'ADMIN',
+        'کل': 'GEN',
+        'امور': 'AFFAIRS',
+        'مالی': 'FIN',
+        'اقتصاد': 'ECON',
+        'دارایی': 'FIN',
+        'برنامه': 'PLAN',
+        'بودجه': 'BUDGET',
+        'فناوری': 'TECH',
+        'اطلاعات': 'INFO',
+        'ارتباطات': 'COMM',
+        'صنعت': 'IND',
+        'معدن': 'MINE',
+        'تجارت': 'TRADE',
+        'کشاورزی': 'AGRI',
+        'نفت': 'OIL',
+        'گاز': 'GAS',
+        'نیرو': 'POWER',
+        'آب': 'WATER',
+        'راه': 'ROAD',
+        'مسکن': 'HOUSE',
+        'شهرسازی': 'URBAN',
+        'کشور': 'INTERIOR',
+        'خارجه': 'FOREIGN',
+        'دفاع': 'DEFENSE',
+        'دادگستری': 'JUSTICE',
+        'بهداشت': 'HEALTH',
+        'درمان': 'MED',
+        'آموزش': 'EDU',
+        'پرورش': 'EDU',
+        'علوم': 'SCI',
+        'تحقیقات': 'RES',
+        'فرهنگ': 'CULTURE',
+        'ارشاد': 'GUIDE',
+        'اسلامی': 'ISLAMIC',
+        'کار': 'LABOR',
+        'رفاه': 'WELFARE',
+        'اجتماعی': 'SOCIAL',
+        'ورزش': 'SPORT',
+        'جوانان': 'YOUTH',
+        'میراث': 'HERITAGE',
+        'گردشگری': 'TOURISM',
+        'محیط': 'ENV',
+        'زیست': 'ENV',
+        'داخلی': 'INTERNAL',
+        'خارجی': 'EXTERNAL',
+        'عمومی': 'PUBLIC',
+        'خصوصی': 'PRIVATE',
+        'دولتی': 'GOV',
+        'ملی': 'NATIONAL',
+        'استانی': 'PROVINCE',
+        'شهرستانی': 'COUNTY',
+    };
+    
+    try {
+        // تبدیل اعداد فارسی به انگلیسی و حذف کاراکترهای خاص
+        let processedName = persianJs(persianName)
+            .toEnglishNumber()
+            .arabicChar()
+            .toString();
+        
+        // جستجوی کلمات کلیدی در نام
+        let prefix = '';
+        let remainingName = processedName;
+        
+        for (const [persian, english] of Object.entries(keywords)) {
+            if (persianName.includes(persian)) {
+                if (!prefix) {
+                    prefix = english;
+                }
+                // حذف کلمه کلیدی از نام
+                remainingName = remainingName.replace(new RegExp(persian, 'g'), '');
+            }
+        }
+        
+        // اگر پیشوندی پیدا نشد، از پیشوند پیش‌فرض استفاده کن
+        if (!prefix) {
+            prefix = 'ORG';
+        }
+        
+        // تبدیل حروف فارسی باقیمانده به انگلیسی
+        const persianToEnglishMap: Record<string, string> = {
+            'ا': 'A', 'آ': 'A', 'ب': 'B', 'پ': 'P', 'ت': 'T', 'ث': 'S',
+            'ج': 'J', 'چ': 'CH', 'ح': 'H', 'خ': 'KH', 'د': 'D',
+            'ذ': 'Z', 'ر': 'R', 'ز': 'Z', 'ژ': 'ZH', 'س': 'S',
+            'ش': 'SH', 'ص': 'S', 'ض': 'Z', 'ط': 'T', 'ظ': 'Z',
+            'ع': 'A', 'غ': 'GH', 'ف': 'F', 'ق': 'GH', 'ک': 'K',
+            'گ': 'G', 'ل': 'L', 'م': 'M', 'ن': 'N', 'و': 'V',
+            'ه': 'H', 'ی': 'Y', 'ئ': 'E', 'ء': ''
+        };
+        
+        let englishName = '';
+        for (const char of remainingName.trim()) {
+            englishName += persianToEnglishMap[char] || char;
+        }
+        
+        // پاکسازی نهایی
+        const cleanName = englishName
+            .replace(/[^A-Z0-9]/g, '') // فقط حروف بزرگ و اعداد
+            .replace(/\s+/g, '')
+            .trim();
+        
+        // ترکیب پیشوند و نام
+        const finalCode = cleanName 
+            ? `${prefix}-${cleanName}`
+            : prefix;
+        
+        // محدودیت طول و حذف خط تیره اضافی
+        return finalCode
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '')
+            .toUpperCase()
+            .slice(0, 20);
+            
+    } catch (error) {
+        console.error('Error generating org code:', error);
+        // در صورت خطا، یک کد پیش‌فرض برگردان
+        return `ORG-${Date.now().toString().slice(-6)}`;
+    }
+};
 
 // ─── Shared Field Components ───────────────────────────────────────────────
 
@@ -24,17 +165,23 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
 }
 
 function InputField({
-    icon: Icon, value, onChange, onBlur, error, placeholder, type = 'text', textarea = false, rows = 3
+    icon: Icon, value, onChange, onBlur, error, placeholder, type = 'text', textarea = false, rows = 3, readOnly = false
 }: {
     icon?: React.ElementType; value: string; onChange: (v: string) => void;
     onBlur?: () => void; error?: string | null; placeholder?: string;
-    type?: string; textarea?: boolean; rows?: number;
+    type?: string; textarea?: boolean; rows?: number; readOnly?: boolean;
 }) {
-    const baseClass = `w-full ${Icon ? 'pr-10' : 'pr-4'} pl-4 py-3 text-sm bg-transparent focus:outline-none text-slate-700 placeholder-slate-300`;
-    const wrapClass = `relative flex items-start rounded-xl border bg-white transition-all duration-200 ${
+    const baseClass = `w-full ${Icon ? 'pr-10' : 'pr-4'} pl-4 py-3 text-sm bg-transparent focus:outline-none text-slate-700 placeholder-slate-300 ${
+        readOnly ? 'bg-slate-50 cursor-not-allowed' : ''
+    }`;
+    const wrapClass = `relative flex items-start rounded-xl border transition-all duration-200 ${
+        readOnly ? 'bg-slate-50' : 'bg-white'
+    } ${
         error
             ? 'border-rose-300 ring-1 ring-rose-300'
-            : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
+            : readOnly 
+                ? 'border-slate-200' 
+                : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
     }`;
 
     return (
@@ -50,6 +197,7 @@ function InputField({
                         onBlur={onBlur}
                         placeholder={placeholder}
                         rows={rows}
+                        readOnly={readOnly}
                         className={`${baseClass} resize-none leading-7 pt-3`}
                     />
                 ) : (
@@ -59,6 +207,7 @@ function InputField({
                         onChange={e => onChange(e.target.value)}
                         onBlur={onBlur}
                         placeholder={placeholder}
+                        readOnly={readOnly}
                         className={baseClass}
                     />
                 )}
@@ -119,6 +268,15 @@ export default function OrganizationsCreate({ organizations }: Props) {
     });
 
     const [touched, setTouched] = useState<Record<string, boolean>>({});
+    const [autoGenerateCode, setAutoGenerateCode] = useState(true);
+
+    // تولید خودکار کد هنگام تغییر نام
+    useEffect(() => {
+        if (autoGenerateCode && data.name) {
+            const generatedCode = generateOrgCode(data.name);
+            setData('code', generatedCode);
+        }
+    }, [data.name, autoGenerateCode]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -127,6 +285,28 @@ export default function OrganizationsCreate({ organizations }: Props) {
 
     const handleBlur = (field: string) => setTouched(prev => ({ ...prev, [field]: true }));
     const getFieldError = (field: string) => touched[field] && errors[field] ? errors[field] : null;
+
+    const handleNameChange = (value: string) => {
+        setData('name', value);
+        // اگر کاربر شروع به تایپ کرد، حالت autoGenerate را روشن نگه دار
+        setAutoGenerateCode(true);
+    };
+
+    const handleCodeChange = (value: string) => {
+        setData('code', value);
+        // اگر کاربر دستی کد را تغییر داد، autoGenerate را غیرفعال کن
+        if (value !== generateOrgCode(data.name)) {
+            setAutoGenerateCode(false);
+        }
+    };
+
+    const handleRegenerateCode = () => {
+        if (data.name) {
+            const generatedCode = generateOrgCode(data.name);
+            setData('code', generatedCode);
+            setAutoGenerateCode(true);
+        }
+    };
 
     const statusOptions = [
         {
@@ -233,22 +413,40 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                             <InputField
                                                 icon={Building2}
                                                 value={data.name}
-                                                onChange={v => setData('name', v)}
+                                                onChange={handleNameChange}
                                                 onBlur={() => handleBlur('name')}
                                                 error={getFieldError('name')}
-                                                placeholder="مثال: وزارت اقتصاد"
+                                                placeholder="مثال: وزارت اقتصاد و دارایی"
                                             />
                                         </div>
                                         <div>
                                             <FieldLabel required>کد سازمان</FieldLabel>
-                                            <InputField
-                                                icon={Hash}
-                                                value={data.code}
-                                                onChange={v => setData('code', v)}
-                                                onBlur={() => handleBlur('code')}
-                                                error={getFieldError('code')}
-                                                placeholder="مثال: ORG-001"
-                                            />
+                                            <div className="relative">
+                                                <InputField
+                                                    icon={Hash}
+                                                    value={data.code}
+                                                    onChange={handleCodeChange}
+                                                    onBlur={() => handleBlur('code')}
+                                                    error={getFieldError('code')}
+                                                    placeholder="مثال: MO-ECON-FIN"
+                                                />
+                                                {data.name && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleRegenerateCode}
+                                                        className="absolute left-3 top-3 p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                                                        title="تولید مجدد کد از نام سازمان"
+                                                    >
+                                                        <RefreshCw className="h-3.5 w-3.5" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {autoGenerateCode && data.name && (
+                                                <p className="text-xs text-slate-400 mt-1.5 flex items-center gap-1">
+                                                    <CheckCircle className="h-3 w-3 text-green-500" />
+                                                    کد به صورت خودکار از نام سازمان تولید می‌شود
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
 
