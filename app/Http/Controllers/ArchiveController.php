@@ -91,7 +91,7 @@ class ArchiveController extends Controller
         $parentArchives = Archive::where('department_id', $currentUser->department_id)
             ->get();
         
-        return Inertia::render('Archives/Create', [
+        return Inertia::render('archives/create', [
             'departments' => $departments,
             'parentArchives' => $parentArchives,
         ]);
