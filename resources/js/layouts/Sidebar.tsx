@@ -1,24 +1,13 @@
-// resources/js/components/layout/Sidebar.tsx
-
 import { Link, usePage } from '@inertiajs/react';
 import {
-    LayoutDashboard,
-    Building2,
-    Map as Sitemap,
-    Briefcase,
-    Users,
-    Mail,
-    Inbox,
-    Send,
-    FileText,
-    Archive,
-    BarChart3,
-    Settings,
-    ChevronDown,
-    ChevronLeft,
-    FolderTree
+    LayoutDashboard, Building2, Map as Sitemap, Briefcase,
+    Users, Mail, Inbox, Send, FileText, Archive,
+    BarChart3, Settings, ChevronDown, ChevronLeft,
+    FolderTree, Sparkles, Layout, Zap
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+
+// مسیرها
 import { dashboard } from '@/routes';
 import { index as archivesIndex } from '@/routes/archives';
 import { index as cartableIndex } from '@/routes/cartable';
@@ -30,232 +19,148 @@ import positions from '@/routes/positions';
 import { edit as profileEdit } from '@/routes/profile';
 import { index as reportsIndex } from '@/routes/reports';
 import { index as usersIndex } from '@/routes/users';
-import { index as settingsIndex } from '@/routes/users';
 
-interface NavItem {
-    title: string;
-    href?: string;
-    icon: React.ComponentType<{ className?: string }>;
-    children?: NavItem[];
-    permission?: string;
+interface SidebarProps {
+    collapsed: boolean;
+    setCollapsed: (val: boolean) => void;
 }
 
-// کامپوننت Tooltip ساده
-function Tooltip({ children, text }: { children: React.ReactNode; text: string }) {
-    if (!text) {
-        return <>{children}</>;
-    }
+export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
+    const { url } = usePage();
+    const { auth } = usePage().props as any;
+    const [openMenus, setOpenMenus] = useState<string[]>([]);
+    const userRole = auth?.user?.roles?.[0]?.name || 'user';
 
-    return (
-        <div className="relative group">
-            {children}
-            <div className="absolute right-full top-1/2 -translate-y-1/2 mr-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                {text}
-            </div>
-        </div>
-    );
-}
-
-export function Sidebar() {
-    const { auth, url } = usePage().props as any;
-    const [collapsed, setCollapsed] = useState(false);
-    const [openMenus, setOpenMenus] = useState<string[]>(['نامه‌ها']);
-    
-
-    const userRole = auth.user?.roles?.[0]?.name || 'user';
-    const isSuperAdmin = userRole === 'super-admin';
-    const isOrgAdmin = userRole === 'org-admin';
-    const isDeptManager = userRole === 'dept-manager';
-
-    const toggleMenu = (title: string) => {
-        if (collapsed) {
-            return;
-        }
-
-        setOpenMenus(prev =>
-            prev.includes(title)
-                ? prev.filter(t => t !== title)
-                : [...prev, title]
-        );
+    const isUrlActive = (href: any) => {
+        if (!url || !href || typeof href !== 'string') return false;
+        const currentPath = url.split('?')[0];
+        const targetPath = href.split('?')[0];
+        return currentPath === targetPath || currentPath.startsWith(targetPath + '/');
     };
 
-    const navigationItems: NavItem[] = [
+    // لیست کامل آیتم‌ها (همه بخش‌های قبلی بازگردانده شد)
+    const navigationItems = [
+        { title: 'داشبورد', href: dashboard(), icon: LayoutDashboard },
         {
-            title: 'داشبورد',
-            href: dashboard(),
-            icon: LayoutDashboard,
-        },
-        {
-            title: 'مدیریت بخش ها',
+            title: 'مدیریت تشکیلات',
             icon: Building2,
             permission: 'super-admin',
             children: [
-                { title: 'وزارت خانه ها', href: organizationsIndex(), icon: Building2 },
-                { title: 'ریاست ها', href: departmentsIndex(), icon: Sitemap },
-                { title: 'وظایف', href: positions.index(), icon: Briefcase },
-                { title: 'کاربران', href: usersIndex(), icon: Users },
-                { title: 'دسته‌بندی مکاتیب', href: categoriesIndex(), icon: FolderTree },
+                { title: 'وزارت‌خانه‌ها', href: organizationsIndex(), icon: Building2 },
+                { title: 'ریاست‌ها', href: departmentsIndex(), icon: Sitemap },
+                { title: 'بست‌های شغلی', href: positions.index(), icon: Briefcase },
+                { title: 'مدیریت کاربران', href: usersIndex(), icon: Users },
+                { title: 'طبقه‌بندی مکاتیب', href: categoriesIndex(), icon: FolderTree },
             ],
         },
         {
-            title: 'مکاتیب',
+            title: 'میز مکاتبات',
             icon: Mail,
             children: [
-                { title: 'مکاتیب وارده', href: lettersIndex({query: { type: 'incoming' }}), icon: Inbox },
-                { title: 'مکاتیب صادره', href: lettersIndex({query: { type: 'outgoing' }}), icon: Send },
-                { title: 'مکاتیب داخلی', href: lettersIndex({query: { type: 'internal' }}), icon: FileText },
-                { title: 'مکتوب جدید', href: lettersCreate(), icon: Mail },
+                { title: 'مکاتیب وارده', href: lettersIndex({ query: { type: 'incoming' } }), icon: Inbox },
+                { title: 'مکاتیب صادره', href: lettersIndex({ query: { type: 'outgoing' } }), icon: Send },
+                { title: 'مکاتیب داخلی', href: lettersIndex({ query: { type: 'internal' } }), icon: FileText },
+                { title: 'ثبت مکتوب جدید', href: lettersCreate(), icon: Sparkles },
             ],
         },
+        { title: 'کارتابل جاری', href: cartableIndex(), icon: Layout },
+        { title: 'آرشیف مرکزی', href: archivesIndex(), icon: Archive },
+        { title: 'گزارشات تحلیلی', href: reportsIndex(), icon: BarChart3, permission: 'dept-manager' },
         {
-            title: 'کارتابل',
-            href: cartableIndex(),
-            icon: Inbox,
-        },
-        {
-            title: 'آرشیف',
-            href: archivesIndex(),
-            icon: Archive,
-        },
-        {
-            title: 'گزارشات',
-            href: reportsIndex(),
-            icon: BarChart3,
-            permission: 'dept-manager',
-        },
-        {
-            title: 'تنظیمات',
+            title: 'تنظیمات سیستم',
             icon: Settings,
             children: [
-                { title: 'پروفایل', href: profileEdit(), icon: Users },
-                { title: 'تنظیمات سیستم', href: settingsIndex(), icon: Settings },
+                { title: 'پروفایل کاربری', href: profileEdit(), icon: Users },
+                { title: 'پیکربندی اصلی', href: usersIndex(), icon: Settings },
             ],
         },
     ];
 
-    // فیلتر آیتم‌ها بر اساس نقش
-    const filterByRole = (items: NavItem[]): NavItem[] => {
-        return items.filter(item => {
-            if (item.permission) {
-                if (item.permission === 'super-admin' && !isSuperAdmin) {
-                    return false;
-                }
-
-                if (item.permission === 'org-admin' && !isSuperAdmin && !isOrgAdmin) {
-                    return false;
-                }
-
-                if (item.permission === 'dept-manager' && !isSuperAdmin && !isOrgAdmin && !isDeptManager) {
-                    return false;
-                }
-            }
-
-            if (item.children) {
-                item.children = filterByRole(item.children);
-
-                return item.children.length > 0;
-            }
-
-            return true;
-        });
-    };
-
-    const filteredNavItems = filterByRole(navigationItems);
-
-    const isActive = (href?: string) => {
-        if (!href) {
-            return false;
-        }
-
-        return false;
-    };
+    const filteredNavItems = useMemo(() => {
+        const filter = (items: any[]): any[] => {
+            return items
+                .filter(item => {
+                    if (item.permission === 'super-admin') return userRole === 'super-admin';
+                    if (item.permission === 'dept-manager') return ['super-admin', 'org-admin', 'dept-manager'].includes(userRole);
+                    return true;
+                })
+                .map(item => ({ ...item, children: item.children ? filter(item.children) : undefined }))
+                .filter(item => !item.children || item.children.length > 0);
+        };
+        return filter(navigationItems);
+    }, [userRole]);
 
     return (
-        <aside className={`fixed right-0 top-0 h-full bg-white border-l border-gray-200 shadow-sm transition-all duration-300 z-40 ${collapsed ? 'w-20' : 'w-64'}`}>
-            {/* لوگو */}
-            <div className={`h-16 flex items-center ${collapsed ? 'justify-center' : 'px-4'} border-b border-gray-200`}>
-                {!collapsed ? (
-                    <Link href={dashboard()} className="flex items-center gap-2">
-                        <div className="h-8 w-8 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">م</span>
+        <aside className={`fixed right-0 top-0 h-screen bg-white/80 backdrop-blur-2xl border-l border-slate-200/60 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] z-50 ${collapsed ? 'w-20' : 'w-72'}`}>
+            <div className="h-24 flex items-center px-6">
+                <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 shrink-0 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-100 ring-2 ring-white">
+                        <Zap className="text-white h-5 w-5 fill-current" />
+                    </div>
+                    {!collapsed && (
+                        <div className="flex flex-col animate-in fade-in slide-in-from-right-4 duration-700">
+                            <span className="font-bold text-slate-900 leading-none">سامانه NSIA</span>
+                            <span className="text-[10px] text-slate-500 font-medium mt-1">Correspondence System</span>
                         </div>
-                        <span className="font-bold text-gray-800">سیستم مکاتبات</span>
-                    </Link>
-                ) : (
-                    <Link href={dashboard()}>
-                        <div className="h-8 w-8 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">م</span>
-                        </div>
-                    </Link>
-                )}
+                    )}
+                </div>
             </div>
 
-            {/* دکمه جمع کردن */}
-            <button
-                onClick={() => setCollapsed(!collapsed)}
-                className="absolute -left-3 top-20 bg-white border border-gray-200 rounded-full p-1 shadow-md hover:bg-gray-50 transition-colors z-50"
-            >
-                <ChevronLeft className={`h-4 w-4 text-gray-500 transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`} />
+            <button onClick={() => setCollapsed(!collapsed)} className="absolute -left-3.5 top-10 h-7 w-7 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all z-50 group">
+                <ChevronLeft className={`h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-600 transition-transform duration-500 ${collapsed ? 'rotate-180' : ''}`} />
             </button>
 
-            <nav className="p-3 space-y-1 overflow-hidden h-[calc(100%-4rem)]">
-                {filteredNavItems.map((item) => (
-                    <div key={item.title}>
-                        {item.children ? (
-                            <div>
-                                <button
-                                    onClick={() => toggleMenu(item.title)}
-                                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${openMenus.includes(item.title) && !collapsed
-                                            ? 'text-blue-600 bg-blue-50'
-                                            : 'text-gray-700 hover:bg-gray-100'
-                                        } ${collapsed ? 'justify-center' : ''}`}
-                                >
-                                    <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
-                                        <item.icon className="h-5 w-5" />
-                                        {!collapsed && <span>{item.title}</span>}
-                                    </div>
-                                    {!collapsed && (
-                                        <ChevronDown className={`h-4 w-4 transition-transform ${openMenus.includes(item.title) ? 'rotate-180' : ''}`} />
+            <nav className="px-3 space-y-1 h-[calc(100%-14rem)] overflow-y-auto [&::-webkit-scrollbar]:w-0 scrollbar-none">
+                {filteredNavItems.map((item) => {
+                    const active = isUrlActive(item.href);
+                    const isOpen = openMenus.includes(item.title);
+                    return (
+                        <div key={item.title}>
+                            {item.children ? (
+                                <>
+                                    <button onClick={() => !collapsed && setOpenMenus(prev => prev.includes(item.title) ? prev.filter(t => t !== item.title) : [...prev, item.title])} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all ${isOpen && !collapsed ? 'bg-indigo-50/50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}>
+                                        <div className="flex items-center gap-3">
+                                            <item.icon className={`h-5 w-5 ${isOpen ? 'text-indigo-600' : 'text-slate-400'}`} />
+                                            {!collapsed && <span className="text-sm font-semibold">{item.title}</span>}
+                                        </div>
+                                        {!collapsed && <ChevronDown className={`h-4 w-4 opacity-30 transition-transform ${isOpen ? 'rotate-180' : ''}`} />}
+                                    </button>
+                                    {!collapsed && isOpen && (
+                                        <div className="mr-6 pr-3 border-r border-slate-200 space-y-1 py-1">
+                                            {item.children.map((child: any) => (
+                                                <Link key={child.title} href={child.href} className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${isUrlActive(child.href) ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50'}`}>
+                                                    <child.icon className="h-4 w-4" />
+                                                    <span>{child.title}</span>
+                                                </Link>
+                                            ))}
+                                        </div>
                                     )}
-                                </button>
-
-                                {/* زیرمنو */}
-                                {!collapsed && openMenus.includes(item.title) && (
-                                    <div className="mr-8 mt-1 space-y-1">
-                                        {item.children.map((child) => (
-                                            <Link
-                                                key={child.title}
-                                                href={child.href!}
-                                                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive(child.href)
-                                                        ? 'text-blue-600 bg-blue-50'
-                                                        : 'text-gray-600 hover:bg-gray-100'
-                                                    }`}
-                                            >
-                                                <child.icon className="h-4 w-4" />
-                                                <span>{child.title}</span>
-                                            </Link>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            // آیتم ساده
-                            <Tooltip text={collapsed ? item.title : ''}>
-                                <Link
-                                    href={item.href!}
-                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${isActive(item.href)
-                                            ? 'text-blue-600 bg-blue-50'
-                                            : 'text-gray-700 hover:bg-gray-100'
-                                        } ${collapsed ? 'justify-center' : ''}`}
-                                >
-                                    <item.icon className="h-5 w-5" />
-                                    {!collapsed && <span>{item.title}</span>}
+                                </>
+                            ) : (
+                                <Link href={item.href} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${active ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-slate-600 hover:bg-slate-50'}`}>
+                                    <item.icon className={`h-5 w-5 ${active ? 'text-white' : 'text-slate-400'}`} />
+                                    {!collapsed && <span className="text-sm font-semibold">{item.title}</span>}
                                 </Link>
-                            </Tooltip>
-                        )}
-                    </div>
-                ))}
+                            )}
+                        </div>
+                    );
+                })}
             </nav>
+
+            {/* Profile Footer - Fixed */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200/50 bg-slate-50/80 backdrop-blur-md">
+                <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
+                    <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center text-white font-bold shadow-md ring-2 ring-white shrink-0">
+                        {auth?.user?.first_name ? auth.user.first_name.charAt(0) : 'U'}
+                    </div>
+                    {!collapsed && (
+                        <div className="flex flex-col truncate">
+                            <span className="text-xs font-bold text-slate-800 truncate">{auth?.user?.first_name || 'کاربر سیستم'}</span>
+                            <span className="text-[10px] text-slate-500 font-bold uppercase opacity-70">{userRole}</span>
+                        </div>
+                    )}
+                </div>
+            </div>
         </aside>
     );
 }

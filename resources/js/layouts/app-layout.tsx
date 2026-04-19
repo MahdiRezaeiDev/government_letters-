@@ -8,33 +8,56 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false); // مخصوص موبایل
+    const [collapsed, setCollapsed] = useState(false);    // مخصوص دسکتاپ
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
         const checkMobile = () => {
-            setIsMobile(window.innerWidth < 768);
+            const mobile = window.innerWidth < 768;
+            setIsMobile(mobile);
+
+            if (mobile) {
+                setCollapsed(false);
+            } // در موبایل حالت جمع شده نداریم
         };
-        
+
         checkMobile();
         window.addEventListener('resize', checkMobile);
-        
+
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
+    // محاسبه عرض سایدبار برای ایجاد فاصله در محتوا و هدر
+    const sidebarWidthClasses = collapsed ? 'mr-20' : 'mr-72';
+
     return (
         <div className="min-h-screen bg-gray-100" dir="rtl">
-            {/* دسکتاپ: سایدبار همیشه باز */}
-            {!isMobile && <Sidebar />}
-            
-            {/* موبایل: منوی همبرگری */}
-            {isMobile && <MobileMenu isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
-            
-            {/* محتوای اصلی */}
-            <div className={`flex flex-col min-h-screen ${!isMobile ? 'mr-64' : ''}`}>
-                <Header onMenuClick={() => setSidebarOpen(true)} isMobile={isMobile} />
-                
-                <main className="flex-1 p-4 md:p-6">
+            {/* سایدبار دسکتاپ */}
+            {!isMobile && (
+                <Sidebar
+                    collapsed={collapsed}
+                    setCollapsed={setCollapsed}
+                />
+            )}
+
+            {/* منوی موبایل */}
+            {isMobile && (
+                <MobileMenu
+                    isOpen={sidebarOpen}
+                    onClose={() => setSidebarOpen(false)}
+                />
+            )}
+
+            {/* بخش محتوا و هدر: عرض این بخش با انیمیشن تغییر می‌کند */}
+            <div className={`flex flex-col min-h-screen transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${!isMobile ? sidebarWidthClasses : ''}`}>
+                <Header
+                    onMenuClick={() => setSidebarOpen(true)}
+                    isMobile={isMobile}
+                    collapsed={collapsed}
+                />
+
+                <main className="flex-1 p-4 md:p-6 mt-2">
                     {children}
                 </main>
             </div>

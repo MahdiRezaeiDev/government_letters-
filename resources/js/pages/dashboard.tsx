@@ -37,52 +37,6 @@ export default function FinalProfessionalDashboard({ stats, recentLetters, month
         <div className="min-h-screen bg-[#fcfdfe] text-slate-900 font-['vazir'] selection:bg-indigo-100" dir="rtl">
             <Head title="داشبورد عملیاتی مکاتبات" />
 
-            {/* --- TOP NAVIGATION --- */}
-            <header className="sticky top-0 z-40 bg-white/70 backdrop-blur-xl border-b border-slate-200/60">
-                <div className="max-w-[1600px] mx-auto px-6 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-10">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
-                                <LayoutDashboard className="text-white h-6 w-6" />
-                            </div>
-                            <h1 className="text-xl font-black tracking-tight text-slate-800">
-                                سامانه <span className="text-indigo-600">مکاتبات</span>
-                            </h1>
-                        </div>
-
-                        <div className="hidden lg:flex items-center bg-slate-100/80 rounded-2xl px-4 py-2.5 w-[400px] group focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
-                            <Search className="h-4 w-4 text-slate-400" />
-                            <input
-                                type="text"
-                                placeholder="جستجوی هوشمند (شماره نامه، فرستنده، موضوع...)"
-                                className="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-slate-400"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-5">
-                        <div className="hidden md:block text-left ml-2 border-l pl-5 border-slate-200">
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1">امروز</p>
-                            <p className="text-sm font-bold text-slate-700">
-                                {currentTime.toLocaleDateString('fa-IR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                            </p>
-                        </div>
-
-                        <div className="flex gap-2">
-                            <button className="relative p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm group">
-                                <Bell className="h-5 w-5 text-slate-600 group-hover:text-indigo-600" />
-                                <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
-                            </button>
-                        </div>
-
-                        <Link href="/letters/create" className="flex items-center gap-2 bg-slate-900 hover:bg-indigo-600 text-white px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95">
-                            <Plus className="h-4 w-4" />
-                            <span className="text-sm font-bold">ثبت مکتوب جدید</span>
-                        </Link>
-                    </div>
-                </div>
-            </header>
-
             <main className="max-w-[1600px] mx-auto px-6 py-8">
 
                 {/* --- QUICK ACTION TOOLBAR --- */}
