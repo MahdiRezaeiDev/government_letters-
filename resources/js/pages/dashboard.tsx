@@ -1,444 +1,334 @@
 import { Head, Link } from '@inertiajs/react';
 import {
-    Inbox, Send, FileText, Clock, Archive, Users, Mail,
-    TrendingUp, TrendingDown, CheckCircle, XCircle,
-    Eye, FileSignature, Activity,
-    Calendar, ChevronRight,
-    Zap, Target, Building2
+    Inbox, FileText, Clock, Archive, Users, 
+    Search, Plus, Bell, AlertCircle, BedDoubleIcon as CheckDouble, ArrowUpRight,
+    History, ChevronLeft, Activity, LayoutDashboard,
+    MoreHorizontal, Download, ArrowLeftRight
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { index as ArchiveIndex } from '@/routes/archives';
-import { index as CartableIndex } from '@/routes/cartable';
-import { index as LetterIndex, create as LetterCreate, show as LetterShow } from '@/routes/letters';
-import { index as UserIndex } from '@/routes/users';
-import type { DashboardStats, Letter } from '@/types';
+import { useState, useEffect, useMemo } from 'react';
+import {
+    AreaChart, Area, XAxis, YAxis, CartesianGrid,
+    Tooltip, ResponsiveContainer, PieChart, Pie, Cell
+} from 'recharts';
 
+// فرض بر این است که تایپ‌ها از قبل تعریف شده‌اند
 interface Props {
-    stats: DashboardStats;
-    recentLetters: Letter[];
-    monthlyStats?: { month: string; count: number }[];
-    departmentStats?: { department: string; count: number }[];
-    priorityStats?: { priority: string; count: number }[];
+    stats: any;
+    recentLetters: any[];
+    monthlyStats: any[];
 }
 
-export default function Dashboard({
-    stats,
-    recentLetters,
-    monthlyStats = [],
-    departmentStats = [],
-    priorityStats = []
-}: Props) {
-    const [greeting, setGreeting] = useState('');
-    const [currentTime, setCurrentTime] = useState('');
+export default function FinalProfessionalDashboard({ stats, recentLetters, monthlyStats }: Props) {
+    const [currentTime, setCurrentTime] = useState(new Date());
 
     useEffect(() => {
-        const hour = new Date().getHours();
+        const timer = setInterval(() => setCurrentTime(new Date()), 60000);
 
-        if (hour < 12) {
-            setGreeting('صبح بخیر');
-        } else if (hour < 18) {
-            setGreeting('بعد از ظهر بخیر');
-        } else {
-            setGreeting('شب بخیر');
-        }
-
-        setCurrentTime(new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }));
+        return () => clearInterval(timer);
     }, []);
 
-    const priorityColors = {
-        low: '#9ca3af',
-        normal: '#3b82f6',
-        high: '#eab308',
-        urgent: '#f97316',
-        very_urgent: '#ef4444',
-    };
-
-    const priorityLabels = {
-        low: 'کم',
-        normal: 'عادی',
-        high: 'مهم',
-        urgent: 'فوری',
-        very_urgent: 'خیلی فوری',
-    };
-
-    // کارت‌های آمار اصلی
-    const mainStatCards = [
-        {
-            label: 'در انتظار اقدام',
-            value: stats.pending_actions,
-            icon: Clock,
-            color: 'from-yellow-500 to-yellow-600',
-            bgColor: 'bg-yellow-50',
-            textColor: 'text-yellow-700',
-            iconBg: 'bg-yellow-500',
-            href: CartableIndex(),
-            trend: '+12%',
-            trendUp: true
-        },
-        {
-            label: 'مکاتیب وارده',
-            value: stats.incoming_new,
-            icon: Inbox,
-            color: 'from-blue-500 to-blue-600',
-            bgColor: 'bg-blue-50',
-            textColor: 'text-blue-700',
-            iconBg: 'bg-blue-500',
-            href: LetterIndex({ query: { type: 'incoming', status: 'pending' } }),
-            trend: '+8%',
-            trendUp: true
-        },
-        {
-            label: 'مکاتیب صادره',
-            value: stats.outgoing_new,
-            icon: Send,
-            color: 'from-green-500 to-green-600',
-            bgColor: 'bg-green-50',
-            textColor: 'text-green-700',
-            iconBg: 'bg-green-500',
-            href: LetterIndex({ query: { type: 'outgoing', status: 'pending' } }),
-            trend: '-3%',
-            trendUp: false
-        },
-        {
-            label: 'پیش‌نویس‌ها',
-            value: stats.my_drafts,
-            icon: FileText,
-            color: 'from-purple-500 to-purple-600',
-            bgColor: 'bg-purple-50',
-            textColor: 'text-purple-700',
-            iconBg: 'bg-purple-500',
-            href: LetterIndex({ query: { status: 'draft' } }),
-            trend: '+5%',
-            trendUp: true
-        },
-    ];
-
-    // کارت‌های آمار ثانویه
-    const secondaryStatCards = [
-        {
-            label: 'کل مکاتیب',
-            value: stats.total_letters,
-            icon: FileSignature,
-            color: 'from-indigo-500 to-indigo-600',
-            bgColor: 'bg-indigo-50',
-            iconBg: 'bg-indigo-500',
-        },
-        {
-            label: 'کاربران فعال',
-            value: stats.total_users,
-            icon: Users,
-            color: 'from-emerald-500 to-emerald-600',
-            bgColor: 'bg-emerald-50',
-            iconBg: 'bg-emerald-500',
-            href: UserIndex()
-        },
-        {
-            label: 'دپارتمان‌ها',
-            value: stats.total_departments,
-            icon: Building2,
-            color: 'from-rose-500 to-rose-600',
-            bgColor: 'bg-rose-50',
-            iconBg: 'bg-rose-500',
-        },
-        {
-            label: 'بایگانی شده',
-            value: stats.archived_count,
-            icon: Archive,
-            color: 'from-gray-500 to-gray-600',
-            bgColor: 'bg-gray-50',
-            iconBg: 'bg-gray-500',
-            href: ArchiveIndex()
-        },
-    ];
-
-    // داده‌های نمودار اولویت
-    const pieData = Object.entries(priorityStats).map(([priority, count]) => ({
-        name: priorityLabels[priority as keyof typeof priorityLabels],
-        value: count,
-        color: priorityColors[priority as keyof typeof priorityColors],
-    }));
-
-    // اقدامات سریع
-    const quickActions = [
-        { title: 'مکتوب وارده جدید', icon: Inbox, href: LetterCreate({ query: { type: 'incoming' } }), color: 'blue' },
-        { title: 'مکتوب صادره جدید', icon: Send, href: LetterCreate({ query: { type: 'outgoing' } }), color: 'green' },
-        { title: 'مکتوب داخلی جدید', icon: FileText, href: LetterCreate({ query: { type: 'internal' } }), color: 'purple' },
-        { title: 'مدیریت کاربران', icon: Users, href: UserIndex(), color: 'indigo' },
-        { title: 'کارتابل من', icon: Clock, href: CartableIndex(), color: 'yellow' },
-        { title: 'آرشبف', icon: Archive, href: ArchiveIndex(), color: 'gray' },
-    ];
+    const pieData = useMemo(() => [
+        { name: 'فوری', value: stats.urgent_count || 12, color: '#ef4444' },
+        { name: 'عادی', value: stats.normal_count || 45, color: '#3b82f6' },
+        { name: 'مهم', value: stats.high_count || 23, color: '#f59e0b' },
+    ], [stats]);
 
     return (
-        <>
-            <Head title="داشبورد" />
+        <div className="min-h-screen bg-[#fcfdfe] text-slate-900 font-['vazir'] selection:bg-indigo-100" dir="rtl">
+            <Head title="داشبورد عملیاتی مکاتبات" />
 
-            <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-                    {/* Header with Greeting */}
-                    <div className="mb-8">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                            <div>
-                                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-                                    {greeting} 👋
-                                </h1>
-                                <p className="text-gray-500 mt-1 flex items-center gap-2">
-                                    <Calendar className="h-4 w-4" />
-                                    {new Date().toLocaleDateString('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                                    <span className="text-gray-300">|</span>
-                                    <Clock className="h-4 w-4" />
-                                    {currentTime}
-                                </p>
+            {/* --- TOP NAVIGATION --- */}
+            <header className="sticky top-0 z-40 bg-white/70 backdrop-blur-xl border-b border-slate-200/60">
+                <div className="max-w-[1600px] mx-auto px-6 h-20 flex items-center justify-between">
+                    <div className="flex items-center gap-10">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
+                                <LayoutDashboard className="text-white h-6 w-6" />
                             </div>
-                            <Link
-                                href={LetterCreate()}
-                                className="inline-flex items-center px-5 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                            >
-                                <Mail className="ml-2 h-5 w-5" />
-                                ایجاد مکتوب جدید
-                            </Link>
+                            <h1 className="text-xl font-black tracking-tight text-slate-800">
+                                سامانه <span className="text-indigo-600">مکاتبات</span>
+                            </h1>
+                        </div>
+
+                        <div className="hidden lg:flex items-center bg-slate-100/80 rounded-2xl px-4 py-2.5 w-[400px] group focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+                            <Search className="h-4 w-4 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="جستجوی هوشمند (شماره نامه، فرستنده، موضوع...)"
+                                className="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-slate-400"
+                            />
                         </div>
                     </div>
 
-                    {/* Main Stats Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-                        {mainStatCards.map((card) => (
-                            <Link
-                                key={card.label}
-                                href={card.href}
-                                className="group bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-                            >
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <p className="text-gray-500 text-sm mb-1">{card.label}</p>
-                                        <p className="text-3xl font-bold text-gray-900">{card.value.toLocaleString('fa-IR')}</p>
-                                        <div className="flex items-center gap-1 mt-2">
-                                            {card.trendUp ? (
-                                                <TrendingUp className="h-3 w-3 text-green-500" />
-                                            ) : (
-                                                <TrendingDown className="h-3 w-3 text-red-500" />
-                                            )}
-                                            <span className={`text-xs ${card.trendUp ? 'text-green-600' : 'text-red-600'}`}>
-                                                {card.trend}
-                                            </span>
-                                            <span className="text-xs text-gray-400">از ماه قبل</span>
-                                        </div>
-                                    </div>
-                                    <div className={`${card.iconBg} rounded-xl p-3 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                                        <card.icon className="h-6 w-6 text-white" />
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
+                    <div className="flex items-center gap-5">
+                        <div className="hidden md:block text-left ml-2 border-l pl-5 border-slate-200">
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1">امروز</p>
+                            <p className="text-sm font-bold text-slate-700">
+                                {currentTime.toLocaleDateString('fa-IR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                            </p>
+                        </div>
+
+                        <div className="flex gap-2">
+                            <button className="relative p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition shadow-sm group">
+                                <Bell className="h-5 w-5 text-slate-600 group-hover:text-indigo-600" />
+                                <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
+                            </button>
+                        </div>
+
+                        <Link href="/letters/create" className="flex items-center gap-2 bg-slate-900 hover:bg-indigo-600 text-white px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95">
+                            <Plus className="h-4 w-4" />
+                            <span className="text-sm font-bold">ثبت مکتوب جدید</span>
+                        </Link>
+                    </div>
+                </div>
+            </header>
+
+            <main className="max-w-[1600px] mx-auto px-6 py-8">
+
+                {/* --- QUICK ACTION TOOLBAR --- */}
+                <section className="mb-10 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <button className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-700 rounded-xl text-xs font-black border border-rose-100 hover:bg-rose-100 transition">
+                            <AlertCircle className="h-4 w-4" />
+                            {stats.overdue || 5} پاسخ دیرهنگام
+                        </button>
+                        <button className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-xl text-xs font-black border border-amber-100 hover:bg-amber-100 transition">
+                            <Clock className="h-4 w-4" />
+                            {stats.waiting_sign || 12} در انتظار امضا
+                        </button>
                     </div>
 
-                    {/* Charts Section */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                        {/* Monthly Chart */}
-                        {monthlyStats.length > 0 && (
-                            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-400 font-medium ml-2">فیلتر نمایش:</span>
+                        {['همه', 'وارده', 'صادره', 'داخلی'].map((tab) => (
+                            <button key={tab} className="px-4 py-1.5 rounded-lg text-xs font-bold transition bg-white border border-slate-200 text-slate-600 hover:border-indigo-300">
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+                </section>
+
+                <div className="grid grid-cols-12 gap-8">
+
+                    {/* --- LEFT COLUMN: CORE OPS --- */}
+                    <div className="col-span-12 xl:col-span-9 space-y-8">
+
+                        {/* BENTO STATS GRID */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            {/* Main Hero Card */}
+                            <div className="md:col-span-2 bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-100 relative overflow-hidden group">
+                                <div className="relative z-10 flex flex-col h-full justify-between">
                                     <div>
-                                        <h3 className="font-semibold text-gray-900">آمار ماهیانه</h3>
-                                        <p className="text-xs text-gray-500 mt-1">تغییرات مکاتیب در ۶ ماه اخیر</p>
+                                        <p className="text-indigo-100 text-sm font-medium">مجموع مکاتبات در جریان</p>
+                                        <h3 className="text-5xl font-black mt-2 tracking-tighter">{stats.pending_actions || 42}</h3>
                                     </div>
-                                    <div className="flex items-center gap-1 text-xs text-gray-400">
-                                        <Activity className="h-3 w-3" />
-                                        <span>روند صعودی</span>
+                                    <div className="mt-8 flex items-center gap-4">
+                                        <Link href="/cartable" className="bg-white text-indigo-600 px-6 py-2 rounded-2xl text-xs font-black hover:bg-indigo-50 transition">
+                                            مدیریت کارتابل
+                                        </Link>
+                                        <span className="text-indigo-100 text-[11px] flex items-center gap-1">
+                                            <Activity className="h-3 w-3" />
+                                            ۱۲٪ افزایش نسبت به هفته قبل
+                                        </span>
                                     </div>
                                 </div>
-                                <ResponsiveContainer width="100%" height={280}>
-                                    <LineChart data={monthlyStats}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                        <XAxis dataKey="month" stroke="#9ca3af" fontSize={12} />
-                                        <YAxis stroke="#9ca3af" fontSize={12} />
+                                <ArrowLeftRight className="absolute -left-10 -bottom-10 h-48 w-48 text-white/10 group-hover:rotate-12 transition-transform duration-700" />
+                            </div>
+
+                            {/* Mini Metrics */}
+                            <div className="bg-white border border-slate-100 rounded-[2.5rem] p-6 flex flex-col justify-between hover:shadow-lg transition">
+                                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
+                                    <Inbox className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <p className="text-slate-400 text-xs font-bold uppercase">وارده امروز</p>
+                                    <p className="text-2xl font-black text-slate-800">{stats.incoming_new || 8}</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-white border border-slate-100 rounded-[2.5rem] p-6 flex flex-col justify-between hover:shadow-lg transition">
+                                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
+                                    <CheckDouble className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <p className="text-slate-400 text-xs font-bold uppercase">مختومه شده</p>
+                                    <p className="text-2xl font-black text-slate-800">{stats.closed_today || 15}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ANALYTICS SECTION */}
+                        <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm">
+                            <div className="flex items-center justify-between mb-10">
+                                <div>
+                                    <h3 className="text-lg font-black text-slate-800">تحلیل زمانی گردش مکاتبات</h3>
+                                    <p className="text-sm text-slate-400 mt-1">مقایسه حجم نامه‌های ورودی در بازه‌های زمانی</p>
+                                </div>
+                                <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50">
+                                    <Download className="h-4 w-4" />
+                                    دریافت گزارش PDF
+                                </button>
+                            </div>
+                            <div className="h-[320px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={monthlyStats}>
+                                        <defs>
+                                            <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.15} />
+                                                <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} dy={15} />
+                                        <YAxis hide />
                                         <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: 'white',
-                                                borderRadius: '12px',
-                                                border: '1px solid #e5e7eb',
-                                                fontSize: '12px'
-                                            }}
+                                            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', padding: '15px' }}
+                                            cursor={{ stroke: '#4f46e5', strokeWidth: 2, strokeDasharray: '5 5' }}
                                         />
-                                        <Legend />
-                                        <Line
-                                            type="monotone"
-                                            dataKey="count"
-                                            stroke="#3b82f6"
-                                            strokeWidth={2}
-                                            dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                                            activeDot={{ r: 6 }}
-                                            name="تعداد مکاتیب"
-                                        />
-                                    </LineChart>
+                                        <Area type="monotone" dataKey="count" stroke="#4f46e5" strokeWidth={4} fillOpacity={1} fill="url(#chartGradient)" />
+                                    </AreaChart>
                                 </ResponsiveContainer>
                             </div>
-                        )}
+                        </div>
 
-                        {/* Priority Distribution */}
-                        {pieData.length > 0 && (
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                                <div>
-                                    <h3 className="font-semibold text-gray-900">توزیع اولویت‌ها</h3>
-                                    <p className="text-xs text-gray-500 mt-1">بر اساس اولویت مکاتیب</p>
-                                </div>
-                                <ResponsiveContainer width="100%" height={260}>
+                        {/* RECENT LETTERS TABLE */}
+                        <div className="bg-white border border-slate-100 rounded-[2.5rem] shadow-sm overflow-hidden">
+                            <div className="p-7 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+                                <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                    <History className="h-5 w-5 text-indigo-500" />
+                                    آخرین مکتوبات در جریان
+                                </h3>
+                                <button className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                                    مشاهده همه
+                                    <ChevronLeft className="h-4 w-4" />
+                                </button>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-right">
+                                    <thead>
+                                        <tr className="text-slate-400 text-[11px] uppercase tracking-widest border-b border-slate-50">
+                                            <th className="px-8 py-5 font-bold">موضوع و عنوان مکتوب</th>
+                                            <th className="px-8 py-5 font-bold">فرستنده / واحد</th>
+                                            <th className="px-8 py-5 font-bold text-center">اولویت</th>
+                                            <th className="px-8 py-5 font-bold">وضعیت فعلی</th>
+                                            <th className="px-8 py-5 font-bold"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        {recentLetters.map((letter) => (
+                                            <tr key={letter.id} className="hover:bg-indigo-50/30 transition-colors group cursor-pointer">
+                                                <td className="px-8 py-5">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-white group-hover:text-indigo-600 transition-all shadow-sm">
+                                                            <FileText className="h-5 w-5" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-black text-slate-700">{letter.subject}</p>
+                                                            <p className="text-[10px] text-slate-400 mt-1 font-mono">{letter.letter_no || 'NSIA-1402-120'}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-5 text-sm font-medium text-slate-600">ریاست منابع بشری</td>
+                                                <td className="px-8 py-5 text-center">
+                                                    <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-rose-50 text-rose-600 border border-rose-100">فوری</span>
+                                                </td>
+                                                <td className="px-8 py-5">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                                        <span className="text-xs font-bold text-slate-600">در انتظار پاراف</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-5">
+                                                    <button className="p-2 hover:bg-white rounded-lg transition text-slate-400 hover:text-indigo-600 shadow-sm">
+                                                        <MoreHorizontal className="h-5 w-5" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* --- RIGHT COLUMN: INSIGHTS & UTILS --- */}
+                    <div className="col-span-12 xl:col-span-3 space-y-8">
+
+                        {/* PRIORITY DONUT CHART */}
+                        <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm">
+                            <h3 className="font-black text-slate-800 mb-8">تفکیک اولویت‌ها</h3>
+                            <div className="h-60 relative">
+                                <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie
                                             data={pieData}
-                                            cx="50%"
-                                            cy="50%"
-                                            innerRadius={50}
-                                            outerRadius={80}
-                                            paddingAngle={3}
+                                            innerRadius={65}
+                                            outerRadius={85}
+                                            paddingAngle={10}
                                             dataKey="value"
-                                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                                            labelLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
+                                            stroke="none"
                                         >
                                             {pieData.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={entry.color} />
                                             ))}
                                         </Pie>
-                                        <Tooltip />
                                     </PieChart>
                                 </ResponsiveContainer>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span className="text-3xl font-black text-slate-800">{stats.total_letters || 80}</span>
+                                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">کل مکتوبات</span>
+                                </div>
                             </div>
-                        )}
-                    </div>
-
-                    {/* Secondary Stats & Recent Activity */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                        {/* Secondary Stats Cards */}
-                        <div className="lg:col-span-1 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                {secondaryStatCards.map((card) => (
-                                    <div
-                                        key={card.label}
-                                        className={`${card.bgColor} rounded-xl p-4 ${card.href ? 'cursor-pointer hover:shadow-md transition' : ''}`}
-                                        onClick={() => card.href && window.location.assign(card.href)}
-                                    >
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className={`${card.iconBg} rounded-lg p-2`}>
-                                                <card.icon className="h-4 w-4 text-white" />
-                                            </div>
-                                            {card.href && <ChevronRight className="h-4 w-4 text-gray-400" />}
+                            <div className="grid grid-cols-1 gap-3 mt-8">
+                                {pieData.map((p) => (
+                                    <div key={p.name} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition border border-transparent hover:border-slate-100">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }} />
+                                            <span className="text-xs font-bold text-slate-600">{p.name}</span>
                                         </div>
-                                        <p className="text-xs text-gray-500">{card.label}</p>
-                                        <p className="text-2xl font-bold text-gray-900 mt-1">{card.value.toLocaleString('fa-IR')}</p>
+                                        <span className="text-xs font-black text-slate-800">{p.value}</span>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        {/* Recent Letters */}
-                        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-linear-to-r from-gray-50 to-white">
-                                <div>
-                                    <h3 className="font-semibold text-gray-900">مکاتیب اخیر</h3>
-                                    <p className="text-xs text-gray-500 mt-0.5">آخرین مکاتیب ثبت شده</p>
-                                </div>
-                                <Link href={LetterIndex()} className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1">
-                                    مشاهده همه
-                                    <ChevronRight className="h-4 w-4" />
-                                </Link>
-                            </div>
-                            <div className="divide-y divide-gray-100 max-h-[400px] overflow-y-auto">
-                                {recentLetters.length === 0 ? (
-                                    <div className="px-5 py-12 text-center">
-                                        <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                                        <p className="text-gray-500">هیچ مکتوب‌ای وجود ندارد</p>
-                                    </div>
-                                ) : (
-                                    recentLetters.map((letter, index) => (
-                                        <Link
-                                            key={letter.id}
-                                            href={LetterShow({ letter: letter.id })}
-                                            className="block px-5 py-3 hover:bg-gray-50 transition group"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex-shrink-0">
-                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${index % 2 === 0 ? 'bg-blue-50' : 'bg-purple-50'
-                                                        } group-hover:scale-105 transition`}>
-                                                        <FileText className={`h-5 w-5 ${index % 2 === 0 ? 'text-blue-500' : 'text-purple-500'
-                                                            }`} />
-                                                    </div>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium text-gray-900 truncate">
-                                                        {letter.subject}
-                                                    </p>
-                                                    <div className="flex items-center gap-3 mt-1">
-                                                        <span className="text-xs text-gray-400">{letter.letter_number}</span>
-                                                        <span className="text-xs text-gray-300">•</span>
-                                                        <span className="text-xs text-gray-400">
-                                                            {new Date(letter.created_at).toLocaleDateString('fa-IR')}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-gray-500 transition" />
-                                            </div>
-                                        </Link>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Quick Actions */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                        <div className="px-5 py-4 border-b border-gray-100 bg-linear-to-r from-gray-50 to-white">
-                            <div className="flex items-center gap-2">
-                                <Zap className="h-5 w-5 text-yellow-500" />
-                                <div>
-                                    <h3 className="font-semibold text-gray-900">دسترسی سریع</h3>
-                                    <p className="text-xs text-gray-500 mt-0.5">عملیات پرکاربرد سیستم</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="p-5">
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                                {quickActions.map((action) => (
-                                    <Link
-                                        key={action.title}
-                                        href={action.href}
-                                        className="group flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition-all duration-200 hover:-translate-y-1"
-                                    >
-                                        <div className={`w-12 h-12 rounded-xl bg-${action.color}-50 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                            <action.icon className={`h-6 w-6 text-${action.color}-500`} />
+                        {/* LIVE NOTIFICATIONS FEED */}
+                        <div className="bg-white border border-slate-100 rounded-[2.5rem] p-7 shadow-sm">
+                            <h3 className="font-black text-slate-800 mb-6 flex items-center justify-between">
+                                رویدادهای اخیر
+                                <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
+                            </h3>
+                            <div className="space-y-6 relative before:absolute before:right-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100">
+                                {[
+                                    { time: '۱۰:۴۵', msg: 'مکتوب شماره ۱۲۰ امضا شد', icon: CheckDouble, color: 'text-emerald-500' },
+                                    { time: '۰۹:۳۰', msg: 'ارجاع جدید از واحد IT', icon: ArrowUpRight, color: 'text-indigo-500' },
+                                    { time: '۰۸:۱۵', msg: 'یادآوری: مهلت پاسخ نامه ۴۴', icon: AlertCircle, color: 'text-rose-500' },
+                                ].map((item, idx) => (
+                                    <div key={idx} className="relative pr-9 group">
+                                        <div className="absolute right-0 top-0 w-[24px] h-[24px] bg-white border-2 border-slate-100 rounded-full flex items-center justify-center z-10 group-hover:border-indigo-400 transition-colors">
+                                            <item.icon className={`h-3 w-3 ${item.color}`} />
                                         </div>
-                                        <span className="text-xs text-gray-600 text-center">{action.title}</span>
-                                    </Link>
+                                        <p className="text-[10px] font-mono text-slate-400 leading-none">{item.time}</p>
+                                        <p className="text-xs font-bold text-slate-600 mt-1.5 leading-relaxed">{item.msg}</p>
+                                    </div>
                                 ))}
                             </div>
                         </div>
-                    </div>
 
-                    {/* Footer Stats */}
-                    <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-linear-to-r from-blue-50 to-indigo-50 rounded-xl p-4 text-center">
-                            <Target className="h-5 w-5 text-blue-500 mx-auto mb-2" />
-                            <p className="text-xs text-gray-500">تکمیل امروز</p>
-                            <p className="text-xl font-bold text-blue-600">{stats.pending_actions || 0}</p>
-                        </div>
-                        <div className="bg-linear-to-r from-green-50 to-emerald-50 rounded-xl p-4 text-center">
-                            <CheckCircle className="h-5 w-5 text-green-500 mx-auto mb-2" />
-                            <p className="text-xs text-gray-500">تأیید شده</p>
-                            <p className="text-xl font-bold text-green-600">{stats.approved_count || 0}</p>
-                        </div>
-                        <div className="bg-linear-to-r from-red-50 to-rose-50 rounded-xl p-4 text-center">
-                            <XCircle className="h-5 w-5 text-red-500 mx-auto mb-2" />
-                            <p className="text-xs text-gray-500">رد شده</p>
-                            <p className="text-xl font-bold text-red-600">{stats.rejected_count || 0}</p>
-                        </div>
-                        <div className="bg-linear-to-r from-purple-50 to-violet-50 rounded-xl p-4 text-center">
-                            <Eye className="h-5 w-5 text-purple-500 mx-auto mb-2" />
-                            <p className="text-xs text-gray-500">مشاهده امروز</p>
-                            <p className="text-xl font-bold text-purple-600">{stats.today_views || 0}</p>
+                        {/* QUICK SHORTCUTS */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <button className="flex flex-col items-center justify-center p-5 bg-white border border-slate-100 rounded-[2rem] hover:shadow-lg transition group">
+                                <Users className="h-6 w-6 text-purple-600 mb-2 group-hover:scale-110 transition" />
+                                <span className="text-[11px] font-black text-slate-600">دفترچه تلفن</span>
+                            </button>
+                            <button className="flex flex-col items-center justify-center p-5 bg-white border border-slate-100 rounded-[2rem] hover:shadow-lg transition group">
+                                <Archive className="h-6 w-6 text-amber-600 mb-2 group-hover:scale-110 transition" />
+                                <span className="text-[11px] font-black text-slate-600">بایگانی راکد</span>
+                            </button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </>
+            </main>
+        </div>
     );
 }
