@@ -6,8 +6,8 @@ import {
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import letters from '@/routes/letters';
-import routings from '@/routes/routings';
 import type { Letter, Case } from '@/types';
+import routings from '@/routes/routings';
 
 interface Props {
     letter: Letter;
@@ -25,11 +25,11 @@ interface Props {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
-    draft:    { label: 'مسوده',       color: '#64748b', bg: '#f1f5f9', icon: FileText },
+    draft:    { label: 'پیش‌نویس',    color: '#64748b', bg: '#f1f5f9', icon: FileText },
     pending:  { label: 'در انتظار',   color: '#b45309', bg: '#fef3c7', icon: Clock },
     approved: { label: 'تأیید شده',   color: '#15803d', bg: '#dcfce7', icon: CheckCircle },
     rejected: { label: 'رد شده',      color: '#b91c1c', bg: '#fee2e2', icon: XCircle },
-    archived: { label: 'آرشیف شده',   color: '#475569', bg: '#f1f5f9', icon: Archive },
+    archived: { label: 'بایگانی شده', color: '#475569', bg: '#f1f5f9', icon: Archive },
 };
 
 const ROUTING_STATUS: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
@@ -43,12 +43,11 @@ const ACTION_LABELS: Record<string, string> = {
     information: 'جهت اطلاع', coordination: 'جهت هماهنگی', sign: 'جهت امضاء',
 };
 
-// ─── Archive Modal (بدون تغییر) ─────────────────────────────────────────────────────────
+// ─── Archive Modal ──────────────────────────────────────────────────────────
 function ArchiveModal({ cases, loading, onClose, onConfirm }: {
     cases: Case[]; loading: boolean; onClose: () => void; onConfirm: (id: number) => void;
 }) {
     const [sel, setSel] = useState<number | null>(null);
-
     return (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
@@ -57,8 +56,8 @@ function ArchiveModal({ cases, loading, onClose, onConfirm }: {
                         <Archive className="h-4 w-4 text-amber-600" />
                     </div>
                     <div>
-                        <h3 className="text-sm font-bold text-slate-800">آرشیف نمودن مکتوب</h3>
-                        <p className="text-xs text-slate-400 mt-0.5">دوسیه مقصد را انتخاب کنید</p>
+                        <h3 className="text-sm font-bold text-slate-800">بایگانی نامه</h3>
+                        <p className="text-xs text-slate-400 mt-0.5">پرونده مقصد را انتخاب کنید</p>
                     </div>
                 </div>
                 <div className="p-6 space-y-4">
@@ -66,7 +65,7 @@ function ArchiveModal({ cases, loading, onClose, onConfirm }: {
                         <FolderOpen className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
                         <select value={sel || ''} onChange={e => setSel(parseInt(e.target.value) || null)} disabled={loading}
                             className="w-full pr-10 pl-9 py-3 text-sm bg-transparent focus:outline-none appearance-none text-slate-700">
-                            <option value="">انتخاب دوسیه...</option>
+                            <option value="">انتخاب پرونده...</option>
                             {cases.map(c => <option key={c.id} value={c.id}>{c.title} ({c.case_number})</option>)}
                         </select>
                         <svg className="absolute left-3.5 h-4 w-4 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -81,7 +80,7 @@ function ArchiveModal({ cases, loading, onClose, onConfirm }: {
                         <button onClick={() => sel && onConfirm(sel)} disabled={loading || !sel}
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-xl shadow-md disabled:opacity-50 transition-all">
                             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                            آرشیف
+                            بایگانی
                         </button>
                     </div>
                 </div>
@@ -90,7 +89,7 @@ function ArchiveModal({ cases, loading, onClose, onConfirm }: {
     );
 }
 
-// ─── Main ──────────────────────────────────────────────────────────────────
+// ─── Main ───────────────────────────────────────────────────────────────────
 export default function LettersShow({ letter, securityLevels, priorityLevels, availableCases = [], can }: Props) {
     const [showArchiveModal, setShowArchiveModal] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -111,39 +110,26 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, av
     const handleArchive = (caseId: number) => {
         setLoading(true);
         router.post(letters.show({ letter: letter.id }), { case_id: caseId }, {
-            onSuccess: () => {
- setShowArchiveModal(false); setLoading(false); router.reload(); 
-},
+            onSuccess: () => { setShowArchiveModal(false); setLoading(false); router.reload(); },
             onError: () => setLoading(false),
         });
     };
 
     const handleApprove = () => {
-        if (!confirm('آیا از تأیید این مکتوب اطمینان دارید؟')) {
-return;
-}
-
+        if (!confirm('آیا از تأیید این نامه اطمینان دارید؟')) return;
         setLoading(true);
         router.post(letters.show({ letter: letter.id }), {}, {
-            onSuccess: () => {
- setLoading(false); router.reload(); 
-},
+            onSuccess: () => { setLoading(false); router.reload(); },
             onError: () => setLoading(false),
         });
     };
 
     const handleReject = () => {
         const reason = prompt('لطفاً دلیل رد را وارد کنید:');
-
-        if (!reason) {
-return;
-}
-
+        if (!reason) return;
         setLoading(true);
         router.post(letters.show({ letter: letter.id }), { reason }, {
-            onSuccess: () => {
- setLoading(false); router.reload(); 
-},
+            onSuccess: () => { setLoading(false); router.reload(); },
             onError: () => setLoading(false),
         });
     };
@@ -152,12 +138,6 @@ return;
         ? new Date(letter.date).toLocaleDateString('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' })
         : '—';
     const createdDate = new Date(letter.created_at).toLocaleDateString('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' });
-
-    // تاریخ هجری شمسی با فرمت افغانستان (حمل، ثور...)
-    const afgDate = letter.date
-        ? new Date(letter.date).toLocaleDateString('fa-AF', { year: 'numeric', month: 'long', day: 'numeric' })
-        : '—';
-    const afgCreated = new Date(letter.created_at).toLocaleDateString('fa-AF', { year: 'numeric', month: 'long', day: 'numeric' });
 
     return (
         <>
@@ -168,136 +148,120 @@ return;
                 * { font-family: 'Vazirmatn', sans-serif; }
                 :root { direction: rtl; }
 
-                /* ── Afghan official letter style ── */
-                .afg-letter-paper {
-                    background-color: #fcfcfc;
-                    background-image:
-                        repeating-linear-gradient(
-                            0deg,
-                            transparent,
-                            transparent calc(2.6rem - 1px),
-                            rgba(0,40,20,0.03) calc(2.6rem - 1px),
-                            rgba(0,40,20,0.03) 2.6rem
-                        );
+                /* ── White paper, no texture for clean print ── */
+                .letter-paper {
+                    background: #ffffff;
                     box-shadow:
-                        0 4px 6px rgba(0,0,0,0.04),
-                        0 12px 24px rgba(0,0,0,0.06),
-                        0 0 0 1.5px rgba(0,0,0,0.08);
-                    border: 1px solid #d4af37;
+                        0 1px 2px rgba(0,0,0,0.04),
+                        0 4px 24px rgba(0,0,0,0.10),
+                        0 0 0 1px rgba(0,0,0,0.04);
+                    width: 210mm;
+                    min-height: 297mm;
+                    margin: 0 auto;
                 }
 
-                /* Afghan tri-color top band */
-                .afg-header-band {
+                /* ── Header top line ── */
+                .header-top-line {
                     height: 6px;
-                    background: linear-gradient(
-                        to right,
-                        #000000 0%, #000000 33%,
-                        #c8102e 33%, #c8102e 66%,
-                        #007a3d 66%, #007a3d 100%
-                    );
+                    background: #1a1a2e;
                 }
 
-                .afg-footer-band {
-                    height: 4px;
-                    background: linear-gradient(
-                        to right,
-                        #000000 0%, #000000 33%,
-                        #c8102e 33%, #c8102e 66%,
-                        #007a3d 66%, #007a3d 100%
-                    );
+                /* ── Divider between header and body ── */
+                .header-divider {
+                    border: none;
+                    border-top: 1.5px solid #555;
+                    margin: 0;
                 }
 
-                /* Double border with gold accent */
-                .afg-border-accent {
-                    position: absolute;
-                    inset: 12px;
-                    border: 1px solid rgba(212, 175, 55, 0.25);
-                    pointer-events: none;
+                /* ── Footer top line ── */
+                .footer-divider {
+                    border: none;
+                    border-top: 1.5px solid #555;
+                    margin: 0;
                 }
 
-                /* National Emblem watermark */
-                .afg-watermark {
-                    position: absolute;
-                    inset: 0;
+                /* ── Letter body ── */
+                .letter-body {
+                    font-size: 14px;
+                    line-height: 2.2;
+                    color: #111;
+                    text-align: justify;
+                    word-spacing: 0.04em;
+                }
+                .letter-body p { margin: 0 0 0.5rem 0; }
+
+                /* ── Number/date table cells ── */
+                .meta-row {
                     display: flex;
                     align-items: center;
-                    justify-content: center;
-                    pointer-events: none;
-                    overflow: hidden;
+                    gap: 4px;
+                    font-size: 12.5px;
+                    line-height: 1.8;
+                    color: #222;
                 }
-                .afg-watermark span {
-                    font-size: 5rem;
-                    font-weight: 900;
-                    color: #007a3d;
-                    opacity: 0.035;
-                    transform: rotate(-15deg);
-                    white-space: nowrap;
-                    user-select: none;
-                    letter-spacing: 0.5em;
-                    text-transform: uppercase;
+                .meta-label {
+                    font-weight: 700;
+                    color: #333;
+                    min-width: 52px;
                 }
 
-                /* Official stamp */
-                .afg-stamp {
+                /* ── Org name center ── */
+                .org-center-name {
+                    font-size: 15px;
+                    font-weight: 800;
+                    color: #1a1a2e;
+                    line-height: 1.6;
+                    text-align: center;
+                }
+                .sub-dept-name {
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #333;
+                    text-align: center;
+                    line-height: 1.7;
+                }
+
+                /* ── Emblem circle ── */
+                .emblem-circle {
                     width: 80px; height: 80px;
                     border-radius: 50%;
-                    border: 2.5px solid #c8102e;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    position: relative;
-                    opacity: 0.45;
-                }
-                .afg-stamp::before {
-                    content: '';
-                    position: absolute;
-                    inset: 6px;
-                    border-radius: 50%;
-                    border: 1px solid #007a3d;
-                }
-                .afg-stamp::after {
-                    content: '\\2726';
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    font-size: 24px;
-                    color: #c8102e;
-                    opacity: 0.6;
+                    border: 1.5px solid #aaa;
+                    display: flex; align-items: center; justify-content: center;
+                    background: #f9f9f9;
+                    overflow: hidden;
                 }
 
-                /* Letter body */
-                .afg-letter-body {
-                    font-size: 0.9375rem;
-                    line-height: 2.6rem;
-                    color: #1a1a1a;
-                    text-align: justify;
-                    word-spacing: 0.01em;
+                /* ── Signature underline ── */
+                .sig-line {
+                    border-bottom: 1px solid #555;
+                    margin-bottom: 6px;
+                    min-height: 48px;
                 }
 
-                /* Print overrides */
                 @media print {
                     .no-print { display: none !important; }
-                    .afg-letter-paper {
+                    body { background: white !important; margin: 0 !important; padding: 0 !important; }
+                    .letter-paper {
                         box-shadow: none !important;
-                        border: 1px solid #888 !important;
-                        background-image: none !important;
+                        width: 100% !important;
+                        min-height: auto !important;
+                        margin: 0 !important;
                     }
-                    body { background: white !important; }
-                    .afg-watermark span { opacity: 0.06 !important; }
+                    .print-area { padding: 0 !important; }
                 }
             `}</style>
 
-            <div className="min-h-screen bg-slate-200/40" dir="rtl">
+            <div className="min-h-screen bg-slate-200/70" dir="rtl">
 
-                {/* ── Toolbar (بدون تغییر عمده، فقط واژه‌ها) ── */}
-                <div className="no-print sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
-                    <div className="max-w-5xl mx-auto px-4 sm:px-6">
+                {/* ── Toolbar (no-print) ── */}
+                <div className="no-print sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+                    <div className="max-w-[220mm] mx-auto px-4">
                         <div className="flex items-center justify-between h-14 gap-3">
+                            {/* Breadcrumb */}
                             <div className="flex items-center gap-1.5 min-w-0">
                                 <Link href={letters.index()}
                                     className="text-xs font-bold text-slate-500 hover:text-slate-700 px-2 py-1 rounded-lg hover:bg-slate-100 transition">
-                                    مکتوب‌ها
+                                    نامه‌ها
                                 </Link>
                                 <ChevronRight className="h-3 w-3 text-slate-300 flex-shrink-0" />
                                 <span className="text-xs font-bold text-slate-700 truncate max-w-[200px] sm:max-w-sm">{letter.subject}</span>
@@ -325,7 +289,7 @@ return;
                                     <button onClick={() => setShowArchiveModal(true)} disabled={loading}
                                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-lg transition shadow-sm disabled:opacity-50">
                                         <Archive className="h-3.5 w-3.5" />
-                                        <span className="hidden sm:inline">آرشیف</span>
+                                        <span className="hidden sm:inline">بایگانی</span>
                                     </button>
                                 )}
                                 {can.route && letter.final_status === 'pending' && (
@@ -354,182 +318,202 @@ return;
                     </div>
                 </div>
 
-                <div className="max-w-4xl mx-auto px-4 py-8">
+                {/* ── Print / View area ── */}
+                <div className="print-area py-8 px-4">
+                    <div className="letter-paper">
 
-                    {/* ══════════════════════════════════════════
-                        OFFICIAL AFGHAN GOVERNMENT LETTER
-                    ══════════════════════════════════════════ */}
-                    <div className="afg-letter-paper relative overflow-hidden rounded-sm">
+                        {/* ══ TOP COLOR BAR ══ */}
+                        <div className="header-top-line" />
 
-                        {/* Tri-color top band */}
-                        <div className="afg-header-band" />
+                        {/* ══ LETTERHEAD ══ */}
+                        <div className="px-10 pt-5 pb-0">
 
-                        {/* Inner border accent */}
-                        <div className="afg-border-accent" />
+                            {/* Row 1: Left emblem | Center org names | Right emblem */}
+                            <div className="flex items-center justify-between gap-4">
 
-                        {/* Watermark */}
-                        <div className="afg-watermark">
-                            <span>افغانستان</span>
-                        </div>
-
-                        <div className="relative z-10 px-8 py-7">
-
-                            {/* ── Bismillah ── */}
-                            <div className="text-center mb-6">
-                                <p className="text-xl font-bold tracking-wider text-[#007a3d]">
-                                    بسم الله الرحمن الرحیم
-                                </p>
-                            </div>
-
-                            {/* ── National Emblem & Header ── */}
-                            <div className="flex items-center gap-4 mb-5">
-
-                                {/* Emblem */}
-                                <div className="flex-shrink-0 flex flex-col items-center gap-1">
-                                    <div className="h-20 w-20 rounded-full border-2 border-[#d4af37]/50
-                                        bg-gradient-to-br from-[#007a3d]/5 to-[#c8102e]/5
-                                        flex items-center justify-center">
-                                        <Building2 className="h-8 w-8 text-[#007a3d]/40" />
+                                {/* Right emblem */}
+                                <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                                    <div className="emblem-circle">
+                                        {letter.sender_department?.organization?.logo ? (
+                                            <img src={letter.sender_department.organization.logo} alt="آرم" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <Building2 className="h-8 w-8 text-slate-400" />
+                                        )}
                                     </div>
-                                    <span className="text-[9px] font-bold text-[#c8102e]/60 tracking-wider">نشان ملی</span>
                                 </div>
 
-                                {/* Org name */}
-                                <div className="flex-1 text-center">
-                                    <p className="text-[11px] font-black tracking-[0.15em] text-[#007a3d]/80 uppercase mb-1">
-                                        امارت اسلامی افغانستان
+                                {/* Center: Organization names stacked */}
+                                <div className="flex-1 text-center px-2">
+                                    <p className="org-center-name">
+                                        {letter.sender_department?.organization?.name || 'جمهوری اسلامی ایران'}
                                     </p>
-                                    <h1 className="text-[1.1rem] font-black text-[#1a1a1a] leading-tight">
-                                        {letter.sender_department?.organization?.name || 'وزارت / ریاست'}
-                                    </h1>
-                                    <p className="text-[0.8rem] font-bold text-slate-600 mt-0.5">
-                                        {letter.sender_department?.name || 'معینیت / آمریت'}
+                                    <p className="sub-dept-name">
+                                        {letter.sender_department?.name || 'وزارت / معاونت'}
                                     </p>
                                 </div>
 
-                                {/* Letter metadata box - Afghan style */}
-                                <div className="flex-shrink-0 border border-[#d4af37]/40 text-xs bg-[#fdfaf0]
-                                    min-w-[150px] rounded-sm overflow-hidden">
-                                    {[
-                                        { key: 'شماره',   val: letter.letter_number || '—' },
-                                        { key: 'تاریخ',   val: afgDate },
-                                        { key: 'ضمیمه',   val: letter.attachments?.length ? `${letter.attachments.length} فایل` : 'ندارد' },
-                                        { key: 'صفحات',   val: String(letter.sheet_count || 1) },
-                                    ].map((row, i) => (
-                                        <div key={row.key} className={`flex items-center ${i > 0 ? 'border-t border-[#d4af37]/20' : ''}`}>
-                                            <span className="px-2 py-1.5 bg-[#007a3d]/5 text-[#007a3d]/70 font-bold w-14 flex-shrink-0 border-l border-[#d4af37]/20 text-center">
-                                                {row.key}
-                                            </span>
-                                            <span className="px-2 py-1.5 font-black text-slate-800 tracking-wide">
-                                                {row.val}
-                                            </span>
-                                        </div>
-                                    ))}
+                                {/* Left emblem */}
+                                <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                                    <div className="emblem-circle">
+                                        <Building2 className="h-8 w-8 text-slate-400" />
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* ── Separation rule ── */}
-                            <div className="border-b-2 border-[#d4af37]/30 mb-5" />
-
-                            {/* ── To / Subject ── */}
-                            <div className="mb-5 space-y-2 text-[0.875rem]">
-                                <div className="flex gap-3">
-                                    <span className="font-black text-[#007a3d] w-14 flex-shrink-0 text-left">به:</span>
-                                    <span className="text-slate-800">
-                                        <span className="font-bold">{letter.recipient_name || '—'}</span>
-                                        {letter.recipient_position_name && (
-                                            <> — <span className="font-semibold">{letter.recipient_position_name}</span></>
-                                        )}
-                                        {letter.recipient_department && (
-                                            <span className="text-slate-500"> / {letter.recipient_department.name}</span>
-                                        )}
-                                    </span>
-                                </div>
-                                <div className="flex gap-3">
-                                    <span className="font-black text-[#007a3d] w-14 flex-shrink-0 text-left">موضوع:</span>
-                                    <span className="font-bold text-slate-800">{letter.subject}</span>
-                                </div>
-                            </div>
-
-                            {/* Thin separator */}
-                            <div className="border-t border-dashed border-[#d4af37]/20 mb-5" />
-
-                            {/* ── Salutation ── */}
-                            <p className="text-[0.9375rem] font-semibold text-slate-800 mb-4 leading-[2.6rem]">
-                                با عرض سلام و احترامات فائقه،
-                            </p>
-
-                            {/* ── Body ── */}
-                            <div className="afg-letter-body min-h-48 mb-8"
-                                dangerouslySetInnerHTML={{
-                                    __html: letter.content || '<p style="color:#94a3b8;font-style:italic">متن مکتوب درج نگردیده است.</p>'
-                                }}
-                            />
-
-                            {/* ── Summary ── */}
-                            {letter.summary && (
-                                <div className="mb-8 border-r-4 border-[#c8102e]/40 pr-4 py-2 bg-[#fdfaf0]">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#c8102e]/70 mb-1">خلاصه</p>
-                                    <p className="text-[0.875rem] text-slate-700 leading-7">{letter.summary}</p>
+                            {/* Row 2: Recipient dept centered */}
+                            {letter.recipient_department && (
+                                <div className="text-center mt-3 mb-1">
+                                    <p className="sub-dept-name">{letter.recipient_department.name}</p>
                                 </div>
                             )}
 
-                            {/* ── Closing salutation ── */}
-                            <p className="text-[0.875rem] text-slate-700 mb-10 leading-[2.6rem]">
-                                با تقدیم احترامات
+                            {/* Row 3: Number / Date metadata — two columns */}
+                            <div className="flex justify-between items-start mt-4 mb-3 gap-6">
+                                {/* Right column: شماره + شماره رسیدات */}
+                                <div className="space-y-0.5">
+                                    <div className="meta-row">
+                                        <span className="meta-label">شماره :</span>
+                                        <span className="font-bold tracking-wide">{letter.letter_number || '—'}</span>
+                                    </div>
+                                    <div className="meta-row">
+                                        <span className="meta-label">شماره رسیدات:</span>
+                                        <span>{letter.tracking_number || '—'}</span>
+                                    </div>
+                                </div>
+
+                                {/* Left column: نیته (dates) + ضمایم */}
+                                <div className="space-y-0.5 text-left">
+                                    <div className="meta-row flex-row-reverse">
+                                        <span className="meta-label text-right">نیته :</span>
+                                        <span>{letterDate}</span>
+                                    </div>
+                                    <div className="meta-row flex-row-reverse">
+                                        <span className="meta-label text-right">تاریخ ثبت :</span>
+                                        <span>{createdDate}</span>
+                                    </div>
+                                    <div className="meta-row flex-row-reverse">
+                                        <span className="meta-label text-right">ضمایم :</span>
+                                        <span>{letter.attachments?.length ? `${letter.attachments.length} فایل` : 'ندارد'}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* ── Divider ── */}
+                            <div className="header-divider" />
+                        </div>
+
+                        {/* ══ BODY ══ */}
+                        <div className="px-10 pt-5 pb-4">
+
+                            {/* Recipient / To line */}
+                            <div className="text-center mb-4 space-y-0.5">
+                                <p style={{ fontSize: '14px', fontWeight: 700, color: '#111', lineHeight: 1.8 }}>
+                                    {letter.recipient_name || '—'}
+                                    {letter.recipient_position_name && (
+                                        <span style={{ fontWeight: 600, color: '#333' }}> {letter.recipient_position_name}</span>
+                                    )}
+                                    {' '}!
+                                </p>
+                            </div>
+
+                            {/* Subject line */}
+                            <div className="flex gap-2 mb-3" style={{ fontSize: '13.5px' }}>
+                                <span style={{ fontWeight: 800, minWidth: '56px', color: '#1a1a2e' }}>موضوع :</span>
+                                <span style={{ fontWeight: 700, color: '#111' }}>{letter.subject}</span>
+                            </div>
+
+                            {/* Salutation */}
+                            <p style={{ fontSize: '14px', fontWeight: 600, color: '#111', marginBottom: '8px', lineHeight: 2 }}>
+                                السلام عليكم ورحمة الله وبركاته
                             </p>
 
-                            {/* ── Signature row ── */}
-                            <div className="flex items-end justify-between mt-4">
+                            {/* Letter body */}
+                            <div className="letter-body mb-6"
+                                dangerouslySetInnerHTML={{
+                                    __html: letter.content || '<p style="color:#94a3b8;font-style:italic">متن نامه وارد نشده است.</p>'
+                                }}
+                            />
 
-                                {/* Stamp area */}
-                                <div className="flex flex-col items-center gap-1.5">
-                                    <div className="afg-stamp" />
-                                    <span className="text-[9px] font-semibold text-slate-400 tracking-wider">مهر رسمی</span>
+                            {/* Summary */}
+                            {letter.summary && (
+                                <div className="mb-5 pr-3 border-r-2 border-slate-400">
+                                    <p style={{ fontSize: '13px', color: '#444', lineHeight: 1.9 }}>{letter.summary}</p>
                                 </div>
+                            )}
 
-                                {/* Security level seal */}
-                                <div className="self-center">
-                                    {letter.security_level && letter.security_level !== 'public' && (
-                                        <div className="border-2 border-[#c8102e]/40 px-5 py-1.5 rounded-sm bg-[#fdfaf0]">
-                                            <p className="text-[11px] font-black tracking-[0.2em] text-[#c8102e]/80 uppercase text-center">
-                                                {securityLevels[letter.security_level] || letter.security_level}
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
+                            {/* Closing */}
+                            <p style={{ fontSize: '14px', fontWeight: 600, color: '#111', textAlign: 'center', margin: '12px 0 32px 0' }}>
+                                والسلام
+                            </p>
 
-                                {/* Sender signature */}
-                                <div className="text-center min-w-[160px]">
-                                    <div className="h-12 mb-2" />
-                                    <div className="border-b border-[#d4af37]/50 mb-2" />
-                                    <p className="text-[0.875rem] font-black text-slate-800">{letter.sender_name || '—'}</p>
-                                    <p className="text-[0.8rem] font-semibold text-slate-500 mt-0.5">{letter.sender_position_name || '—'}</p>
+                            {/* ══ SIGNATURE BLOCK ══ */}
+                            {/* Positioned left-of-center, like the scanned letter */}
+                            <div className="flex justify-start pr-8 mb-10">
+                                <div style={{ minWidth: '200px', maxWidth: '240px', textAlign: 'center' }}>
+                                    {/* Signature space */}
+                                    <div className="sig-line" />
+                                    <p style={{ fontSize: '13.5px', fontWeight: 800, color: '#111', lineHeight: 1.7 }}>
+                                        {letter.sender_name || '—'}
+                                    </p>
+                                    <p style={{ fontSize: '12.5px', fontWeight: 600, color: '#333', lineHeight: 1.7 }}>
+                                        {letter.sender_position_name || '—'}
+                                    </p>
                                     {letter.sender_department && (
-                                        <p className="text-[0.75rem] text-slate-400 mt-0.5">{letter.sender_department.name}</p>
+                                        <p style={{ fontSize: '12px', color: '#555', lineHeight: 1.7 }}>
+                                            {letter.sender_department.name}
+                                        </p>
                                     )}
                                 </div>
-                            </div>
-
-                            {/* ── Footer band ── */}
-                            <div className="afg-footer-band mt-8 mb-2" />
-
-                            {/* Footer info line */}
-                            <div className="flex items-center justify-between text-[10px] font-semibold text-slate-500 tracking-wide">
-                                <span>تعقیب: {letter.tracking_number || '—'}</span>
-                                <span>ثبت: {afgCreated}</span>
                             </div>
                         </div>
-                    </div>
 
-                    {/* ── Attachments panel ── */}
+                        {/* ══ FOOTER ══ */}
+                        <div className="px-10 pb-5 mt-auto">
+                            <div className="footer-divider mb-3" />
+                            {/* Two-column contact footer, like the scanned letter */}
+                            <div className="flex justify-between items-start" style={{ fontSize: '11.5px', color: '#444' }}>
+                                {/* Right: Persian contact */}
+                                <div className="space-y-0.5 text-right">
+                                    {letter.sender_department?.organization?.address && (
+                                        <p>ادرس: {letter.sender_department.organization.address}</p>
+                                    )}
+                                    {letter.sender_department?.organization?.phone && (
+                                        <p>تلیفون: {letter.sender_department.organization.phone}</p>
+                                    )}
+                                    {letter.sender_department?.organization?.email && (
+                                        <p>ایمیل: {letter.sender_department.organization.email}</p>
+                                    )}
+                                    {/* Fallbacks */}
+                                    {!letter.sender_department?.organization?.address && (
+                                        <p style={{ color: '#aaa' }}>آدرس سازمان</p>
+                                    )}
+                                </div>
+                                {/* Left: security/priority badges */}
+                                <div className="text-left space-y-1">
+                                    {letter.security_level && letter.security_level !== 'public' && (
+                                        <p style={{ fontWeight: 700 }}>
+                                            سطح: {securityLevels[letter.security_level] || letter.security_level}
+                                        </p>
+                                    )}
+                                    <p>
+                                        اولویت: {priorityLevels[letter.priority] || letter.priority}
+                                    </p>
+                                    <p style={{ color: '#888' }}>صفحات: {letter.sheet_count || 1}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>{/* /letter-paper */}
+
+                    {/* ══ ATTACHMENTS PANEL (screen only) ══ */}
                     {letter.attachments && letter.attachments.length > 0 && (
-                        <div className="no-print mt-6 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div className="no-print mt-6 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+                            style={{ maxWidth: '210mm', margin: '24px auto 0' }}>
                             <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3 bg-gradient-to-l from-white to-slate-50/60">
                                 <div className="h-8 w-8 rounded-xl bg-indigo-50 flex items-center justify-center">
                                     <Paperclip className="h-4 w-4 text-indigo-500" />
                                 </div>
-                                <h3 className="text-sm font-bold text-slate-800 flex-1">ضمیمه‌جات</h3>
+                                <h3 className="text-sm font-bold text-slate-800 flex-1">پیوست‌ها</h3>
                                 <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600">
                                     {letter.attachments.length}
                                 </span>
@@ -544,16 +528,13 @@ return;
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="text-sm font-semibold text-slate-700 truncate">{att.file_name}</p>
-                                                <p className="text-xs text-slate-400">{(att.file_size / 1024).toFixed(1)} KB • {att.download_count} دانلود</p>
+                                                <p className="text-xs text-slate-400">{(att.file_size / 1024).toFixed(1)} KB</p>
                                             </div>
                                         </div>
                                         <button
                                             onClick={() => window.open(letters.show({ query: { attachment: att.id } }), '_blank')}
-                                            className="flex-shrink-0 flex items-center gap-1.5 text-xs font-semibold text-indigo-600
-                                            hover:text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition
-                                            opacity-0 group-hover:opacity-100">
-                                            <Download className="h-3.5 w-3.5" />
-                                            دانلود
+                                            className="flex-shrink-0 flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition opacity-0 group-hover:opacity-100">
+                                            <Download className="h-3.5 w-3.5" />دانلود
                                         </button>
                                     </div>
                                 ))}
@@ -561,9 +542,10 @@ return;
                         </div>
                     )}
 
-                    {/* ── Routing history ── */}
+                    {/* ══ ROUTING HISTORY (screen only) ══ */}
                     {letter.routings && letter.routings.length > 0 && (
-                        <div className="no-print mt-5 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div className="no-print mt-5 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+                            style={{ maxWidth: '210mm', margin: '20px auto 0' }}>
                             <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3 bg-gradient-to-l from-white to-slate-50/60">
                                 <div className="h-8 w-8 rounded-xl bg-violet-50 flex items-center justify-center">
                                     <Clock className="h-4 w-4 text-violet-500" />
@@ -573,20 +555,15 @@ return;
                                     {letter.routings.length}
                                 </span>
                             </div>
-                            <div className="px-6 py-5 space-y-0">
+                            <div className="px-6 py-5">
                                 {letter.routings.map((routing, idx) => {
                                     const rCfg = ROUTING_STATUS[routing.status] ?? ROUTING_STATUS.pending;
                                     const RIcon = rCfg.icon;
-                                    const isOverdue = routing.deadline &&
-                                        new Date(routing.deadline) < new Date() &&
-                                        routing.status === 'pending';
+                                    const isOverdue = routing.deadline && new Date(routing.deadline) < new Date() && routing.status === 'pending';
                                     const isLast = idx === letter.routings.length - 1;
-
                                     return (
                                         <div key={routing.id} className="relative flex gap-4 pb-5">
-                                            {!isLast && (
-                                                <div className="absolute right-3 top-7 bottom-0 w-px bg-slate-200" />
-                                            )}
+                                            {!isLast && <div className="absolute right-3 top-7 bottom-0 w-px bg-slate-200" />}
                                             <div className="flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center z-10 mt-0.5"
                                                 style={{ backgroundColor: rCfg.bg }}>
                                                 <RIcon className="h-3.5 w-3.5" style={{ color: rCfg.color }} />
@@ -608,7 +585,7 @@ return;
                                                         )}
                                                     </div>
                                                     <span className="text-xs text-slate-400 flex-shrink-0">
-                                                        {new Date(routing.created_at).toLocaleDateString('fa-AF')}
+                                                        {new Date(routing.created_at).toLocaleDateString('fa-IR')}
                                                     </span>
                                                 </div>
                                                 <p className="text-xs text-slate-500 mt-1">
@@ -616,11 +593,6 @@ return;
                                                     {' '}←{' '}
                                                     به <span className="font-semibold text-slate-700">{routing.to_user?.full_name || 'نامشخص'}</span>
                                                 </p>
-                                                {routing.deadline && (
-                                                    <p className={`text-xs mt-0.5 ${isOverdue ? 'text-rose-500 font-semibold' : 'text-slate-400'}`}>
-                                                        مهلت: {new Date(routing.deadline).toLocaleDateString('fa-AF')}
-                                                    </p>
-                                                )}
                                                 {routing.instruction && (
                                                     <div className="mt-2 bg-violet-50 border border-violet-100 rounded-xl px-3 py-2">
                                                         <p className="text-xs text-violet-700 leading-relaxed">{routing.instruction}</p>
@@ -638,7 +610,8 @@ return;
                             </div>
                         </div>
                     )}
-                </div>
+
+                </div>{/* /print-area */}
             </div>
 
             {showArchiveModal && (

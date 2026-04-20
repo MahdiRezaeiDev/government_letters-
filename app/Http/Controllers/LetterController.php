@@ -209,7 +209,7 @@ class LetterController extends Controller
     /**
      * ذخیره نامه جدید
      */
-    public function store(Request $request)
+    public function store(LetterRequest $request)
     {
         try {
             $currentUser = Auth::user()->load(['primaryPosition', 'department']);
