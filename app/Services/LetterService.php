@@ -54,6 +54,7 @@ class LetterService
             return $letter;
         } catch (\Exception $e) {
             DB::rollBack();
+            dd($e);
             $this->logError('Letter creation failed', $e);
             throw $e;
         }
@@ -216,15 +217,10 @@ class LetterService
             return 'DRAFT-' . time();
         }
 
-        $prefix = match ($data['letter_type'] ?? 'internal') {
-            'incoming' => 'INC',
-            'outgoing' => 'OUT',
-            default => 'INT'
-        };
+        $prefix = 'LETR';
 
         $year = date('Y');
-        $count = Letter::where('letter_type', $data['letter_type'])
-            ->whereYear('created_at', $year)
+        $count = Letter::whereYear('created_at', $year)
             ->count();
 
         return sprintf('%s-%s-%04d', $prefix, $year, $count + 1);

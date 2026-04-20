@@ -32,9 +32,13 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
     const userRole = auth?.user?.roles?.[0]?.name || 'user';
 
     const isUrlActive = (href: any) => {
-        if (!url || !href || typeof href !== 'string') return false;
+        if (!url || !href || typeof href !== 'string') {
+            return false;
+        }
+
         const currentPath = url.split('?')[0];
         const targetPath = href.split('?')[0];
+
         return currentPath === targetPath || currentPath.startsWith(targetPath + '/');
     };
 
@@ -80,13 +84,20 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
         const filter = (items: any[]): any[] => {
             return items
                 .filter(item => {
-                    if (item.permission === 'super-admin') return userRole === 'super-admin';
-                    if (item.permission === 'dept-manager') return ['super-admin', 'org-admin', 'dept-manager'].includes(userRole);
+                    if (item.permission === 'super-admin') {
+                        return userRole === 'super-admin';
+                    }
+
+                    if (item.permission === 'dept-manager') {
+                        return ['super-admin', 'org-admin', 'dept-manager'].includes(userRole);
+                    }
+
                     return true;
                 })
                 .map(item => ({ ...item, children: item.children ? filter(item.children) : undefined }))
                 .filter(item => !item.children || item.children.length > 0);
         };
+
         return filter(navigationItems);
     }, [userRole]);
 
@@ -99,7 +110,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                     </div>
                     {!collapsed && (
                         <div className="flex flex-col animate-in fade-in slide-in-from-right-4 duration-700">
-                            <span className="font-bold text-slate-900 leading-none">سامانه NSIA</span>
+                            <span className="font-bold text-slate-900 leading-none">سیستم مدیریت مکاتیب</span>
                             <span className="text-[10px] text-slate-500 font-medium mt-1">Correspondence System</span>
                         </div>
                     )}
@@ -114,6 +125,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 {filteredNavItems.map((item) => {
                     const active = isUrlActive(item.href);
                     const isOpen = openMenus.includes(item.title);
+
                     return (
                         <div key={item.title}>
                             {item.children ? (

@@ -208,7 +208,7 @@ export default function LettersCreate({
         date: new Date().toISOString().split('T')[0],
         due_date: null,
         sheet_count: 1,
-        is_draft: true,
+        is_draft: false,
         recipient_type: 'internal',
         recipient_department_id: null,
         recipient_position_id: null,

@@ -11,7 +11,7 @@ interface HeaderProps {
     collapsed: boolean;
 }
 
-export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
+export function Header({ onMenuClick, isMobile }: HeaderProps) {
     const { auth } = usePage().props as any;
     const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -55,13 +55,8 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                             </div>
                         )}
                         <h1 className="text-xl font-black tracking-tight text-slate-800 hidden sm:block">
-                            سامانه <span className="text-indigo-600">مکاتبات</span>
+                            سیستم مدیریت <span className="text-indigo-600">مکاتبات</span>
                         </h1>
-                    </div>
-
-                    <div className="hidden lg:flex items-center bg-slate-100/80 rounded-2xl px-4 py-2.5 w-[350px] group focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all border border-transparent focus-within:border-slate-200">
-                        <Search className="h-4 w-4 text-slate-400" />
-                        <input type="text" placeholder="جستجوی هوشمند..." className="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-slate-400 mr-2" />
                     </div>
                 </div>
 
@@ -72,7 +67,7 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                     <div className="hidden md:block text-left border-l pl-5 border-slate-200">
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1 text-left">امروز</p>
                         <p className="text-sm font-bold text-slate-700">
-                            {currentTime.toLocaleDateString('fa-IR', { day: 'numeric', month: 'long' })}
+                            {currentTime.toLocaleDateString('fa-Af', { day: 'numeric', month: 'long' })}
                         </p>
                     </div>
 
