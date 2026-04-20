@@ -1,13 +1,13 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { 
-    Plus, Search, Filter, Eye, Edit, Trash2, 
-    ChevronLeft, ChevronRight, FileText, 
-    Inbox, Send, File, Clock, AlertCircle, 
+import {
+    Plus, Search, Filter, Eye, Edit, Trash2,
+    ChevronLeft, ChevronRight, FileText,
+    Inbox, Send, File, Clock, AlertCircle,
     TrendingUp, Calendar, X, Mail, CheckCircle,
     AlertTriangle, Archive, Clock as ClockIcon
 } from 'lucide-react';
 import React, { useState } from 'react';
-import { index as LetterIndex, create as LetterCreate, show as LetterShow } from '@/routes/letters';
+import lettersRoute from '@/routes/letters';
 import type { Letter, PaginatedResponse, LetterCategory } from '@/types';
 
 interface Props {
@@ -39,7 +39,7 @@ export default function LettersIndex({ letters, categories, filters, can, types,
     const [showFilters, setShowFilters] = useState(false);
 
     const handleSearch = () => {
-        router.get(LetterIndex(), {
+        router.get(lettersRoute.index(), {
             search: searchTerm,
             letter_type: selectedType,
             status: selectedStatus,
@@ -54,12 +54,12 @@ export default function LettersIndex({ letters, categories, filters, can, types,
         setSelectedType('');
         setSelectedStatus('');
         setSelectedPriority('');
-        router.get(LetterIndex(), {}, { preserveState: true, replace: true });
+        router.get(lettersRoute.index(), {}, { preserveState: true, replace: true });
     };
 
     const handleDelete = (id: number, subject: string) => {
         if (confirm(`آیا از حذف نامه "${subject}" اطمینان دارید؟`)) {
-            router.delete(route('letters.destroy', { letter: id }));
+            router.delete(lettersRoute.destroy({ letter: id }));
         }
     };
 
@@ -119,7 +119,7 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                             </div>
                             {can.create && (
                                 <Link
-                                    href={LetterCreate()}
+                                    href={lettersRoute.create()}
                                     className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 border border-transparent rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                                 >
                                     <Plus className="ml-2 h-4 w-4" />
@@ -184,16 +184,16 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                         setSelectedType('');
                                         handleSearch();
                                     }}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${
-                                        !selectedType 
-                                            ? 'bg-blue-600 text-white shadow-sm' 
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${!selectedType
+                                            ? 'bg-blue-600 text-white shadow-sm'
                                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                    }`}
+                                        }`}
                                 >
                                     همه
                                 </button>
                                 {Object.entries(types).map(([key, label]) => {
                                     const Icon = typeConfig[key]?.icon || File;
+
                                     return (
                                         <button
                                             key={key}
@@ -201,11 +201,10 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                                 setSelectedType(key);
                                                 handleSearch();
                                             }}
-                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap inline-flex items-center gap-2 ${
-                                                selectedType === key 
-                                                    ? 'bg-blue-600 text-white shadow-sm' 
+                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap inline-flex items-center gap-2 ${selectedType === key
+                                                    ? 'bg-blue-600 text-white shadow-sm'
                                                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                            }`}
+                                                }`}
                                         >
                                             <Icon className="h-4 w-4" />
                                             {label}
@@ -235,11 +234,10 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                     <div className="flex gap-3">
                                         <button
                                             onClick={() => setShowFilters(!showFilters)}
-                                            className={`inline-flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                                                showFilters || hasActiveFilters
+                                            className={`inline-flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${showFilters || hasActiveFilters
                                                     ? 'bg-blue-50 text-blue-700 border border-blue-200'
                                                     : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
-                                            }`}
+                                                }`}
                                         >
                                             <Filter className="ml-2 h-4 w-4" />
                                             فیلترها
@@ -342,7 +340,7 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                                 const status = statusConfig[letter.final_status] || statusConfig.draft;
                                                 const StatusIcon = status.icon;
                                                 const TypeIcon = typeConfig[letter.letter_type]?.icon || File;
-                                                
+
                                                 return (
                                                     <tr key={letter.id} className="hover:bg-gray-50 transition-colors group">
                                                         <td className="px-6 py-4 whitespace-nowrap">
@@ -387,7 +385,7 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                                         <td className="px-6 py-4 whitespace-nowrap text-left">
                                                             <div className="flex items-center gap-2">
                                                                 <Link
-                                                                    href={LetterShow({ letter: letter.id })}
+                                                                    href={lettersRoute.show({ letter: letter.id })}
                                                                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                                     title="مشاهده"
                                                                 >
@@ -395,7 +393,7 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                                                 </Link>
                                                                 {can.edit && letter.final_status === 'draft' && (
                                                                     <Link
-                                                                        href={route('letters.edit', { letter: letter.id })}
+                                                                        href={lettersRoute.edit({ letter: letter.id })}
                                                                         className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                                                                         title="ویرایش"
                                                                     >
@@ -431,12 +429,11 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                     </div>
                                     <div className="flex gap-1.5">
                                         <Link
-                                            href={letters.current_page > 1 ? LetterIndex({ page: letters.current_page - 1, ...filters }) : '#'}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                                                letters.current_page > 1
+                                            href={letters.current_page > 1 ? lettersRoute.index({ query: { page: letters.current_page - 1, ...filters } }) : '#'}
+                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${letters.current_page > 1
                                                     ? 'text-gray-700 hover:bg-white hover:text-blue-600'
                                                     : 'text-gray-300 cursor-not-allowed'
-                                            }`}
+                                                }`}
                                         >
                                             <ChevronRight className="h-4 w-4" />
                                         </Link>
@@ -444,67 +441,67 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                             const pages = [];
                                             const maxVisible = 5;
                                             let start = Math.max(1, letters.current_page - Math.floor(maxVisible / 2));
-                                            let end = Math.min(letters.last_page, start + maxVisible - 1);
-                                            
+                                            const end = Math.min(letters.last_page, start + maxVisible - 1);
+
                                             if (end - start + 1 < maxVisible) {
                                                 start = Math.max(1, end - maxVisible + 1);
                                             }
-                                            
+
                                             if (start > 1) {
                                                 pages.push(
                                                     <Link
                                                         key={1}
-                                                        href={LetterIndex({ page: 1, ...filters })}
+                                                        href={lettersRoute.index({ query: { page: 1, ...filters } })}
                                                         className="px-3 py-1.5 rounded-lg text-sm text-gray-700 hover:bg-white hover:text-blue-600 transition-colors"
                                                     >
                                                         1
                                                     </Link>
                                                 );
+
                                                 if (start > 2) {
                                                     pages.push(<span key="dots1" className="px-2 text-gray-400">...</span>);
                                                 }
                                             }
-                                            
+
                                             for (let i = start; i <= end; i++) {
                                                 pages.push(
                                                     <Link
                                                         key={i}
-                                                        href={LetterIndex({ page: i, ...filters })}
-                                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                                                            letters.current_page === i
+                                                        href={lettersRoute.index({ query: { page: i, ...filters } })}
+                                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${letters.current_page === i
                                                                 ? 'bg-blue-600 text-white shadow-sm'
                                                                 : 'text-gray-700 hover:bg-white hover:text-blue-600'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {i}
                                                     </Link>
                                                 );
                                             }
-                                            
+
                                             if (end < letters.last_page) {
                                                 if (end < letters.last_page - 1) {
                                                     pages.push(<span key="dots2" className="px-2 text-gray-400">...</span>);
                                                 }
+
                                                 pages.push(
                                                     <Link
                                                         key={letters.last_page}
-                                                        href={LetterIndex({ page: letters.last_page, ...filters })}
+                                                        href={lettersRoute.index({ query: { page: letters.last_page, ...filters } })}
                                                         className="px-3 py-1.5 rounded-lg text-sm text-gray-700 hover:bg-white hover:text-blue-600 transition-colors"
                                                     >
                                                         {letters.last_page}
                                                     </Link>
                                                 );
                                             }
-                                            
+
                                             return pages;
                                         })()}
                                         <Link
-                                            href={letters.current_page < letters.last_page ? LetterIndex({ page: letters.current_page + 1, ...filters }) : '#'}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                                                letters.current_page < letters.last_page
+                                            href={letters.current_page < letters.last_page ? lettersRoute.index({query: { page: letters.current_page + 1, ...filters }}) : '#'}
+                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${letters.current_page < letters.last_page
                                                     ? 'text-gray-700 hover:bg-white hover:text-blue-600'
                                                     : 'text-gray-300 cursor-not-allowed'
-                                            }`}
+                                                }`}
                                         >
                                             <ChevronLeft className="h-4 w-4" />
                                         </Link>

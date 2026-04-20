@@ -127,7 +127,9 @@ class LetterController extends Controller
             'categories' => $categories,
             'filters' => $request->only(['search', 'letter_type', 'status', 'priority', 'date_from', 'date_to']),
             'can' => [
-                'create' => $currentUser->can(PermissionEnum::CREATE_LETTER->value),
+                'create' => $currentUser->can('create-department'),
+                'edit' => $currentUser->can('edit-department'),
+                'delete' => $currentUser->can('delete-department'),
             ],
             'types' => [
                 'incoming' => 'نامه وارده',
@@ -200,6 +202,11 @@ class LetterController extends Controller
             'users' => $users,
             'departments' => $departments,
             'positions' => $positions,
+            'can' => [
+                'create' => $currentUser->can('create-department'),
+                'edit' => $currentUser->can('edit-department'),
+                'delete' => $currentUser->can('delete-department'),
+            ],
             'externalOrganizations' => $externalOrganizations,
             'securityLevels' => config('correspondence.security_levels'),
             'priorityLevels' => config('correspondence.priority_levels'),
