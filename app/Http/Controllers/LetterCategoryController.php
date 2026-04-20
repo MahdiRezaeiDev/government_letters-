@@ -157,6 +157,11 @@ class LetterCategoryController extends Controller
         return Inertia::render('categories/show', [
             'category' => $category,
             'stats' => $stats,
+            'can' => [
+                'create' => $user->can('create-department'),
+                'edit' => $user->can('edit-department'),
+                'delete' => $user->can('delete-department'),
+            ],
         ]);
     }
 

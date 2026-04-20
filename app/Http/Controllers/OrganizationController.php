@@ -106,8 +106,6 @@ class OrganizationController extends Controller
     public function show(Organization $organization)
     {
         $organization->load([
-            'parent',
-            'children',
             'departments' => function ($q) {
                 $q->withCount('users');
             },
