@@ -204,41 +204,24 @@ class LetterController extends Controller
     public function store(LetterRequest $request)
     {
 
-        $currentUser = auth()->user();
-        dd($currentUser);
+        $currentUser = User::with([
+            'primaryPosition',
+            'department'
+            ])->where('id', auth()->user()->id)->first();
+
         DB::beginTransaction();
+
+        dd($request->all());
 
         try {
             // ============================================
             // تنظیم اطلاعات فرستنده
             // ============================================
-            $senderName = null;
-            $senderPositionName = null;
-            $senderDepartmentId = null;
-            $senderUserId = null;
-            $senderPositionId = null;
-
-            if ($request->letter_type === 'incoming') {
-                // نامه وارده: فرستنده از داده‌های ارسالی
-                $senderName = $request->sender_name ?? $request->input('sender_name');
-                $senderPositionName = $request->sender_position_name ?? $request->input('sender_position_name');
-                $senderUserId = $request->sender_user_id;
-                $senderDepartmentId = $request->sender_department_id;
-                $senderPositionId = $request->sender_position_id;
-
-                // اگر نام فرستنده خالی بود، از نام کاربر استفاده کن
-                if (empty($senderName) && $senderUserId) {
-                    $sender = User::find($senderUserId);
-                    $senderName = $sender?->full_name;
-                }
-            } else {
-                // نامه صادره یا داخلی: فرستنده کاربر فعلی است
-                $senderName = $currentUser->full_name;
-                $senderPositionName = $currentUser->primaryPosition?->name;
-                $senderDepartmentId = $currentUser->department_id;
-                $senderUserId = $currentUser->id;
-                $senderPositionId = $currentUser->primaryPosition?->id;
-            }
+            $senderName = $currentUser->full_name;
+            $senderPositionName = $currentUser->primaryPosition->name;
+            $senderDepartmentId = $currentUser->department->id;
+            $senderUserId = $currentUser->id;
+            $senderPositionId = $currentUser->primaryPosition->id;
 
             // ============================================
             // تنظیم اطلاعات گیرنده
@@ -249,13 +232,17 @@ class LetterController extends Controller
             $recipientUserId = null;
             $recipientPositionId = null;
 
-            if ($request->letter_type === 'outgoing' || $request->letter_type === 'internal') {
-                // نامه صادره یا داخلی: گیرنده از داده‌های ارسالی
-                $recipientName = $request->recipient_name;
+            if($request->recipient_type === 'internal') {
+                 $recipientName = $request->recipient_name;
                 $recipientPositionName = $request->recipient_position_name;
                 $recipientUserId = $request->recipient_user_id;
                 $recipientDepartmentId = $request->recipient_department_id;
                 $recipientPositionId = $request->recipient_position_id;
+            }
+
+            if ($request->letter_type === 'outgoing' || $request->letter_type === 'internal') {
+                // نامه صادره یا داخلی: گیرنده از داده‌های ارسالی
+               
 
                 // اگر گیرنده داخلی است و نام خالی، از دیتابیس دریافت کن
                 if (empty($recipientName) && $recipientUserId) {

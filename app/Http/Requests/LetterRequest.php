@@ -23,7 +23,7 @@ class LetterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'letter_type' => 'required|in:incoming,outgoing,internal',
+            'letter_type' => 'nullable|in:incoming,outgoing,internal',
             'category_id' => 'nullable|exists:letter_categories,id',
             'subject' => 'required|string|max:500',
             'summary' => 'nullable|string',
