@@ -121,7 +121,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 <ChevronLeft className={`h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-600 transition-transform duration-500 ${collapsed ? 'rotate-180' : ''}`} />
             </button>
 
-            <nav className="px-3 space-y-1 h-[calc(100%-14rem)] overflow-y-auto [&::-webkit-scrollbar]:w-0 scrollbar-none">
+            <nav className="px-3 space-y-1 h-[calc(100%-10rem)] overflow-y-auto [&::-webkit-scrollbar]:w-0 scrollbar-none">
                 {filteredNavItems.map((item) => {
                     const active = isUrlActive(item.href);
                     const isOpen = openMenus.includes(item.title);
@@ -158,21 +158,6 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                     );
                 })}
             </nav>
-
-            {/* Profile Footer - Fixed */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200/50 bg-slate-50/80 backdrop-blur-md">
-                <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
-                    <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center text-white font-bold shadow-md ring-2 ring-white shrink-0">
-                        {auth?.user?.first_name ? auth.user.first_name.charAt(0) : 'U'}
-                    </div>
-                    {!collapsed && (
-                        <div className="flex flex-col truncate">
-                            <span className="text-xs font-bold text-slate-800 truncate">{auth?.user?.first_name || 'کاربر سیستم'}</span>
-                            <span className="text-[10px] text-slate-500 font-bold uppercase opacity-70">{userRole}</span>
-                        </div>
-                    )}
-                </div>
-            </div>
         </aside>
     );
 }
