@@ -115,7 +115,7 @@ class LetterController extends Controller
             ->where('status', true)
             ->get();
         
-        return Inertia::render('letters/Index', [
+        return Inertia::render('letters/index', [
             'letters' => $letters,
             'categories' => $categories,
             'filters' => $request->only(['search', 'letter_type', 'status', 'priority', 'date_from', 'date_to']),

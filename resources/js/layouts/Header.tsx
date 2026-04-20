@@ -1,9 +1,9 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
-    Search, Bell, Plus, LayoutDashboard, Menu,
-    LogOut, User, Settings, ShieldCheck, ChevronDown
+    Search, Bell, LayoutDashboard, Menu,
+    LogOut, User, Settings, ChevronDown
 } from 'lucide-react';
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface HeaderProps {
     onMenuClick: () => void;

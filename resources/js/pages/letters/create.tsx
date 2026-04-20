@@ -1,16 +1,16 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
+import axios from 'axios';
 import {
     Save, Paperclip, Send, Trash2,
     AlertCircle, ChevronDown, FileText,
     Calendar, UserIcon, Building2, Briefcase, Shield,
-    Flag, FolderTree, FileSignature, Clock, Users,
-    Building, Globe, UserCheck, CheckCircle, ChevronRight,
-    ArrowLeft, Hash
+    Flag, FolderTree, FileSignature, Users,
+    Building, Globe, UserCheck, CheckCircle
 } from 'lucide-react';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { store as LetterCreate } from '@/routes/letters';
-import type { LetterCategory, User, Department, Position, Organization } from '@/types';
+import type { LetterCategory, Organization } from '@/types';
 
 interface Props {
     type: 'incoming' | 'outgoing' | 'internal';
@@ -241,10 +241,13 @@ export default function LettersCreate({
 
     useEffect(() => {
         if (selectedExternalOrg && data.recipient_type === 'external') {
-            router.get('/organizations/departments', { organization_id: selectedExternalOrg }, {
-                preserveState: true,
-                onSuccess: (page) => setExternalDepartments(page.props.departments as any[]),
-            });
+            axios.get('/organizations/departments', {
+                params: { organization_id: selectedExternalOrg }
+            }).then(response => {
+                setExternalDepartments(response.data.departments as any[])
+            }).catch(error => {
+                console.error('خطا در دریافت ریاست ها', error);
+            })
         } else {
             setExternalDepartments([]);
             setSelectedExternalDept(null);
@@ -254,10 +257,15 @@ export default function LettersCreate({
 
     useEffect(() => {
         if (selectedExternalDept && data.recipient_type === 'external') {
-            router.get('/departments/positions', { department_id: selectedExternalDept }, {
-                preserveState: true,
-                onSuccess: (page) => setExternalPositions(page.props.positions as any[]),
-            });
+            axios.get('/departments/positions', {
+                params: { department_id: selectedExternalDept }
+            })
+                .then(response => {
+                    setExternalPositions(response.data.positions);
+                })
+                .catch(error => {
+                    console.error("خطا در دریافت پوزیشن‌ها", error);
+                });
         } else {
             setExternalPositions([]);
         }
@@ -266,6 +274,7 @@ export default function LettersCreate({
     useEffect(() => {
         if (selectedRecipientUser && data.recipient_type === 'internal') {
             const user = users.find(u => u.id === selectedRecipientUser);
+
             if (user) {
                 setData('recipient_name', user.name);
                 setData('recipient_position_name', user.position || '');
@@ -285,14 +294,20 @@ export default function LettersCreate({
     useEffect(() => {
         if (selectedExternalOrg && data.recipient_type === 'external') {
             const org = externalOrganizations.find(o => o.id === selectedExternalOrg);
-            if (org) setData('recipient_name', org.name);
+
+            if (org) {
+                setData('recipient_name', org.name);
+            }
         }
     }, [selectedExternalOrg, externalOrganizations]);
 
     useEffect(() => {
         if (selectedExternalDept && data.recipient_type === 'external') {
             const dept = externalDepartments.find(d => d.id === selectedExternalDept);
-            if (dept) setData('recipient_position_name', dept.name);
+
+            if (dept) {
+                setData('recipient_position_name', dept.name);
+            }
         }
     }, [selectedExternalDept, externalDepartments]);
 
@@ -318,15 +333,21 @@ export default function LettersCreate({
         const observer = new IntersectionObserver(
             entries => {
                 entries.forEach(entry => {
-                    if (entry.isIntersecting) setActiveSection(entry.target.id);
+                    if (entry.isIntersecting) {
+                        setActiveSection(entry.target.id);
+                    }
                 });
             },
             { rootMargin: '-20% 0px -60% 0px' }
         );
         sections.forEach(s => {
             const el = document.getElementById(s.id);
-            if (el) observer.observe(el);
+
+            if (el) {
+                observer.observe(el);
+            }
         });
+
         return () => observer.disconnect();
     }, []);
 
@@ -351,6 +372,7 @@ export default function LettersCreate({
         formData.append('sender_position_name', currentUser.primary_position?.name || '');
         formData.append('sender_department_id', String(currentUser.department_id || ''));
         formData.append('recipient_type', data.recipient_type);
+
         if (data.recipient_type === 'internal') {
             formData.append('recipient_user_id', String(data.recipient_user_id || ''));
             formData.append('recipient_department_id', String(data.recipient_department_id || ''));
@@ -370,6 +392,7 @@ export default function LettersCreate({
             formData.append('external_department_id', String(data.external_department_id || ''));
             formData.append('external_position_id', String(data.external_position_id || ''));
         }
+
         formData.append('cc_recipients', JSON.stringify(data.cc_recipients));
         formData.append('instruction', data.instruction);
         attachments.forEach(file => formData.append('attachments[]', file));
@@ -390,7 +413,9 @@ export default function LettersCreate({
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) setAttachments([...attachments, ...Array.from(e.target.files)]);
+        if (e.target.files) {
+            setAttachments([...attachments, ...Array.from(e.target.files)]);
+        }
     };
     const removeAttachment = (index: number) => setAttachments(attachments.filter((_, i) => i !== index));
 
@@ -493,7 +518,9 @@ export default function LettersCreate({
                                             <li key={s.id}>
                                                 <a
                                                     href={`#${s.id}`}
-                                                    onClick={(e) => { e.preventDefault(); document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth' }); }}
+                                                    onClick={(e) => {
+                                                        e.preventDefault(); document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth' });
+                                                    }}
                                                     className={`sidebar-nav-item flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-all duration-150 ${activeSection === s.id ? 'active' : ''}`}
                                                 >
                                                     <span className="nav-dot w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0" />
