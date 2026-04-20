@@ -163,6 +163,7 @@ class LetterController extends Controller
         // کاربران سازمان (برای انتخاب فرستنده/گیرنده)
         $users = User::where('organization_id', $currentUser->organization_id)
             ->where('status', 'active')
+            ->where('id', '!=', $currentUser->id)
             ->with(['primaryPosition', 'department'])
             ->get()
             ->map(fn($user) => [
@@ -171,6 +172,8 @@ class LetterController extends Controller
                 'position' => $user->primaryPosition?->name,
                 'department' => $user->department?->name,
             ]);
+
+        dd($users);
 
         // دپارتمان‌ها
         $departments = Department::where('organization_id', $currentUser->organization_id)
@@ -187,11 +190,6 @@ class LetterController extends Controller
             ->where('status', 'active')
             ->get(['id', 'name', 'code']);
 
-        // دریافت سازمان‌های خارجی با ساختار سلسله‌مراتبی
-        $externalOrganizationsTree = Organization::where('id', '!=', $currentUser->organization_id)
-            ->where('status', 'active')
-            ->get();
-
         return Inertia::render('letters/create', [
             'type' => $type,
             'categories' => $categories,
@@ -199,7 +197,6 @@ class LetterController extends Controller
             'departments' => $departments,
             'positions' => $positions,
             'externalOrganizations' => $externalOrganizations,
-            'externalOrganizationsTree' => $externalOrganizationsTree,
             'securityLevels' => config('correspondence.security_levels'),
             'priorityLevels' => config('correspondence.priority_levels'),
         ]);
