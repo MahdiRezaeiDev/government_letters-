@@ -18,9 +18,7 @@ use Inertia\Inertia;
 use App\Enums\PermissionEnum;
 use App\Http\Requests\LetterRequest;
 use App\Models\Organization;
-use Illuminate\Mail\Attachment as MailAttachment;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\FacadesLog;
 
 class LetterController extends Controller
 {
@@ -36,8 +34,8 @@ class LetterController extends Controller
                 'createdBy',
                 'senderDepartment',
                 'recipientDepartment',
-                'routings' => function ($q) {
-                    $q->where('to_user_id', auth()->id())
+                'routings' => function ($query) {
+                    $query->where('to_user_id', auth()->id())
                         ->orWhere('to_user_id', null);
                 }
             ]);
@@ -56,8 +54,8 @@ class LetterController extends Controller
             $query->where('organization_id', $currentUser->organization_id);
         } elseif ($currentUser->isDeptManager()) {
             // مدیر دپارتمان: نامه‌های دپارتمان خودش
-            $query->where(function ($q) use ($currentUser) {
-                $q->where('sender_department_id', $currentUser->department_id)
+            $query->where(function ($query) use ($currentUser) {
+                $query->where('sender_department_id', $currentUser->department_id)
                     ->orWhere('recipient_department_id', $currentUser->department_id);
             });
         } else {
@@ -93,8 +91,8 @@ class LetterController extends Controller
 
         // فیلتر جستجو
         if ($request->has('search') && $request->search) {
-            $query->where(function ($q) use ($request) {
-                $q->where('subject', 'like', "%{$request->search}%")
+            $query->where(function ($query) use ($request) {
+                $query->where('subject', 'like', "%{$request->search}%")
                     ->orWhere('letter_number', 'like', "%{$request->search}%")
                     ->orWhere('tracking_number', 'like', "%{$request->search}%")
                     ->orWhere('content', 'like', "%{$request->search}%");
@@ -172,8 +170,6 @@ class LetterController extends Controller
                 'position' => $user->primaryPosition?->name,
                 'department' => $user->department?->name,
             ]);
-
-        dd($users);
 
         // دپارتمان‌ها
         $departments = Department::where('organization_id', $currentUser->organization_id)
