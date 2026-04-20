@@ -19,8 +19,7 @@ use App\Enums\PermissionEnum;
 use App\Http\Requests\LetterRequest;
 use App\Models\Organization;
 use App\Services\LetterService;
-use Illuminate\Container\Attributes\Auth;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class LetterController extends Controller
 {
@@ -210,7 +209,7 @@ class LetterController extends Controller
     /**
      * ذخیره نامه جدید
      */
-    public function store(LetterRequest $request)
+    public function store(Request $request)
     {
         try {
             $currentUser = Auth::user()->load(['primaryPosition', 'department']);
@@ -478,11 +477,6 @@ class LetterController extends Controller
         $sequence = $lastLetter ? intval(substr($lastLetter->letter_number, -5)) + 1 : 1;
 
         return sprintf("%s/%s/%s/%05d", $code, $year, $month, $sequence);
-    }
-
-    private function generateTrackingNumber(): string
-    {
-        return 'TRK-' . now()->format('YmdHis') . '-' . rand(1000, 9999);
     }
 
     private function createRouting(Letter $letter, int $toUserId, ?string $instruction = null): void

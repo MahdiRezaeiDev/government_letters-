@@ -52,7 +52,8 @@ class LetterRequest extends FormRequest
             'cc_recipients' => 'nullable|array',
             'instruction' => 'nullable|string',
 
-            'attachments.*' => 'nullable|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png',
         ];
     }
 

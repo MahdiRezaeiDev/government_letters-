@@ -1,12 +1,11 @@
 import { Head, usePage } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
-import axios from 'axios';
 import {
     Save, Paperclip, Send, Trash2,
     AlertCircle, ChevronDown, FileText,
     Calendar, UserIcon, Building2, Briefcase, Shield,
-    Flag, FolderTree, FileSignature, Users,
-    Building, Globe, UserCheck, CheckCircle
+    Flag, FolderTree, FileSignature,
+    Building, UserCheck, X, Eye, Download
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { store as LetterCreate } from '@/routes/letters';
@@ -41,6 +40,7 @@ interface FormData {
     external_department_id: number | null;
     external_position_id: number | null;
     instruction: string;
+    attachments?: File[];
 }
 
 // داده‌های فیک برای تست
@@ -218,9 +218,10 @@ export default function LettersCreate({
         external_department_id: null,
         external_position_id: null,
         instruction: '',
+        attachments: [],
     });
 
-    // State variables
+    // State variables for UI
     const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null);
     const [availablePositions, setAvailablePositions] = useState<{ id: number; name: string }[]>([]);
 
@@ -229,20 +230,17 @@ export default function LettersCreate({
     const [externalDepartments, setExternalDepartments] = useState<{ id: number; name: string; parent_id: number | null }[]>([]);
     const [externalPositions, setExternalPositions] = useState<{ id: number; name: string }[]>([]);
 
-    const [attachments, setAttachments] = useState<File[]>([]);
     const [activeSection, setActiveSection] = useState('basic');
     const [fakeDataLoaded, setFakeDataLoaded] = useState(false);
+    const [previewFile, setPreviewFile] = useState<File | null>(null);
 
     // 🎯 پر کردن خودکار فرم با داده‌های فیک در محیط development
     useEffect(() => {
         if (process.env.NODE_ENV === 'development' && !fakeDataLoaded) {
-            // استفاده از داده‌های فیک داخلی (می‌توانید به external تغییر دهید)
-            const useExternalData = false; // true = گیرنده خارجی, false = گیرنده داخلی
+            const useExternalData = false;
             const fakeData = useExternalData ? FAKE_DATA.external : FAKE_DATA.internal;
-            
-            // تاخیر کوچک برای اطمینان از لود شدن کامل کامپوننت
+
             const timer = setTimeout(() => {
-                // تنظیم داده‌های پایه
                 setData('category_id', fakeData.category_id);
                 setData('subject', fakeData.subject);
                 setData('summary', fakeData.summary);
@@ -255,17 +253,15 @@ export default function LettersCreate({
                 setData('recipient_type', fakeData.recipient_type);
                 setData('instruction', fakeData.instruction);
 
-                // تنظیم گیرنده داخلی
                 if (fakeData.recipient_type === 'internal') {
-                    // انتخاب اولین دپارتمان موجود
                     if (departments.length > 0) {
                         const firstDept = departments[0];
                         setSelectedDepartment(firstDept.id);
                         setData('recipient_department_id', firstDept.id);
-                        
-                        // انتخاب اولین پوزیشن مربوط به این دپارتمان
+
                         setTimeout(() => {
                             const deptPositions = positions.filter(p => p.department_id === firstDept.id);
+
                             if (deptPositions.length > 0) {
                                 const firstPos = deptPositions[0];
                                 setData('recipient_position_id', firstPos.id);
@@ -274,33 +270,30 @@ export default function LettersCreate({
                             }
                         }, 200);
                     }
-                } 
-                // تنظیم گیرنده خارجی
-                else {
-                    // انتخاب اولین سازمان خارجی
+                } else {
                     if (externalOrganizationsTree.length > 0) {
                         const firstOrg = externalOrganizationsTree[0];
                         setSelectedExternalOrg(firstOrg.id);
                         setData('external_organization_id', firstOrg.id);
-                        
-                        // بارگذاری دپارتمان‌های این سازمان
+
                         setTimeout(() => {
                             axios.get('/organizations/departments', {
                                 params: { organization_id: firstOrg.id }
                             }).then(response => {
                                 const depts = response.data.departments;
+
                                 if (depts && depts.length > 0) {
                                     setExternalDepartments(depts);
                                     const firstDept = depts[0];
                                     setSelectedExternalDept(firstDept.id);
                                     setData('external_department_id', firstDept.id);
-                                    
-                                    // بارگذاری پوزیشن‌های این دپارتمان
+
                                     setTimeout(() => {
                                         axios.get('/departments/positions', {
                                             params: { department_id: firstDept.id }
                                         }).then(posResponse => {
                                             const posList = posResponse.data.positions;
+
                                             if (posList && posList.length > 0) {
                                                 setExternalPositions(posList);
                                                 const firstPos = posList[0];
@@ -382,23 +375,32 @@ export default function LettersCreate({
     const getOrganizationName = (orgId: number): string => {
         const findOrg = (orgs: Organization[], id: number): string => {
             for (const org of orgs) {
-                if (org.id === id) return org.name;
+                if (org.id === id) {
+                    return org.name;
+                }
+
                 if (org.children) {
                     const found = findOrg(org.children, id);
-                    if (found) return found;
+
+                    if (found) {
+                        return found;
+                    }
                 }
             }
+
             return '';
         };
+
         return findOrg(externalOrganizationsTree, orgId);
     };
 
     const getDepartmentName = (deptId: number): string => {
         const dept = externalDepartments.find(d => d.id === deptId);
+
         return dept?.name || '';
     };
 
-    // Intersection observer
+    // Intersection observer for active section
     useEffect(() => {
         const observer = new IntersectionObserver(
             entries => {
@@ -410,76 +412,87 @@ export default function LettersCreate({
             },
             { rootMargin: '-20% 0px -60% 0px' }
         );
+
         sections.forEach(s => {
             const el = document.getElementById(s.id);
-            if (el) observer.observe(el);
+
+            if (el) {
+                observer.observe(el);
+            }
         });
+
         return () => observer.disconnect();
     }, []);
 
-    // Submit handler
+    // ✅ اصلاح شده: تابع ارسال با استفاده از useForm
     const handleSubmit = (e: React.FormEvent, isDraft: boolean) => {
         e.preventDefault();
+
+        // تنظیم is_draft در دیتا
         setData('is_draft', isDraft);
-        const formData = new FormData();
 
-        // فیلدهای اصلی
-        formData.append('letter_type', 'outgoing');
-        formData.append('category_id', String(data.category_id || ''));
-        formData.append('subject', data.subject);
-        formData.append('summary', data.summary || '');
-        formData.append('content', data.content || '');
-        formData.append('security_level', data.security_level);
-        formData.append('priority', data.priority);
-        formData.append('date', data.date);
-        formData.append('due_date', data.due_date || '');
-        formData.append('sheet_count', String(data.sheet_count));
-        formData.append('is_draft', String(isDraft));
-
-        // فرستنده (کاربر فعلی)
-        formData.append('sender_user_id', String(currentUser.id));
-        formData.append('sender_name', currentUser.full_name);
-        formData.append('sender_position_name', currentUser.primary_position?.name || '');
-        formData.append('sender_department_id', String(currentUser.department_id || ''));
-
-        // گیرنده
-        if (data.recipient_type === 'internal') {
-            formData.append('recipient_type', 'internal');
-            formData.append('recipient_department_id', String(data.recipient_department_id || ''));
-            formData.append('recipient_position_id', String(data.recipient_position_id || ''));
-            formData.append('recipient_name', data.recipient_name);
-            formData.append('recipient_position_name', data.recipient_position_name);
-        } else {
-            formData.append('recipient_type', 'external');
-            formData.append('recipient_name', data.recipient_name);
-            formData.append('recipient_position_name', data.recipient_position_name);
-        }
-
-        formData.append('instruction', data.instruction);
-        attachments.forEach(file => formData.append('attachments[]', file));
-
+        // ارسال مستقیم با useForm - اینرتزیا به صورت خودکار FormData می‌سازد
         post(LetterCreate(), {
-            data: formData,
             preserveScroll: true,
-            onSuccess: () => {
+            onSuccess: (page) => {
+                console.log('Success:', page);
+
                 if (!isDraft) {
                     reset();
-                    setAttachments([]);
+                    // ریست کردن state های محلی
                     setSelectedDepartment(null);
                     setSelectedExternalOrg(null);
                     setSelectedExternalDept(null);
+                    setAvailablePositions([]);
+                    setExternalDepartments([]);
+                    setExternalPositions([]);
                 }
+            },
+            onError: (errors) => {
+                console.error('Errors:', errors);
             },
         });
     };
 
+    // ✅ توابع مدیریت فایل‌ها
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            setAttachments([...attachments, ...Array.from(e.target.files)]);
+            const newFiles = Array.from(e.target.files);
+            const currentAttachments = data.attachments || [];
+            setData('attachments', [...currentAttachments, ...newFiles]);
         }
     };
 
-    const removeAttachment = (index: number) => setAttachments(attachments.filter((_, i) => i !== index));
+    const removeAttachment = (index: number) => {
+        const currentAttachments = data.attachments || [];
+        setData('attachments', currentAttachments.filter((_, i) => i !== index));
+    };
+
+    const formatFileSize = (bytes: number): string => {
+        if (bytes === 0) {
+            return '0 Bytes';
+        }
+
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
+    const getFileIcon = (fileName: string): React.ElementType => {
+        const ext = fileName.split('.').pop()?.toLowerCase();
+
+        if (ext === 'pdf') {
+            return FileText;
+        }
+
+        if (['jpg', 'jpeg', 'png', 'gif'].includes(ext || '')) {
+            return Eye;
+        }
+
+        return FileText;
+    };
 
     const renderOrganizationTree = (organizations: Organization[], level = 0) => {
         return organizations.map(org => (
@@ -501,13 +514,20 @@ export default function LettersCreate({
                 <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between h-16">
-                            <h1 className="text-sm font-bold text-slate-800">ثبت مکتوب صادره</h1>
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-sm font-bold text-slate-800">ثبت مکتوب صادره</h1>
+                                {(data.attachments && data.attachments.length > 0) && (
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                        {data.attachments.length} پیوست
+                                    </span>
+                                )}
+                            </div>
                             <div className="flex items-center gap-2.5">
                                 <button
                                     type="button"
                                     onClick={(e) => handleSubmit(e, true)}
                                     disabled={processing}
-                                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl"
+                                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <Save className="h-4 w-4" />
                                     پیش‌نویس
@@ -516,7 +536,7 @@ export default function LettersCreate({
                                     type="submit"
                                     form="letter-form"
                                     disabled={processing}
-                                    className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md"
+                                    className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <Send className="h-4 w-4" />
                                     {processing ? 'در حال ارسال...' : 'ثبت و ارسال'}
@@ -575,6 +595,9 @@ export default function LettersCreate({
                                                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                                                 ))}
                                             </SelectField>
+                                            {errors.category_id && (
+                                                <p className="text-rose-500 text-xs mt-1">{errors.category_id}</p>
+                                            )}
                                         </div>
                                         <div>
                                             <FieldLabel required>تاریخ مکتوب</FieldLabel>
@@ -584,6 +607,9 @@ export default function LettersCreate({
                                                 value={data.date}
                                                 onChange={(v) => setData('date', v)}
                                             />
+                                            {errors.date && (
+                                                <p className="text-rose-500 text-xs mt-1">{errors.date}</p>
+                                            )}
                                         </div>
                                         <div>
                                             <FieldLabel required>اولویت</FieldLabel>
@@ -609,6 +635,23 @@ export default function LettersCreate({
                                                 ))}
                                             </SelectField>
                                         </div>
+                                        <div>
+                                            <FieldLabel>تاریخ سررسید</FieldLabel>
+                                            <InputField
+                                                icon={Calendar}
+                                                type="date"
+                                                value={data.due_date || ''}
+                                                onChange={(v) => setData('due_date', v || null)}
+                                            />
+                                        </div>
+                                        <div>
+                                            <FieldLabel>تعداد برگه</FieldLabel>
+                                            <InputField
+                                                type="number"
+                                                value={String(data.sheet_count)}
+                                                onChange={(v) => setData('sheet_count', parseInt(v) || 1)}
+                                            />
+                                        </div>
                                         <div className="md:col-span-2">
                                             <FieldLabel required>موضوع</FieldLabel>
                                             <InputField
@@ -617,6 +660,9 @@ export default function LettersCreate({
                                                 error={errors.subject}
                                                 placeholder="موضوع مکتوب را وارد کنید..."
                                             />
+                                            {errors.subject && (
+                                                <p className="text-rose-500 text-xs mt-1">{errors.subject}</p>
+                                            )}
                                         </div>
                                         <div className="md:col-span-2">
                                             <FieldLabel>خلاصه</FieldLabel>
@@ -635,7 +681,7 @@ export default function LettersCreate({
                                 <SectionCard id="sender" title="فرستنده" subtitle="شما به عنوان فرستنده ثبت می‌شوید" icon={UserIcon} iconColor="#10b981">
                                     <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
                                         <div className="flex items-center gap-4">
-                                            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-lg font-bold">
+                                            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-lg font-bold shadow-sm">
                                                 {currentUser.full_name?.charAt(0) || 'U'}
                                             </div>
                                             <div>
@@ -650,7 +696,6 @@ export default function LettersCreate({
 
                                 {/* 3. Recipient */}
                                 <SectionCard id="recipient" title="گیرنده" subtitle="مشخصات گیرنده مکتوب" icon={UserCheck} iconColor="#8b5cf6">
-                                    {/* نوع گیرنده */}
                                     <div className="mb-6">
                                         <FieldLabel required>نوع گیرنده</FieldLabel>
                                         <div className="flex gap-3">
@@ -663,11 +708,14 @@ export default function LettersCreate({
                                                         setData('recipient_type', 'internal');
                                                         setSelectedExternalOrg(null);
                                                         setExternalDepartments([]);
+                                                        setData('external_organization_id', null);
+                                                        setData('external_department_id', null);
+                                                        setData('external_position_id', null);
                                                     }}
                                                     className="sr-only"
                                                 />
-                                                <div className={`flex items-center gap-3 border-2 rounded-xl px-4 py-3 transition-all ${data.recipient_type === 'internal' ? 'border-indigo-400 bg-indigo-50' : 'border-slate-200'}`}>
-                                                    <Building2 className="h-4 w-4" />
+                                                <div className={`flex items-center gap-3 border-2 rounded-xl px-4 py-3 transition-all ${data.recipient_type === 'internal' ? 'border-indigo-400 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                                                    <Building2 className="h-5 w-5 text-indigo-500" />
                                                     <div>
                                                         <p className="text-sm font-semibold">داخلی</p>
                                                         <p className="text-xs text-slate-400">دپارتمان‌های سازمان</p>
@@ -683,11 +731,13 @@ export default function LettersCreate({
                                                         setData('recipient_type', 'external');
                                                         setSelectedDepartment(null);
                                                         setAvailablePositions([]);
+                                                        setData('recipient_department_id', null);
+                                                        setData('recipient_position_id', null);
                                                     }}
                                                     className="sr-only"
                                                 />
-                                                <div className={`flex items-center gap-3 border-2 rounded-xl px-4 py-3 transition-all ${data.recipient_type === 'external' ? 'border-indigo-400 bg-indigo-50' : 'border-slate-200'}`}>
-                                                    <Building className="h-4 w-4" />
+                                                <div className={`flex items-center gap-3 border-2 rounded-xl px-4 py-3 transition-all ${data.recipient_type === 'external' ? 'border-indigo-400 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                                                    <Building className="h-5 w-5 text-indigo-500" />
                                                     <div>
                                                         <p className="text-sm font-semibold">خارجی</p>
                                                         <p className="text-xs text-slate-400">وزارت‌خانه‌ها و سازمان‌ها</p>
@@ -830,37 +880,72 @@ export default function LettersCreate({
                                     />
                                 </SectionCard>
 
-                                {/* 5. Attachments */}
+                                {/* 5. Attachments - ✅ اصلاح شده */}
                                 <SectionCard id="attachments" title="پیوست‌ها" subtitle="فایل‌های ضمیمه" icon={Paperclip} iconColor="#6366f1">
-                                    <label className="group flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50">
+                                    <label className="group flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 transition-all">
                                         <div className="text-center">
-                                            <div className="h-10 w-10 rounded-xl bg-slate-100 group-hover:bg-indigo-100 flex items-center justify-center mx-auto mb-3">
+                                            <div className="h-10 w-10 rounded-xl bg-slate-100 group-hover:bg-indigo-100 flex items-center justify-center mx-auto mb-3 transition-colors">
                                                 <Paperclip className="h-5 w-5 text-slate-400 group-hover:text-indigo-500" />
                                             </div>
                                             <p className="text-sm font-semibold text-slate-600">برای آپلود کلیک کنید</p>
-                                            <p className="text-xs text-slate-400 mt-1">PDF, DOC, DOCX, JPG, PNG</p>
+                                            <p className="text-xs text-slate-400 mt-1">PDF, DOC, DOCX, JPG, PNG (حداکثر ۱۰ مگابایت)</p>
                                         </div>
-                                        <input type="file" multiple onChange={handleFileChange} className="hidden" />
+                                        <input
+                                            type="file"
+                                            multiple
+                                            onChange={handleFileChange}
+                                            className="hidden"
+                                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                        />
                                     </label>
 
-                                    {attachments.length > 0 && (
+                                    {data.attachments && data.attachments.length > 0 && (
                                         <div className="mt-4 space-y-2">
-                                            {attachments.map((file, index) => (
-                                                <div key={index} className="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-xl">
-                                                    <div className="flex items-center gap-3">
-                                                        <FileText className="h-4 w-4 text-indigo-600" />
-                                                        <span className="text-sm">{file.name}</span>
-                                                        <span className="text-xs text-slate-400">{(file.size / 1024).toFixed(1)} KB</span>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <p className="text-xs font-semibold text-slate-500">
+                                                    {data.attachments.length} فایل انتخاب شده
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setData('attachments', [])}
+                                                    className="text-xs text-rose-500 hover:text-rose-600"
+                                                >
+                                                    حذف همه
+                                                </button>
+                                            </div>
+                                            {data.attachments.map((file, index) => {
+                                                const FileIconComponent = getFileIcon(file.name);
+
+                                                return (
+                                                    <div key={index} className="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors">
+                                                        <div className="flex items-center gap-3">
+                                                            <FileIconComponent className="h-5 w-5 text-indigo-600" />
+                                                            <div>
+                                                                <span className="text-sm font-medium text-slate-700">{file.name}</span>
+                                                                <span className="text-xs text-slate-400 mr-2">{formatFileSize(file.size)}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setPreviewFile(file)}
+                                                                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                                title="پیش‌نمایش"
+                                                            >
+                                                                <Eye className="h-4 w-4" />
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removeAttachment(index)}
+                                                                className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                                                                title="حذف"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeAttachment(index)}
-                                                        className="text-slate-400 hover:text-rose-500"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </SectionCard>
@@ -881,6 +966,61 @@ export default function LettersCreate({
                     </form>
                 </div>
             </div>
+
+            {/* Preview Modal */}
+            {previewFile && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setPreviewFile(null)}>
+                    <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-xl" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                            <h3 className="text-sm font-bold text-slate-800">پیش‌نمایش فایل</h3>
+                            <button
+                                onClick={() => setPreviewFile(null)}
+                                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <FileText className="h-6 w-6 text-indigo-600" />
+                                <div>
+                                    <p className="font-medium text-slate-800">{previewFile.name}</p>
+                                    <p className="text-xs text-slate-400">{formatFileSize(previewFile.size)}</p>
+                                </div>
+                            </div>
+                            {previewFile.type.startsWith('image/') ? (
+                                <img
+                                    src={URL.createObjectURL(previewFile)}
+                                    alt={previewFile.name}
+                                    className="max-w-full max-h-96 mx-auto rounded-lg"
+                                />
+                            ) : (
+                                <div className="text-center py-8 text-slate-400">
+                                    <FileText className="h-16 w-16 mx-auto mb-3 opacity-50" />
+                                    <p>پیش‌نمایش برای این نوع فایل در دسترس نیست</p>
+                                    <p className="text-xs mt-2">می‌توانید فایل را دانلود کنید</p>
+                                </div>
+                            )}
+                        </div>
+                        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                            <button
+                                onClick={() => {
+                                    const url = URL.createObjectURL(previewFile);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = previewFile.name;
+                                    a.click();
+                                    URL.revokeObjectURL(url);
+                                }}
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors"
+                            >
+                                <Download className="h-4 w-4" />
+                                دانلود فایل
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
