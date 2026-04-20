@@ -1,4 +1,4 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import axios from 'axios';
 import {
@@ -13,26 +13,15 @@ import { store as LetterCreate } from '@/routes/letters';
 import type { LetterCategory, Organization } from '@/types';
 
 interface Props {
-    type: 'incoming' | 'outgoing' | 'internal';
     categories: LetterCategory[];
-    users: {
-        id: number;
-        name: string;
-        position: string | null;
-        department: string | null;
-        department_id?: number;
-        position_id?: number;
-    }[];
     departments: { id: number; name: string }[];
     positions: { id: number; name: string; department_id: number }[];
-    externalOrganizations: Organization[];
     externalOrganizationsTree: Organization[];
     securityLevels: Record<string, string>;
     priorityLevels: Record<string, string>;
 }
 
 interface FormData {
-    letter_type: string;
     category_id: number | null;
     subject: string;
     summary: string;
@@ -41,11 +30,9 @@ interface FormData {
     priority: string;
     date: string;
     due_date: string | null;
-    response_deadline: string | null;
     sheet_count: number;
     is_draft: boolean;
     recipient_type: 'internal' | 'external';
-    recipient_user_id: number | null;
     recipient_department_id: number | null;
     recipient_position_id: number | null;
     recipient_name: string;
@@ -53,32 +40,67 @@ interface FormData {
     external_organization_id: number | null;
     external_department_id: number | null;
     external_position_id: number | null;
-    cc_recipients: number[];
     instruction: string;
 }
 
-const typeConfig = {
-    incoming: {
-        label: 'ثبت نامه وارده',
-        desc: 'نامه‌ای که از سازمان یا شخص دیگری دریافت کرده‌اید',
-        accent: '#0ea5e9',
-        accentLight: '#e0f2fe',
-        badge: 'وارده',
-    },
-    outgoing: {
-        label: 'ایجاد نامه صادره',
-        desc: 'نامه‌ای که به سازمان یا شخص دیگری ارسال می‌کنید',
-        accent: '#8b5cf6',
-        accentLight: '#ede9fe',
-        badge: 'صادره',
-    },
+// داده‌های فیک برای تست
+const FAKE_DATA = {
     internal: {
-        label: 'ایجاد نامه داخلی',
-        desc: 'نامه‌ای که بین واحدهای داخلی سازمان رد و بدل می‌شود',
-        accent: '#10b981',
-        accentLight: '#d1fae5',
-        badge: 'داخلی',
+        category_id: 1,
+        subject: 'درخواست بودجه تکمیلی پروژه سامانه جامع اداری',
+        summary: 'با توجه به افزایش دامنه پروژه و نیاز به منابع بیشتر، درخواست تخصیص بودجه تکمیلی به مبلغ ۵۰۰ میلیون تومان جهت تکمیل فاز دوم سامانه جامع اداری را داریم.',
+        content: `بسمه تعالی
+
+احتراماً، همانطور که مستحضر هستید پروژه "سامانه جامع اداری" از ابتدای سال جاری با موفقیت آغاز شده و فاز اول آن طبق برنامه زمان‌بندی به اتمام رسیده است. با توجه به استقبال واحدهای سازمانی و نیاز به توسعه قابلیت‌های جدید، دامنه پروژه در فاز دوم گسترش یافته است.
+
+بر اساس برآوردهای کارشناسی انجام شده توسط تیم فنی پروژه، جهت تکمیل فاز دوم و راه‌اندازی کامل سامانه، نیاز به تخصیص بودجه تکمیلی به مبلغ ۵,۰۰۰,۰۰۰,۰۰۰ ریال (پانصد میلیون تومان) می‌باشد.
+
+جزئیات هزینه‌های پیش‌بینی شده به شرح پیوست تقدیم می‌گردد. خواهشمند است دستور فرمایید نسبت به بررسی و تخصیص بودجه مورد نظر اقدام لازم معمول گردد.
+
+بدیهی است در صورت تخصیص به موقع بودجه، فاز دوم پروژه تا پایان آذرماه سال جاری به بهره‌برداری خواهد رسید.
+
+با تجدید احترام`,
+        security_level: 'confidential',
+        priority: 'high',
+        date: new Date().toISOString().split('T')[0],
+        due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        sheet_count: 3,
+        recipient_type: 'internal' as const,
+        instruction: 'با توجه به فوریت موضوع، خواهشمند است در اسرع وقت بررسی و اقدام لازم صورت پذیرد. نتیجه حداکثر تا پایان وقت اداری فردا به این دفتر اعلام گردد.',
     },
+    external: {
+        category_id: 2,
+        subject: 'دعوتنامه شرکت در جلسه کمیته تخصصی امنیت سایبری',
+        summary: 'بدینوسیله از جنابعالی دعوت می‌گردد در جلسه کمیته تخصصی امنیت سایبری که در تاریخ ۱۴۰۲/۰۹/۰۱ برگزار می‌گردد، حضور به هم رسانید.',
+        content: `بسمه تعالی
+
+جناب آقای/سرکار خانم ....................
+معاون محترم ....................
+
+سلام علیکم
+
+احتراماً، بدینوسیله از جنابعالی دعوت می‌گردد در جلسه کمیته تخصصی امنیت سایبری که با حضور نمایندگان دستگاه‌های اجرایی استان برگزار می‌گردد، حضور به هم رسانید.
+
+زمان: روز سه‌شنبه مورخ ۱۴۰۲/۰۹/۰۱ ساعت ۱۰:۰۰ صبح
+مکان: سالن جلسات طبقه پنجم - ساختمان مرکزی
+
+دستور جلسه:
+۱- بررسی آخرین وضعیت تهدیدات سایبری استان
+۲- ارائه گزارش اقدامات انجام شده در حوزه امنیت شبکه
+۳- برنامه‌ریزی مانور امنیت سایبری پایان سال
+
+خواهشمند است نماینده محترم خود را حداکثر تا تاریخ ۱۴۰۲/۰۸/۲۸ به این دبیرخانه معرفی فرمایید.
+
+با تجدید احترام
+دبیر کمیته تخصصی امنیت سایبری`,
+        security_level: 'internal',
+        priority: 'normal',
+        date: new Date().toISOString().split('T')[0],
+        due_date: null,
+        sheet_count: 1,
+        recipient_type: 'external' as const,
+        instruction: 'پس از تایید نهایی، نامه با پست پیشتاز ارسال گردد.',
+    }
 };
 
 const sections = [
@@ -102,10 +124,10 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
 }
 
 function SelectField({
-    icon: Icon, value, onChange, onBlur, error, children, placeholder
+    icon: Icon, value, onChange, error, children, placeholder
 }: {
     icon?: React.ElementType; value: string | number; onChange: (v: string) => void;
-    onBlur?: () => void; error?: string | null; children: React.ReactNode; placeholder?: string;
+    error?: string | null; children: React.ReactNode; placeholder?: string;
 }) {
     return (
         <div>
@@ -114,7 +136,6 @@ function SelectField({
                 <select
                     value={value}
                     onChange={e => onChange(e.target.value)}
-                    onBlur={onBlur}
                     className={`w-full ${Icon ? 'pr-10' : 'pr-4'} pl-9 py-3 text-sm bg-transparent focus:outline-none appearance-none text-slate-700`}
                 >
                     {placeholder && <option value="">{placeholder}</option>}
@@ -122,20 +143,15 @@ function SelectField({
                 </select>
                 <ChevronDown className="absolute left-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
             </div>
-            {error && (
-                <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />{error}
-                </p>
-            )}
         </div>
     );
 }
 
 function InputField({
-    icon: Icon, value, onChange, onBlur, error, placeholder, type = 'text'
+    icon: Icon, value, onChange, error, placeholder, type = 'text'
 }: {
     icon?: React.ElementType; value: string; onChange: (v: string) => void;
-    onBlur?: () => void; error?: string | null; placeholder?: string; type?: string;
+    error?: string | null; placeholder?: string; type?: string;
 }) {
     return (
         <div>
@@ -145,16 +161,10 @@ function InputField({
                     type={type}
                     value={value}
                     onChange={e => onChange(e.target.value)}
-                    onBlur={onBlur}
                     placeholder={placeholder}
                     className={`w-full ${Icon ? 'pr-10' : 'pr-4'} pl-4 py-3 text-sm bg-transparent focus:outline-none text-slate-700 placeholder-slate-300`}
                 />
             </div>
-            {error && (
-                <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />{error}
-                </p>
-            )}
         </div>
     );
 }
@@ -181,16 +191,14 @@ function SectionCard({ id, title, subtitle, icon: Icon, iconColor, children }: {
 // ─── Main Component ────────────────────────────────────────────────────────
 
 export default function LettersCreate({
-    type, categories, users, departments, positions,
-    externalOrganizations, externalOrganizationsTree,
+    categories, departments, positions,
+    externalOrganizationsTree,
     securityLevels, priorityLevels
 }: Props) {
     const { auth } = usePage().props as any;
     const currentUser = auth.user;
-    const config = typeConfig[type];
 
     const { data, setData, post, processing, errors, reset } = useForm<FormData>({
-        letter_type: type,
         category_id: null,
         subject: '',
         summary: '',
@@ -199,11 +207,9 @@ export default function LettersCreate({
         priority: 'normal',
         date: new Date().toISOString().split('T')[0],
         due_date: null,
-        response_deadline: null,
         sheet_count: 1,
         is_draft: true,
         recipient_type: 'internal',
-        recipient_user_id: null,
         recipient_department_id: null,
         recipient_position_id: null,
         recipient_name: '',
@@ -211,124 +217,188 @@ export default function LettersCreate({
         external_organization_id: null,
         external_department_id: null,
         external_position_id: null,
-        cc_recipients: [],
         instruction: '',
     });
 
-    const [selectedRecipientUser, setSelectedRecipientUser] = useState<number | null>(null);
-    const [selectedRecipientDepartment, setSelectedRecipientDepartment] = useState<number | null>(null);
+    // State variables
+    const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null);
+    const [availablePositions, setAvailablePositions] = useState<{ id: number; name: string }[]>([]);
+
     const [selectedExternalOrg, setSelectedExternalOrg] = useState<number | null>(null);
     const [selectedExternalDept, setSelectedExternalDept] = useState<number | null>(null);
-    const [attachments, setAttachments] = useState<File[]>([]);
-    const [touched, setTouched] = useState<Record<string, boolean>>({});
-    const [activeSection, setActiveSection] = useState('basic');
-    const [recipientPositions, setRecipientPositions] = useState<{ id: number; name: string }[]>([]);
     const [externalDepartments, setExternalDepartments] = useState<{ id: number; name: string; parent_id: number | null }[]>([]);
     const [externalPositions, setExternalPositions] = useState<{ id: number; name: string }[]>([]);
 
-    const handleBlur = (field: string) => setTouched(prev => ({ ...prev, [field]: true }));
-    const getFieldError = (field: string) => touched[field] && errors[field] ? errors[field] : null;
+    const [attachments, setAttachments] = useState<File[]>([]);
+    const [activeSection, setActiveSection] = useState('basic');
+    const [fakeDataLoaded, setFakeDataLoaded] = useState(false);
 
-    // ── Effects (logic preserved) ─────────────────────────────────────────
-
+    // 🎯 پر کردن خودکار فرم با داده‌های فیک در محیط development
     useEffect(() => {
-        if (selectedRecipientDepartment) {
-            setRecipientPositions(positions.filter(p => p.department_id === selectedRecipientDepartment));
-        } else {
-            setRecipientPositions([]);
+        if (process.env.NODE_ENV === 'development' && !fakeDataLoaded) {
+            // استفاده از داده‌های فیک داخلی (می‌توانید به external تغییر دهید)
+            const useExternalData = false; // true = گیرنده خارجی, false = گیرنده داخلی
+            const fakeData = useExternalData ? FAKE_DATA.external : FAKE_DATA.internal;
+            
+            // تاخیر کوچک برای اطمینان از لود شدن کامل کامپوننت
+            const timer = setTimeout(() => {
+                // تنظیم داده‌های پایه
+                setData('category_id', fakeData.category_id);
+                setData('subject', fakeData.subject);
+                setData('summary', fakeData.summary);
+                setData('content', fakeData.content);
+                setData('security_level', fakeData.security_level);
+                setData('priority', fakeData.priority);
+                setData('date', fakeData.date);
+                setData('due_date', fakeData.due_date);
+                setData('sheet_count', fakeData.sheet_count);
+                setData('recipient_type', fakeData.recipient_type);
+                setData('instruction', fakeData.instruction);
+
+                // تنظیم گیرنده داخلی
+                if (fakeData.recipient_type === 'internal') {
+                    // انتخاب اولین دپارتمان موجود
+                    if (departments.length > 0) {
+                        const firstDept = departments[0];
+                        setSelectedDepartment(firstDept.id);
+                        setData('recipient_department_id', firstDept.id);
+                        
+                        // انتخاب اولین پوزیشن مربوط به این دپارتمان
+                        setTimeout(() => {
+                            const deptPositions = positions.filter(p => p.department_id === firstDept.id);
+                            if (deptPositions.length > 0) {
+                                const firstPos = deptPositions[0];
+                                setData('recipient_position_id', firstPos.id);
+                                setData('recipient_position_name', firstPos.name);
+                                setData('recipient_name', `${firstPos.name} - ${firstDept.name}`);
+                            }
+                        }, 200);
+                    }
+                } 
+                // تنظیم گیرنده خارجی
+                else {
+                    // انتخاب اولین سازمان خارجی
+                    if (externalOrganizationsTree.length > 0) {
+                        const firstOrg = externalOrganizationsTree[0];
+                        setSelectedExternalOrg(firstOrg.id);
+                        setData('external_organization_id', firstOrg.id);
+                        
+                        // بارگذاری دپارتمان‌های این سازمان
+                        setTimeout(() => {
+                            axios.get('/organizations/departments', {
+                                params: { organization_id: firstOrg.id }
+                            }).then(response => {
+                                const depts = response.data.departments;
+                                if (depts && depts.length > 0) {
+                                    setExternalDepartments(depts);
+                                    const firstDept = depts[0];
+                                    setSelectedExternalDept(firstDept.id);
+                                    setData('external_department_id', firstDept.id);
+                                    
+                                    // بارگذاری پوزیشن‌های این دپارتمان
+                                    setTimeout(() => {
+                                        axios.get('/departments/positions', {
+                                            params: { department_id: firstDept.id }
+                                        }).then(posResponse => {
+                                            const posList = posResponse.data.positions;
+                                            if (posList && posList.length > 0) {
+                                                setExternalPositions(posList);
+                                                const firstPos = posList[0];
+                                                setData('external_position_id', firstPos.id);
+                                                setData('recipient_position_name', firstPos.name);
+                                                setData('recipient_name', `${firstOrg.name} - ${firstDept.name}`);
+                                            }
+                                        });
+                                    }, 100);
+                                }
+                            });
+                        }, 100);
+                    }
+                }
+
+                setFakeDataLoaded(true);
+                console.log('✅ فرم با داده‌های فیک پر شد (Development Mode)');
+            }, 300);
+
+            return () => clearTimeout(timer);
         }
-    }, [selectedRecipientDepartment, positions]);
+    }, []);
 
+    // بارگذاری پوزیشن‌ها هنگام انتخاب دپارتمان داخلی
     useEffect(() => {
-        if (selectedExternalOrg && data.recipient_type === 'external') {
+        if (selectedDepartment) {
+            const deptPositions = positions.filter(p => p.department_id === selectedDepartment);
+            setAvailablePositions(deptPositions);
+        } else {
+            setAvailablePositions([]);
+        }
+    }, [selectedDepartment, positions]);
+
+    // بارگذاری دپارتمان‌های سازمان خارجی
+    useEffect(() => {
+        if (selectedExternalOrg) {
             axios.get('/organizations/departments', {
                 params: { organization_id: selectedExternalOrg }
             }).then(response => {
-                setExternalDepartments(response.data.departments as any[])
+                setExternalDepartments(response.data.departments);
             }).catch(error => {
-                console.error('خطا در دریافت ریاست ها', error);
-            })
+                console.error('خطا:', error);
+                setExternalDepartments([]);
+            });
         } else {
             setExternalDepartments([]);
             setSelectedExternalDept(null);
             setExternalPositions([]);
         }
-    }, [selectedExternalOrg, data.recipient_type]);
+    }, [selectedExternalOrg]);
 
+    // بارگذاری پوزیشن‌های دپارتمان خارجی
     useEffect(() => {
-        if (selectedExternalDept && data.recipient_type === 'external') {
+        if (selectedExternalDept) {
             axios.get('/departments/positions', {
                 params: { department_id: selectedExternalDept }
-            })
-                .then(response => {
-                    setExternalPositions(response.data.positions);
-                })
-                .catch(error => {
-                    console.error("خطا در دریافت پوزیشن‌ها", error);
-                });
+            }).then(response => {
+                setExternalPositions(response.data.positions);
+            }).catch(error => {
+                console.error('خطا:', error);
+                setExternalPositions([]);
+            });
         } else {
             setExternalPositions([]);
         }
-    }, [selectedExternalDept, data.recipient_type]);
+    }, [selectedExternalDept]);
 
+    // تنظیم نام گیرنده خارجی
     useEffect(() => {
-        if (selectedRecipientUser && data.recipient_type === 'internal') {
-            const user = users.find(u => u.id === selectedRecipientUser);
-
-            if (user) {
-                setData('recipient_name', user.name);
-                setData('recipient_position_name', user.position || '');
-                setData('recipient_department_id', user.department_id || null);
-                setSelectedRecipientDepartment(user.department_id || null);
-                setData('recipient_user_id', user.id);
-            }
-        } else if (data.recipient_type !== 'internal') {
-            setData('recipient_user_id', null);
-            setData('recipient_department_id', null);
-            setData('recipient_position_id', null);
-            setSelectedRecipientUser(null);
-            setSelectedRecipientDepartment(null);
+        if (selectedExternalOrg && selectedExternalDept && data.external_position_id) {
+            const orgName = getOrganizationName(selectedExternalOrg);
+            const deptName = getDepartmentName(selectedExternalDept);
+            const positionName = externalPositions.find(p => p.id === data.external_position_id)?.name || '';
+            setData('recipient_name', `${orgName} - ${deptName}`);
+            setData('recipient_position_name', positionName);
         }
-    }, [selectedRecipientUser, data.recipient_type]);
+    }, [data.external_position_id, selectedExternalOrg, selectedExternalDept, externalPositions]);
 
-    useEffect(() => {
-        if (selectedExternalOrg && data.recipient_type === 'external') {
-            const org = externalOrganizations.find(o => o.id === selectedExternalOrg);
-
-            if (org) {
-                setData('recipient_name', org.name);
+    const getOrganizationName = (orgId: number): string => {
+        const findOrg = (orgs: Organization[], id: number): string => {
+            for (const org of orgs) {
+                if (org.id === id) return org.name;
+                if (org.children) {
+                    const found = findOrg(org.children, id);
+                    if (found) return found;
+                }
             }
-        }
-    }, [selectedExternalOrg, externalOrganizations]);
+            return '';
+        };
+        return findOrg(externalOrganizationsTree, orgId);
+    };
 
-    useEffect(() => {
-        if (selectedExternalDept && data.recipient_type === 'external') {
-            const dept = externalDepartments.find(d => d.id === selectedExternalDept);
+    const getDepartmentName = (deptId: number): string => {
+        const dept = externalDepartments.find(d => d.id === deptId);
+        return dept?.name || '';
+    };
 
-            if (dept) {
-                setData('recipient_position_name', dept.name);
-            }
-        }
-    }, [selectedExternalDept, externalDepartments]);
-
-    useEffect(() => {
-        setData('recipient_user_id', null);
-        setData('recipient_department_id', null);
-        setData('recipient_position_id', null);
-        setData('recipient_name', '');
-        setData('recipient_position_name', '');
-        setData('external_organization_id', null);
-        setData('external_department_id', null);
-        setData('external_position_id', null);
-        setSelectedRecipientUser(null);
-        setSelectedRecipientDepartment(null);
-        setSelectedExternalOrg(null);
-        setSelectedExternalDept(null);
-        setExternalDepartments([]);
-        setExternalPositions([]);
-    }, [data.recipient_type]);
-
-    // Intersection observer for active section
+    // Intersection observer
     useEffect(() => {
         const observer = new IntersectionObserver(
             entries => {
@@ -342,20 +412,19 @@ export default function LettersCreate({
         );
         sections.forEach(s => {
             const el = document.getElementById(s.id);
-
-            if (el) {
-                observer.observe(el);
-            }
+            if (el) observer.observe(el);
         });
-
         return () => observer.disconnect();
     }, []);
 
+    // Submit handler
     const handleSubmit = (e: React.FormEvent, isDraft: boolean) => {
         e.preventDefault();
         setData('is_draft', isDraft);
         const formData = new FormData();
-        formData.append('letter_type', data.letter_type);
+
+        // فیلدهای اصلی
+        formData.append('letter_type', 'outgoing');
         formData.append('category_id', String(data.category_id || ''));
         formData.append('subject', data.subject);
         formData.append('summary', data.summary || '');
@@ -364,38 +433,31 @@ export default function LettersCreate({
         formData.append('priority', data.priority);
         formData.append('date', data.date);
         formData.append('due_date', data.due_date || '');
-        formData.append('response_deadline', data.response_deadline || '');
         formData.append('sheet_count', String(data.sheet_count));
         formData.append('is_draft', String(isDraft));
+
+        // فرستنده (کاربر فعلی)
         formData.append('sender_user_id', String(currentUser.id));
         formData.append('sender_name', currentUser.full_name);
         formData.append('sender_position_name', currentUser.primary_position?.name || '');
         formData.append('sender_department_id', String(currentUser.department_id || ''));
-        formData.append('recipient_type', data.recipient_type);
 
+        // گیرنده
         if (data.recipient_type === 'internal') {
-            formData.append('recipient_user_id', String(data.recipient_user_id || ''));
+            formData.append('recipient_type', 'internal');
             formData.append('recipient_department_id', String(data.recipient_department_id || ''));
             formData.append('recipient_position_id', String(data.recipient_position_id || ''));
             formData.append('recipient_name', data.recipient_name);
             formData.append('recipient_position_name', data.recipient_position_name);
-            formData.append('external_organization_id', '');
-            formData.append('external_department_id', '');
-            formData.append('external_position_id', '');
         } else {
-            formData.append('recipient_user_id', '');
-            formData.append('recipient_department_id', '');
-            formData.append('recipient_position_id', '');
+            formData.append('recipient_type', 'external');
             formData.append('recipient_name', data.recipient_name);
             formData.append('recipient_position_name', data.recipient_position_name);
-            formData.append('external_organization_id', String(data.external_organization_id || ''));
-            formData.append('external_department_id', String(data.external_department_id || ''));
-            formData.append('external_position_id', String(data.external_position_id || ''));
         }
 
-        formData.append('cc_recipients', JSON.stringify(data.cc_recipients));
         formData.append('instruction', data.instruction);
         attachments.forEach(file => formData.append('attachments[]', file));
+
         post(LetterCreate(), {
             data: formData,
             preserveScroll: true,
@@ -403,8 +465,7 @@ export default function LettersCreate({
                 if (!isDraft) {
                     reset();
                     setAttachments([]);
-                    setSelectedRecipientUser(null);
-                    setSelectedRecipientDepartment(null);
+                    setSelectedDepartment(null);
                     setSelectedExternalOrg(null);
                     setSelectedExternalDept(null);
                 }
@@ -417,6 +478,7 @@ export default function LettersCreate({
             setAttachments([...attachments, ...Array.from(e.target.files)]);
         }
     };
+
     const removeAttachment = (index: number) => setAttachments(attachments.filter((_, i) => i !== index));
 
     const renderOrganizationTree = (organizations: Organization[], level = 0) => {
@@ -430,49 +492,22 @@ export default function LettersCreate({
         ));
     };
 
-    // ── Render ────────────────────────────────────────────────────────────
-
     return (
         <>
-            <Head title={config.label} />
-
-            <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
-                * { font-family: 'Vazirmatn', sans-serif; }
-                :root { direction: rtl; }
-                .sidebar-nav-item.active { background: ${config.accentLight}; color: ${config.accent}; font-weight: 600; }
-                .sidebar-nav-item.active .nav-icon { color: ${config.accent}; }
-                .sidebar-nav-item.active .nav-dot { background: ${config.accent}; }
-                .accent-btn { background: ${config.accent}; }
-                .accent-btn:hover { filter: brightness(0.92); }
-                .accent-badge { background: ${config.accentLight}; color: ${config.accent}; }
-                .radio-option input:checked + .radio-card {
-                    border-color: ${config.accent};
-                    background: ${config.accentLight};
-                }
-                input[type=file]::-webkit-file-upload-button { display: none; }
-            `}</style>
+            <Head title="ثبت مکتوب صادره" />
 
             <div className="min-h-screen bg-slate-50/70" dir="rtl">
-                {/* ── Top Header Bar ── */}
+                {/* Header */}
                 <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between h-16">
-                            {/* Left: breadcrumb + badge */}
-                            <div className="flex items-center gap-3">
-                                <span className="accent-badge text-xs font-bold px-3 py-1.5 rounded-full tracking-wide">
-                                    {config.badge}
-                                </span>
-                                <span className="text-slate-300 text-lg font-light">/</span>
-                                <h1 className="text-sm font-bold text-slate-800">{config.label}</h1>
-                            </div>
-                            {/* Right: actions */}
+                            <h1 className="text-sm font-bold text-slate-800">ثبت مکتوب صادره</h1>
                             <div className="flex items-center gap-2.5">
                                 <button
                                     type="button"
                                     onClick={(e) => handleSubmit(e, true)}
                                     disabled={processing}
-                                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200 disabled:opacity-50"
+                                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl"
                                 >
                                     <Save className="h-4 w-4" />
                                     پیش‌نویس
@@ -481,7 +516,7 @@ export default function LettersCreate({
                                     type="submit"
                                     form="letter-form"
                                     disabled={processing}
-                                    className="accent-btn flex items-center gap-2 px-5 py-2 text-sm font-bold text-white rounded-xl transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md"
                                 >
                                     <Send className="h-4 w-4" />
                                     {processing ? 'در حال ارسال...' : 'ثبت و ارسال'}
@@ -495,57 +530,37 @@ export default function LettersCreate({
                     <form id="letter-form" onSubmit={(e) => handleSubmit(e, false)}>
                         <div className="flex gap-8 items-start">
 
-                            {/* ── Sticky Sidebar ── */}
+                            {/* Sidebar */}
                             <aside className="hidden lg:block w-56 flex-shrink-0 sticky top-24">
-                                {/* Letter type card */}
-                                <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-4 mb-4">
-                                    <p className="text-xs text-slate-400 font-medium mb-1">نوع نامه</p>
-                                    <p className="text-sm font-bold text-slate-800 leading-snug">{config.label}</p>
-                                    <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">{config.desc}</p>
-                                    <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-500">
-                                        <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                                        {data.date}
-                                    </div>
-                                </div>
-
-                                {/* Section navigation */}
                                 <nav className="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
                                     <div className="px-4 py-3 border-b border-slate-50">
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">بخش‌ها</p>
+                                        <p className="text-xs font-bold text-slate-400">بخش‌ها</p>
                                     </div>
                                     <ul className="py-2">
-                                        {sections.map((s, i) => (
+                                        {sections.map((s) => (
                                             <li key={s.id}>
                                                 <a
                                                     href={`#${s.id}`}
                                                     onClick={(e) => {
-                                                        e.preventDefault(); document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth' });
+                                                        e.preventDefault();
+                                                        document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth' });
                                                     }}
-                                                    className={`sidebar-nav-item flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-all duration-150 ${activeSection === s.id ? 'active' : ''}`}
+                                                    className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-all ${activeSection === s.id ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'}`}
                                                 >
-                                                    <span className="nav-dot w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0" />
-                                                    <s.icon className="nav-icon h-4 w-4 text-slate-400 flex-shrink-0" />
+                                                    <s.icon className="h-4 w-4" />
                                                     <span className="text-xs">{s.label}</span>
                                                 </a>
                                             </li>
                                         ))}
                                     </ul>
                                 </nav>
-
-                                {/* Attachment count badge */}
-                                {attachments.length > 0 && (
-                                    <div className="mt-3 rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-3 flex items-center gap-2">
-                                        <Paperclip className="h-4 w-4 text-indigo-500" />
-                                        <span className="text-xs font-semibold text-indigo-700">{attachments.length} پیوست</span>
-                                    </div>
-                                )}
                             </aside>
 
-                            {/* ── Main Content ── */}
+                            {/* Main Content */}
                             <div className="flex-1 min-w-0 space-y-5">
 
                                 {/* 1. Basic Info */}
-                                <SectionCard id="basic" title="اطلاعات پایه" subtitle="مشخصات اصلی نامه" icon={FileSignature} iconColor="#6366f1">
+                                <SectionCard id="basic" title="اطلاعات پایه" subtitle="مشخصات اصلی مکتوب" icon={FileSignature} iconColor="#6366f1">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         <div>
                                             <FieldLabel required>دسته‌بندی</FieldLabel>
@@ -553,8 +568,7 @@ export default function LettersCreate({
                                                 icon={FolderTree}
                                                 value={data.category_id || ''}
                                                 onChange={(v) => setData('category_id', parseInt(v) || null)}
-                                                onBlur={() => handleBlur('category_id')}
-                                                error={getFieldError('category_id')}
+                                                error={errors.category_id}
                                                 placeholder="انتخاب کنید..."
                                             >
                                                 {categories.map(cat => (
@@ -563,7 +577,7 @@ export default function LettersCreate({
                                             </SelectField>
                                         </div>
                                         <div>
-                                            <FieldLabel required>تاریخ نامه</FieldLabel>
+                                            <FieldLabel required>تاریخ مکتوب</FieldLabel>
                                             <InputField
                                                 icon={Calendar}
                                                 type="date"
@@ -600,9 +614,8 @@ export default function LettersCreate({
                                             <InputField
                                                 value={data.subject}
                                                 onChange={(v) => setData('subject', v)}
-                                                onBlur={() => handleBlur('subject')}
-                                                error={getFieldError('subject')}
-                                                placeholder="موضوع نامه را وارد کنید..."
+                                                error={errors.subject}
+                                                placeholder="موضوع مکتوب را وارد کنید..."
                                             />
                                         </div>
                                         <div className="md:col-span-2">
@@ -611,122 +624,133 @@ export default function LettersCreate({
                                                 value={data.summary}
                                                 onChange={(e) => setData('summary', e.target.value)}
                                                 rows={3}
-                                                placeholder="خلاصه نامه..."
-                                                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all resize-none text-slate-700 placeholder-slate-300 hover:border-slate-300"
+                                                placeholder="خلاصه مکتوب..."
+                                                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 resize-none"
                                             />
                                         </div>
                                     </div>
                                 </SectionCard>
 
                                 {/* 2. Sender */}
-                                <SectionCard id="sender" title="اطلاعات فرستنده" subtitle="شما به عنوان فرستنده ثبت می‌شوید" icon={UserIcon} iconColor="#10b981">
+                                <SectionCard id="sender" title="فرستنده" subtitle="شما به عنوان فرستنده ثبت می‌شوید" icon={UserIcon} iconColor="#10b981">
                                     <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
                                         <div className="flex items-center gap-4">
-                                            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-lg font-bold shadow-md flex-shrink-0">
+                                            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-lg font-bold">
                                                 {currentUser.full_name?.charAt(0) || 'U'}
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-bold text-slate-800 text-sm">{currentUser.full_name}</p>
-                                                <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5 flex-wrap">
-                                                    <Briefcase className="h-3 w-3 text-emerald-500" />
-                                                    {currentUser.primary_position?.name || 'بدون سمت'}
-                                                    <span className="text-slate-300">•</span>
-                                                    <Building2 className="h-3 w-3 text-emerald-500" />
-                                                    {currentUser.department?.name || 'بدون دپارتمان'}
+                                            <div>
+                                                <p className="font-bold text-slate-800">{currentUser.full_name}</p>
+                                                <p className="text-xs text-slate-500 mt-0.5">
+                                                    {currentUser.primary_position?.name || 'بدون سمت'} • {currentUser.department?.name || 'بدون دپارتمان'}
                                                 </p>
-                                            </div>
-                                            <div className="flex items-center gap-1.5 text-emerald-600 text-xs font-semibold bg-white px-3 py-1.5 rounded-full border border-emerald-200 flex-shrink-0">
-                                                <CheckCircle className="h-3.5 w-3.5" />
-                                                تأیید شده
                                             </div>
                                         </div>
                                     </div>
                                 </SectionCard>
 
                                 {/* 3. Recipient */}
-                                <SectionCard id="recipient" title="اطلاعات گیرنده" subtitle="مشخصات فرد یا سازمان دریافت‌کننده" icon={data.recipient_type === 'internal' ? UserCheck : Globe} iconColor="#8b5cf6">
-                                    {/* Type Toggle */}
+                                <SectionCard id="recipient" title="گیرنده" subtitle="مشخصات گیرنده مکتوب" icon={UserCheck} iconColor="#8b5cf6">
+                                    {/* نوع گیرنده */}
                                     <div className="mb-6">
                                         <FieldLabel required>نوع گیرنده</FieldLabel>
                                         <div className="flex gap-3">
-                                            {[
-                                                { value: 'internal', label: 'داخلی', desc: 'کاربر سازمان', Icon: UserCheck },
-                                                { value: 'external', label: 'خارجی', desc: 'سازمان دیگر', Icon: Globe },
-                                            ].map(opt => (
-                                                <label key={opt.value} className="radio-option flex-1 cursor-pointer">
-                                                    <input
-                                                        type="radio"
-                                                        value={opt.value}
-                                                        checked={data.recipient_type === opt.value}
-                                                        onChange={(e) => setData('recipient_type', e.target.value as 'internal' | 'external')}
-                                                        className="sr-only"
-                                                    />
-                                                    <div className={`radio-card flex items-center gap-3 border-2 rounded-xl px-4 py-3 transition-all duration-200 ${data.recipient_type === opt.value ? 'border-violet-400 bg-violet-50' : 'border-slate-200 hover:border-slate-300'}`}>
-                                                        <opt.Icon className={`h-4 w-4 flex-shrink-0 ${data.recipient_type === opt.value ? 'text-violet-600' : 'text-slate-400'}`} />
-                                                        <div>
-                                                            <p className={`text-sm font-semibold ${data.recipient_type === opt.value ? 'text-violet-700' : 'text-slate-700'}`}>{opt.label}</p>
-                                                            <p className="text-xs text-slate-400">{opt.desc}</p>
-                                                        </div>
+                                            <label className="flex-1 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    value="internal"
+                                                    checked={data.recipient_type === 'internal'}
+                                                    onChange={(e) => {
+                                                        setData('recipient_type', 'internal');
+                                                        setSelectedExternalOrg(null);
+                                                        setExternalDepartments([]);
+                                                    }}
+                                                    className="sr-only"
+                                                />
+                                                <div className={`flex items-center gap-3 border-2 rounded-xl px-4 py-3 transition-all ${data.recipient_type === 'internal' ? 'border-indigo-400 bg-indigo-50' : 'border-slate-200'}`}>
+                                                    <Building2 className="h-4 w-4" />
+                                                    <div>
+                                                        <p className="text-sm font-semibold">داخلی</p>
+                                                        <p className="text-xs text-slate-400">دپارتمان‌های سازمان</p>
                                                     </div>
-                                                </label>
-                                            ))}
+                                                </div>
+                                            </label>
+                                            <label className="flex-1 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    value="external"
+                                                    checked={data.recipient_type === 'external'}
+                                                    onChange={(e) => {
+                                                        setData('recipient_type', 'external');
+                                                        setSelectedDepartment(null);
+                                                        setAvailablePositions([]);
+                                                    }}
+                                                    className="sr-only"
+                                                />
+                                                <div className={`flex items-center gap-3 border-2 rounded-xl px-4 py-3 transition-all ${data.recipient_type === 'external' ? 'border-indigo-400 bg-indigo-50' : 'border-slate-200'}`}>
+                                                    <Building className="h-4 w-4" />
+                                                    <div>
+                                                        <p className="text-sm font-semibold">خارجی</p>
+                                                        <p className="text-xs text-slate-400">وزارت‌خانه‌ها و سازمان‌ها</p>
+                                                    </div>
+                                                </div>
+                                            </label>
                                         </div>
                                     </div>
 
-                                    {/* Internal Recipient */}
+                                    {/* گیرنده داخلی */}
                                     {data.recipient_type === 'internal' && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                            <div className="md:col-span-2">
-                                                <FieldLabel required>کاربر</FieldLabel>
-                                                <SelectField
-                                                    icon={Users}
-                                                    value={selectedRecipientUser || ''}
-                                                    onChange={(v) => setSelectedRecipientUser(parseInt(v) || null)}
-                                                    onBlur={() => handleBlur('recipient_user_id')}
-                                                    error={getFieldError('recipient_user_id')}
-                                                    placeholder="انتخاب کاربر..."
-                                                >
-                                                    {users.map(user => (
-                                                        <option key={user.id} value={user.id}>
-                                                            {user.name} — {user.position || 'بدون سمت'}
-                                                        </option>
-                                                    ))}
-                                                </SelectField>
-                                            </div>
+                                        <div className="space-y-4">
                                             <div>
-                                                <FieldLabel>دپارتمان</FieldLabel>
+                                                <FieldLabel required>ریاست / دپارتمان</FieldLabel>
                                                 <SelectField
                                                     icon={Building2}
-                                                    value={selectedRecipientDepartment || ''}
-                                                    onChange={(v) => setSelectedRecipientDepartment(parseInt(v) || null)}
-                                                    placeholder="انتخاب دپارتمان..."
+                                                    value={selectedDepartment || ''}
+                                                    onChange={(v) => {
+                                                        const deptId = parseInt(v) || null;
+                                                        setSelectedDepartment(deptId);
+                                                        setData('recipient_department_id', deptId);
+                                                        setData('recipient_position_id', null);
+                                                        setData('recipient_name', '');
+                                                        setData('recipient_position_name', '');
+                                                    }}
+                                                    placeholder="انتخاب ریاست..."
                                                 >
                                                     {departments.map(dept => (
                                                         <option key={dept.id} value={dept.id}>{dept.name}</option>
                                                     ))}
                                                 </SelectField>
                                             </div>
-                                            <div>
-                                                <FieldLabel>سمت</FieldLabel>
-                                                <SelectField
-                                                    icon={Briefcase}
-                                                    value={data.recipient_position_id || ''}
-                                                    onChange={(v) => setData('recipient_position_id', parseInt(v) || null)}
-                                                    placeholder="انتخاب سمت..."
-                                                >
-                                                    {recipientPositions.map(pos => (
-                                                        <option key={pos.id} value={pos.id}>{pos.name}</option>
-                                                    ))}
-                                                </SelectField>
-                                            </div>
+
+                                            {selectedDepartment && (
+                                                <div>
+                                                    <FieldLabel required>سمت</FieldLabel>
+                                                    <SelectField
+                                                        icon={Briefcase}
+                                                        value={data.recipient_position_id || ''}
+                                                        onChange={(v) => {
+                                                            const posId = parseInt(v) || null;
+                                                            setData('recipient_position_id', posId);
+                                                            const position = availablePositions.find(p => p.id === posId);
+                                                            setData('recipient_position_name', position?.name || '');
+                                                            setData('recipient_name', `${position?.name || ''} - ${departments.find(d => d.id === selectedDepartment)?.name || ''}`);
+                                                        }}
+                                                        placeholder="انتخاب سمت..."
+                                                    >
+                                                        <option value="">انتخاب سمت...</option>
+                                                        {availablePositions.map(pos => (
+                                                            <option key={pos.id} value={pos.id}>{pos.name}</option>
+                                                        ))}
+                                                    </SelectField>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
-                                    {/* External Recipient */}
+                                    {/* گیرنده خارجی */}
                                     {data.recipient_type === 'external' && (
-                                        <div className="space-y-5">
+                                        <div className="space-y-4">
                                             <div>
-                                                <FieldLabel required>سازمان</FieldLabel>
+                                                <FieldLabel required>وزارت / سازمان</FieldLabel>
                                                 <SelectField
                                                     icon={Building}
                                                     value={selectedExternalOrg || ''}
@@ -737,15 +761,19 @@ export default function LettersCreate({
                                                         setSelectedExternalDept(null);
                                                         setData('external_department_id', null);
                                                         setData('external_position_id', null);
+                                                        setData('recipient_name', '');
+                                                        setData('recipient_position_name', '');
                                                     }}
                                                     placeholder="انتخاب سازمان..."
                                                 >
+                                                    <option value="">انتخاب سازمان...</option>
                                                     {renderOrganizationTree(externalOrganizationsTree)}
                                                 </SelectField>
                                             </div>
-                                            {externalDepartments.length > 0 && (
+
+                                            {selectedExternalOrg && externalDepartments.length > 0 && (
                                                 <div>
-                                                    <FieldLabel>دپارتمان / ریاست</FieldLabel>
+                                                    <FieldLabel required>ریاست / دپارتمان</FieldLabel>
                                                     <SelectField
                                                         icon={Building2}
                                                         value={selectedExternalDept || ''}
@@ -754,26 +782,33 @@ export default function LettersCreate({
                                                             setSelectedExternalDept(deptId);
                                                             setData('external_department_id', deptId);
                                                             setData('external_position_id', null);
+                                                            setData('recipient_position_name', '');
                                                         }}
-                                                        placeholder="انتخاب دپارتمان..."
+                                                        placeholder="انتخاب ریاست..."
                                                     >
+                                                        <option value="">انتخاب ریاست...</option>
                                                         {externalDepartments.map(dept => (
-                                                            <option key={dept.id} value={dept.id}>
-                                                                {'—'.repeat(dept.parent_id ? 1 : 0)} {dept.name}
-                                                            </option>
+                                                            <option key={dept.id} value={dept.id}>{dept.name}</option>
                                                         ))}
                                                     </SelectField>
                                                 </div>
                                             )}
-                                            {externalPositions.length > 0 && (
+
+                                            {selectedExternalDept && externalPositions.length > 0 && (
                                                 <div>
-                                                    <FieldLabel>سمت</FieldLabel>
+                                                    <FieldLabel required>سمت</FieldLabel>
                                                     <SelectField
                                                         icon={Briefcase}
                                                         value={data.external_position_id || ''}
-                                                        onChange={(v) => setData('external_position_id', parseInt(v) || null)}
+                                                        onChange={(v) => {
+                                                            const posId = parseInt(v) || null;
+                                                            setData('external_position_id', posId);
+                                                            const position = externalPositions.find(p => p.id === posId);
+                                                            setData('recipient_position_name', position?.name || '');
+                                                        }}
                                                         placeholder="انتخاب سمت..."
                                                     >
+                                                        <option value="">انتخاب سمت...</option>
                                                         {externalPositions.map(pos => (
                                                             <option key={pos.id} value={pos.id}>{pos.name}</option>
                                                         ))}
@@ -784,29 +819,26 @@ export default function LettersCreate({
                                     )}
                                 </SectionCard>
 
-                                {/* 4. Letter Content */}
-                                <SectionCard id="content" title="متن نامه" subtitle="محتوای اصلی نامه را وارد کنید" icon={FileText} iconColor="#f59e0b">
+                                {/* 4. Content */}
+                                <SectionCard id="content" title="متن مکتوب" subtitle="محتوای اصلی مکتوب" icon={FileText} iconColor="#f59e0b">
                                     <textarea
                                         value={data.content}
                                         onChange={(e) => setData('content', e.target.value)}
                                         rows={14}
-                                        placeholder="متن نامه را اینجا وارد کنید..."
-                                        className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-100 focus:border-amber-400 transition-all resize-y text-slate-700 placeholder-slate-300 hover:border-slate-300 leading-7"
+                                        placeholder="متن مکتوب را اینجا وارد کنید..."
+                                        className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-100 focus:border-amber-400 resize-y"
                                     />
-                                    <p className="text-xs text-slate-400 mt-2 text-left">
-                                        {data.content.length} حرف
-                                    </p>
                                 </SectionCard>
 
                                 {/* 5. Attachments */}
-                                <SectionCard id="attachments" title="پیوست‌ها" subtitle="فایل‌های ضمیمه نامه" icon={Paperclip} iconColor="#6366f1">
-                                    <label className="group flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 transition-all duration-200">
+                                <SectionCard id="attachments" title="پیوست‌ها" subtitle="فایل‌های ضمیمه" icon={Paperclip} iconColor="#6366f1">
+                                    <label className="group flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50">
                                         <div className="text-center">
-                                            <div className="h-10 w-10 rounded-xl bg-slate-100 group-hover:bg-indigo-100 flex items-center justify-center mx-auto mb-3 transition-colors">
-                                                <Paperclip className="h-5 w-5 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                                            <div className="h-10 w-10 rounded-xl bg-slate-100 group-hover:bg-indigo-100 flex items-center justify-center mx-auto mb-3">
+                                                <Paperclip className="h-5 w-5 text-slate-400 group-hover:text-indigo-500" />
                                             </div>
                                             <p className="text-sm font-semibold text-slate-600">برای آپلود کلیک کنید</p>
-                                            <p className="text-xs text-slate-400 mt-1">PDF, DOC, DOCX, JPG, PNG (حداکثر ۱۰ مگابایت)</p>
+                                            <p className="text-xs text-slate-400 mt-1">PDF, DOC, DOCX, JPG, PNG</p>
                                         </div>
                                         <input type="file" multiple onChange={handleFileChange} className="hidden" />
                                     </label>
@@ -814,20 +846,16 @@ export default function LettersCreate({
                                     {attachments.length > 0 && (
                                         <div className="mt-4 space-y-2">
                                             {attachments.map((file, index) => (
-                                                <div key={index} className="flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors group">
-                                                    <div className="flex items-center gap-3 min-w-0">
-                                                        <div className="h-8 w-8 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                                                            <FileText className="h-4 w-4 text-indigo-600" />
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <p className="text-sm font-medium text-slate-700 truncate">{file.name}</p>
-                                                            <p className="text-xs text-slate-400">{(file.size / 1024).toFixed(1)} KB</p>
-                                                        </div>
+                                                <div key={index} className="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-xl">
+                                                    <div className="flex items-center gap-3">
+                                                        <FileText className="h-4 w-4 text-indigo-600" />
+                                                        <span className="text-sm">{file.name}</span>
+                                                        <span className="text-xs text-slate-400">{(file.size / 1024).toFixed(1)} KB</span>
                                                     </div>
                                                     <button
                                                         type="button"
                                                         onClick={() => removeAttachment(index)}
-                                                        className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                                        className="text-slate-400 hover:text-rose-500"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
                                                     </button>
@@ -838,36 +866,15 @@ export default function LettersCreate({
                                 </SectionCard>
 
                                 {/* 6. Instruction */}
-                                <SectionCard id="instruction" title="دستورالعمل" subtitle="دستورالعمل‌های لازم برای گیرنده در صورت ارجاع" icon={AlertCircle} iconColor="#f97316">
+                                <SectionCard id="instruction" title="دستورالعمل" subtitle="دستورالعمل‌های لازم" icon={AlertCircle} iconColor="#f97316">
                                     <textarea
                                         value={data.instruction}
                                         onChange={(e) => setData('instruction', e.target.value)}
                                         rows={4}
-                                        placeholder="در صورت نیاز، دستورالعمل‌ها را اینجا وارد کنید..."
-                                        className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400 transition-all resize-none text-slate-700 placeholder-slate-300 hover:border-slate-300 leading-7"
+                                        placeholder="دستورالعمل‌ها را اینجا وارد کنید..."
+                                        className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400 resize-none"
                                     />
                                 </SectionCard>
-
-                                {/* Mobile Actions */}
-                                <div className="flex gap-3 lg:hidden pb-4">
-                                    <button
-                                        type="button"
-                                        onClick={(e) => handleSubmit(e, true)}
-                                        disabled={processing}
-                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-all"
-                                    >
-                                        <Save className="h-4 w-4" />
-                                        پیش‌نویس
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className="accent-btn flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-white transition-all shadow-md disabled:opacity-50"
-                                    >
-                                        <Send className="h-4 w-4" />
-                                        {processing ? 'در حال ارسال...' : 'ثبت و ارسال'}
-                                    </button>
-                                </div>
 
                             </div>
                         </div>
