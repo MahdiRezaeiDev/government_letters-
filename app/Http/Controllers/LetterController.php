@@ -18,10 +18,19 @@ use Inertia\Inertia;
 use App\Enums\PermissionEnum;
 use App\Http\Requests\LetterRequest;
 use App\Models\Organization;
+use App\Services\LetterService;
+use Illuminate\Container\Attributes\Auth;
 use Illuminate\Support\Facades\Log;
 
 class LetterController extends Controller
 {
+    protected LetterService $letterService;
+
+    public function __construct(LetterService $letterService)
+    {
+        $this->letterService = $letterService;
+    }
+
     /**
      * نمایش لیست نامه‌ها (بر اساس سطح دسترسی)
      */
@@ -203,169 +212,25 @@ class LetterController extends Controller
      */
     public function store(LetterRequest $request)
     {
-
-        $currentUser = User::with([
-            'primaryPosition',
-            'department'
-            ])->where('id', auth()->user()->id)->first();
-
-        DB::beginTransaction();
-
-        dd($request->all());
-
         try {
-            // ============================================
-            // تنظیم اطلاعات فرستنده
-            // ============================================
-            $senderName = $currentUser->full_name;
-            $senderPositionName = $currentUser->primaryPosition->name;
-            $senderDepartmentId = $currentUser->department->id;
-            $senderUserId = $currentUser->id;
-            $senderPositionId = $currentUser->primaryPosition->id;
+            $currentUser = Auth::user()->load(['primaryPosition', 'department']);
 
-            // ============================================
-            // تنظیم اطلاعات گیرنده
-            // ============================================
-            $recipientName = null;
-            $recipientPositionName = null;
-            $recipientDepartmentId = null;
-            $recipientUserId = null;
-            $recipientPositionId = null;
+            $letter = $this->letterService->createLetter(
+                $request->validated(),
+                $currentUser
+            );
 
-            if($request->recipient_type === 'internal') {
-                 $recipientName = $request->recipient_name;
-                $recipientPositionName = $request->recipient_position_name;
-                $recipientUserId = $request->recipient_user_id;
-                $recipientDepartmentId = $request->recipient_department_id;
-                $recipientPositionId = $request->recipient_position_id;
-            }
+            $message = $letter->is_draft
+                ? 'پیش‌نویس مکتوب با موفقیت ذخیره شد.'
+                : 'مکتوب با موفقیت ثبت گردید.';
 
-            if ($request->letter_type === 'outgoing' || $request->letter_type === 'internal') {
-                // نامه صادره یا داخلی: گیرنده از داده‌های ارسالی
-               
-
-                // اگر گیرنده داخلی است و نام خالی، از دیتابیس دریافت کن
-                if (empty($recipientName) && $recipientUserId) {
-                    $recipient = User::find($recipientUserId);
-                    $recipientName = $recipient?->full_name;
-                    $recipientPositionName = $recipient?->primaryPosition?->name;
-                    $recipientDepartmentId = $recipient?->department_id;
-                    $recipientPositionId = $recipient?->primaryPosition?->id;
-                }
-            } else {
-                // نامه وارده: گیرنده کاربر فعلی است
-                $recipientName = $currentUser->full_name;
-                $recipientPositionName = $currentUser->primaryPosition?->name;
-                $recipientDepartmentId = $currentUser->department_id;
-                $recipientUserId = $currentUser->id;
-                $recipientPositionId = $currentUser->primaryPosition?->id;
-            }
-
-            Log::info('Sender/Recipient Info', [
-                'sender' => ['name' => $senderName, 'position' => $senderPositionName, 'user_id' => $senderUserId],
-                'recipient' => ['name' => $recipientName, 'position' => $recipientPositionName, 'user_id' => $recipientUserId]
-            ]);
-
-            // ============================================
-            // ایجاد شماره نامه
-            // ============================================
-            $trackingNumber = $this->generateTrackingNumber();
-            $letterNumber = !$request->is_draft ? $this->generateLetterNumber($request->letter_type) : 'DRAFT-' . time();
-
-            // ============================================
-            // ایجاد نامه
-            // ============================================
-            $letterData = [
-                'organization_id' => $currentUser->organization_id,
-                'letter_type' => 'internal',
-                'letter_number' => $letterNumber,
-                'tracking_number' => $trackingNumber,
-                'security_level' => $request->security_level,
-                'priority' => $request->priority,
-                'category_id' => $request->category_id,
-                'subject' => $request->subject,
-                'summary' => $request->summary,
-                'content' => $request->content,
-                'is_public' => $request->security_level === 'public' ? 1 : 0,
-
-                // اطلاعات فرستنده
-                'sender_name' => $senderName,
-                'sender_position_name' => $senderPositionName,
-                'sender_department_id' => $senderDepartmentId,
-                'sender_user_id' => $senderUserId,
-                'sender_position_id' => $senderPositionId,
-
-                // اطلاعات گیرنده
-                'recipient_name' => $recipientName,
-                'recipient_position_name' => $recipientPositionName,
-                'recipient_department_id' => $recipientDepartmentId,
-                'recipient_user_id' => $recipientUserId,
-                'recipient_position_id' => $recipientPositionId,
-
-                'cc_recipients' => $request->cc_recipients ?? [],
-                'date' => $request->date ?? now(),
-                'due_date' => $request->due_date,
-                'response_deadline' => $request->response_deadline,
-                'sheet_count' => $request->sheet_count ?? 1,
-                'is_draft' => $request->is_draft ?? false,
-                'final_status' => $request->is_draft ? 'draft' : 'pending',
-                'created_by' => $currentUser->id,
-            ];
-
-            Log::info('Creating letter with data', $letterData);
-
-            $letter = Letter::create($letterData);
-
-            if (!$letter) {
-                throw new \Exception('Failed to create letter');
-            }
-
-            // ============================================
-            // آپلود پیوست‌ها
-            // ============================================
-            if ($request->hasFile('attachments')) {
-                foreach ($request->file('attachments') as $file) {
-                    try {
-                        $path = $file->store('attachments/' . $letter->id, 'public');
-                        \App\Models\Attachment::create([
-                            'letter_id' => $letter->id,
-                            'user_id' => $currentUser->id,
-                            'file_name' => $file->getClientOriginalName(),
-                            'file_path' => $path,
-                            'file_size' => $file->getSize(),
-                            'mime_type' => $file->getMimeType(),
-                            'extension' => $file->getClientOriginalExtension(),
-                        ]);
-                    } catch (\Exception $e) {
-                        Log::error('Attachment upload failed', ['error' => $e->getMessage()]);
-                    }
-                }
-            }
-
-            // ============================================
-            // ایجاد ارجاع (برای نامه‌های غیر پیش‌نویس)
-            // ============================================
-            if (!$request->is_draft && $recipientUserId && $request->letter_type !== 'incoming') {
-                try {
-                    $this->createRouting($letter, $recipientUserId, $request->instruction);
-                } catch (\Exception $e) {
-                    Log::error('Routing creation failed', ['error' => $e->getMessage()]);
-                }
-            }
-
-            DB::commit();
-
-            $message = $request->is_draft ? 'پیش‌نویس نامه با موفقیت ذخیره شد.' : 'نامه با موفقیت ثبت شد.';
-
-            return redirect()->route('letters.show', $letter->id)->with('success', $message);
+            return redirect()
+                ->route('letters.show', $letter->id)
+                ->with('success', $message);
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Letter creation failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return back()->with('error', 'خطا در ثبت نامه: ' . $e->getMessage())->withInput();
+            return back()
+                ->with('error', 'خطا در ثبت مکتوب: ' . $e->getMessage())
+                ->withInput();
         }
     }
     /**
