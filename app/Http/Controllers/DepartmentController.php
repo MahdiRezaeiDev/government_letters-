@@ -43,7 +43,7 @@ class DepartmentController extends Controller
         $departments = $query->paginate(15);
         
         // برای فیلتر سازمان (فقط ادمین کل)
-        $organizations = $user->isSuperAdmin() ? Organization::all() : null;
+        $organizations = $user->isSuperAdmin() ? Organization::all() : [];
         
         return Inertia::render('departments/index', [
             'departments' => $departments,
