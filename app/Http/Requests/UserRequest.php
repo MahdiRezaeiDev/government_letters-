@@ -28,7 +28,6 @@ class UserRequest extends FormRequest
             'organization_id' => 'required|exists:organizations,id',
             'department_id' => 'nullable|exists:departments,id',
             'primary_position_id' => 'nullable|exists:positions,id',
-            'username' => 'required|string|max:255|unique:users,username,' . $userId,
             'email' => 'required|email|max:255|unique:users,email,' . $userId,
             'password' => 'required|string|min:8|confirmed',
             'first_name' => 'required|string|max:255',
@@ -59,12 +58,6 @@ class UserRequest extends FormRequest
 
             // سمت
             'primary_position_id.exists' => 'سمت انتخاب شده معتبر نیست.',
-
-            // نام کاربری
-            'username.required' => 'نام کاربری الزامی است.',
-            'username.string' => 'نام کاربری باید متن باشد.',
-            'username.max' => 'نام کاربری نباید بیشتر از ۲۵۵ کاراکتر باشد.',
-            'username.unique' => 'این نام کاربری قبلاً ثبت شده است.',
 
             // ایمیل
             'email.required' => 'آدرس ایمیل الزامی است.',
@@ -129,7 +122,6 @@ class UserRequest extends FormRequest
             'organization_id' => 'سازمان',
             'department_id' => 'دپارتمان',
             'primary_position_id' => 'سمت اصلی',
-            'username' => 'نام کاربری',
             'email' => 'آدرس ایمیل',
             'password' => 'رمز عبور',
             'first_name' => 'نام',
