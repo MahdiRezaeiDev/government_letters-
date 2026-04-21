@@ -175,6 +175,20 @@ class User extends Authenticatable
         return $this->activePositions()->exists();
     }
 
+
+    public function canManageOrganization(int $organizationId): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($this->isOrgAdmin() && $this->organization_id === $organizationId) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function canAccessConfidential(): bool
     {
         return in_array($this->security_clearance, ['confidential', 'secret']);
