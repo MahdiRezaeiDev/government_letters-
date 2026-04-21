@@ -49,7 +49,7 @@ function InputField({
             </div>
             {error && (
                 <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3 flex-shrink-0" />{error}
+                    <AlertCircle className="h-3 w-3 shrink-0" />{error}
                 </p>
             )}
         </div>
@@ -153,7 +153,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between h-16">
                             <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md">
+                                <div className="h-8 w-8 rounded-xl bg-linear-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md">
                                     <Layers className="h-4 w-4 text-white" />
                                 </div>
                                 <h1 className="text-sm font-bold text-slate-800">ایجاد ریاست جدید</h1>
@@ -186,8 +186,8 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                         <div className="space-y-5">
 
                             {/* ── Intro Card ── */}
-                            <div className="rounded-2xl border border-indigo-100 bg-gradient-to-l from-indigo-50 to-violet-50 px-6 py-5 flex items-center gap-4 fade-up">
-                                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                            <div className="rounded-2xl border border-indigo-100 bg-linear-to-l from-indigo-50 to-violet-50 px-6 py-5 flex items-center gap-4 fade-up">
+                                <div className="h-12 w-12 rounded-xl bg-linear-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shrink-0">
                                     <Sparkles className="h-6 w-6 text-white" />
                                 </div>
                                 <div>
@@ -198,7 +198,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
 
                             {/* ── Main Form Card ── */}
                             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden fade-up">
-                                <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-gradient-to-l from-white to-slate-50/60">
+                                <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-linear-to-l from-white to-slate-50/60">
                                     <div className="h-9 w-9 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
                                         <FolderTree className="h-4 w-4 text-indigo-600" />
                                     </div>
@@ -301,6 +301,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                                             {statusOptions.map(opt => {
                                                 const Icon = opt.icon;
                                                 const isSelected = data.status === opt.value;
+                                                
                                                 return (
                                                     <button
                                                         key={opt.value}
@@ -337,8 +338,8 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
 
                             {/* ── Live Preview ── */}
                             {data.name && data.code && selectedOrgName && (
-                                <div className="rounded-2xl border border-indigo-100 bg-gradient-to-l from-indigo-600 to-violet-700 px-6 py-4 flex items-center gap-4 fade-up">
-                                    <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center flex-shrink-0">
+                                <div className="rounded-2xl border border-indigo-100 bg-linear-to-l from-indigo-600 to-violet-700 px-6 py-4 flex items-center gap-4 fade-up">
+                                    <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center shrink-0">
                                         <Layers className="h-5 w-5 text-white" />
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -362,7 +363,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                                             )}
                                         </div>
                                     </div>
-                                    <div className="flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center" style={{ backgroundColor: selectedStatus.color }}>
+                                    <div className="shrink-0 h-7 w-7 rounded-full flex items-center justify-center" style={{ backgroundColor: selectedStatus.color }}>
                                         <CheckCircle className="h-4 w-4 text-white" />
                                     </div>
                                 </div>

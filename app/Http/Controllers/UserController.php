@@ -104,9 +104,9 @@ class UserController extends Controller
         $currentUser = auth()->user();
         
         // بررسی دسترسی کلی برای ایجاد کاربر
-        // if (!$currentUser->can('create-user')) {
-        //     abort(403, 'شما دسترسی ایجاد کاربر را ندارید.');
-        // }
+        if (!$currentUser->can('create-user')) {
+            abort(403, 'شما دسترسی ایجاد کاربر را ندارید.');
+        }
         
         // تعیین لیست سازمان‌های قابل انتخاب
         if ($currentUser->isSuperAdmin()) {
