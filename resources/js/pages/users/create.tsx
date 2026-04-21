@@ -9,9 +9,9 @@ import {
     Venus, Mars, Heart, PhoneCall, Info
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import PersianDatePicker from '@/components/PersianDatePicker';
 import users from '@/routes/users';
 import type { Organization, Department, Position, Role } from '@/types';
-import PersianDatePicker from '@/components/text-link';
 
 interface Props {
     organizations: Organization[];
@@ -309,12 +309,10 @@ export default function UsersCreate({
                                         <p className="text-xs text-slate-400 mt-1.5">نمبر تذکره منحصر به فرد</p>
                                     </div>
                                     <div>
-                                        <FieldLabel>تاریخ تولد</FieldLabel>
                                         <PersianDatePicker
+                                            label="تاریخ تولد"
                                             value={data.birth_date}
                                             onChange={(date) => setData('birth_date', date as string)}
-                                            placeholder="انتخاب تاریخ تولد"
-                                            mode="single"
                                             error={getFieldError('birth_date')}
                                         />
                                         <p className="text-xs text-slate-400 mt-1.5">تاریخ تولد را به شمسی انتخاب کنید</p>

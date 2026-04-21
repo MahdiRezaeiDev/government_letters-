@@ -89,10 +89,10 @@ class UserController extends Controller
             'roles' => $roles,
             'filters' => $request->only(['search', 'status', 'organization_id', 'role']),
             'can' => [
-                'create' => $currentUser->can('create-user-in-org'),
-                'edit' => $currentUser->can('edit-user-in-org'),
-                'delete' => $currentUser->can('delete-user-in-org'),
-                'assign_role' => $currentUser->can('assign-role-to-user'),
+                'create' => $currentUser->can('create-user') && ($currentUser->isSuperAdmin() || $currentUser->isOrgAdmin()),
+                'edit' => $currentUser->can('edit-user'),
+                'delete' => $currentUser->can('delete-user'),
+                'assign_role' => $currentUser->can('assign-role'),
             ],
         ]);
     }
@@ -144,7 +144,7 @@ class UserController extends Controller
     /**
      * ذخیره کاربر جدید
      */
-    public function store(UserRequest $request)
+    public function store(Request $request)
     {
         $currentUser = auth()->user();
 

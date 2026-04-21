@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Morilog\Jalali\Jalalian;
 
 class UserRequest extends FormRequest
 {
@@ -43,7 +44,11 @@ class UserRequest extends FormRequest
 
             // فیلدهای اضافی جدید
             'gender' => 'nullable|in:male,female',
-            'birth_date' => 'nullable|date|before:today',
+            'birth_date' => [
+                'nullable',
+                new \App\Rules\JalaliDate(),
+                'before:today',
+            ],
             'emergency_phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
 
@@ -198,5 +203,33 @@ class UserRequest extends FormRequest
             'security_clearance' => 'سطح امنیتی',
             'role' => 'نقش کاربری',
         ];
+    }
+    protected function prepareForValidation()
+    {
+        if ($this->birth_date) {
+            try {
+                // ۱. تبدیل اعداد فارسی به انگلیسی
+                $englishDigits = str_replace(
+                    ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'],
+                    ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+                    $this->birth_date
+                );
+
+                // ۲. تشخیص فرمت (اگر با خط تیره است Y-m-d و اگر با اسلش Y/m/d)
+                $format = str_contains($englishDigits, '-') ? 'Y-m-d' : 'Y/m/d';
+
+                // ۳. تبدیل به تاریخ میلادی برای اینکه قانون 'date' لاراول پاس شود
+                $miladiDate = Jalalian::fromFormat($format, $englishDigits)
+                    ->toCarbon()
+                    ->toDateString();
+
+                // ۴. جایگزینی در درخواست
+                $this->merge([
+                    'birth_date' => $miladiDate,
+                ]);
+            } catch (\Exception $e) {
+                // در صورت خطا کاری نمی‌کنیم تا خودِ Validation پیام خطا بدهد
+            }
+        }
     }
 }
