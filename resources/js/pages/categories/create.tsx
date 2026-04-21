@@ -7,6 +7,7 @@ import {
 import React, { useState, useEffect } from 'react';
 import categories from '@/routes/categories';
 import type { Organization, LetterCategory } from '@/types';
+import axios from 'axios';
 
 interface Props {
     organizations: Organization[];
@@ -41,8 +42,8 @@ function InputField({
     return (
         <div>
             <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${error
-                    ? 'border-rose-300 ring-1 ring-rose-300'
-                    : 'border-slate-200 hover:border-slate-300 focus-within:border-teal-400 focus-within:ring-2 focus-within:ring-teal-100'
+                ? 'border-rose-300 ring-1 ring-rose-300'
+                : 'border-slate-200 hover:border-slate-300 focus-within:border-teal-400 focus-within:ring-2 focus-within:ring-teal-100'
                 }`}>
                 {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
                 <input
@@ -98,15 +99,12 @@ export default function CategoriesCreate({ organizations, parentCategories }: Pr
 
     useEffect(() => {
         if (data.organization_id) {
-            router.get('/categories/list',
-                { organization_id: data.organization_id },
-                {
-                    preserveState: true,
-                    onSuccess: (page) => {
-                        setAvailableParents(page.props.categories as LetterCategory[]);
-                    },
-                }
-            );
+            axios.get('/categories/list', { params: { organization_id: data.organization_id } })
+                .then((response) => {
+                    setAvailableParents(response.data.categories as LetterCategory[]);
+                }).catch((e) => {
+                    console.error(e);
+                });
         }
     }, [data.organization_id]);
 
