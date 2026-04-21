@@ -55,8 +55,8 @@ const SECURITY_LEVELS = [
 ] as const;
 
 const GENDER_OPTIONS = [
-    { value: 'male', label: 'مرد', icon: Mars, color: '#3b82f6' },
-    { value: 'female', label: 'زن', icon: Venus, color: '#ec4899' },
+    { value: 'male', label: 'مذکر', icon: Mars, color: '#3b82f6' },
+    { value: 'female', label: 'مونث', icon: Venus, color: '#ec4899' },
 ] as const;
 
 const ROLE_LABELS: Record<string, string> = {
@@ -277,7 +277,7 @@ export default function UsersCreate({
                                 iconColor="#0ea5e9" 
                                 title="اطلاعات شخصی" 
                                 subtitle="مشخصات هویتی کاربر"
-                                description="این اطلاعات پایه و اصلی کاربر است. کد ملی باید دقیق و معتبر باشد.">
+                                description="این اطلاعات پایه و اصلی کاربر است. نمبر تذکره باید دقیق و معتبر باشد.">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
                                         <FieldLabel required>نام</FieldLabel>
@@ -298,7 +298,7 @@ export default function UsersCreate({
                                             placeholder="رضایی" />
                                     </div>
                                     <div>
-                                        <FieldLabel required>کد ملی</FieldLabel>
+                                        <FieldLabel required>نمبر تذکره</FieldLabel>
                                         <Field 
                                             icon={Hash} 
                                             value={data.national_code} 
@@ -307,7 +307,7 @@ export default function UsersCreate({
                                             error={getFieldError('national_code')} 
                                             placeholder="1234567890" 
                                             maxLength={10} />
-                                        <p className="text-xs text-slate-400 mt-1.5">کد ملی ۱۰ رقمی و منحصر به فرد</p>
+                                        <p className="text-xs text-slate-400 mt-1.5">نمبر تذکره منحصر به فرد</p>
                                     </div>
                                     <div>
                                         <FieldLabel>تاریخ تولد</FieldLabel>

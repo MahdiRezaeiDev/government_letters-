@@ -149,21 +149,43 @@ class UserController extends Controller
         $currentUser = auth()->user();
 
         // ============================================
-        // بررسی دسترسی برای ایجاد کاربر در سازمان خاص
+        // 1. بررسی دسترسی برای ایجاد کاربر در سازمان خاص
         // ============================================
-
         $targetOrganizationId = $request->organization_id;
 
         if (!$currentUser->canManageOrganization($targetOrganizationId)) {
-            abort(403, 'شما دسترسی ایجاد کاربر در این سازمان را ندارید.');
+            return back()->withErrors(['organization_id' => 'شما دسترسی ایجاد کاربر در این سازمان را ندارید.'])->withInput();
         }
 
-        // بررسی نقش: ادمین سازمان نمی‌تواند نقش ادمین کل بدهد
+        // ============================================
+        // 2. بررسی نقش: ادمین سازمان نمی‌تواند نقش ادمین کل بدهد
+        // ============================================
         if ($currentUser->isOrgAdmin() && $request->role === RoleEnum::SUPER_ADMIN->value) {
             return back()->withErrors(['role' => 'شما نمی‌توانید نقش ادمین کل را تخصیص دهید.'])->withInput();
         }
 
-        // ایجاد کاربر
+        // ============================================
+        // 3. بررسی: ادمین سازمان نمی‌تواند نقش بالاتر از خودش بدهد
+        // ============================================
+        if ($currentUser->isOrgAdmin()) {
+            $roleHierarchy = [
+                'super-admin' => 4,
+                'org-admin' => 3,
+                'dept-manager' => 2,
+                'user' => 1,
+            ];
+
+            $currentUserRoleLevel = $roleHierarchy[$currentUser->roles->first()->name] ?? 0;
+            $targetRoleLevel = $roleHierarchy[$request->role] ?? 0;
+
+            if ($targetRoleLevel > $currentUserRoleLevel) {
+                return back()->withErrors(['role' => 'شما نمی‌توانید نقشی بالاتر از نقش خود تخصیص دهید.'])->withInput();
+            }
+        }
+
+        // ============================================
+        // 4. ایجاد کاربر
+        // ============================================
         $user = User::create([
             'organization_id' => $request->organization_id,
             'department_id' => $request->department_id,
@@ -175,14 +197,35 @@ class UserController extends Controller
             'national_code' => $request->national_code,
             'mobile' => $request->mobile,
             'employment_code' => $request->employment_code,
+            'gender' => $request->gender,
+            'birth_date' => $request->birth_date,
+            'emergency_phone' => $request->emergency_phone,
+            'address' => $request->address,
             'status' => $request->status,
             'security_clearance' => $request->security_clearance,
+            'locale' => 'fa',
+            'timezone' => 'Asia/Tehran',
         ]);
 
-        // تخصیص نقش
+        // ============================================
+        // 5. تخصیص نقش
+        // ============================================
         $user->assignRole($request->role);
 
-        // لاگ عملیات
+        // ============================================
+        // 6. ذخیره رابطه user_positions (در صورت وجود department_id و primary_position_id)
+        // ============================================
+        if ($request->department_id && $request->primary_position_id) {
+            $user->positions()->attach($request->primary_position_id, [
+                'is_primary' => true,
+                'start_date' => now(),
+                'status' => 'active',
+            ]);
+        }
+
+        // ============================================
+        // 7. لاگ عملیات
+        // ============================================
         \App\Models\EventLog::log(
             'user_created',
             "کاربر {$user->full_name} با نقش {$request->role} ایجاد شد",
