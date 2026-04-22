@@ -1,5 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
+import axios from 'axios';
 import {
     Save, Paperclip, Send, Trash2,
     AlertCircle, ChevronDown, FileText,
@@ -15,7 +16,7 @@ interface Props {
     categories: LetterCategory[];
     departments: { id: number; name: string }[];
     positions: { id: number; name: string; department_id: number }[];
-    externalOrganizationsTree: Organization[];
+    externalOrganizations?: Organization[];
     securityLevels: Record<string, string>;
     priorityLevels: Record<string, string>;
 }
@@ -192,7 +193,7 @@ function SectionCard({ id, title, subtitle, icon: Icon, iconColor, children }: {
 
 export default function LettersCreate({
     categories, departments, positions,
-    externalOrganizationsTree,
+    externalOrganizations = [],
     securityLevels, priorityLevels
 }: Props) {
     const { auth } = usePage().props as any;
@@ -271,8 +272,8 @@ export default function LettersCreate({
                         }, 200);
                     }
                 } else {
-                    if (externalOrganizationsTree.length > 0) {
-                        const firstOrg = externalOrganizationsTree[0];
+                    if (externalOrganizations.length > 0) {
+                        const firstOrg = externalOrganizations[0];
                         setSelectedExternalOrg(firstOrg.id);
                         setData('external_organization_id', firstOrg.id);
 
@@ -373,25 +374,9 @@ export default function LettersCreate({
     }, [data.external_position_id, selectedExternalOrg, selectedExternalDept, externalPositions]);
 
     const getOrganizationName = (orgId: number): string => {
-        const findOrg = (orgs: Organization[], id: number): string => {
-            for (const org of orgs) {
-                if (org.id === id) {
-                    return org.name;
-                }
+        const org = externalOrganizations.find(o => o.id === orgId);
 
-                if (org.children) {
-                    const found = findOrg(org.children, id);
-
-                    if (found) {
-                        return found;
-                    }
-                }
-            }
-
-            return '';
-        };
-
-        return findOrg(externalOrganizationsTree, orgId);
+        return org?.name || '';
     };
 
     const getDepartmentName = (deptId: number): string => {
@@ -492,17 +477,6 @@ export default function LettersCreate({
         }
 
         return FileText;
-    };
-
-    const renderOrganizationTree = (organizations: Organization[], level = 0) => {
-        return organizations.map(org => (
-            <React.Fragment key={org.id}>
-                <option value={org.id} style={{ paddingRight: `${level * 20}px` }}>
-                    {'—'.repeat(level)} {org.name}
-                </option>
-                {org.children && renderOrganizationTree(org.children, level + 1)}
-            </React.Fragment>
-        ));
     };
 
     return (
@@ -796,7 +770,7 @@ export default function LettersCreate({
                                         </div>
                                     )}
 
-                                    {/* گیرنده خارجی */}
+                                    {/* گیرنده خارجی - FIXED VERSION */}
                                     {data.recipient_type === 'external' && (
                                         <div className="space-y-4">
                                             <div>
@@ -817,7 +791,9 @@ export default function LettersCreate({
                                                     placeholder="انتخاب سازمان..."
                                                 >
                                                     <option value="">انتخاب سازمان...</option>
-                                                    {renderOrganizationTree(externalOrganizationsTree)}
+                                                    {externalOrganizations.map(org => (
+                                                        <option key={org.id} value={org.id}>{org.name}</option>
+                                                    ))}
                                                 </SelectField>
                                             </div>
 
@@ -880,7 +856,7 @@ export default function LettersCreate({
                                     />
                                 </SectionCard>
 
-                                {/* 5. Attachments - ✅ اصلاح شده */}
+                                {/* 5. Attachments */}
                                 <SectionCard id="attachments" title="پیوست‌ها" subtitle="فایل‌های ضمیمه" icon={Paperclip} iconColor="#6366f1">
                                     <label className="group flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 transition-all">
                                         <div className="text-center">

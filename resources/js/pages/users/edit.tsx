@@ -194,9 +194,6 @@ export default function UsersEdit({
         role: userRole,
     });
 
-    console.log(user);
-    
-
     const handleBlur = (field: string) => setTouched(prev => ({ ...prev, [field]: true }));
     const getFieldError = (field: string) => touched[field] && errors[field] ? errors[field] : null;
 
