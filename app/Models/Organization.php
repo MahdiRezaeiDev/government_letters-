@@ -13,20 +13,24 @@ class Organization extends Model
 
     protected $table = 'organizations';
 
+
     protected $fillable = [
         'name',
         'code',
         'logo',
-        'address',
-        'phone',
         'email',
+        'phone',
+        'address',
         'website',
         'parent_id',
-        'status'
+        'status',
     ];
 
     protected $casts = [
         'status' => 'string',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     // ─── Relationships ─────────────────────────────────────────

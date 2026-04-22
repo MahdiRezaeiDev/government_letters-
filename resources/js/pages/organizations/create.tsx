@@ -3,7 +3,7 @@ import { useForm } from '@inertiajs/react';
 import axios from 'axios';
 import {
     Save, X, Building2, Mail, Phone, MapPin, Globe,
-    Link2, ChevronDown, CheckCircle, AlertCircle, Hash, RefreshCw,
+    ChevronDown, CheckCircle, AlertCircle, Hash, RefreshCw,
     Upload
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
@@ -188,37 +188,6 @@ function InputField({
     );
 }
 
-function SelectField({
-    icon: Icon, value, onChange, children, error
-}: {
-    icon?: React.ElementType; value: string; onChange: (v: string) => void;
-    children: React.ReactNode; error?: string | null;
-}) {
-    return (
-        <div>
-            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${error
-                ? 'border-rose-300 ring-1 ring-rose-300'
-                : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
-                }`}>
-                {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
-                <select
-                    value={value}
-                    onChange={e => onChange(e.target.value)}
-                    className={`w-full ${Icon ? 'pr-10' : 'pr-4'} pl-9 py-3 text-sm bg-transparent focus:outline-none appearance-none text-slate-700`}
-                >
-                    {children}
-                </select>
-                <ChevronDown className="absolute left-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
-            </div>
-            {error && (
-                <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />{error}
-                </p>
-            )}
-        </div>
-    );
-}
-
 // ─── Main Component ────────────────────────────────────────────────────────
 
 export default function OrganizationsCreate() {
@@ -353,8 +322,8 @@ export default function OrganizationsCreate() {
                         <div className="space-y-5">
 
                             {/* Hero intro strip */}
-                            <div className="rounded-2xl border border-blue-100 bg-gradient-to-l from-blue-50 to-indigo-50 px-6 py-5 flex items-center gap-4">
-                                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                            <div className="rounded-2xl border border-blue-100 bg-linear-to-l from-blue-50 to-indigo-50 px-6 py-5 flex items-center gap-4">
+                                <div className="h-12 w-12 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shrink-0">
                                     <Building2 className="h-6 w-6 text-white" />
                                 </div>
                                 <div>
@@ -368,7 +337,7 @@ export default function OrganizationsCreate() {
                             {/* Basic Info */}
                             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                                 <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-linear-to-l from-white to-slate-50/60">
-                                    <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                    <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
                                         <Building2 className="h-4 w-4 text-blue-600" />
                                     </div>
                                     <div>

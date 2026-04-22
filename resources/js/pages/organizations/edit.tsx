@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
-import 
+import organizationsRoute from '@/routes/organizations';
 import type { Organization } from '@/types';
 
 interface Props {

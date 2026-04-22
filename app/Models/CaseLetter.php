@@ -24,7 +24,7 @@ class CaseLetter extends Model
 
     public function case(): BelongsTo
     {
-        return $this->belongsTo(CaseModel::class);
+        return $this->belongsTo(ArchiveCase::class);
     }
 
     public function letter(): BelongsTo
