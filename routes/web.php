@@ -56,7 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('departments-list', [DepartmentController::class, 'getList'])
         ->name('departments.list');
     Route::resource('departments', DepartmentController::class);
- 
+
 
     // مدیریت سمت‌ها
     Route::resource('positions', PositionController::class);
@@ -119,11 +119,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/cartable/{routing}/reject', [CartableController::class, 'reject'])->name('cartable.reject');
 
     // مدیریت دسته‌بندی نامه‌ها
-    Route::resource('categories', LetterCategoryController::class);
-    Route::post('categories/{category}/toggle-status', [LetterCategoryController::class, 'toggleStatus'])
-        ->name('categories.toggle-status');
     Route::get('categories-list', [LetterCategoryController::class, 'getList'])
         ->name('categories.list');
+    Route::post('categories/{category}/toggle-status', [LetterCategoryController::class, 'toggleStatus'])
+        ->name('categories.toggle-status');
+    Route::resource('categories', LetterCategoryController::class);
+
+
 
     // تنظیمات سیستم
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');

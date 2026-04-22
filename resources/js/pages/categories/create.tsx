@@ -99,7 +99,7 @@ export default function CategoriesCreate({ organizations, parentCategories }: Pr
 
     useEffect(() => {
         if (data.organization_id) {
-            axios.get('/categories/list', { params: { organization_id: data.organization_id } })
+            axios.get('categories-list', { params: { organization_id: data.organization_id } })
                 .then((response) => {
                     setAvailableParents(response.data.categories as LetterCategory[]);
                 }).catch((e) => {
