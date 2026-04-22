@@ -442,8 +442,6 @@ export default function OrganizationsCreate() {
                                     {/* Divider */}
                                     <div className="border-t border-slate-100" />
 
-
-
                                     {/* Website + Parent */}
                                     <div className="grid grid-cols-1  gap-5">
                                         <div>
