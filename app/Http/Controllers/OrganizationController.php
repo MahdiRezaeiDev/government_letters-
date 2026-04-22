@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 
@@ -51,33 +52,30 @@ class OrganizationController extends Controller
      */
     public function store(Request $request)
     {
-        // اعتبارسنجی
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:organizations,code',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string',
             'website' => 'nullable|url|max:255',
-            'parent_id' => 'nullable|exists:organizations,id',
             'status' => 'required|in:active,inactive',
-        ], [
-            'name.required' => 'نام سازمان الزامی است',
-            'code.required' => 'کد سازمان الزامی است',
-            'code.unique' => 'این کد قبلاً ثبت شده است',
-            'email.email' => 'فرمت ایمیل صحیح نیست',
-            'parent_id.exists' => 'سازمان والد معتبر نیست',
-            'status.in' => 'وضعیت باید فعال یا غیرفعال باشد',
         ]);
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
 
-        // ایجاد سازمان
+        $logoPath = null;
+        if ($request->hasFile('logo')) {
+            $logoPath = $request->file('logo')->store('organizations/logos', 'public');
+        }
+
         $organization = Organization::create([
             'name' => $request->name,
             'code' => $request->code,
+            'logo' => $logoPath,
             'email' => $request->email,
             'phone' => $request->phone,
             'address' => $request->address,
@@ -85,17 +83,9 @@ class OrganizationController extends Controller
             'status' => $request->status,
         ]);
 
-        // لاگ عملیات
-        \App\Models\EventLog::log(
-            'organization_created',
-            "سازمان {$organization->name} ایجاد شد",
-            $organization
-        );
-
         return redirect()->route('organizations.index')
             ->with('success', 'سازمان با موفقیت ایجاد شد.');
     }
-
     /**
      * نمایش جزئیات سازمان
      */
@@ -129,6 +119,10 @@ class OrganizationController extends Controller
      */
     public function edit(Organization $organization)
     {
+        $organization->logo_url = $organization->logo
+            ? Storage::url($organization->logo)
+            : null;
+
         return Inertia::render('organizations/edit', [
             'organization' => $organization,
         ]);

@@ -1,21 +1,21 @@
 import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
-import axios from 'axios';
 import {
-    Save, X, Building2, Trash2, Mail, Phone, MapPin, Globe,
-    ChevronDown, CheckCircle, AlertCircle, Eye,
-    Hash, RefreshCw, Upload
+    Save, X, Building2, Mail, Phone, MapPin, Globe,
+    ChevronDown, CheckCircle, AlertCircle, Hash, RefreshCw,
+    Upload, Trash2, Eye
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
-import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import organizationsRoute from '@/routes/organizations';
 import type { Organization } from '@/types';
 
 interface Props {
     organization: Organization;
+    organizations: Organization[];
 }
 
-// Utility function for generating code
+// ─── Utility Functions ─────────────────────────────────────────────────────
+
 const generateOrgCode = (persianName: string): string => {
     if (!persianName) {
         return '';
@@ -145,41 +145,11 @@ function InputField({
     );
 }
 
-function SelectField({
-    icon: Icon, value, onChange, children, error
-}: {
-    icon?: React.ElementType; value: string; onChange: (v: string) => void;
-    children: React.ReactNode; error?: string | null;
-}) {
-    return (
-        <div>
-            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${error
-                ? 'border-rose-300 ring-1 ring-rose-300'
-                : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
-                }`}>
-                {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
-                <select
-                    value={value}
-                    onChange={e => onChange(e.target.value)}
-                    className={`w-full ${Icon ? 'pr-10' : 'pr-4'} pl-9 py-3 text-sm bg-transparent focus:outline-none appearance-none text-slate-700`}
-                >
-                    {children}
-                </select>
-                <ChevronDown className="absolute left-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
-            </div>
-            {error && (
-                <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />{error}
-                </p>
-            )}
-        </div>
-    );
-}
 
 // ─── Main Component ────────────────────────────────────────────────────────
 
 export default function OrganizationsEdit({ organization }: Props) {
-    const { data, setData, put, processing, errors, reset } = useForm({
+    const { data, setData, put, processing, errors, clearErrors } = useForm({
         name: organization.name,
         code: organization.code,
         email: organization.email || '',
@@ -187,15 +157,18 @@ export default function OrganizationsEdit({ organization }: Props) {
         address: organization.address || '',
         website: organization.website || '',
         status: organization.status,
-        logo: organization.logo || '',
+        logo: null as File | null,
     });
+
+    console.log(organization.logo);
+
+
 
     const [touched, setTouched] = useState<Record<string, boolean>>({});
     const [autoGenerateCode, setAutoGenerateCode] = useState(false);
+    const [logoPreview, setLogoPreview] = useState<string>(organization.logo_url || '');
+    const [existingLogo, setExistingLogo] = useState<string>(organization.logo || '');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [deleting, setDeleting] = useState(false);
-    const [logoPreview, setLogoPreview] = useState<string>(organization.logo || '');
-    const [logoFile, setLogoFile] = useState<File | null>(null);
 
     // تولید خودکار کد هنگام تغییر نام
     useEffect(() => {
@@ -208,24 +181,13 @@ export default function OrganizationsEdit({ organization }: Props) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // اگر فایل لوگو تغییر کرده، ابتدا آپلود کن
-        if (logoFile) {
-            const formData = new FormData();
-            formData.append('logo', logoFile);
-
-            axios.post(route('organizations.upload-logo'), formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            }).then(response => {
-                setData('logo', response.data.path);
-                put(organizationsRoute.update({ organization: organization.id }), {
-                    preserveScroll: true,
-                });
-            });
-        } else {
-            put(organizationsRoute.update({ organization: organization.id }), {
-                preserveScroll: true,
-            });
-        }
+        put(organizationsRoute.update({ organization: organization.id }), {
+            preserveScroll: true,
+            onSuccess: () => {
+                // پاک کردن پیش‌نمایش لوگو بعد از موفقیت
+                setLogoPreview('');
+            },
+        });
     };
 
     const handleBlur = (field: string) => {
@@ -239,6 +201,7 @@ export default function OrganizationsEdit({ organization }: Props) {
     const handleNameChange = (value: string) => {
         setData('name', value);
         setAutoGenerateCode(true);
+        clearErrors('name');
     };
 
     const handleCodeChange = (value: string) => {
@@ -247,6 +210,8 @@ export default function OrganizationsEdit({ organization }: Props) {
         if (value !== generateOrgCode(data.name)) {
             setAutoGenerateCode(false);
         }
+
+        clearErrors('code');
     };
 
     const handleRegenerateCode = () => {
@@ -261,7 +226,25 @@ export default function OrganizationsEdit({ organization }: Props) {
         const file = e.target.files?.[0];
 
         if (file) {
-            setLogoFile(file);
+            // بررسی حجم فایل (حداکثر 2 مگابایت)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('حجم فایل نباید بیشتر از 2 مگابایت باشد');
+
+                return;
+            }
+
+            // بررسی نوع فایل
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+
+            if (!allowedTypes.includes(file.type)) {
+                alert('فرمت فایل باید JPEG، PNG، JPG یا GIF باشد');
+
+                return;
+            }
+
+            setData('logo', file);
+            clearErrors('logo');
+
             const reader = new FileReader();
             reader.onloadend = () => {
                 setLogoPreview(reader.result as string);
@@ -270,14 +253,10 @@ export default function OrganizationsEdit({ organization }: Props) {
         }
     };
 
-    const confirmDelete = () => {
-        setDeleting(true);
-        router.delete(organizationsRoute.destroy({ organization: organization.id }), {
-            onFinish: () => {
-                setDeleting(false);
-                setShowDeleteModal(false);
-            },
-        });
+    const handleRemoveLogo = () => {
+        setData('logo', null);
+        setLogoPreview('');
+        setExistingLogo('');
     };
 
     const statusOptions = [
@@ -285,14 +264,33 @@ export default function OrganizationsEdit({ organization }: Props) {
         { value: 'inactive', label: 'غیرفعال', desc: 'وزارت غیرفعال و در دسترس نیست', icon: AlertCircle, color: '#94a3b8', bg: '#f1f5f9', ring: '#cbd5e1' },
     ];
 
+    const getLogoUrl = (logoPath: string | null) => {
+        if (!logoPath) {
+            return null;
+        }
+
+        // اگر مسیر با http شروع شود، همان را برگردان
+        if (logoPath.startsWith('http')) {
+            return logoPath;
+        }
+
+        // در غیر این صورت، مسیر ذخیره‌سازی را بساز
+        // توجه: باید route('storage') یا آدرس base URL را بدانید
+        return `/storage/${logoPath}`;
+    };
+
     const selectedStatus = statusOptions.find(s => s.value === data.status);
-    const StatusIcon = selectedStatus?.icon;
 
     return (
         <>
             <Head title={`ویرایش وزارت - ${organization.name}`} />
 
             <div className="min-h-screen bg-slate-50/70" dir="rtl">
+                <img
+                    src={getLogoUrl(organization.logo)}
+                    alt={organization.name}
+                    className="h-full w-full object-cover"
+                />
                 {/* Sticky Top Bar */}
                 <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
                     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -342,10 +340,9 @@ export default function OrganizationsEdit({ organization }: Props) {
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <form id="org-form" onSubmit={handleSubmit}>
                         <div className="space-y-5">
-
                             {/* Hero intro strip */}
                             <div className="rounded-2xl border border-blue-100 bg-gradient-to-l from-blue-50 to-indigo-50 px-6 py-5 flex items-center gap-4">
-                                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shrink-0">
                                     <Building2 className="h-6 w-6 text-white" />
                                 </div>
                                 <div>
@@ -359,7 +356,7 @@ export default function OrganizationsEdit({ organization }: Props) {
                             {/* Basic Info */}
                             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                                 <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-gradient-to-l from-white to-slate-50/60">
-                                    <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                    <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
                                         <Building2 className="h-4 w-4 text-blue-600" />
                                     </div>
                                     <div>
@@ -418,8 +415,17 @@ export default function OrganizationsEdit({ organization }: Props) {
                                         <FieldLabel>لوگو</FieldLabel>
                                         <div className="flex items-center gap-4">
                                             {logoPreview && (
-                                                <div className="h-20 w-20 rounded-xl border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center">
-                                                    <img src={logoPreview} alt="Logo preview" className="h-full w-full object-cover" />
+                                                <div className="relative">
+                                                    <div className="h-20 w-20 rounded-xl border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center">
+                                                        <img src={logoPreview} alt="Logo preview" className="h-full w-full object-cover" />
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleRemoveLogo}
+                                                        className="absolute -top-2 -right-2 p-1 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors shadow-md"
+                                                    >
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </button>
                                                 </div>
                                             )}
                                             <label className="flex-1 cursor-pointer">
@@ -431,17 +437,20 @@ export default function OrganizationsEdit({ organization }: Props) {
                                                 </div>
                                                 <input
                                                     type="file"
-                                                    accept="image/*"
+                                                    accept="image/jpeg,image/png,image/jpg,image/gif"
                                                     onChange={handleLogoChange}
                                                     className="hidden"
                                                 />
                                             </label>
                                         </div>
+                                        {errors.logo && (
+                                            <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                                                <AlertCircle className="h-3 w-3" />
+                                                {errors.logo}
+                                            </p>
+                                        )}
                                         <p className="text-xs text-slate-400 mt-2">فرمت‌های مجاز: JPG, PNG, GIF (حداکثر 2 مگابایت)</p>
                                     </div>
-
-                                    {/* Divider */}
-                                    <div className="border-t border-slate-100" />
 
                                     {/* Email + Phone */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -452,6 +461,8 @@ export default function OrganizationsEdit({ organization }: Props) {
                                                 type="email"
                                                 value={data.email}
                                                 onChange={v => setData('email', v)}
+                                                onBlur={() => handleBlur('email')}
+                                                error={getFieldError('email')}
                                                 placeholder="info@organization.com"
                                             />
                                         </div>
@@ -461,7 +472,25 @@ export default function OrganizationsEdit({ organization }: Props) {
                                                 icon={Phone}
                                                 value={data.phone}
                                                 onChange={v => setData('phone', v)}
+                                                onBlur={() => handleBlur('phone')}
+                                                error={getFieldError('phone')}
                                                 placeholder="021-12345678"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Website + Parent */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <div>
+                                            <FieldLabel>وبسایت</FieldLabel>
+                                            <InputField
+                                                icon={Globe}
+                                                type="url"
+                                                value={data.website}
+                                                onChange={v => setData('website', v)}
+                                                onBlur={() => handleBlur('website')}
+                                                error={getFieldError('website')}
+                                                placeholder="https://www.example.com"
                                             />
                                         </div>
                                     </div>
@@ -478,30 +507,13 @@ export default function OrganizationsEdit({ organization }: Props) {
                                             rows={3}
                                         />
                                     </div>
-
-                                    {/* Divider */}
-                                    <div className="border-t border-slate-100" />
-
-                                    {/* Website + Parent */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        <div>
-                                            <FieldLabel>وبسایت</FieldLabel>
-                                            <InputField
-                                                icon={Globe}
-                                                type="url"
-                                                value={data.website}
-                                                onChange={v => setData('website', v)}
-                                                placeholder="https://www.example.com"
-                                            />
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
                             {/* Status */}
                             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                                 <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-gradient-to-l from-white to-slate-50/60">
-                                    <div className="h-9 w-9 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                                    <div className="h-9 w-9 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
                                         <CheckCircle className="h-4 w-4 text-emerald-600" />
                                     </div>
                                     <div>
@@ -549,7 +561,7 @@ export default function OrganizationsEdit({ organization }: Props) {
                                                         </div>
                                                         {isSelected && (
                                                             <div
-                                                                className="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0"
+                                                                className="h-5 w-5 rounded-full flex items-center justify-center shrink-0"
                                                                 style={{ backgroundColor: opt.color }}
                                                             >
                                                                 <CheckCircle className="h-3.5 w-3.5 text-white" />
@@ -564,57 +576,25 @@ export default function OrganizationsEdit({ organization }: Props) {
                             </div>
 
                             {/* Current Status Info */}
-                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 p-4">
-                                <div className="flex items-start gap-3">
-                                    {StatusIcon && <StatusIcon className="h-5 w-5 text-blue-500 mt-0.5" />}
-                                    <div>
-                                        <p className="text-sm font-medium text-blue-800">وضعیت فعلی سازمان</p>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className={`text-sm font-medium ${selectedStatus?.color === '#10b981' ? 'text-emerald-700' : 'text-slate-600'}`}>
-                                                {selectedStatus?.label}
-                                            </span>
-                                            <span className="text-xs text-blue-600">•</span>
-                                            <span className="text-xs text-blue-600">
-                                                آخرین بروزرسانی: {new Date(organization.updated_at).toLocaleDateString('fa-IR')}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Delete Section */}
-                            <div className="bg-white rounded-2xl border border-red-100 shadow-sm overflow-hidden">
-                                <div className="px-6 py-5 border-b border-red-100 flex items-center gap-3.5 bg-gradient-to-l from-red-50 to-white">
-                                    <div className="h-9 w-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
-                                        <Trash2 className="h-4 w-4 text-red-600" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-sm font-bold text-red-800">منطقه خطر</h2>
-                                        <p className="text-xs text-red-600 mt-0.5">عملیات حذف وزارت - این عمل غیرقابل بازگشت است</p>
-                                    </div>
-                                </div>
-                                <div className="p-6">
-                                    <div className="bg-red-50 rounded-xl p-4 border border-red-200">
-                                        <div className="flex items-start gap-3">
-                                            <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
-                                            <div>
-                                                <p className="text-sm font-medium text-red-800">هشدار!</p>
-                                                <p className="text-sm text-red-700 mt-1">
-                                                    با حذف وزارت "{organization.name}"، تمام دپارتمان‌ها، کاربران و اطلاعات مرتبط با این وزارت نیز حذف خواهند شد.
-                                                </p>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowDeleteModal(true)}
-                                                    className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-all shadow-sm"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                    حذف وزارت
-                                                </button>
+                            {selectedStatus && (
+                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 p-4">
+                                    <div className="flex items-start gap-3">
+                                        {selectedStatus.icon && <selectedStatus.icon className="h-5 w-5 text-blue-500 mt-0.5" />}
+                                        <div>
+                                            <p className="text-sm font-medium text-blue-800">وضعیت فعلی سازمان</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className={`text-sm font-medium ${selectedStatus.color === '#10b981' ? 'text-emerald-700' : 'text-slate-600'}`}>
+                                                    {selectedStatus.label}
+                                                </span>
+                                                <span className="text-xs text-blue-600">•</span>
+                                                <span className="text-xs text-blue-600">
+                                                    آخرین بروزرسانی: {new Date(organization.updated_at).toLocaleDateString('fa-IR')}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Mobile Actions */}
                             <div className="flex gap-3 sm:hidden pb-4">
@@ -635,25 +615,10 @@ export default function OrganizationsEdit({ organization }: Props) {
                                     {processing ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
                                 </button>
                             </div>
-
                         </div>
                     </form>
                 </div>
             </div>
-
-            {/* Delete Confirmation Modal */}
-            {showDeleteModal && (
-                <DeleteConfirmationModal
-                    isOpen={showDeleteModal}
-                    onClose={() => setShowDeleteModal(false)}
-                    onConfirm={confirmDelete}
-                    title="حذف وزارت"
-                    message="آیا از حذف این وزارت اطمینان دارید؟"
-                    itemName={organization.name}
-                    type="organization"
-                    isLoading={deleting}
-                />
-            )}
         </>
     );
 }
