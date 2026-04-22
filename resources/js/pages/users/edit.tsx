@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
-import users from '@/routes/users';
+import usersRoute from '@/routes/users';
 import type { User, Organization, Department, Position, Role } from '@/types';
 
 interface Props {
@@ -194,6 +194,9 @@ export default function UsersEdit({
         role: userRole,
     });
 
+    console.log(user);
+    
+
     const handleBlur = (field: string) => setTouched(prev => ({ ...prev, [field]: true }));
     const getFieldError = (field: string) => touched[field] && errors[field] ? errors[field] : null;
 
@@ -229,14 +232,14 @@ export default function UsersEdit({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(users.update({ user: user.id }), {
+        put(usersRoute.update({ user: user.id }), {
             preserveScroll: true,
         });
     };
 
     const handleAssignRole = (roleName: string) => {
         if (confirm(`آیا نقش کاربر به "${roleName}" تغییر کند؟`)) {
-            router.post(users.assignRole({ user: user.id }), { role: roleName });
+            router.post(usersRoute.assignRole({ user: user.id }), { role: roleName });
         }
     };
 

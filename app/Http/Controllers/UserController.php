@@ -144,7 +144,7 @@ class UserController extends Controller
     /**
      * ذخیره کاربر جدید
      */
-    public function store(Request $request)
+    public function store(UserRequest $request)
     {
         $currentUser = auth()->user();
 
@@ -331,86 +331,10 @@ class UserController extends Controller
     /**
      * به‌روزرسانی کاربر
      */
-    public function update(Request $request, User $user)
+    public function update(UserRequest $request, User $user)
     {
         $currentUser = auth()->user();
-
-        // بررسی دسترسی
-        if (
-            !$currentUser->isSuperAdmin() &&
-            !($currentUser->isOrgAdmin() && $currentUser->organization_id === $user->organization_id) &&
-            !($currentUser->isDeptManager() && $currentUser->department_id === $user->department_id) &&
-            $currentUser->id !== $user->id
-        ) {
-            abort(403);
-        }
-
-        // اعتبارسنجی
-        $rules = [
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'mobile' => 'nullable|string|max:20',
-            'status' => 'required|in:active,inactive,suspended',
-        ];
-
-        // ادمین‌ها می‌توانند اطلاعات بیشتری ویرایش کنند
-        if ($currentUser->isSuperAdmin() || $currentUser->isOrgAdmin()) {
-            $rules['organization_id'] = 'required|exists:organizations,id';
-            $rules['department_id'] = 'nullable|exists:departments,id';
-            $rules['primary_position_id'] = 'nullable|exists:positions,id';
-            $rules['username'] = 'required|string|max:255|unique:users,username,' . $user->id;
-            $rules['email'] = 'required|email|max:255|unique:users,email,' . $user->id;
-            $rules['national_code'] = 'required|string|size:10|unique:users,national_code,' . $user->id;
-            $rules['employment_code'] = 'nullable|string|max:50|unique:users,employment_code,' . $user->id;
-            $rules['security_clearance'] = 'required|in:public,internal,confidential,secret';
-        }
-
-        // اگر رمز عبور ارسال شده
-        if ($request->filled('password')) {
-            $rules['password'] = 'string|min:8|confirmed';
-        }
-
-        $validator = Validator::make($request->all(), $rules);
-
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
-        }
-
-        // داده‌های قابل به‌روزرسانی
-        $data = [
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'mobile' => $request->mobile,
-            'status' => $request->status,
-        ];
-
-        // ادمین‌ها می‌توانند اطلاعات بیشتری به‌روزرسانی کنند
-        if ($currentUser->isSuperAdmin() || $currentUser->isOrgAdmin()) {
-            $data['organization_id'] = $request->organization_id;
-            $data['department_id'] = $request->department_id;
-            $data['primary_position_id'] = $request->primary_position_id;
-            $data['username'] = $request->username;
-            $data['email'] = $request->email;
-            $data['national_code'] = $request->national_code;
-            $data['employment_code'] = $request->employment_code;
-            $data['security_clearance'] = $request->security_clearance;
-        }
-
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
-        }
-
-        $user->update($data);
-
-        // لاگ عملیات
-        \App\Models\EventLog::log(
-            'user_updated',
-            "کاربر {$user->full_name} به‌روزرسانی شد",
-            $user
-        );
-
-        return redirect()->route('users.index')
-            ->with('success', 'کاربر با موفقیت به‌روزرسانی شد.');
+        dd($currentUser);
     }
 
     /**
