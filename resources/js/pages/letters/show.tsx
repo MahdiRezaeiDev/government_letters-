@@ -207,7 +207,7 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, av
 
                 /* ── Org name center ── */
                 .org-center-name {
-                    font-size: 15px;
+                    font-size: 50px;
                     font-weight: 800;
                     color: #1a1a2e;
                     line-height: 1.6;
@@ -344,8 +344,8 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, av
 
                                 {/* Center: Organization names stacked */}
                                 <div className="flex-1 text-center px-2">
-                                    <p className="org-center-name">
-                                        {letter.sender_department?.organization?.name || 'جمهوری اسلامی ایران'}
+                                    <p className="org-center-name nastaliq text-9xl">
+                                        {letter.sender_department?.organization?.name || 'امارت اسلامی افغانستان'}
                                     </p>
                                     <p className="sub-dept-name">
                                         {letter.sender_department?.name || 'وزارت / معاونت'}

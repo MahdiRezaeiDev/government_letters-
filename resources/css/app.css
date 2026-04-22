@@ -57,8 +57,20 @@
     font-style: normal;
 }
 
+
+@font-face {
+    font-family: "IranNastaliq";
+    src: url("../../resources/fonts/IranNastaliq.ttf") format("ttf");
+    font-weight: 900;
+    font-style: normal;
+}
+
 * {
     font-family: Vazir;
+}
+
+.nastaliq {
+    font-family: IranNastaliq !important;
 }
 
 @theme {
