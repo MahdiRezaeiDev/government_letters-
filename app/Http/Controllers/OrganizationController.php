@@ -16,17 +16,17 @@ class OrganizationController extends Controller
     public function index(Request $request)
     {
         $query = Organization::query()
-        ->when($request->filled('search'), function ($q) use ($request) {
+            ->when($request->filled('search'), function ($q) use ($request) {
                 $q->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('code', 'like', "%{$request->search}%")
-                  ->orWhere('email', 'like', "%{$request->search}%");
-        })
-        ->when ($request->filled('status'), function ($query) use ($request) {
-                  $query->where('status', $request->status);
-        });
+                    ->orWhere('code', 'like', "%{$request->search}%")
+                    ->orWhere('email', 'like', "%{$request->search}%");
+            })
+            ->when($request->filled('status'), function ($query) use ($request) {
+                $query->where('status', $request->status);
+            });
 
         $organizations = $query->with('parent')->paginate(15);
-        
+
         return Inertia::render('organizations/index', [
             'organizations' => $organizations,
             'filters' => $request->only(['search', 'status']),
@@ -43,11 +43,7 @@ class OrganizationController extends Controller
      */
     public function create()
     {
-        $organizations = Organization::all();
-        
-        return Inertia::render('organizations/create', [
-            'organizations' => $organizations,
-        ]);
+        return Inertia::render('organizations/create');
     }
 
     /**
@@ -73,11 +69,11 @@ class OrganizationController extends Controller
             'parent_id.exists' => 'سازمان والد معتبر نیست',
             'status.in' => 'وضعیت باید فعال یا غیرفعال باشد',
         ]);
-        
+
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
-        
+
         // ایجاد سازمان
         $organization = Organization::create([
             'name' => $request->name,
@@ -88,14 +84,14 @@ class OrganizationController extends Controller
             'website' => $request->website,
             'status' => $request->status,
         ]);
-        
+
         // لاگ عملیات
         \App\Models\EventLog::log(
             'organization_created',
             "سازمان {$organization->name} ایجاد شد",
             $organization
         );
-        
+
         return redirect()->route('organizations.index')
             ->with('success', 'سازمان با موفقیت ایجاد شد.');
     }
@@ -110,14 +106,14 @@ class OrganizationController extends Controller
                 $q->withCount('users');
             },
         ]);
-        
+
         // آمار
         $stats = [
             'total_departments' => $organization->departments->count(),
             'total_users' => User::where('organization_id', $organization->id)->count(),
             'active_departments' => $organization->departments->where('status', 'active')->count(),
         ];
-        
+
         return Inertia::render('organizations/show', [
             'organization' => $organization,
             'stats' => $stats,
@@ -133,11 +129,8 @@ class OrganizationController extends Controller
      */
     public function edit(Organization $organization)
     {
-        $organizations = Organization::where('id', '!=', $organization->id)->get();
-        
         return Inertia::render('organizations/edit', [
             'organization' => $organization,
-            'organizations' => $organizations,
         ]);
     }
 
@@ -160,13 +153,13 @@ class OrganizationController extends Controller
             'code.unique' => 'این کد قبلاً ثبت شده است',
             'parent_id.not_in' => 'سازمان نمی‌تواند والد خودش باشد',
         ]);
-        
+
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
-        
+
         $oldName = $organization->name;
-        
+
         // به‌روزرسانی
         $organization->update([
             'name' => $request->name,
@@ -178,7 +171,7 @@ class OrganizationController extends Controller
             'parent_id' => $request->parent_id,
             'status' => $request->status,
         ]);
-        
+
         // لاگ عملیات
         \App\Models\EventLog::log(
             'organization_updated',
@@ -186,7 +179,7 @@ class OrganizationController extends Controller
             $organization,
             ['old_name' => $oldName, 'new_name' => $organization->name]
         );
-        
+
         return redirect()->route('organizations.index')
             ->with('success', 'سازمان با موفقیت به‌روزرسانی شد.');
     }
@@ -200,26 +193,26 @@ class OrganizationController extends Controller
         if ($organization->departments()->count() > 0) {
             return back()->with('error', 'این سازمان دارای دپارتمان است و قابل حذف نمی‌باشد.');
         }
-        
+
         // بررسی وجود کاربر
         if ($organization->users()->count() > 0) {
             return back()->with('error', 'این سازمان دارای کاربر است و قابل حذف نمی‌باشد.');
         }
-        
+
         $organizationName = $organization->name;
         $organization->delete();
-        
+
         // لاگ عملیات
         \App\Models\EventLog::log(
             'organization_deleted',
             "سازمان {$organizationName} حذف شد",
             $organization
         );
-        
+
         return redirect()->route('organizations.index')
             ->with('success', 'سازمان با موفقیت حذف شد.');
     }
-    
+
     /**
      * تغییر وضعیت سازمان (فعال/غیرفعال)
      */
@@ -227,10 +220,10 @@ class OrganizationController extends Controller
     {
         $newStatus = $organization->status === 'active' ? 'inactive' : 'active';
         $organization->update(['status' => $newStatus]);
-        
+
         return back()->with('success', 'وضعیت سازمان با موفقیت تغییر کرد.');
     }
-    
+
     /**
      * دریافت سازمان‌ها برای API (برای select box)
      */
@@ -242,7 +235,7 @@ class OrganizationController extends Controller
             })
             ->orderBy('name')
             ->get();
-            
+
         return response()->json($organizations);
     }
 }

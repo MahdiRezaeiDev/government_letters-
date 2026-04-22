@@ -1,16 +1,13 @@
 import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
+import axios from 'axios';
 import {
     Save, X, Building2, Mail, Phone, MapPin, Globe,
-    Link2, ChevronDown, CheckCircle, AlertCircle, Hash, RefreshCw
+    Link2, ChevronDown, CheckCircle, AlertCircle, Hash, RefreshCw,
+    Upload
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import organizationsRoute from '@/routes/organizations';
-import type { Organization } from '@/types';
-
-interface Props {
-    organizations: Organization[];
-}
 
 // ─── Utility Functions ─────────────────────────────────────────────────────
 
@@ -19,10 +16,9 @@ const generateOrgCode = (persianName: string): string => {
         return '';
     }
 
-    // لیست کلمات کلیدی و معادل انگلیسی آنها
     const keywords: Record<string, string> = {
         'وزارت': 'MO',
-        'وزارت': 'ORG',
+        'سازمان': 'ORG',
         'شرکت': 'CO',
         'موسسه': 'INS',
         'بانک': 'BANK',
@@ -35,7 +31,7 @@ const generateOrgCode = (persianName: string): string => {
         'پژوهشگاه': 'RSCH',
         'اداره': 'ADMIN',
         'کل': 'GEN',
-        'امور': 'AFFAIRS',
+        'امور': 'AFF',
         'مالی': 'FIN',
         'اقتصاد': 'ECON',
         'دارایی': 'FIN',
@@ -47,56 +43,49 @@ const generateOrgCode = (persianName: string): string => {
         'صنعت': 'IND',
         'معدن': 'MINE',
         'تجارت': 'TRADE',
-        'کشاورزی': 'AGRI',
+        'کشاورزی': 'AGR',
         'نفت': 'OIL',
         'گاز': 'GAS',
-        'نیرو': 'POWER',
-        'آب': 'WATER',
+        'نیرو': 'POW',
+        'آب': 'WAT',
         'راه': 'ROAD',
-        'مسکن': 'HOUSE',
-        'شهرسازی': 'URBAN',
-        'کشور': 'INTERIOR',
-        'خارجه': 'FOREIGN',
-        'دفاع': 'DEFENSE',
-        'دادگستری': 'JUSTICE',
-        'بهداشت': 'HEALTH',
+        'مسکن': 'HOU',
+        'شهرسازی': 'URB',
+        'کشور': 'INT',
+        'خارجه': 'FOR',
+        'دفاع': 'DEF',
+        'دادگستری': 'JUS',
+        'بهداشت': 'HEA',
         'درمان': 'MED',
         'آموزش': 'EDU',
         'پرورش': 'EDU',
         'علوم': 'SCI',
         'تحقیقات': 'RES',
-        'فرهنگ': 'CULTURE',
-        'ارشاد': 'GUIDE',
-        'اسلامی': 'ISLAMIC',
-        'کار': 'LABOR',
-        'رفاه': 'WELFARE',
-        'اجتماعی': 'SOCIAL',
-        'ورزش': 'SPORT',
-        'جوانان': 'YOUTH',
-        'میراث': 'HERITAGE',
-        'گردشگری': 'TOURISM',
+        'فرهنگ': 'CUL',
+        'ارشاد': 'GUI',
+        'اسلامی': 'ISL',
+        'کار': 'LAB',
+        'رفاه': 'WEL',
+        'اجتماعی': 'SOC',
+        'ورزش': 'SPO',
+        'جوانان': 'YOU',
+        'میراث': 'HER',
+        'گردشگری': 'TOU',
         'محیط': 'ENV',
         'زیست': 'ENV',
-        'داخلی': 'INTERNAL',
-        'خارجی': 'EXTERNAL',
-        'عمومی': 'PUBLIC',
-        'خصوصی': 'PRIVATE',
+        'داخلی': 'INT',
+        'خارجی': 'EXT',
+        'عمومی': 'PUB',
+        'خصوصی': 'PRI',
         'دولتی': 'GOV',
-        'ملی': 'NATIONAL',
-        'استانی': 'PROVINCE',
-        'شهرستانی': 'COUNTY',
+        'ملی': 'NAT',
+        'استانی': 'PRO',
+        'شهرستانی': 'COU',
     };
 
     try {
-        // تبدیل اعداد فارسی به انگلیسی و حذف کاراکترهای خاص
-        const processedName = persianJs(persianName)
-            .toEnglishNumber()
-            .arabicChar()
-            .toString();
-
-        // جستجوی کلمات کلیدی در نام
         let prefix = '';
-        let remainingName = processedName;
+        let remainingName = persianName;
 
         for (const [persian, english] of Object.entries(keywords)) {
             if (persianName.includes(persian)) {
@@ -104,25 +93,21 @@ const generateOrgCode = (persianName: string): string => {
                     prefix = english;
                 }
 
-                // حذف کلمه کلیدی از نام
                 remainingName = remainingName.replace(new RegExp(persian, 'g'), '');
             }
         }
 
-        // اگر پیشوندی پیدا نشد، از پیشوند پیش‌فرض استفاده کن
         if (!prefix) {
             prefix = 'ORG';
         }
 
-        // تبدیل حروف فارسی باقیمانده به انگلیسی
         const persianToEnglishMap: Record<string, string> = {
             'ا': 'A', 'آ': 'A', 'ب': 'B', 'پ': 'P', 'ت': 'T', 'ث': 'S',
-            'ج': 'J', 'چ': 'CH', 'ح': 'H', 'خ': 'KH', 'د': 'D',
-            'ذ': 'Z', 'ر': 'R', 'ز': 'Z', 'ژ': 'ZH', 'س': 'S',
-            'ش': 'SH', 'ص': 'S', 'ض': 'Z', 'ط': 'T', 'ظ': 'Z',
-            'ع': 'A', 'غ': 'GH', 'ف': 'F', 'ق': 'GH', 'ک': 'K',
-            'گ': 'G', 'ل': 'L', 'م': 'M', 'ن': 'N', 'و': 'V',
-            'ه': 'H', 'ی': 'Y', 'ئ': 'E', 'ء': ''
+            'ج': 'J', 'چ': 'CH', 'ح': 'H', 'خ': 'KH', 'د': 'D', 'ذ': 'Z',
+            'ر': 'R', 'ز': 'Z', 'ژ': 'ZH', 'س': 'S', 'ش': 'SH', 'ص': 'S',
+            'ض': 'Z', 'ط': 'T', 'ظ': 'Z', 'ع': 'A', 'غ': 'GH', 'ف': 'F',
+            'ق': 'GH', 'ک': 'K', 'گ': 'G', 'ل': 'L', 'م': 'M', 'ن': 'N',
+            'و': 'V', 'ه': 'H', 'ی': 'Y', 'ئ': 'E', 'ء': ''
         };
 
         let englishName = '';
@@ -131,28 +116,13 @@ const generateOrgCode = (persianName: string): string => {
             englishName += persianToEnglishMap[char] || char;
         }
 
-        // پاکسازی نهایی
-        const cleanName = englishName
-            .replace(/[^A-Z0-9]/g, '') // فقط حروف بزرگ و اعداد
-            .replace(/\s+/g, '')
-            .trim();
+        const cleanName = englishName.replace(/[^A-Z0-9]/g, '').trim();
+        const finalCode = cleanName ? `${prefix}-${cleanName}` : prefix;
 
-        // ترکیب پیشوند و نام
-        const finalCode = cleanName
-            ? `${prefix}-${cleanName}`
-            : prefix;
-
-        // محدودیت طول و حذف خط تیره اضافی
-        return finalCode
-            .replace(/-+/g, '-')
-            .replace(/^-|-$/g, '')
-            .toUpperCase()
-            .slice(0, 20);
-
+        return finalCode.replace(/-+/g, '-').replace(/^-|-$/g, '').toUpperCase().slice(0, 20);
     } catch (error) {
         console.error('Error generating org code:', error);
 
-        // در صورت خطا، یک کد پیش‌فرض برگردان
         return `ORG-${Date.now().toString().slice(-6)}`;
     }
 };
@@ -175,22 +145,18 @@ function InputField({
     onBlur?: () => void; error?: string | null; placeholder?: string;
     type?: string; textarea?: boolean; rows?: number; readOnly?: boolean;
 }) {
-    const baseClass = `w-full ${Icon ? 'pr-10' : 'pr-4'} pl-4 py-3 text-sm bg-transparent focus:outline-none text-slate-700 placeholder-slate-300 ${readOnly ? 'bg-slate-50 cursor-not-allowed' : ''
-        }`;
-    const wrapClass = `relative flex items-start rounded-xl border transition-all duration-200 ${readOnly ? 'bg-slate-50' : 'bg-white'
-        } ${error
-            ? 'border-rose-300 ring-1 ring-rose-300'
-            : readOnly
-                ? 'border-slate-200'
-                : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
+    const baseClass = `w-full ${Icon ? 'pr-10' : 'pr-4'} pl-4 py-3 text-sm bg-transparent focus:outline-none text-slate-700 placeholder-slate-300 ${readOnly ? 'bg-slate-50 cursor-not-allowed' : ''}`;
+    const wrapClass = `relative flex items-start rounded-xl border transition-all duration-200 ${readOnly ? 'bg-slate-50' : 'bg-white'} ${error
+        ? 'border-rose-300 ring-1 ring-rose-300'
+        : readOnly
+            ? 'border-slate-200'
+            : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
         }`;
 
     return (
         <div>
             <div className={wrapClass}>
-                {Icon && (
-                    <Icon className="absolute right-3.5 top-3.5 h-4 w-4 text-slate-400 pointer-events-none flex-shrink-0" />
-                )}
+                {Icon && <Icon className="absolute right-3.5 top-3.5 h-4 w-4 text-slate-400 pointer-events-none flex-shrink-0" />}
                 {textarea ? (
                     <textarea
                         value={value}
@@ -231,8 +197,8 @@ function SelectField({
     return (
         <div>
             <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${error
-                    ? 'border-rose-300 ring-1 ring-rose-300'
-                    : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
+                ? 'border-rose-300 ring-1 ring-rose-300'
+                : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
                 }`}>
                 {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
                 <select
@@ -255,20 +221,22 @@ function SelectField({
 
 // ─── Main Component ────────────────────────────────────────────────────────
 
-export default function OrganizationsCreate({ organizations }: Props) {
+export default function OrganizationsCreate() {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         code: '',
+        logo: '',
         email: '',
         phone: '',
         address: '',
         website: '',
-        parent_id: '',
         status: 'active',
     });
 
     const [touched, setTouched] = useState<Record<string, boolean>>({});
     const [autoGenerateCode, setAutoGenerateCode] = useState(true);
+    const [logoPreview, setLogoPreview] = useState<string>('');
+    const [logoFile, setLogoFile] = useState<File | null>(null);
 
     // تولید خودکار کد هنگام تغییر نام
     useEffect(() => {
@@ -280,7 +248,22 @@ export default function OrganizationsCreate({ organizations }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(organizationsRoute.store());
+
+        // اگر فایل لوگو وجود دارد، ابتدا آپلود کن
+        if (logoFile) {
+            const formData = new FormData();
+            formData.append('logo', logoFile);
+
+            // آپلود لوگو (این قسمت باید با توجه به API شما تنظیم شود)
+            axios.post(route('organizations.upload-logo'), formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            }).then(response => {
+                setData('logo', response.data.path);
+                post(organizationsRoute.store());
+            });
+        } else {
+            post(organizationsRoute.store());
+        }
     };
 
     const handleBlur = (field: string) => setTouched(prev => ({ ...prev, [field]: true }));
@@ -288,14 +271,12 @@ export default function OrganizationsCreate({ organizations }: Props) {
 
     const handleNameChange = (value: string) => {
         setData('name', value);
-        // اگر کاربر شروع به تایپ کرد، حالت autoGenerate را روشن نگه دار
         setAutoGenerateCode(true);
     };
 
     const handleCodeChange = (value: string) => {
         setData('code', value);
 
-        // اگر کاربر دستی کد را تغییر داد، autoGenerate را غیرفعال کن
         if (value !== generateOrgCode(data.name)) {
             setAutoGenerateCode(false);
         }
@@ -309,40 +290,30 @@ export default function OrganizationsCreate({ organizations }: Props) {
         }
     };
 
+    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+
+        if (file) {
+            setLogoFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setLogoPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const statusOptions = [
-        {
-            value: 'active',
-            label: 'فعال',
-            desc: 'وزارت فعال و قابل استفاده است',
-            icon: CheckCircle,
-            color: '#10b981',
-            bg: '#d1fae5',
-            ring: '#6ee7b7',
-        },
-        {
-            value: 'inactive',
-            label: 'غیرفعال',
-            desc: 'وزارت غیرفعال و در دسترس نیست',
-            icon: AlertCircle,
-            color: '#94a3b8',
-            bg: '#f1f5f9',
-            ring: '#cbd5e1',
-        },
+        { value: 'active', label: 'فعال', desc: 'وزارت فعال و قابل استفاده است', icon: CheckCircle, color: '#10b981', bg: '#d1fae5', ring: '#6ee7b7' },
+        { value: 'inactive', label: 'غیرفعال', desc: 'وزارت غیرفعال و در دسترس نیست', icon: AlertCircle, color: '#94a3b8', bg: '#f1f5f9', ring: '#cbd5e1' },
     ];
 
     return (
         <>
             <Head title="ایجاد وزارت جدید" />
 
-            <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
-                * { font-family: 'Vazirmatn', sans-serif; }
-                :root { direction: rtl; }
-            `}</style>
-
             <div className="min-h-screen bg-slate-50/70" dir="rtl">
-
-                {/* ── Sticky Top Bar ── */}
+                {/* Sticky Top Bar */}
                 <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
                     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between h-16">
@@ -376,12 +347,12 @@ export default function OrganizationsCreate({ organizations }: Props) {
                     </div>
                 </div>
 
-                {/* ── Page Body ── */}
+                {/* Page Body */}
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <form id="org-form" onSubmit={handleSubmit}>
                         <div className="space-y-5">
 
-                            {/* ── Hero intro strip ── */}
+                            {/* Hero intro strip */}
                             <div className="rounded-2xl border border-blue-100 bg-gradient-to-l from-blue-50 to-indigo-50 px-6 py-5 flex items-center gap-4">
                                 <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0">
                                     <Building2 className="h-6 w-6 text-white" />
@@ -394,9 +365,9 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                 </div>
                             </div>
 
-                            {/* ── Basic Info ── */}
+                            {/* Basic Info */}
                             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                                <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-gradient-to-l from-white to-slate-50/60">
+                                <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-linear-to-l from-white to-slate-50/60">
                                     <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
                                         <Building2 className="h-4 w-4 text-blue-600" />
                                     </div>
@@ -451,9 +422,6 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                         </div>
                                     </div>
 
-                                    {/* Divider */}
-                                    <div className="border-t border-slate-100" />
-
                                     {/* Email + Phone */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         <div>
@@ -477,6 +445,50 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                         </div>
                                     </div>
 
+                                    {/* Logo Upload */}
+                                    <div>
+                                        <FieldLabel>لوگو</FieldLabel>
+                                        <div className="flex items-center gap-4">
+                                            {logoPreview && (
+                                                <div className="h-20 w-20 rounded-xl border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center">
+                                                    <img src={logoPreview} alt="Logo preview" className="h-full w-full object-cover" />
+                                                </div>
+                                            )}
+                                            <label className="flex-1 cursor-pointer">
+                                                <div className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-slate-200 rounded-xl hover:border-blue-400 hover:bg-blue-50/50 transition-all">
+                                                    <Upload className="h-5 w-5 text-slate-400" />
+                                                    <span className="text-sm text-slate-600">آپلود لوگو</span>
+                                                </div>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleLogoChange}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                        </div>
+                                        <p className="text-xs text-slate-400 mt-2">فرمت‌های مجاز: JPG, PNG, GIF (حداکثر 2 مگابایت)</p>
+                                    </div>
+
+                                    {/* Divider */}
+                                    <div className="border-t border-slate-100" />
+
+
+
+                                    {/* Website + Parent */}
+                                    <div className="grid grid-cols-1  gap-5">
+                                        <div>
+                                            <FieldLabel>وبسایت</FieldLabel>
+                                            <InputField
+                                                icon={Globe}
+                                                type="url"
+                                                value={data.website}
+                                                onChange={v => setData('website', v)}
+                                                placeholder="https://www.example.com"
+                                            />
+                                        </div>
+                                    </div>
+
                                     {/* Address */}
                                     <div>
                                         <FieldLabel>آدرس</FieldLabel>
@@ -489,43 +501,13 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                             rows={3}
                                         />
                                     </div>
-
-                                    {/* Divider */}
-                                    <div className="border-t border-slate-100" />
-
-                                    {/* Website + Parent */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        <div>
-                                            <FieldLabel>وبسایت</FieldLabel>
-                                            <InputField
-                                                icon={Globe}
-                                                type="url"
-                                                value={data.website}
-                                                onChange={v => setData('website', v)}
-                                                placeholder="https://www.example.com"
-                                            />
-                                        </div>
-                                        <div>
-                                            <FieldLabel>وزارت والد</FieldLabel>
-                                            <SelectField
-                                                icon={Link2}
-                                                value={data.parent_id}
-                                                onChange={v => setData('parent_id', v)}
-                                            >
-                                                <option value="">بدون والد</option>
-                                                {organizations.map(org => (
-                                                    <option key={org.id} value={org.id}>{org.name}</option>
-                                                ))}
-                                            </SelectField>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
-                            {/* ── Status ── */}
+                            {/* Status */}
                             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                                <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-gradient-to-l from-white to-slate-50/60">
-                                    <div className="h-9 w-9 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                                <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-linear-to-l from-white to-slate-50/60">
+                                    <div className="h-9 w-9 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
                                         <CheckCircle className="h-4 w-4 text-emerald-600" />
                                     </div>
                                     <div>
@@ -551,8 +533,8 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                                         boxShadow: `0 0 0 3px ${opt.bg}`,
                                                     } : {}}
                                                     className={`relative p-4 rounded-xl border-2 transition-all duration-200 text-right focus:outline-none ${isSelected
-                                                            ? 'border-transparent'
-                                                            : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
+                                                        ? 'border-transparent'
+                                                        : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
                                                         }`}
                                                 >
                                                     <div className="flex items-center gap-3">
@@ -573,7 +555,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                                         </div>
                                                         {isSelected && (
                                                             <div
-                                                                className="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0"
+                                                                className="h-5 w-5 rounded-full flex items-center justify-center shrink-0"
                                                                 style={{ backgroundColor: opt.color }}
                                                             >
                                                                 <CheckCircle className="h-3.5 w-3.5 text-white" />
@@ -587,7 +569,7 @@ export default function OrganizationsCreate({ organizations }: Props) {
                                 </div>
                             </div>
 
-                            {/* ── Mobile Actions ── */}
+                            {/* Mobile Actions */}
                             <div className="flex gap-3 sm:hidden pb-4">
                                 <button
                                     type="button"

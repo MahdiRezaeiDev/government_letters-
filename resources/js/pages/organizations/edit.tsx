@@ -1,24 +1,184 @@
-// resources/js/pages/organizations/edit.tsx
-
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
-import { 
-    Save, X, Building2, Trash2, Mail, Phone, MapPin, Globe, Link2, 
-    ChevronDown, CheckCircle, AlertCircle, Eye, Sparkles, 
-    Hash, TrendingUp, Shield, Clock, Users, Database,
-    AlertTriangle, Info
+import axios from 'axios';
+import {
+    Save, X, Building2, Trash2, Mail, Phone, MapPin, Globe,
+    ChevronDown, CheckCircle, AlertCircle, Eye,
+    Hash, RefreshCw, Upload
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
-import organizationsRoutes from '@/routes/organizations';
+import 
 import type { Organization } from '@/types';
 
 interface Props {
     organization: Organization;
-    organizations: Organization[];
 }
 
-export default function OrganizationsEdit({ organization, organizations }: Props) {
+// Utility function for generating code
+const generateOrgCode = (persianName: string): string => {
+    if (!persianName) {
+        return '';
+    }
+
+    const keywords: Record<string, string> = {
+        'وزارت': 'MO', 'سازمان': 'ORG', 'شرکت': 'CO', 'موسسه': 'INS',
+        'بانک': 'BANK', 'دانشگاه': 'UNI', 'بیمه': 'INS', 'صندوق': 'FUND',
+        'ستاد': 'HQ', 'مرکز': 'CENTER', 'پژوهشکده': 'RSCH', 'پژوهشگاه': 'RSCH',
+        'اداره': 'ADMIN', 'کل': 'GEN', 'امور': 'AFF', 'مالی': 'FIN',
+        'اقتصاد': 'ECON', 'دارایی': 'FIN', 'برنامه': 'PLAN', 'بودجه': 'BUDGET',
+        'فناوری': 'TECH', 'اطلاعات': 'INFO', 'ارتباطات': 'COMM', 'صنعت': 'IND',
+        'معدن': 'MINE', 'تجارت': 'TRADE', 'کشاورزی': 'AGR', 'نفت': 'OIL',
+        'گاز': 'GAS', 'نیرو': 'POW', 'آب': 'WAT', 'راه': 'ROAD',
+        'مسکن': 'HOU', 'شهرسازی': 'URB', 'کشور': 'INT', 'خارجه': 'FOR',
+        'دفاع': 'DEF', 'دادگستری': 'JUS', 'بهداشت': 'HEA', 'درمان': 'MED',
+        'آموزش': 'EDU', 'پرورش': 'EDU', 'علوم': 'SCI', 'تحقیقات': 'RES',
+        'فرهنگ': 'CUL', 'ارشاد': 'GUI', 'اسلامی': 'ISL', 'کار': 'LAB',
+        'رفاه': 'WEL', 'اجتماعی': 'SOC', 'ورزش': 'SPO', 'جوانان': 'YOU',
+        'میراث': 'HER', 'گردشگری': 'TOU', 'محیط': 'ENV', 'زیست': 'ENV',
+        'داخلی': 'INT', 'خارجی': 'EXT', 'عمومی': 'PUB', 'خصوصی': 'PRI',
+        'دولتی': 'GOV', 'ملی': 'NAT', 'استانی': 'PRO', 'شهرستانی': 'COU',
+    };
+
+    try {
+        let prefix = '';
+        let remainingName = persianName;
+
+        for (const [persian, english] of Object.entries(keywords)) {
+            if (persianName.includes(persian)) {
+                if (!prefix) {
+                    prefix = english;
+                }
+
+                remainingName = remainingName.replace(new RegExp(persian, 'g'), '');
+            }
+        }
+
+        if (!prefix) {
+            prefix = 'ORG';
+        }
+
+        const persianToEnglishMap: Record<string, string> = {
+            'ا': 'A', 'آ': 'A', 'ب': 'B', 'پ': 'P', 'ت': 'T', 'ث': 'S',
+            'ج': 'J', 'چ': 'CH', 'ح': 'H', 'خ': 'KH', 'د': 'D', 'ذ': 'Z',
+            'ر': 'R', 'ز': 'Z', 'ژ': 'ZH', 'س': 'S', 'ش': 'SH', 'ص': 'S',
+            'ض': 'Z', 'ط': 'T', 'ظ': 'Z', 'ع': 'A', 'غ': 'GH', 'ف': 'F',
+            'ق': 'GH', 'ک': 'K', 'گ': 'G', 'ل': 'L', 'م': 'M', 'ن': 'N',
+            'و': 'V', 'ه': 'H', 'ی': 'Y', 'ئ': 'E', 'ء': ''
+        };
+
+        let englishName = '';
+
+        for (const char of remainingName.trim()) {
+            englishName += persianToEnglishMap[char] || char;
+        }
+
+        const cleanName = englishName.replace(/[^A-Z0-9]/g, '').trim();
+        const finalCode = cleanName ? `${prefix}-${cleanName}` : prefix;
+
+        return finalCode.replace(/-+/g, '-').replace(/^-|-$/g, '').toUpperCase().slice(0, 20);
+    } catch (error) {
+        console.error('Error generating org code:', error);
+
+        return `ORG-${Date.now().toString().slice(-6)}`;
+    }
+};
+
+// ─── Shared Field Components ───────────────────────────────────────────────
+
+function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+    return (
+        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            {children}
+            {required && <span className="text-rose-400 mr-1">*</span>}
+        </label>
+    );
+}
+
+function InputField({
+    icon: Icon, value, onChange, onBlur, error, placeholder, type = 'text', textarea = false, rows = 3, readOnly = false
+}: {
+    icon?: React.ElementType; value: string; onChange: (v: string) => void;
+    onBlur?: () => void; error?: string | null; placeholder?: string;
+    type?: string; textarea?: boolean; rows?: number; readOnly?: boolean;
+}) {
+    const baseClass = `w-full ${Icon ? 'pr-10' : 'pr-4'} pl-4 py-3 text-sm bg-transparent focus:outline-none text-slate-700 placeholder-slate-300 ${readOnly ? 'bg-slate-50 cursor-not-allowed' : ''}`;
+    const wrapClass = `relative flex items-start rounded-xl border transition-all duration-200 ${readOnly ? 'bg-slate-50' : 'bg-white'} ${error
+        ? 'border-rose-300 ring-1 ring-rose-300'
+        : readOnly
+            ? 'border-slate-200'
+            : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
+        }`;
+
+    return (
+        <div>
+            <div className={wrapClass}>
+                {Icon && <Icon className="absolute right-3.5 top-3.5 h-4 w-4 text-slate-400 pointer-events-none flex-shrink-0" />}
+                {textarea ? (
+                    <textarea
+                        value={value}
+                        onChange={e => onChange(e.target.value)}
+                        onBlur={onBlur}
+                        placeholder={placeholder}
+                        rows={rows}
+                        readOnly={readOnly}
+                        className={`${baseClass} resize-none leading-7 pt-3`}
+                    />
+                ) : (
+                    <input
+                        type={type}
+                        value={value}
+                        onChange={e => onChange(e.target.value)}
+                        onBlur={onBlur}
+                        placeholder={placeholder}
+                        readOnly={readOnly}
+                        className={baseClass}
+                    />
+                )}
+            </div>
+            {error && (
+                <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" />{error}
+                </p>
+            )}
+        </div>
+    );
+}
+
+function SelectField({
+    icon: Icon, value, onChange, children, error
+}: {
+    icon?: React.ElementType; value: string; onChange: (v: string) => void;
+    children: React.ReactNode; error?: string | null;
+}) {
+    return (
+        <div>
+            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${error
+                ? 'border-rose-300 ring-1 ring-rose-300'
+                : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
+                }`}>
+                {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
+                <select
+                    value={value}
+                    onChange={e => onChange(e.target.value)}
+                    className={`w-full ${Icon ? 'pr-10' : 'pr-4'} pl-9 py-3 text-sm bg-transparent focus:outline-none appearance-none text-slate-700`}
+                >
+                    {children}
+                </select>
+                <ChevronDown className="absolute left-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
+            </div>
+            {error && (
+                <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />{error}
+                </p>
+            )}
+        </div>
+    );
+}
+
+// ─── Main Component ────────────────────────────────────────────────────────
+
+export default function OrganizationsEdit({ organization }: Props) {
     const { data, setData, put, processing, errors, reset } = useForm({
         name: organization.name,
         code: organization.code,
@@ -26,20 +186,46 @@ export default function OrganizationsEdit({ organization, organizations }: Props
         phone: organization.phone || '',
         address: organization.address || '',
         website: organization.website || '',
-        parent_id: organization.parent_id?.toString() || '',
         status: organization.status,
+        logo: organization.logo || '',
     });
 
     const [touched, setTouched] = useState<Record<string, boolean>>({});
+    const [autoGenerateCode, setAutoGenerateCode] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleting, setDeleting] = useState(false);
-    const [activeTab, setActiveTab] = useState<'basic' | 'contact' | 'advanced'>('basic');
+    const [logoPreview, setLogoPreview] = useState<string>(organization.logo || '');
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+
+    // تولید خودکار کد هنگام تغییر نام
+    useEffect(() => {
+        if (autoGenerateCode && data.name) {
+            const generatedCode = generateOrgCode(data.name);
+            setData('code', generatedCode);
+        }
+    }, [data.name, autoGenerateCode]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(organizationsRoutes.update({ organization: organization.id }), {
-            preserveScroll: true,
-        });
+
+        // اگر فایل لوگو تغییر کرده، ابتدا آپلود کن
+        if (logoFile) {
+            const formData = new FormData();
+            formData.append('logo', logoFile);
+
+            axios.post(route('organizations.upload-logo'), formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            }).then(response => {
+                setData('logo', response.data.path);
+                put(organizationsRoute.update({ organization: organization.id }), {
+                    preserveScroll: true,
+                });
+            });
+        } else {
+            put(organizationsRoute.update({ organization: organization.id }), {
+                preserveScroll: true,
+            });
+        }
     };
 
     const handleBlur = (field: string) => {
@@ -50,9 +236,43 @@ export default function OrganizationsEdit({ organization, organizations }: Props
         return touched[field] && errors[field] ? errors[field] : null;
     };
 
+    const handleNameChange = (value: string) => {
+        setData('name', value);
+        setAutoGenerateCode(true);
+    };
+
+    const handleCodeChange = (value: string) => {
+        setData('code', value);
+
+        if (value !== generateOrgCode(data.name)) {
+            setAutoGenerateCode(false);
+        }
+    };
+
+    const handleRegenerateCode = () => {
+        if (data.name) {
+            const generatedCode = generateOrgCode(data.name);
+            setData('code', generatedCode);
+            setAutoGenerateCode(true);
+        }
+    };
+
+    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+
+        if (file) {
+            setLogoFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setLogoPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const confirmDelete = () => {
         setDeleting(true);
-        router.delete(organizationsRoutes.destroy({ organization: organization.id }), {
+        router.delete(organizationsRoute.destroy({ organization: organization.id }), {
             onFinish: () => {
                 setDeleting(false);
                 setShowDeleteModal(false);
@@ -61,21 +281,8 @@ export default function OrganizationsEdit({ organization, organizations }: Props
     };
 
     const statusOptions = [
-        { value: 'active', label: 'فعال', color: 'emerald', icon: CheckCircle, description: 'سازمان فعال و قابل استفاده است', gradient: 'from-emerald-500 to-teal-600' },
-        { value: 'inactive', label: 'غیرفعال', color: 'gray', icon: AlertCircle, description: 'سازمان غیرفعال و در دسترس نیست', gradient: 'from-gray-500 to-slate-600' },
-    ];
-
-    const tabs = [
-        { id: 'basic', label: 'اطلاعات پایه', icon: Building2 },
-        { id: 'contact', label: 'اطلاعات تماس', icon: Mail },
-        { id: 'advanced', label: 'تنظیمات پیشرفته', icon: Shield },
-    ];
-
-    const stats = [
-        { label: 'شناسه', value: organization.id, icon: Hash },
-        { label: 'تاریخ ایجاد', value: new Date(organization.created_at).toLocaleDateString('fa-IR'), icon: Clock },
-        { label: 'تاریخ ویرایش', value: new Date(organization.updated_at).toLocaleDateString('fa-IR'), icon: TrendingUp },
-        { label: 'زیرمجموعه‌ها', value: organization.children?.length || 0, icon: Database },
+        { value: 'active', label: 'فعال', desc: 'وزارت فعال و قابل استفاده است', icon: CheckCircle, color: '#10b981', bg: '#d1fae5', ring: '#6ee7b7' },
+        { value: 'inactive', label: 'غیرفعال', desc: 'وزارت غیرفعال و در دسترس نیست', icon: AlertCircle, color: '#94a3b8', bg: '#f1f5f9', ring: '#cbd5e1' },
     ];
 
     const selectedStatus = statusOptions.find(s => s.value === data.status);
@@ -83,434 +290,356 @@ export default function OrganizationsEdit({ organization, organizations }: Props
 
     return (
         <>
-            <Head title={`ویرایش سازمان - ${organization.name}`} />
+            <Head title={`ویرایش وزارت - ${organization.name}`} />
 
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <form onSubmit={handleSubmit}>
-                        {/* Header Section */}
-                        <div className="mb-8 animate-fade-in">
-                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                <div>
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="relative">
-                                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl blur-lg opacity-50"></div>
-                                            <div className="relative p-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg">
-                                                <Building2 className="h-6 w-6 text-white" />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <h1 className="text-2xl font-bold text-gray-900">ویرایش سازمان</h1>
-                                            <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
-                                                <Sparkles className="h-3 w-3 text-blue-500" />
-                                                در حال ویرایش {organization.name}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex gap-3">
-                                    <Link
-                                        href={organizationsRoutes.show({ organization: organization.id })}
-                                        className="inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
-                                    >
-                                        <Eye className="ml-2 h-4 w-4" />
-                                        مشاهده
-                                    </Link>
-                                    <button
-                                        type="button"
-                                        onClick={() => router.get(organizationsRoutes.index())}
-                                        className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
-                                    >
-                                        <X className="ml-2 h-4 w-4" />
-                                        انصراف
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 border border-transparent rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        <Save className="ml-2 h-4 w-4" />
-                                        {processing ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
-                                    </button>
-                                </div>
+            <div className="min-h-screen bg-slate-50/70" dir="rtl">
+                {/* Sticky Top Bar */}
+                <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-16">
+                            <div className="flex items-center gap-3">
+                                <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 tracking-wide">
+                                    وزارت‌ها
+                                </span>
+                                <span className="text-slate-300 text-lg font-light">/</span>
+                                <h1 className="text-sm font-bold text-slate-800">ویرایش وزارت</h1>
+                                <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">
+                                    {organization.name}
+                                </span>
                             </div>
-                        </div>
-
-                        {/* Stats Cards */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 animate-slide-up">
-                            {stats.map((stat, index) => (
-                                <div key={stat.label} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300">
-                                    <div className="flex items-center gap-2 text-gray-500 mb-1">
-                                        <stat.icon className="h-4 w-4" />
-                                        <span className="text-xs">{stat.label}</span>
-                                    </div>
-                                    <p className="text-lg font-bold text-gray-900">{stat.value}</p>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Tabs */}
-                        <div className="border-b border-gray-200 mb-6 animate-slide-up">
-                            <nav className="flex gap-2">
-                                {tabs.map((tab) => (
-                                    <button
-                                        key={tab.id}
-                                        type="button"
-                                        onClick={() => setActiveTab(tab.id as any)}
-                                        className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-all ${
-                                            activeTab === tab.id
-                                                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/30'
-                                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        <tab.icon className="h-4 w-4" />
-                                        {tab.label}
-                                    </button>
-                                ))}
-                            </nav>
-                        </div>
-
-                        {/* Form Sections */}
-                        <div className="space-y-6">
-                            {/* Basic Information Tab */}
-                            {activeTab === 'basic' && (
-                                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in">
-                                    <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                                        <div className="flex items-center gap-2">
-                                            <Building2 className="h-5 w-5 text-blue-600" />
-                                            <div>
-                                                <h2 className="text-lg font-semibold text-gray-900">اطلاعات پایه</h2>
-                                                <p className="text-sm text-gray-500 mt-0.5">اطلاعات اصلی سازمان</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="p-6 space-y-5">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    نام سازمان <span className="text-red-500">*</span>
-                                                </label>
-                                                <div className="relative">
-                                                    <Building2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                    <input
-                                                        type="text"
-                                                        value={data.name}
-                                                        onChange={(e) => setData('name', e.target.value)}
-                                                        onBlur={() => handleBlur('name')}
-                                                        className={`w-full pr-9 pl-3 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all ${
-                                                            getFieldError('name')
-                                                                ? 'border-red-300 focus:ring-red-500'
-                                                                : 'border-gray-200 focus:ring-blue-500'
-                                                        }`}
-                                                    />
-                                                </div>
-                                                {getFieldError('name') && (
-                                                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                                                        <AlertCircle className="h-3 w-3" />
-                                                        {errors.name}
-                                                    </p>
-                                                )}
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    کد سازمان <span className="text-red-500">*</span>
-                                                </label>
-                                                <div className="relative">
-                                                    <Hash className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                    <input
-                                                        type="text"
-                                                        value={data.code}
-                                                        onChange={(e) => setData('code', e.target.value)}
-                                                        onBlur={() => handleBlur('code')}
-                                                        className={`w-full pr-9 pl-3 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all ${
-                                                            getFieldError('code')
-                                                                ? 'border-red-300 focus:ring-red-500'
-                                                                : 'border-gray-200 focus:ring-blue-500'
-                                                        }`}
-                                                    />
-                                                </div>
-                                                {getFieldError('code') && (
-                                                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                                                        <AlertCircle className="h-3 w-3" />
-                                                        {errors.code}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                آدرس
-                                            </label>
-                                            <div className="relative">
-                                                <MapPin className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
-                                                <textarea
-                                                    value={data.address}
-                                                    onChange={(e) => setData('address', e.target.value)}
-                                                    rows={3}
-                                                    placeholder="آدرس کامل سازمان..."
-                                                    className="w-full pr-9 pl-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                سازمان والد
-                                            </label>
-                                            <div className="relative">
-                                                <Link2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                <select
-                                                    value={data.parent_id}
-                                                    onChange={(e) => setData('parent_id', e.target.value)}
-                                                    className="w-full pr-9 pl-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none bg-white"
-                                                >
-                                                    <option value="">بدون والد</option>
-                                                    {organizations
-                                                        .filter(org => org.id !== organization.id)
-                                                        .map(org => (
-                                                            <option key={org.id} value={org.id}>{org.name}</option>
-                                                        ))}
-                                                </select>
-                                                <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Contact Information Tab */}
-                            {activeTab === 'contact' && (
-                                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in">
-                                    <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                                        <div className="flex items-center gap-2">
-                                            <Mail className="h-5 w-5 text-emerald-600" />
-                                            <div>
-                                                <h2 className="text-lg font-semibold text-gray-900">اطلاعات تماس</h2>
-                                                <p className="text-sm text-gray-500 mt-0.5">راه‌های ارتباطی با سازمان</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="p-6 space-y-5">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    ایمیل
-                                                </label>
-                                                <div className="relative">
-                                                    <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                    <input
-                                                        type="email"
-                                                        value={data.email}
-                                                        onChange={(e) => setData('email', e.target.value)}
-                                                        placeholder="info@organization.com"
-                                                        className="w-full pr-9 pl-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    تلفن
-                                                </label>
-                                                <div className="relative">
-                                                    <Phone className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                    <input
-                                                        type="text"
-                                                        value={data.phone}
-                                                        onChange={(e) => setData('phone', e.target.value)}
-                                                        placeholder="021-12345678"
-                                                        className="w-full pr-9 pl-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                وبسایت
-                                            </label>
-                                            <div className="relative">
-                                                <Globe className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                <input
-                                                    type="url"
-                                                    value={data.website}
-                                                    onChange={(e) => setData('website', e.target.value)}
-                                                    placeholder="https://www.example.com"
-                                                    className="w-full pr-9 pl-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Advanced Settings Tab */}
-                            {activeTab === 'advanced' && (
-                                <div className="space-y-6 animate-fade-in">
-                                    {/* Status Section */}
-                                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                                        <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                                            <div className="flex items-center gap-2">
-                                                <Shield className="h-5 w-5 text-amber-600" />
-                                                <div>
-                                                    <h2 className="text-lg font-semibold text-gray-900">وضعیت سازمان</h2>
-                                                    <p className="text-sm text-gray-500 mt-0.5">تعیین وضعیت فعال یا غیرفعال سازمان</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="p-6">
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                {statusOptions.map((option) => {
-                                                    const Icon = option.icon;
-                                                    const isSelected = data.status === option.value;
-
-                                                    return (
-                                                        <button
-                                                            key={option.value}
-                                                            type="button"
-                                                            onClick={() => setData('status', option.value)}
-                                                            className={`relative p-4 rounded-xl border-2 transition-all duration-200 text-right ${
-                                                                isSelected
-                                                                    ? `border-${option.color}-500 bg-${option.color}-50 shadow-md`
-                                                                    : 'border-gray-200 hover:border-gray-300 bg-white'
-                                                            }`}
-                                                        >
-                                                            <div className="flex items-center justify-between">
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className={`p-2 rounded-lg ${
-                                                                        isSelected ? `bg-${option.color}-100` : 'bg-gray-100'
-                                                                    }`}>
-                                                                        <Icon className={`h-5 w-5 ${
-                                                                            isSelected ? `text-${option.color}-600` : 'text-gray-500'
-                                                                        }`} />
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className={`font-medium ${
-                                                                            isSelected ? `text-${option.color}-900` : 'text-gray-900'
-                                                                        }`}>
-                                                                            {option.label}
-                                                                        </p>
-                                                                        <p className={`text-xs mt-0.5 ${
-                                                                            isSelected ? `text-${option.color}-600` : 'text-gray-500'
-                                                                        }`}>
-                                                                            {option.description}
-                                                                        </p>
-                                                                    </div>
-                                                                </div>
-                                                                {isSelected && (
-                                                                    <CheckCircle className={`h-5 w-5 text-${option.color}-500`} />
-                                                                )}
-                                                            </div>
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Current Status Info */}
-                                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 p-4">
-                                        <div className="flex items-start gap-3">
-                                            <Info className="h-5 w-5 text-blue-500 mt-0.5" />
-                                            <div>
-                                                <p className="text-sm font-medium text-blue-800">وضعیت فعلی سازمان</p>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    {StatusIcon && <StatusIcon className={`h-4 w-4 ${selectedStatus?.color === 'emerald' ? 'text-emerald-600' : 'text-gray-500'}`} />}
-                                                    <span className={`text-sm font-medium ${selectedStatus?.color === 'emerald' ? 'text-emerald-700' : 'text-gray-600'}`}>
-                                                        {selectedStatus?.label}
-                                                    </span>
-                                                    <span className="text-xs text-blue-600">•</span>
-                                                    <span className="text-xs text-blue-600">
-                                                        آخرین بروزرسانی: {new Date(organization.updated_at).toLocaleDateString('fa-IR')}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Delete Section */}
-                                    <div className="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden">
-                                        <div className="px-6 py-4 border-b border-red-100 bg-gradient-to-r from-red-50 to-white">
-                                            <div className="flex items-center gap-2">
-                                                <AlertTriangle className="h-5 w-5 text-red-600" />
-                                                <div>
-                                                    <h2 className="text-lg font-semibold text-red-900">منطقه خطر</h2>
-                                                    <p className="text-sm text-red-600 mt-0.5">عملیات حذف سازمان - این عمل غیرقابل بازگشت است</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="p-6">
-                                            <div className="bg-red-50 rounded-xl p-4 border border-red-200">
-                                                <div className="flex items-start gap-3">
-                                                    <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5" />
-                                                    <div>
-                                                        <p className="text-sm font-medium text-red-800">هشدار!</p>
-                                                        <p className="text-sm text-red-700 mt-1">
-                                                            با حذف سازمان "{organization.name}"، تمام دپارتمان‌ها، کاربران و اطلاعات مرتبط با این سازمان نیز حذف خواهند شد.
-                                                        </p>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setShowDeleteModal(true)}
-                                                            className="mt-4 inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-all shadow-sm"
-                                                        >
-                                                            <Trash2 className="ml-2 h-4 w-4" />
-                                                            حذف سازمان
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Form Actions for Mobile */}
-                            <div className="flex flex-col sm:flex-row gap-3 sm:hidden">
+                            <div className="flex items-center gap-2.5">
                                 <button
                                     type="button"
-                                    onClick={() => router.get(organizationsRoutes.index())}
-                                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all"
+                                    onClick={() => router.get(organizationsRoute.show({ organization: organization.id }))}
+                                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200"
                                 >
+                                    <Eye className="h-4 w-4" />
+                                    مشاهده
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => router.get(organizationsRoute.index())}
+                                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200"
+                                >
+                                    <X className="h-4 w-4" />
+                                    انصراف
+                                </button>
+                                <button
+                                    type="submit"
+                                    form="org-form"
+                                    disabled={processing}
+                                    className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <Save className="h-4 w-4" />
+                                    {processing ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Page Body */}
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <form id="org-form" onSubmit={handleSubmit}>
+                        <div className="space-y-5">
+
+                            {/* Hero intro strip */}
+                            <div className="rounded-2xl border border-blue-100 bg-gradient-to-l from-blue-50 to-indigo-50 px-6 py-5 flex items-center gap-4">
+                                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                                    <Building2 className="h-6 w-6 text-white" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-slate-800">ویرایش وزارت</p>
+                                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                                        اطلاعات وزارت را ویرایش کنید. فیلدهای ستاره‌دار الزامی هستند.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Basic Info */}
+                            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                                <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-gradient-to-l from-white to-slate-50/60">
+                                    <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                        <Building2 className="h-4 w-4 text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-sm font-bold text-slate-800">اطلاعات پایه</h2>
+                                        <p className="text-xs text-slate-400 mt-0.5">مشخصات اصلی وزارت</p>
+                                    </div>
+                                </div>
+
+                                <div className="p-6 space-y-5">
+                                    {/* Name + Code */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <div>
+                                            <FieldLabel required>نام وزارت</FieldLabel>
+                                            <InputField
+                                                icon={Building2}
+                                                value={data.name}
+                                                onChange={handleNameChange}
+                                                onBlur={() => handleBlur('name')}
+                                                error={getFieldError('name')}
+                                                placeholder="مثال: وزارت اقتصاد و دارایی"
+                                            />
+                                        </div>
+                                        <div>
+                                            <FieldLabel required>کد وزارت</FieldLabel>
+                                            <div className="relative">
+                                                <InputField
+                                                    icon={Hash}
+                                                    value={data.code}
+                                                    onChange={handleCodeChange}
+                                                    onBlur={() => handleBlur('code')}
+                                                    error={getFieldError('code')}
+                                                    placeholder="مثال: MO-ECON-FIN"
+                                                />
+                                                {data.name && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleRegenerateCode}
+                                                        className="absolute left-3 top-3 p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                                                        title="تولید مجدد کد از نام وزارت"
+                                                    >
+                                                        <RefreshCw className="h-3.5 w-3.5" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {autoGenerateCode && data.name && (
+                                                <p className="text-xs text-slate-400 mt-1.5 flex items-center gap-1">
+                                                    <CheckCircle className="h-3 w-3 text-green-500" />
+                                                    کد به صورت خودکار از نام وزارت تولید می‌شود
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Logo Upload */}
+                                    <div>
+                                        <FieldLabel>لوگو</FieldLabel>
+                                        <div className="flex items-center gap-4">
+                                            {logoPreview && (
+                                                <div className="h-20 w-20 rounded-xl border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center">
+                                                    <img src={logoPreview} alt="Logo preview" className="h-full w-full object-cover" />
+                                                </div>
+                                            )}
+                                            <label className="flex-1 cursor-pointer">
+                                                <div className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-slate-200 rounded-xl hover:border-blue-400 hover:bg-blue-50/50 transition-all">
+                                                    <Upload className="h-5 w-5 text-slate-400" />
+                                                    <span className="text-sm text-slate-600">
+                                                        {logoPreview ? 'تغییر لوگو' : 'آپلود لوگو'}
+                                                    </span>
+                                                </div>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleLogoChange}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                        </div>
+                                        <p className="text-xs text-slate-400 mt-2">فرمت‌های مجاز: JPG, PNG, GIF (حداکثر 2 مگابایت)</p>
+                                    </div>
+
+                                    {/* Divider */}
+                                    <div className="border-t border-slate-100" />
+
+                                    {/* Email + Phone */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <div>
+                                            <FieldLabel>ایمیل</FieldLabel>
+                                            <InputField
+                                                icon={Mail}
+                                                type="email"
+                                                value={data.email}
+                                                onChange={v => setData('email', v)}
+                                                placeholder="info@organization.com"
+                                            />
+                                        </div>
+                                        <div>
+                                            <FieldLabel>تلفن</FieldLabel>
+                                            <InputField
+                                                icon={Phone}
+                                                value={data.phone}
+                                                onChange={v => setData('phone', v)}
+                                                placeholder="021-12345678"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Address */}
+                                    <div>
+                                        <FieldLabel>آدرس</FieldLabel>
+                                        <InputField
+                                            icon={MapPin}
+                                            value={data.address}
+                                            onChange={v => setData('address', v)}
+                                            placeholder="آدرس کامل وزارت..."
+                                            textarea
+                                            rows={3}
+                                        />
+                                    </div>
+
+                                    {/* Divider */}
+                                    <div className="border-t border-slate-100" />
+
+                                    {/* Website + Parent */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <div>
+                                            <FieldLabel>وبسایت</FieldLabel>
+                                            <InputField
+                                                icon={Globe}
+                                                type="url"
+                                                value={data.website}
+                                                onChange={v => setData('website', v)}
+                                                placeholder="https://www.example.com"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Status */}
+                            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                                <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-gradient-to-l from-white to-slate-50/60">
+                                    <div className="h-9 w-9 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                                        <CheckCircle className="h-4 w-4 text-emerald-600" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-sm font-bold text-slate-800">وضعیت وزارت</h2>
+                                        <p className="text-xs text-slate-400 mt-0.5">وضعیت فعال یا غیرفعال بودن وزارت را تعیین کنید</p>
+                                    </div>
+                                </div>
+
+                                <div className="p-6">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {statusOptions.map(opt => {
+                                            const Icon = opt.icon;
+                                            const isSelected = data.status === opt.value;
+
+                                            return (
+                                                <button
+                                                    key={opt.value}
+                                                    type="button"
+                                                    onClick={() => setData('status', opt.value)}
+                                                    style={isSelected ? {
+                                                        borderColor: opt.ring,
+                                                        backgroundColor: opt.bg,
+                                                        boxShadow: `0 0 0 3px ${opt.bg}`,
+                                                    } : {}}
+                                                    className={`relative p-4 rounded-xl border-2 transition-all duration-200 text-right focus:outline-none ${isSelected
+                                                        ? 'border-transparent'
+                                                        : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
+                                                        }`}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div
+                                                            className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                                                            style={{ backgroundColor: isSelected ? opt.color + '22' : '#f1f5f9' }}
+                                                        >
+                                                            <Icon
+                                                                className="h-5 w-5"
+                                                                style={{ color: isSelected ? opt.color : '#94a3b8' }}
+                                                            />
+                                                        </div>
+                                                        <div className="flex-1 text-right">
+                                                            <p className="text-sm font-bold" style={{ color: isSelected ? opt.color : '#334155' }}>
+                                                                {opt.label}
+                                                            </p>
+                                                            <p className="text-xs mt-0.5 text-slate-500">{opt.desc}</p>
+                                                        </div>
+                                                        {isSelected && (
+                                                            <div
+                                                                className="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0"
+                                                                style={{ backgroundColor: opt.color }}
+                                                            >
+                                                                <CheckCircle className="h-3.5 w-3.5 text-white" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Current Status Info */}
+                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 p-4">
+                                <div className="flex items-start gap-3">
+                                    {StatusIcon && <StatusIcon className="h-5 w-5 text-blue-500 mt-0.5" />}
+                                    <div>
+                                        <p className="text-sm font-medium text-blue-800">وضعیت فعلی سازمان</p>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className={`text-sm font-medium ${selectedStatus?.color === '#10b981' ? 'text-emerald-700' : 'text-slate-600'}`}>
+                                                {selectedStatus?.label}
+                                            </span>
+                                            <span className="text-xs text-blue-600">•</span>
+                                            <span className="text-xs text-blue-600">
+                                                آخرین بروزرسانی: {new Date(organization.updated_at).toLocaleDateString('fa-IR')}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Delete Section */}
+                            <div className="bg-white rounded-2xl border border-red-100 shadow-sm overflow-hidden">
+                                <div className="px-6 py-5 border-b border-red-100 flex items-center gap-3.5 bg-gradient-to-l from-red-50 to-white">
+                                    <div className="h-9 w-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+                                        <Trash2 className="h-4 w-4 text-red-600" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-sm font-bold text-red-800">منطقه خطر</h2>
+                                        <p className="text-xs text-red-600 mt-0.5">عملیات حذف وزارت - این عمل غیرقابل بازگشت است</p>
+                                    </div>
+                                </div>
+                                <div className="p-6">
+                                    <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+                                        <div className="flex items-start gap-3">
+                                            <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+                                            <div>
+                                                <p className="text-sm font-medium text-red-800">هشدار!</p>
+                                                <p className="text-sm text-red-700 mt-1">
+                                                    با حذف وزارت "{organization.name}"، تمام دپارتمان‌ها، کاربران و اطلاعات مرتبط با این وزارت نیز حذف خواهند شد.
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowDeleteModal(true)}
+                                                    className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-all shadow-sm"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                    حذف وزارت
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Mobile Actions */}
+                            <div className="flex gap-3 sm:hidden pb-4">
+                                <button
+                                    type="button"
+                                    onClick={() => router.get(organizationsRoute.index())}
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-all"
+                                >
+                                    <X className="h-4 w-4" />
                                     انصراف
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all disabled:opacity-50"
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md disabled:opacity-50"
                                 >
+                                    <Save className="h-4 w-4" />
                                     {processing ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
                                 </button>
                             </div>
+
                         </div>
                     </form>
                 </div>
             </div>
-
-            {/* CSS Animations */}
-            <style>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                @keyframes slideUp {
-                    from {
-                        opacity: 0;
-                        transform: translateY(20px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-                .animate-fade-in {
-                    animation: fadeIn 0.5s ease-out;
-                }
-                .animate-slide-up {
-                    animation: slideUp 0.5s ease-out;
-                }
-            `}</style>
 
             {/* Delete Confirmation Modal */}
             {showDeleteModal && (
@@ -518,8 +647,8 @@ export default function OrganizationsEdit({ organization, organizations }: Props
                     isOpen={showDeleteModal}
                     onClose={() => setShowDeleteModal(false)}
                     onConfirm={confirmDelete}
-                    title="حذف سازمان"
-                    message="آیا از حذف این سازمان اطمینان دارید؟"
+                    title="حذف وزارت"
+                    message="آیا از حذف این وزارت اطمینان دارید؟"
                     itemName={organization.name}
                     type="organization"
                     isLoading={deleting}
