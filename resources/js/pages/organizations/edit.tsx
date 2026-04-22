@@ -1,7 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import {
-    Save, X, Building2, Mail, Phone, MapPin, Globe,
+    Save, X, Building2, Mail, Phone, MapPin, Globe, Link2,
     ChevronDown, CheckCircle, AlertCircle, Hash, RefreshCw,
     Upload, Trash2, Eye
 } from 'lucide-react';
@@ -17,9 +17,7 @@ interface Props {
 // ─── Utility Functions ─────────────────────────────────────────────────────
 
 const generateOrgCode = (persianName: string): string => {
-    if (!persianName) {
-        return '';
-    }
+    if (!persianName) return '';
 
     const keywords: Record<string, string> = {
         'وزارت': 'MO', 'سازمان': 'ORG', 'شرکت': 'CO', 'موسسه': 'INS',
@@ -46,17 +44,12 @@ const generateOrgCode = (persianName: string): string => {
 
         for (const [persian, english] of Object.entries(keywords)) {
             if (persianName.includes(persian)) {
-                if (!prefix) {
-                    prefix = english;
-                }
-
+                if (!prefix) prefix = english;
                 remainingName = remainingName.replace(new RegExp(persian, 'g'), '');
             }
         }
 
-        if (!prefix) {
-            prefix = 'ORG';
-        }
+        if (!prefix) prefix = 'ORG';
 
         const persianToEnglishMap: Record<string, string> = {
             'ا': 'A', 'آ': 'A', 'ب': 'B', 'پ': 'P', 'ت': 'T', 'ث': 'S',
@@ -68,7 +61,6 @@ const generateOrgCode = (persianName: string): string => {
         };
 
         let englishName = '';
-
         for (const char of remainingName.trim()) {
             englishName += persianToEnglishMap[char] || char;
         }
@@ -79,7 +71,6 @@ const generateOrgCode = (persianName: string): string => {
         return finalCode.replace(/-+/g, '-').replace(/^-|-$/g, '').toUpperCase().slice(0, 20);
     } catch (error) {
         console.error('Error generating org code:', error);
-
         return `ORG-${Date.now().toString().slice(-6)}`;
     }
 };
@@ -145,30 +136,57 @@ function InputField({
     );
 }
 
+function SelectField({
+    icon: Icon, value, onChange, children, error, placeholder
+}: {
+    icon?: React.ElementType; value: string; onChange: (v: string) => void;
+    children: React.ReactNode; error?: string | null; placeholder?: string;
+}) {
+    return (
+        <div>
+            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${error
+                ? 'border-rose-300 ring-1 ring-rose-300'
+                : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
+                }`}>
+                {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
+                <select
+                    value={value}
+                    onChange={e => onChange(e.target.value)}
+                    className={`w-full ${Icon ? 'pr-10' : 'pr-4'} pl-9 py-3 text-sm bg-transparent focus:outline-none appearance-none text-slate-700`}
+                >
+                    {placeholder && <option value="">{placeholder}</option>}
+                    {children}
+                </select>
+                <ChevronDown className="absolute left-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
+            </div>
+            {error && (
+                <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />{error}
+                </p>
+            )}
+        </div>
+    );
+}
 
 // ─── Main Component ────────────────────────────────────────────────────────
 
 export default function OrganizationsEdit({ organization }: Props) {
-    const { data, setData, put, processing, errors, clearErrors } = useForm({
+    const { data, setData, post, processing, errors, clearErrors } = useForm({
         name: organization.name,
         code: organization.code,
         email: organization.email || '',
         phone: organization.phone || '',
         address: organization.address || '',
         website: organization.website || '',
+        parent_id: organization.parent_id?.toString() || '',
         status: organization.status,
         logo: null as File | null,
     });
 
-    console.log(organization.logo);
-
-
-
     const [touched, setTouched] = useState<Record<string, boolean>>({});
     const [autoGenerateCode, setAutoGenerateCode] = useState(false);
     const [logoPreview, setLogoPreview] = useState<string>(organization.logo_url || '');
-    const [existingLogo, setExistingLogo] = useState<string>(organization.logo || '');
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [isLogoChanged, setIsLogoChanged] = useState(false);
 
     // تولید خودکار کد هنگام تغییر نام
     useEffect(() => {
@@ -181,11 +199,36 @@ export default function OrganizationsEdit({ organization }: Props) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        put(organizationsRoute.update({ organization: organization.id }), {
+        // استفاده از POST با _method=PUT برای ارسال فایل
+        const formData = new FormData();
+        formData.append('_method', 'PUT');
+        formData.append('name', data.name);
+        formData.append('code', data.code);
+        formData.append('email', data.email);
+        formData.append('phone', data.phone);
+        formData.append('address', data.address);
+        formData.append('website', data.website);
+        formData.append('parent_id', data.parent_id);
+        formData.append('status', data.status);
+
+        // اضافه کردن لوگو اگر تغییر کرده باشد
+        if (data.logo && data.logo instanceof File) {
+            formData.append('logo', data.logo);
+        }
+
+        // اگر لوگو حذف شده باشد
+        if (isLogoChanged && !data.logo && !logoPreview) {
+            formData.append('remove_logo', 'true');
+        }
+
+        // ارسال با POST و FormData
+        router.post(organizationsRoute.update({ organization: organization.id }), formData, {
             preserveScroll: true,
             onSuccess: () => {
-                // پاک کردن پیش‌نمایش لوگو بعد از موفقیت
-                setLogoPreview('');
+                setIsLogoChanged(false);
+            },
+            onError: (errors) => {
+                console.error('Errors:', errors);
             },
         });
     };
@@ -206,11 +249,9 @@ export default function OrganizationsEdit({ organization }: Props) {
 
     const handleCodeChange = (value: string) => {
         setData('code', value);
-
         if (value !== generateOrgCode(data.name)) {
             setAutoGenerateCode(false);
         }
-
         clearErrors('code');
     };
 
@@ -226,23 +267,19 @@ export default function OrganizationsEdit({ organization }: Props) {
         const file = e.target.files?.[0];
 
         if (file) {
-            // بررسی حجم فایل (حداکثر 2 مگابایت)
             if (file.size > 2 * 1024 * 1024) {
                 alert('حجم فایل نباید بیشتر از 2 مگابایت باشد');
-
                 return;
             }
 
-            // بررسی نوع فایل
             const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
-
             if (!allowedTypes.includes(file.type)) {
                 alert('فرمت فایل باید JPEG، PNG، JPG یا GIF باشد');
-
                 return;
             }
 
             setData('logo', file);
+            setIsLogoChanged(true);
             clearErrors('logo');
 
             const reader = new FileReader();
@@ -256,28 +293,13 @@ export default function OrganizationsEdit({ organization }: Props) {
     const handleRemoveLogo = () => {
         setData('logo', null);
         setLogoPreview('');
-        setExistingLogo('');
+        setIsLogoChanged(true);
     };
 
     const statusOptions = [
         { value: 'active', label: 'فعال', desc: 'وزارت فعال و قابل استفاده است', icon: CheckCircle, color: '#10b981', bg: '#d1fae5', ring: '#6ee7b7' },
         { value: 'inactive', label: 'غیرفعال', desc: 'وزارت غیرفعال و در دسترس نیست', icon: AlertCircle, color: '#94a3b8', bg: '#f1f5f9', ring: '#cbd5e1' },
     ];
-
-    const getLogoUrl = (logoPath: string | null) => {
-        if (!logoPath) {
-            return null;
-        }
-
-        // اگر مسیر با http شروع شود، همان را برگردان
-        if (logoPath.startsWith('http')) {
-            return logoPath;
-        }
-
-        // در غیر این صورت، مسیر ذخیره‌سازی را بساز
-        // توجه: باید route('storage') یا آدرس base URL را بدانید
-        return `/storage/${logoPath}`;
-    };
 
     const selectedStatus = statusOptions.find(s => s.value === data.status);
 
@@ -286,11 +308,6 @@ export default function OrganizationsEdit({ organization }: Props) {
             <Head title={`ویرایش وزارت - ${organization.name}`} />
 
             <div className="min-h-screen bg-slate-50/70" dir="rtl">
-                <img
-                    src={getLogoUrl(organization.logo)}
-                    alt={organization.name}
-                    className="h-full w-full object-cover"
-                />
                 {/* Sticky Top Bar */}
                 <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
                     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

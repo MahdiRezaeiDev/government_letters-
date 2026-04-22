@@ -29,8 +29,8 @@ class DepartmentController extends Controller
         
         // فیلتر جستجو
         if ($request->has('search') && $request->search) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%")
+            $query->where(function ($query) use ($request) {
+                $query->where('name', 'like', "%{$request->search}%")
                   ->orWhere('code', 'like', "%{$request->search}%");
             });
         }
@@ -43,7 +43,7 @@ class DepartmentController extends Controller
         $departments = $query->paginate(15);
         
         // برای فیلتر سازمان (فقط ادمین کل)
-        $organizations = $user->isSuperAdmin() ? Organization::all() : [];
+        $organizations = $user->isSuperAdmin() ? Organization::all() :  Organization::where('id', $user->organization_id)->get();
         
         return Inertia::render('departments/index', [
             'departments' => $departments,

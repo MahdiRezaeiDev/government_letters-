@@ -133,28 +133,40 @@ class OrganizationController extends Controller
      */
     public function update(Request $request, Organization $organization)
     {
-        // اعتبارسنجی
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:organizations,code,' . $organization->id,
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string',
             'website' => 'nullable|url|max:255',
-            'parent_id' => 'nullable|exists:organizations,id|not_in:' . $organization->id,
             'status' => 'required|in:active,inactive',
-        ], [
-            'code.unique' => 'این کد قبلاً ثبت شده است',
-            'parent_id.not_in' => 'سازمان نمی‌تواند والد خودش باشد',
         ]);
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
 
-        $oldName = $organization->name;
+        // پردازش لوگو
+        if ($request->hasFile('logo')) {
+            // حذف لوگوی قدیمی
+            if ($organization->logo && Storage::disk('public')->exists($organization->logo)) {
+                Storage::disk('public')->delete($organization->logo);
+            }
 
-        // به‌روزرسانی
+            $logoPath = $request->file('logo')->store('organizations/logos', 'public');
+            $organization->logo = $logoPath;
+        }
+
+        // حذف لوگو اگر درخواست شده باشد
+        if ($request->has('remove_logo') && $request->remove_logo === 'true') {
+            if ($organization->logo && Storage::disk('public')->exists($organization->logo)) {
+                Storage::disk('public')->delete($organization->logo);
+            }
+            $organization->logo = null;
+        }
+
         $organization->update([
             'name' => $request->name,
             'code' => $request->code,
@@ -162,17 +174,8 @@ class OrganizationController extends Controller
             'phone' => $request->phone,
             'address' => $request->address,
             'website' => $request->website,
-            'parent_id' => $request->parent_id,
             'status' => $request->status,
         ]);
-
-        // لاگ عملیات
-        \App\Models\EventLog::log(
-            'organization_updated',
-            "سازمان از {$oldName} به {$organization->name} به‌روزرسانی شد",
-            $organization,
-            ['old_name' => $oldName, 'new_name' => $organization->name]
-        );
 
         return redirect()->route('organizations.index')
             ->with('success', 'سازمان با موفقیت به‌روزرسانی شد.');

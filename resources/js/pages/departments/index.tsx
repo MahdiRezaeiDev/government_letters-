@@ -1,16 +1,16 @@
 // resources/js/pages/departments/index.tsx
 
 import { Head, Link, router } from '@inertiajs/react';
-import { 
-    Plus, Pencil, Trash2, Search, Building2, ChevronLeft, ChevronRight, 
-    Eye, Filter, X, CheckCircle, AlertCircle, Layers, ChevronDown, 
-    FolderTree, Briefcase, TrendingUp, Sparkles, Hash, Zap, 
-    GitBranch, Network, Home, Users, Shield, Star
+import {
+    Plus, Pencil, Trash2, Search, Building2, ChevronLeft, ChevronRight,
+    Eye, Filter, X, CheckCircle, AlertCircle, Layers,
+    FolderTree, TrendingUp, Sparkles, Hash,
+    GitBranch, Network, Users
 } from 'lucide-react';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
-import type { Department, Organization } from '@/types';
 import departmentRoutes from '@/routes/departments';
+import type { Department, Organization } from '@/types';
 
 interface Props {
     departments: {
@@ -66,8 +66,10 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
     };
 
     const confirmDelete = () => {
-        if (!selectedDepartment) return;
-        
+        if (!selectedDepartment) {
+            return;
+        }
+
         setDeleting(true);
         router.delete(departmentRoutes.destroy({ department: selectedDepartment.id }), {
             onFinish: () => {
@@ -80,20 +82,21 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
 
     const getLevelPrefix = (level: number) => {
         const spaces = '—'.repeat(level);
+
         return spaces ? `${spaces} ` : '';
     };
 
     const statusConfig: Record<string, { label: string; bg: string; text: string; icon: any; border: string }> = {
-        active: { 
-            label: 'فعال', 
-            bg: 'bg-emerald-50', 
+        active: {
+            label: 'فعال',
+            bg: 'bg-emerald-50',
             text: 'text-emerald-700',
             icon: CheckCircle,
             border: 'border-emerald-200'
         },
-        inactive: { 
-            label: 'غیرفعال', 
-            bg: 'bg-gray-50', 
+        inactive: {
+            label: 'غیرفعال',
+            bg: 'bg-gray-50',
             text: 'text-gray-600',
             icon: AlertCircle,
             border: 'border-gray-200'
@@ -105,7 +108,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
     const stats = [
         { label: 'کل ریاست ها', value: departments.total, icon: Layers, color: 'indigo', gradient: 'from-indigo-500 to-purple-600', change: '+12%' },
         { label: 'ریاست های فعال', value: departments.data.filter(d => d.status === 'active').length, icon: CheckCircle, color: 'emerald', gradient: 'from-emerald-500 to-teal-600', change: '+8%' },
-        { label: 'وزارت ها', value: new Set(departments.data.map(d => d.organization_id)).size, icon: Building2, color: 'blue', gradient: 'from-blue-500 to-cyan-600', change: '+5%' },
+        { label: 'وزارت ها', value: organizations.length, icon: Building2, color: 'blue', gradient: 'from-blue-500 to-cyan-600', change: '+5%' },
         { label: 'سطوح', value: Math.max(...departments.data.map(d => d.level), 0), icon: GitBranch, color: 'purple', gradient: 'from-purple-500 to-pink-600', change: '-' },
     ];
 
@@ -117,6 +120,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
             'from-rose-500 to-pink-600',
             'from-amber-500 to-orange-600',
         ];
+
         return gradients[id % gradients.length];
     };
 
@@ -128,7 +132,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
         <>
             <Head title="مدیریت ریاست ها" />
 
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+            <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-slate-100">
                 <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="space-y-6">
                         {/* Header Section */}
@@ -158,7 +162,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'table'
                                             ? 'bg-indigo-600 text-white shadow-sm'
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                                        }`}
+                                            }`}
                                     >
                                         جدولی
                                     </button>
@@ -167,7 +171,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'cards'
                                             ? 'bg-indigo-600 text-white shadow-sm'
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                                        }`}
+                                            }`}
                                     >
                                         کارتی
                                     </button>
@@ -230,7 +234,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                             className={`inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${showFilters || hasActiveFilters
                                                 ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-sm'
                                                 : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
-                                            }`}
+                                                }`}
                                         >
                                             <Filter className="ml-2 h-4 w-4" />
                                             فیلترها
@@ -459,7 +463,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${departments.current_page > 1
                                                     ? 'text-gray-700 hover:bg-white hover:text-indigo-600 shadow-sm'
                                                     : 'text-gray-300 cursor-not-allowed'
-                                                }`}
+                                                    }`}
                                             >
                                                 <ChevronRight className="h-4 w-4" />
                                             </Link>
@@ -468,11 +472,11 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                                 const maxVisible = 5;
                                                 let start = Math.max(1, departments.current_page - Math.floor(maxVisible / 2));
                                                 const end = Math.min(departments.last_page, start + maxVisible - 1);
-                                                
+
                                                 if (end - start + 1 < maxVisible) {
                                                     start = Math.max(1, end - maxVisible + 1);
                                                 }
-                                                
+
                                                 if (start > 1) {
                                                     pages.push(
                                                         <Link
@@ -483,9 +487,12 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                                             1
                                                         </Link>
                                                     );
-                                                    if (start > 2) pages.push(<span key="dots1" className="px-2 text-gray-400">...</span>);
+
+                                                    if (start > 2) {
+                                                        pages.push(<span key="dots1" className="px-2 text-gray-400">...</span>);
+                                                    }
                                                 }
-                                                
+
                                                 for (let i = start; i <= end; i++) {
                                                     pages.push(
                                                         <Link
@@ -494,15 +501,18 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                                             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${departments.current_page === i
                                                                 ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
                                                                 : 'text-gray-700 hover:bg-white hover:text-indigo-600'
-                                                            }`}
+                                                                }`}
                                                         >
                                                             {i}
                                                         </Link>
                                                     );
                                                 }
-                                                
+
                                                 if (end < departments.last_page) {
-                                                    if (end < departments.last_page - 1) pages.push(<span key="dots2" className="px-2 text-gray-400">...</span>);
+                                                    if (end < departments.last_page - 1) {
+                                                        pages.push(<span key="dots2" className="px-2 text-gray-400">...</span>);
+                                                    }
+
                                                     pages.push(
                                                         <Link
                                                             key={departments.last_page}
@@ -513,6 +523,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                                         </Link>
                                                     );
                                                 }
+
                                                 return pages;
                                             })()}
                                             <Link
@@ -520,7 +531,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${departments.current_page < departments.last_page
                                                     ? 'text-gray-700 hover:bg-white hover:text-indigo-600 shadow-sm'
                                                     : 'text-gray-300 cursor-not-allowed'
-                                                }`}
+                                                    }`}
                                             >
                                                 <ChevronLeft className="h-4 w-4" />
                                             </Link>
@@ -550,7 +561,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                             <div key={dept.id} className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
                                                 {/* Header Bar */}
                                                 <div className={`h-1.5 bg-gradient-to-r ${getRandomGradient(dept.id)}`} />
-                                                
+
                                                 <div className="p-5">
                                                     <div className="flex items-start justify-between mb-4">
                                                         <div className="flex items-center gap-3">
@@ -661,12 +672,13 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${departments.current_page > 1
                                             ? 'text-gray-700 hover:bg-white hover:text-indigo-600 shadow-sm'
                                             : 'text-gray-300 cursor-not-allowed'
-                                        }`}
+                                            }`}
                                     >
                                         <ChevronRight className="h-4 w-4" />
                                     </Link>
                                     {[...Array(Math.min(5, departments.last_page))].map((_, i) => {
                                         let pageNum;
+
                                         if (departments.last_page <= 5) {
                                             pageNum = i + 1;
                                         } else if (departments.current_page <= 3) {
@@ -676,6 +688,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                         } else {
                                             pageNum = departments.current_page - 2 + i;
                                         }
+
                                         return (
                                             <Link
                                                 key={pageNum}
@@ -683,7 +696,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${departments.current_page === pageNum
                                                     ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
                                                     : 'text-gray-700 hover:bg-white hover:text-indigo-600'
-                                                }`}
+                                                    }`}
                                             >
                                                 {pageNum}
                                             </Link>
@@ -694,7 +707,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${departments.current_page < departments.last_page
                                             ? 'text-gray-700 hover:bg-white hover:text-indigo-600 shadow-sm'
                                             : 'text-gray-300 cursor-not-allowed'
-                                        }`}
+                                            }`}
                                     >
                                         <ChevronLeft className="h-4 w-4" />
                                     </Link>
