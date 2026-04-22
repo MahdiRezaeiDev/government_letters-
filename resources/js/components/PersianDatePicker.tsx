@@ -1,87 +1,66 @@
-import React, { useState } from 'react';
-import { DatePicker, RangePicker } from 'react-persian-range-picker';
-import 'react-persian-range-picker/dist/styles.css';
+import React from "react";
+// 1. ایمپورت به صورت ماژول کامل
+import * as DatePickerModule from "react-multi-date-picker";
+import persian from "react-date-object/calendars/persian";
+import persian_fa from "react-date-object/locales/persian_fa";
 
-interface PersianDatePickerProps {
-    value?: string | string[] | null;
-    onChange: (date: string | string[] | null) => void;
-    placeholder?: string;
+/**
+ * ترفند نهایی برای رفع خطای Element type is invalid در Vite
+ * این خط بررسی می‌کند که آیا خروجی ماژول در ویژگی default قرار دارد یا خیر
+ */
+const DatePicker = (
+    (DatePickerModule as any).default?.default || 
+    (DatePickerModule as any).default || 
+    DatePickerModule
+) as React.ElementType;
+
+interface Props {
+    value: string;
+    onChange: (date: string) => void;
     label?: string;
-    mode?: 'single' | 'multiple' | 'range';
-    required?: boolean;
-    disabled?: boolean;
-    className?: string;
+    error?: string;
+    placeholder?: string;
 }
 
-export default function PersianDatePicker({ 
+const PersianDatePicker: React.FC<Props> = ({ 
     value, 
     onChange, 
-    placeholder = 'انتخاب تاریخ', 
-    label,
-    mode = 'single',
-    required = false,
-    disabled = false,
-    className = ''
-}: PersianDatePickerProps) {
-    const [selectedDate, setSelectedDate] = useState<string | string[] | null>(value || null);
-
-    const handleChange = (date: any) => {
-        let formattedDate: string | string[] | null = null;
-        
-        if (mode === 'single') {
-            formattedDate = date?.format('jYYYY-jMM-jDD') || null;
-        } else if (mode === 'multiple' && Array.isArray(date)) {
-            formattedDate = date.map((d: any) => d.format('jYYYY-jMM-jDD'));
-        } else if (mode === 'range' && date?.from && date?.to) {
-            formattedDate = `${date.from.format('jYYYY-jMM-jDD')} - ${date.to.format('jYYYY-jMM-jDD')}`;
-        }
-        
-        setSelectedDate(formattedDate);
-        onChange(formattedDate);
-    };
-
-    // تبدیل مقدار ورودی به فرمت مورد نیاز کتابخانه
-    const getPickerValue = () => {
-        if (!value) return null;
-        
-        if (mode === 'single' && typeof value === 'string') {
-            return value;
-        } else if (mode === 'multiple' && Array.isArray(value)) {
-            return value;
-        } else if (mode === 'range' && typeof value === 'string') {
-            const [from, to] = value.split(' - ');
-            return { from, to };
-        }
-        return null;
-    };
-
+    label, 
+    error, 
+    placeholder = "انتخاب تاریخ..." 
+}) => {
     return (
-        <div className={`w-full ${className}`}>
+        <div className="w-full flex flex-col" style={{ direction: 'rtl' }}>
             {label && (
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">
                     {label}
-                    {required && <span className="text-red-500 mr-1">*</span>}
                 </label>
             )}
             
-            {mode === 'range' ? (
-                <RangePicker
-                    value={getPickerValue()}
-                    onChange={handleChange}
-                    placeholder={placeholder}
-                    disabled={disabled}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-            ) : (
+            <div className="relative">
                 <DatePicker
-                    value={getPickerValue()}
-                    onChange={handleChange}
+                    value={value}
+                    onChange={(date: any) => {
+                        // تبدیل آبجکت دیت‌پیکر به استرینگ استاندارد برای دیتابیس لاراول
+                        onChange(date ? date.format("YYYY-MM-DD") : "");
+                    }}
+                    calendar={persian}
+                    locale={persian_fa}
+                    calendarPosition="bottom-right"
                     placeholder={placeholder}
-                    disabled={disabled}
-                    multiple={mode === 'multiple'}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    // کلاس‌های استایل‌دهی (هماهنگ با Tailwind)
+                    inputClass="w-full px-4 py-3 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all text-slate-700 placeholder-slate-300"
+                    containerStyle={{ width: "100%" }}
                 />
+            </div>
+            
+            {error && (
+                <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                    {error}
+                </p>
             )}
         </div>
     );
-}
+};
+
+export default PersianDatePicker;

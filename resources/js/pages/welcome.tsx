@@ -1,10 +1,8 @@
-// resources/js/pages/welcome.tsx
-
 import { Head, Link } from '@inertiajs/react';
-import { 
-    FileText, Users, Building2, Clock, 
-    Shield, Zap, Award, LayoutDashboard, 
-    ArrowRight, ChevronRight, Fingerprint, 
+import {
+    FileText, 
+    LayoutDashboard,
+    ChevronRight, Fingerprint,
     Globe2, Sparkles, MousePointer2
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -16,6 +14,7 @@ export default function Welcome() {
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener('scroll', handleScroll);
+
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
@@ -51,9 +50,8 @@ export default function Welcome() {
             <Head title="اتوماسیون اداری نسل نو" />
 
             {/* Glass Navigation */}
-            <nav className={`fixed top-0 w-full z-[100] transition-all duration-500 ${
-                scrolled ? 'py-3 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 shadow-sm' : 'py-6 bg-transparent'
-            }`}>
+            <nav className={`fixed top-0 w-full z-[100] transition-all duration-500 ${scrolled ? 'py-3 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 shadow-sm' : 'py-6 bg-transparent'
+                }`}>
                 <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <div className="relative group">
@@ -101,7 +99,7 @@ export default function Welcome() {
                                     </span>
                                 </h1>
                                 <p className="text-lg text-slate-600 leading-relaxed mb-10 max-w-xl">
-                                    تجربه‌ای متفاوت از گردش کار اداری. سریع، ایمن و بدون کاغذ. 
+                                    تجربه‌ای متفاوت از گردش کار اداری. سریع، ایمن و بدون کاغذ.
                                     طراحی شده برای سازمان‌هایی که به آینده فکر می‌کنند.
                                 </p>
                                 <div className="flex flex-wrap gap-4">

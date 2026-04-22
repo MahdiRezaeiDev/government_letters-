@@ -5,7 +5,7 @@ import {
     BarChart3, Settings, ChevronDown, ChevronLeft,
     FolderTree, Sparkles, Layout, Zap
 } from 'lucide-react';
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 
 // مسیرها
 import { dashboard } from '@/routes';
@@ -48,7 +48,6 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
         {
             title: 'مدیریت تشکیلات',
             icon: Building2,
-            permission: 'super-admin',
             children: [
                 { title: 'وزارت‌خانه‌ها', href: organizationsIndex(), icon: Building2 },
                 { title: 'ریاست‌ها', href: departmentsIndex(), icon: Sitemap },

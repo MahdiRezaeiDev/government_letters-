@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\JalaliDateCast;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -55,11 +56,11 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
+        'email_verified_at' => JalaliDateCast::class,
         'two_factor_confirmed_at' => 'datetime',
         'last_login_at' => 'datetime',
         'last_activity_at' => 'datetime',
-        'birth_date' => 'date',
+        'birth_date' => JalaliDateCast::class,
         'status' => 'string',
         'security_clearance' => 'string',
         'preferences' => 'array',
@@ -173,6 +174,20 @@ class User extends Authenticatable
     public function hasActivePosition(): bool
     {
         return $this->activePositions()->exists();
+    }
+
+
+    public function canManageOrganization(int $organizationId): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($this->isOrgAdmin() && $this->organization_id === $organizationId) {
+            return true;
+        }
+
+        return false;
     }
 
     public function canAccessConfidential(): bool
