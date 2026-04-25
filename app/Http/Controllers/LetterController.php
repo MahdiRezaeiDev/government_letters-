@@ -221,8 +221,6 @@ class LetterController extends Controller
         try {
             $currentUser = Auth::user()->load(['primaryPosition', 'department']);
 
-            dd($request->validated());
-
             $letter = $this->letterService->createLetter(
                 $request->validated(),
                 $currentUser

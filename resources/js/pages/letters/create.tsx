@@ -60,7 +60,7 @@ export default function LettersCreate({
         content: '',
         security_level: 'internal',
         priority: 'normal',
-        date: new Date().toLocaleDateString('fa-Af'),
+        date: '',
         recipient_type: 'internal',
         recipient_department_id: null,
         recipient_position_id: null,
