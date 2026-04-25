@@ -127,9 +127,9 @@ class LetterController extends Controller
             'categories' => $categories,
             'filters' => $request->only(['search', 'letter_type', 'status', 'priority', 'date_from', 'date_to']),
             'can' => [
-                'create' => $currentUser->can('create-department'),
-                'edit' => $currentUser->can('edit-department'),
-                'delete' => $currentUser->can('delete-department'),
+                'create' => $currentUser->can('create-letter'),
+                'edit' => $currentUser->can('edit-letter'),
+                'delete' => $currentUser->can('delete-letter'),
             ],
             'types' => [
                 'incoming' => 'نامه وارده',
@@ -220,6 +220,9 @@ class LetterController extends Controller
     {
         try {
             $currentUser = Auth::user()->load(['primaryPosition', 'department']);
+
+            dd($request->validated());
+
             $letter = $this->letterService->createLetter(
                 $request->validated(),
                 $currentUser
@@ -291,7 +294,7 @@ class LetterController extends Controller
                 'very_urgent' => 'خیلی فوری',
             ],
             'can' => [
-                'edit' => $currentUser->can(PermissionEnum::EDIT_LETTER->value) && $letter->is_draft,
+                'edit' => $currentUser->can(PermissionEnum::EDIT_LETTER->value),
                 'delete' => $currentUser->can(PermissionEnum::DELETE_LETTER->value),
                 'archive' => $currentUser->can(PermissionEnum::ARCHIVE_LETTER->value),
                 'route' => $currentUser->can(PermissionEnum::ROUTE_LETTER->value),

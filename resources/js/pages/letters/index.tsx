@@ -32,6 +32,10 @@ interface Props {
 }
 
 export default function LettersIndex({ letters, categories, filters, can, types, statuses, priorities }: Props) {
+
+    console.log(can);
+    
+
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [selectedType, setSelectedType] = useState(filters.letter_type || '');
     const [selectedStatus, setSelectedStatus] = useState(filters.status || '');
@@ -391,7 +395,7 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                                                 >
                                                                     <Eye className="h-4 w-4" />
                                                                 </Link>
-                                                                {can.edit && letter.final_status === 'draft' && (
+                                                                {can.edit && (
                                                                     <Link
                                                                         href={lettersRoute.edit({ letter: letter.id })}
                                                                         className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"

@@ -8,9 +8,8 @@ import {
     FileText, Shield,
     Flag, UserCheck,
     User,
-
-    Info, Users, Loader2, ArrowLeft, Printer,
-    Clock4, MessageSquare, PenLine
+    Info, Users, Loader2, Printer,
+    MessageSquare, PenLine
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import PersianDatePicker from '@/components/PersianDatePicker';
@@ -163,10 +162,14 @@ export default function LettersCreate({
     };
 
     const formatFileSize = (bytes: number): string => {
-        if (bytes === 0) return '0 Bytes';
+        if (bytes === 0) {
+            return '0 Bytes';
+        }
+
         const k = 1024;
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
+
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
@@ -178,6 +181,7 @@ export default function LettersCreate({
             urgent: 'bg-orange-100 text-orange-700',
             very_urgent: 'bg-red-100 text-red-700',
         };
+
         return colors[key] || colors.normal;
     };
 
@@ -189,6 +193,7 @@ export default function LettersCreate({
             urgent: 'فوری',
             very_urgent: 'فوقالعاده',
         };
+
         return labels[key] || 'معمولی';
     };
 
@@ -200,6 +205,7 @@ export default function LettersCreate({
             secret: 'bg-purple-100 text-purple-700',
             top_secret: 'bg-red-100 text-red-700',
         };
+
         return colors[key] || colors.internal;
     };
 
@@ -211,6 +217,7 @@ export default function LettersCreate({
             secret: 'سری',
             top_secret: 'بسیار سری',
         };
+
         return labels[key] || 'داخلی';
     };
 
@@ -311,6 +318,9 @@ export default function LettersCreate({
                                                     value={data.date}
                                                     onChange={(date) => setData('date', date as string)}
                                                 />
+                                                {errors.date && (
+                                                    <p className="text-red-500 text-xs mt-1">{errors.date}</p>
+                                                )}
                                             </div>
                                         </div>
 

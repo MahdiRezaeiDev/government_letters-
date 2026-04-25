@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\JalaliDate;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Morilog\Jalali\Jalalian;
 
 class LetterRequest extends FormRequest
 {
@@ -30,9 +32,9 @@ class LetterRequest extends FormRequest
             'content' => 'nullable|string',
             'security_level' => 'required|in:public,internal,confidential,secret,top_secret',
             'priority' => 'required|in:low,normal,high,urgent,very_urgent',
-            'date' => 'nullable|date',
-            'due_date' => 'nullable|date|after_or_equal:date',
-            'response_deadline' => 'nullable|date|after_or_equal:date',
+            'date' => ['nullable',  new \App\Rules\JalaliDate()],
+            'due_date' => ['nullable',  new \App\Rules\JalaliDate(), 'after_or_equal:date'],
+            'response_deadline' => ['nullable',  new \App\Rules\JalaliDate(), 'after_or_equal:date'],
             'sheet_count' => 'nullable|integer|min:1',
             'is_draft' => 'boolean',
 
@@ -174,5 +176,37 @@ class LetterRequest extends FormRequest
             'instruction' => 'رهنمود',
             'attachments.*' => 'ضمیمه',
         ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation()
+    {
+        if ($this->date) {
+            try {
+                // ۱. تبدیل اعداد فارسی به انگلیسی
+                $englishDigits = str_replace(
+                    ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'],
+                    ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+                    $this->date
+                );
+
+                // ۲. تشخیص فرمت (اگر با خط تیره است Y-m-d و اگر با اسلش Y/m/d)
+                $format = str_contains($englishDigits, '-') ? 'Y-m-d' : 'Y/m/d';
+
+                // ۳. تبدیل به تاریخ میلادی برای اینکه قانون 'date' لاراول پاس شود
+                $miladiDate = Jalalian::fromFormat($format, $englishDigits)
+                    ->toCarbon()
+                    ->toDateString();
+
+                // ۴. جایگزینی در درخواست
+                $this->merge([
+                    'date' => $miladiDate,
+                ]);
+            } catch (\Exception $e) {
+                // در صورت خطا کاری نمی‌کنیم تا خودِ Validation پیام خطا بدهد
+            }
+        }
     }
 }

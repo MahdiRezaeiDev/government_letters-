@@ -54,7 +54,6 @@ class LetterService
             return $letter;
         } catch (\Exception $e) {
             DB::rollBack();
-            dd($e);
             $this->logError('Letter creation failed', $e);
             throw $e;
         }

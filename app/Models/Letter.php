@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\JalaliDateCast;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -54,9 +55,9 @@ class Letter extends Model
 
     protected $casts = [
         'cc_recipients' => 'array',
-        'date' => 'date',
-        'due_date' => 'date',
-        'response_deadline' => 'date',
+        'date' => JalaliDateCast::class,
+        'due_date' => JalaliDateCast::class,
+        'response_deadline' => JalaliDateCast::class,
         'is_draft' => 'boolean',
         'is_public' => 'boolean',
         'follow_up_count' => 'integer',
