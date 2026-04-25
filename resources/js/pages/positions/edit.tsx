@@ -1,17 +1,132 @@
-import { Head, router, Link } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
-import { Save, X, Briefcase, Trash2, Layers, Hash, Award, FileText, AlertCircle, Eye, TrendingUp, CheckCircle } from 'lucide-react';
-import { useState } from 'react';
-import type { Position, Department } from '@/types';
+import {
+    Save, X, Briefcase, Layers, Hash, Award, FileText,
+    AlertCircle, CheckCircle, TrendingUp, Shield, Star,
+    Zap, Crown, Users, Building2, Info, Eye, Trash2
+} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import positions from '@/routes/positions';
+import type { Position, Department } from '@/types';
 
 interface Props {
     position: Position;
     departments: Department[];
 }
 
+// ─── Level config (same as create page) ──────────────────────────────────────────
+
+const LEVELS = [
+    { min: 0, max: 0, label: 'پایه', icon: Users, color: '#94a3b8', bg: '#f1f5f9' },
+    { min: 1, max: 1, label: 'کارشناس', icon: Shield, color: '#3b82f6', bg: '#eff6ff' },
+    { min: 2, max: 2, label: 'کارشناس ارشد', icon: Star, color: '#10b981', bg: '#ecfdf5' },
+    { min: 3, max: 3, label: 'مدیر', icon: Crown, color: '#f59e0b', bg: '#fffbeb' },
+    { min: 4, max: 4, label: 'مدیر ارشد', icon: Zap, color: '#f97316', bg: '#fff7ed' },
+    { min: 5, max: 99, label: 'سطح بالا', icon: TrendingUp, color: '#8b5cf6', bg: '#f5f3ff' },
+];
+
+function getLevelInfo(level: number) {
+    return LEVELS.find(l => level >= l.min && level <= l.max) ?? LEVELS[0];
+}
+
+// ─── Shared Field Components ───────────────────────────────────────────────
+
+function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+    return (
+        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            {children}
+            {required && <span className="text-rose-400 mr-1">*</span>}
+        </label>
+    );
+}
+
+function InputField({
+    icon: Icon, value, onChange, onBlur, error, placeholder, type = 'text',
+    min, max, textarea = false, rows = 4
+}: {
+    icon?: React.ElementType; value: string | number; onChange: (v: string) => void;
+    onBlur?: () => void; error?: string | null; placeholder?: string; type?: string;
+    min?: number; max?: number; textarea?: boolean; rows?: number;
+}) {
+    const wrapClass = `relative flex items-start rounded-xl border bg-white transition-all duration-200 ${error
+            ? 'border-rose-300 ring-1 ring-rose-300'
+            : 'border-slate-200 hover:border-slate-300 focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-100'
+        }`;
+    const inputClass = `w-full ${Icon ? 'pr-10' : 'pr-4'} pl-4 py-3 text-sm bg-transparent focus:outline-none text-slate-700 placeholder-slate-300`;
+
+    return (
+        <div>
+            <div className={wrapClass}>
+                {Icon && <Icon className="absolute right-3.5 top-3.5 h-4 w-4 text-slate-400 pointer-events-none flex-shrink-0" />}
+                {textarea ? (
+                    <textarea
+                        value={value as string}
+                        onChange={e => onChange(e.target.value)}
+                        onBlur={onBlur}
+                        placeholder={placeholder}
+                        rows={rows}
+                        className={`${inputClass} resize-none leading-7 pt-3`}
+                    />
+                ) : (
+                    <input
+                        type={type}
+                        value={value}
+                        onChange={e => onChange(e.target.value)}
+                        onBlur={onBlur}
+                        placeholder={placeholder}
+                        min={min}
+                        max={max}
+                        className={inputClass}
+                    />
+                )}
+            </div>
+            {error && (
+                <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" />{error}
+                </p>
+            )}
+        </div>
+    );
+}
+
+function SelectField({
+    icon: Icon, value, onChange, onBlur, error, children
+}: {
+    icon?: React.ElementType; value: string | number; onChange: (v: string) => void;
+    onBlur?: () => void; error?: string | null; children: React.ReactNode;
+}) {
+    return (
+        <div>
+            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${error
+                    ? 'border-rose-300 ring-1 ring-rose-300'
+                    : 'border-slate-200 hover:border-slate-300 focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-100'
+                }`}>
+                {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
+                <select
+                    value={value}
+                    onChange={e => onChange(e.target.value)}
+                    onBlur={onBlur}
+                    className={`w-full ${Icon ? 'pr-10' : 'pr-4'} pl-9 py-3 text-sm bg-transparent focus:outline-none appearance-none text-slate-700`}
+                >
+                    {children}
+                </select>
+                <svg className="absolute left-3.5 h-4 w-4 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+            </div>
+            {error && (
+                <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />{error}
+                </p>
+            )}
+        </div>
+    );
+}
+
+// ─── Main Component ────────────────────────────────────────────────────────
+
 export default function PositionsEdit({ position, departments }: Props) {
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, put, processing, errors, reset } = useForm({
         department_id: position.department_id,
         name: position.name,
         code: position.code,
@@ -21,351 +136,424 @@ export default function PositionsEdit({ position, departments }: Props) {
     });
 
     const [touched, setTouched] = useState<Record<string, boolean>>({});
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [selectedDeptName, setSelectedDeptName] = useState('');
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         put(positions.update({ position: position.id }));
     };
 
-    const handleBlur = (field: string) => {
-        setTouched(prev => ({ ...prev, [field]: true }));
-    };
+    const handleBlur = (field: string) => setTouched(prev => ({ ...prev, [field]: true }));
+    const getFieldError = (field: string) => touched[field] && errors[field] ? errors[field] : null;
 
-    const getFieldError = (field: string) => {
-        return touched[field] && errors[field] ? errors[field] : null;
-    };
+    useEffect(() => {
+        const dept = departments.find(d => d.id === Number(data.department_id));
+        setSelectedDeptName(dept?.name || '');
+    }, [data.department_id, departments]);
+
+    const levelInfo = getLevelInfo(data.level);
+    const LevelIcon = levelInfo.icon;
+    const hasPreview = !!(data.name && data.code);
 
     const handleDelete = () => {
-        router.delete(positions.destroy({ position: position.id }));
+        setDeleting(true);
+        router.delete(positions.destroy({ position: position.id }), {
+            onFinish: () => {
+                setDeleting(false);
+                setShowDeleteModal(false);
+            },
+        });
     };
-
-    const selectedDepartment = departments.find(d => d.id === Number(data.department_id));
 
     return (
         <>
-            <Head title={`ویرایش سمت - ${position.name}`} />
+            <Head title={`ویرایش وظیفه - ${position.name}`} />
 
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <form onSubmit={handleSubmit}>
-                        {/* Header Section */}
-                        <div className="mb-8">
-                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                <div>
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg">
-                                            <Briefcase className="h-6 w-6 text-white" />
-                                        </div>
-                                        <div>
-                                            <h1 className="text-2xl font-bold text-gray-900">ویرایش سمت</h1>
-                                            <p className="text-sm text-gray-500 mt-0.5">
-                                                در حال ویرایش {position.name}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex gap-3">
-                                    <Link
-                                        href={positions.show({ position: position.id })}
-                                        className="inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
-                                    >
-                                        <Eye className="ml-2 h-4 w-4" />
-                                        مشاهده
-                                    </Link>
-                                    <button
-                                        type="button"
-                                        onClick={() => router.get(positions.index())}
-                                        className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
-                                    >
-                                        <X className="ml-2 h-4 w-4" />
-                                        انصراف
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 border border-transparent rounded-xl text-sm font-medium text-white hover:from-purple-700 hover:to-purple-800 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        <Save className="ml-2 h-4 w-4" />
-                                        {processing ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
-                                    </button>
-                                </div>
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
+                * { font-family: 'Vazirmatn', sans-serif; }
+                :root { direction: rtl; }
+                @keyframes fadeUp {
+                    from { opacity: 0; transform: translateY(8px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                }
+                .fade-up { animation: fadeUp 0.25s ease-out both; }
+            `}</style>
+
+            <div className="min-h-screen bg-slate-50/70" dir="rtl">
+
+                {/* ── Sticky Top Bar ── */}
+                <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-16">
+                            <div className="flex items-center gap-3">
+                                <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-violet-50 text-violet-600 tracking-wide">
+                                    وظایف
+                                </span>
+                                <span className="text-slate-300 text-lg font-light">/</span>
+                                <h1 className="text-sm font-bold text-slate-800">ویرایش وظیفه</h1>
+                                <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">
+                                    {position.name}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2.5">
+                                <button
+                                    type="button"
+                                    onClick={() => router.get(positions.show({ position: position.id }))}
+                                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200"
+                                >
+                                    <Eye className="h-4 w-4" />
+                                    مشاهده
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => router.get(positions.index())}
+                                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200"
+                                >
+                                    <X className="h-4 w-4" />
+                                    انصراف
+                                </button>
+                                <button
+                                    type="submit"
+                                    form="pos-form"
+                                    disabled={processing}
+                                    className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-violet-600 hover:bg-violet-700 rounded-xl transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <Save className="h-4 w-4" />
+                                    {processing ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
+                                </button>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        {/* Form Sections */}
-                        <div className="space-y-6">
-                            {/* Basic Information Section */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                                    <h2 className="text-lg font-semibold text-gray-900">اطلاعات پایه</h2>
-                                    <p className="text-sm text-gray-500 mt-0.5">اطلاعات اصلی سمت سازمانی</p>
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <form id="pos-form" onSubmit={handleSubmit}>
+                        <div className="space-y-5">
+
+                            {/* ── Intro strip ── */}
+                            <div className="rounded-2xl border border-violet-100 bg-gradient-to-l from-violet-50 to-purple-50 px-6 py-5 flex items-center gap-4">
+                                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                                    <Briefcase className="h-6 w-6 text-white" />
                                 </div>
-                                <div className="p-6 space-y-5">
-                                    {/* Department Selection */}
+                                <div>
+                                    <p className="text-sm font-bold text-slate-800">ویرایش وظیفه</p>
+                                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                                        اطلاعات وظیفه را ویرایش کنید. فیلدهای ستاره‌دار الزامی هستند.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* ── Main Form Card ── */}
+                            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                                <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-gradient-to-l from-white to-slate-50/60">
+                                    <div className="h-9 w-9 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
+                                        <Info className="h-4 w-4 text-violet-600" />
+                                    </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            دپارتمان <span className="text-red-500">*</span>
-                                        </label>
-                                        <div className="relative">
-                                            <Layers className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                            <select
-                                                value={data.department_id}
-                                                onChange={(e) => setData('department_id', e.target.value)}
-                                                onBlur={() => handleBlur('department_id')}
-                                                className={`w-full pr-9 pl-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all appearance-none bg-white ${
-                                                    getFieldError('department_id')
-                                                        ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                                                        : 'border-gray-200 focus:ring-purple-500 focus:border-purple-500'
-                                                }`}
-                                            >
-                                                {departments.map(dept => (
-                                                    <option key={dept.id} value={dept.id}>{dept.name}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        {getFieldError('department_id') && (
-                                            <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                                                <AlertCircle className="h-3 w-3" />
-                                                {errors.department_id}
-                                            </p>
-                                        )}
-                                        {selectedDepartment && (
-                                            <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                        <h2 className="text-sm font-bold text-slate-800">اطلاعات پایه</h2>
+                                        <p className="text-xs text-slate-400 mt-0.5">مشخصات اصلی وظیفه</p>
+                                    </div>
+                                </div>
+
+                                <div className="p-6 space-y-5">
+
+                                    {/* Department */}
+                                    <div>
+                                        <FieldLabel required>ریاست</FieldLabel>
+                                        <SelectField
+                                            icon={Building2}
+                                            value={data.department_id}
+                                            onChange={v => setData('department_id', v)}
+                                            onBlur={() => handleBlur('department_id')}
+                                            error={getFieldError('department_id')}
+                                        >
+                                            <option value="">انتخاب ریاست...</option>
+                                            {departments.map(dept => (
+                                                <option key={dept.id} value={dept.id}>{dept.name}</option>
+                                            ))}
+                                        </SelectField>
+                                        {selectedDeptName && !getFieldError('department_id') && (
+                                            <div className="mt-2.5 inline-flex items-center gap-2 text-xs font-medium text-violet-600 bg-violet-50 border border-violet-100 px-3 py-1.5 rounded-full">
                                                 <Layers className="h-3 w-3" />
-                                                این سمت به دپارتمان {selectedDepartment.name} تعلق دارد
-                                            </p>
+                                                وظیفه برای: {selectedDeptName}
+                                            </div>
                                         )}
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        {/* Position Name */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                نام سمت <span className="text-red-500">*</span>
-                                            </label>
-                                            <div className="relative">
-                                                <Briefcase className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                <input
-                                                    type="text"
-                                                    value={data.name}
-                                                    onChange={(e) => setData('name', e.target.value)}
-                                                    onBlur={() => handleBlur('name')}
-                                                    placeholder="مثال: مدیر مالی"
-                                                    className={`w-full pr-9 pl-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all ${
-                                                        getFieldError('name')
-                                                            ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                                                            : 'border-gray-200 focus:ring-purple-500 focus:border-purple-500'
-                                                    }`}
-                                                />
-                                            </div>
-                                            {getFieldError('name') && (
-                                                <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                                                    <AlertCircle className="h-3 w-3" />
-                                                    {errors.name}
-                                                </p>
-                                            )}
-                                        </div>
+                                    <div className="border-t border-slate-100" />
 
-                                        {/* Position Code */}
+                                    {/* Name + Code */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                کد سمت <span className="text-red-500">*</span>
-                                            </label>
-                                            <div className="relative">
-                                                <Hash className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                <input
-                                                    type="text"
-                                                    value={data.code}
-                                                    onChange={(e) => setData('code', e.target.value)}
-                                                    onBlur={() => handleBlur('code')}
-                                                    placeholder="مثال: FIN-MGR-001"
-                                                    className={`w-full pr-9 pl-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all ${
-                                                        getFieldError('code')
-                                                            ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                                                            : 'border-gray-200 focus:ring-purple-500 focus:border-purple-500'
-                                                    }`}
-                                                />
-                                            </div>
-                                            {getFieldError('code') && (
-                                                <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                                                    <AlertCircle className="h-3 w-3" />
-                                                    {errors.code}
-                                                </p>
-                                            )}
+                                            <FieldLabel required>نام وظیفه</FieldLabel>
+                                            <InputField
+                                                icon={Briefcase}
+                                                value={data.name}
+                                                onChange={v => setData('name', v)}
+                                                onBlur={() => handleBlur('name')}
+                                                error={getFieldError('name')}
+                                                placeholder="مثال: مدیر مالی"
+                                            />
+                                        </div>
+                                        <div>
+                                            <FieldLabel required>کد وظیفه</FieldLabel>
+                                            <InputField
+                                                icon={Hash}
+                                                value={data.code}
+                                                onChange={v => setData('code', v)}
+                                                onBlur={() => handleBlur('code')}
+                                                error={getFieldError('code')}
+                                                placeholder="مثال: FIN-MGR-001"
+                                            />
                                         </div>
                                     </div>
 
+                                    <div className="border-t border-slate-100" />
+
+                                    {/* Level + Management Type */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        {/* Level */}
+                                        {/* Level number input with live badge */}
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                سطح سمت
-                                            </label>
-                                            <div className="relative">
-                                                <TrendingUp className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                <input
-                                                    type="number"
-                                                    value={data.level}
-                                                    onChange={(e) => setData('level', parseInt(e.target.value) || 0)}
-                                                    min="0"
-                                                    max="10"
-                                                    className="w-full pr-9 pl-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                                                />
+                                            <FieldLabel>سطح وظیفه</FieldLabel>
+                                            <InputField
+                                                icon={TrendingUp}
+                                                type="number"
+                                                value={data.level}
+                                                onChange={v => setData('level', parseInt(v) || 0)}
+                                                min={0}
+                                                max={10}
+                                                placeholder="0"
+                                            />
+                                            <div className="mt-2.5 flex items-center gap-2">
+                                                <div
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all duration-300"
+                                                    style={{
+                                                        backgroundColor: levelInfo.bg,
+                                                        color: levelInfo.color,
+                                                        borderColor: levelInfo.color + '40',
+                                                    }}
+                                                >
+                                                    <LevelIcon className="h-3 w-3" />
+                                                    {levelInfo.label}
+                                                </div>
+                                                <span className="text-xs text-slate-400">هرچه عدد بزرگتر، سطح بالاتر (۰–۱۰)</span>
                                             </div>
-                                            <p className="text-xs text-gray-500 mt-1">
-                                                عدد بین 0 تا 10 - هرچه عدد بزرگتر، سطح بالاتر
-                                            </p>
                                         </div>
 
-                                        {/* Management Toggle */}
+                                        {/* Management toggle card */}
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                نوع سمت
-                                            </label>
+                                            <FieldLabel>نوع وظیفه</FieldLabel>
                                             <button
                                                 type="button"
                                                 onClick={() => setData('is_management', !data.is_management)}
-                                                className={`relative w-full p-3 rounded-lg border-2 transition-all duration-200 text-right ${
-                                                    data.is_management
-                                                        ? 'border-amber-500 bg-amber-50'
-                                                        : 'border-gray-200 bg-white hover:border-gray-300'
-                                                }`}
+                                                style={data.is_management ? {
+                                                    borderColor: '#fbbf24',
+                                                    backgroundColor: '#fffbeb',
+                                                } : {}}
+                                                className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-right focus:outline-none ${data.is_management
+                                                        ? ''
+                                                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                                                    }`}
                                             >
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={`p-2 rounded-lg ${
-                                                            data.is_management ? 'bg-amber-100' : 'bg-gray-100'
-                                                        }`}>
-                                                            <Award className={`h-4 w-4 ${
-                                                                data.is_management ? 'text-amber-600' : 'text-gray-500'
-                                                            }`} />
-                                                        </div>
-                                                        <div>
-                                                            <p className={`text-sm font-medium ${
-                                                                data.is_management ? 'text-amber-900' : 'text-gray-900'
-                                                            }`}>
-                                                                {data.is_management ? 'سمت مدیریتی' : 'سمت عادی'}
-                                                            </p>
-                                                            <p className="text-xs text-gray-500 mt-0.5">
-                                                                {data.is_management 
-                                                                    ? 'دارای مسئولیت مدیریتی و تصمیم‌گیری' 
-                                                                    : 'سمت عملیاتی و اجرایی'}
-                                                            </p>
-                                                        </div>
+                                                <div className="flex items-center gap-3">
+                                                    <div
+                                                        className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
+                                                        style={{ backgroundColor: data.is_management ? '#fef3c7' : '#f1f5f9' }}
+                                                    >
+                                                        <Award
+                                                            className="h-5 w-5 transition-colors"
+                                                            style={{ color: data.is_management ? '#d97706' : '#94a3b8' }}
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1 text-right">
+                                                        <p
+                                                            className="text-sm font-bold transition-colors"
+                                                            style={{ color: data.is_management ? '#92400e' : '#334155' }}
+                                                        >
+                                                            {data.is_management ? 'وظیفه مدیریتی' : 'وظیفه عادی'}
+                                                        </p>
+                                                        <p className="text-xs text-slate-500 mt-0.5">
+                                                            {data.is_management
+                                                                ? 'دارای مسئولیت مدیریتی و تصمیم‌گیری'
+                                                                : 'وظیفه عملیاتی و اجرایی'}
+                                                        </p>
                                                     </div>
                                                     {data.is_management && (
-                                                        <CheckCircle className="h-5 w-5 text-amber-600" />
+                                                        <div className="h-5 w-5 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
+                                                            <CheckCircle className="h-3.5 w-3.5 text-white" />
+                                                        </div>
                                                     )}
                                                 </div>
                                             </button>
                                         </div>
                                     </div>
 
+                                    <div className="border-t border-slate-100" />
+
                                     {/* Description */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            توضیحات
-                                        </label>
-                                        <div className="relative">
-                                            <FileText className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
-                                            <textarea
-                                                value={data.description}
-                                                onChange={(e) => setData('description', e.target.value)}
-                                                rows={4}
-                                                placeholder="شرح وظایف، مسئولیت‌ها و اختیارات این سمت..."
-                                                className="w-full pr-9 pl-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all resize-none"
-                                            />
-                                        </div>
+                                        <FieldLabel>توضیحات</FieldLabel>
+                                        <InputField
+                                            icon={FileText}
+                                            value={data.description}
+                                            onChange={v => setData('description', v)}
+                                            placeholder="شرح وظایف، مسئولیت‌ها و اختیارات این وظیفه..."
+                                            textarea
+                                            rows={4}
+                                        />
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Delete Section */}
-                            <div className="bg-white rounded-xl shadow-sm border border-red-100 overflow-hidden">
-                                <div className="px-6 py-4 border-b border-red-100 bg-gradient-to-r from-red-50 to-white">
-                                    <h2 className="text-lg font-semibold text-red-900">منطقه خطر</h2>
-                                    <p className="text-sm text-red-600 mt-0.5">عملیات حذف سمت - این عمل غیرقابل بازگشت است</p>
-                                </div>
-                                <div className="p-6">
-                                    {!showDeleteConfirm ? (
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowDeleteConfirm(true)}
-                                            className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-all shadow-sm"
-                                        >
-                                            <Trash2 className="ml-2 h-4 w-4" />
-                                            حذف سمت
-                                        </button>
-                                    ) : (
-                                        <div className="space-y-4">
-                                            <p className="text-sm text-gray-700">
-                                                آیا از حذف سمت <span className="font-bold text-red-600">"{position.name}"</span> اطمینان دارید؟
-                                                <br />
-                                                <span className="text-xs text-gray-500">
-                                                    این عمل غیرقابل بازگشت است. در صورت وجود کاربران مرتبط با این سمت، ابتدا باید آن‌ها را به سمت دیگری منتقل کنید.
-                                                </span>
-                                            </p>
-                                            <div className="flex gap-3">
-                                                <button
-                                                    type="button"
-                                                    onClick={handleDelete}
-                                                    className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-all"
-                                                >
-                                                    <Trash2 className="ml-2 h-4 w-4" />
-                                                    بله، حذف شود
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowDeleteConfirm(false)}
-                                                    className="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-all"
-                                                >
-                                                    انصراف
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Information Preview */}
-                            {(data.name !== position.name || data.code !== position.code || data.is_management !== position.is_management) && (
-                                <div className="bg-amber-50 rounded-xl border border-amber-100 p-4">
-                                    <div className="flex items-start gap-3">
-                                        <div className="p-1.5 bg-amber-100 rounded-lg">
-                                            <AlertCircle className="h-4 w-4 text-amber-600" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-medium text-amber-900">تغییرات اعمال شده</p>
-                                            <p className="text-xs text-amber-700 mt-1">
-                                                تغییرات شما تا زمان ذخیره شدن اعمال نخواهد شد
-                                            </p>
+                            {/* ── Live Preview strip ── */}
+                            {hasPreview && (
+                                <div className="rounded-2xl border border-violet-100 bg-gradient-to-l from-violet-600 to-purple-700 px-6 py-4 flex items-center gap-4 fade-up">
+                                    <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center flex-shrink-0">
+                                        <Briefcase className="h-5 w-5 text-white" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-semibold text-white/70 mb-1">پیش‌نمایش وظیفه</p>
+                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                            <span className="text-sm font-bold text-white">{data.name}</span>
+                                            <span className="text-white/40 text-xs">•</span>
+                                            <span className="text-xs font-mono text-violet-200 bg-white/10 px-2 py-0.5 rounded-md">{data.code}</span>
+                                            {data.level > 0 && (
+                                                <>
+                                                    <span className="text-white/40 text-xs">•</span>
+                                                    <span
+                                                        className="text-xs font-bold px-2 py-0.5 rounded-full"
+                                                        style={{ backgroundColor: levelInfo.color + '33', color: '#fff' }}
+                                                    >
+                                                        {levelInfo.label}
+                                                    </span>
+                                                </>
+                                            )}
+                                            {data.is_management && (
+                                                <>
+                                                    <span className="text-white/40 text-xs">•</span>
+                                                    <span className="text-xs font-bold text-amber-300 flex items-center gap-1">
+                                                        <Crown className="h-3 w-3" />مدیریتی
+                                                    </span>
+                                                </>
+                                            )}
+                                            {selectedDeptName && (
+                                                <>
+                                                    <span className="text-white/40 text-xs">•</span>
+                                                    <span className="text-xs text-white/70 flex items-center gap-1">
+                                                        <Building2 className="h-3 w-3" />{selectedDeptName}
+                                                    </span>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
+                                    <CheckCircle className="h-5 w-5 text-emerald-300 flex-shrink-0" />
                                 </div>
                             )}
 
-                            {/* Form Actions for Mobile */}
-                            <div className="flex flex-col sm:flex-row gap-3 sm:hidden">
+                            {/* ── Danger Zone (Delete Section) ── */}
+                            <div className="bg-white rounded-2xl border border-red-100 shadow-sm overflow-hidden">
+                                <div className="px-6 py-5 border-b border-red-100 flex items-center gap-3.5 bg-gradient-to-l from-red-50 to-white">
+                                    <div className="h-9 w-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+                                        <Trash2 className="h-4 w-4 text-red-600" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-sm font-bold text-red-800">منطقه خطر</h2>
+                                        <p className="text-xs text-red-600 mt-0.5">عملیات حذف وظیفه - این عمل غیرقابل بازگشت است</p>
+                                    </div>
+                                </div>
+                                <div className="p-6">
+                                    <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+                                        <div className="flex items-start gap-3">
+                                            <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+                                            <div>
+                                                <p className="text-sm font-medium text-red-800">هشدار!</p>
+                                                <p className="text-sm text-red-700 mt-1">
+                                                    با حذف وظیفه "{position.name}"، تمام کاربران مرتبط با این وظیفه نیز تحت تأثیر قرار خواهند گرفت.
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowDeleteModal(true)}
+                                                    className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-all shadow-sm"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                    حذف وظیفه
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* ── Mobile Actions ── */}
+                            <div className="flex gap-3 sm:hidden pb-4">
                                 <button
                                     type="button"
                                     onClick={() => router.get(positions.index())}
-                                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all"
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-all"
                                 >
+                                    <X className="h-4 w-4" />
                                     انصراف
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="flex-1 px-4 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-all disabled:opacity-50"
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-white bg-violet-600 hover:bg-violet-700 transition-all shadow-md disabled:opacity-50"
                                 >
+                                    <Save className="h-4 w-4" />
                                     {processing ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
                                 </button>
                             </div>
+
                         </div>
                     </form>
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowDeleteModal(false)}>
+                    <div className="bg-white rounded-2xl max-w-md w-full shadow-xl" onClick={e => e.stopPropagation()}>
+                        <div className="px-6 py-4 border-b border-slate-100">
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center">
+                                    <AlertCircle className="h-5 w-5 text-red-600" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-800">حذف وظیفه</h3>
+                                    <p className="text-xs text-slate-500 mt-0.5">این عمل غیرقابل بازگشت است</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-6">
+                            <p className="text-sm text-slate-600">
+                                آیا از حذف وظیفه <span className="font-bold text-slate-800">"{position.name}"</span> اطمینان دارید؟
+                            </p>
+                            <p className="text-xs text-slate-400 mt-2">
+                                با حذف این وظیفه، تمام اطلاعات مرتبط با آن نیز حذف خواهد شد.
+                            </p>
+                        </div>
+                        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowDeleteModal(false)}
+                                className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-xl transition-colors"
+                            >
+                                انصراف
+                            </button>
+                            <button
+                                onClick={handleDelete}
+                                disabled={deleting}
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors disabled:opacity-50"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                {deleting ? 'در حال حذف...' : 'حذف'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
