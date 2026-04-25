@@ -9,6 +9,7 @@ import {
     Building, UserCheck, X, Eye, Download
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+import PersianDatePicker from '@/components/PersianDatePicker';
 import { store as LetterCreate } from '@/routes/letters';
 import type { LetterCategory, Organization } from '@/types';
 
@@ -63,8 +64,8 @@ const FAKE_DATA = {
 با تجدید احترام`,
         security_level: 'confidential',
         priority: 'high',
-        date: new Date().toISOString().split('T')[0],
-        due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        date: new Date().toLocaleDateString('fa-Af'),
+        due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('fa-Af'),
         sheet_count: 3,
         recipient_type: 'internal' as const,
         instruction: 'با توجه به فوریت موضوع، خواهشمند است در اسرع وقت بررسی و اقدام لازم صورت پذیرد. نتیجه حداکثر تا پایان وقت اداری فردا به این دفتر اعلام گردد.',
@@ -96,7 +97,7 @@ const FAKE_DATA = {
 دبیر کمیته تخصصی امنیت سایبری`,
         security_level: 'internal',
         priority: 'normal',
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toLocaleDateString('fa-Af'),
         due_date: null,
         sheet_count: 1,
         recipient_type: 'external' as const,
@@ -206,7 +207,7 @@ export default function LettersCreate({
         content: '',
         security_level: 'internal',
         priority: 'normal',
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toLocaleDateString('fa-Af'),
         due_date: null,
         sheet_count: 1,
         is_draft: false,
@@ -574,17 +575,14 @@ export default function LettersCreate({
                                             )}
                                         </div>
                                         <div>
-                                            <FieldLabel required>تاریخ مکتوب</FieldLabel>
-                                            <InputField
-                                                icon={Calendar}
-                                                type="date"
+                                            <PersianDatePicker
+                                                label="تاریخ مکتوب"
                                                 value={data.date}
-                                                onChange={(v) => setData('date', v)}
+                                                onChange={(date) => setData('date', date as string)}
                                             />
                                             {errors.date && (
                                                 <p className="text-rose-500 text-xs mt-1">{errors.date}</p>
-                                            )}
-                                        </div>
+                                            )}                                        </div>
                                         <div>
                                             <FieldLabel required>اولویت</FieldLabel>
                                             <SelectField

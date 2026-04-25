@@ -1,8 +1,8 @@
 import React from "react";
 // 1. ایمپورت به صورت ماژول کامل
-import * as DatePickerModule from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
+import * as DatePickerModule from "react-multi-date-picker";
 
 /**
  * ترفند نهایی برای رفع خطای Element type is invalid در Vite
