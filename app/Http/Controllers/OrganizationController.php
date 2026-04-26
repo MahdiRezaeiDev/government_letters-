@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PermissionEnum;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -16,6 +17,7 @@ class OrganizationController extends Controller
      */
     public function index(Request $request)
     {
+        $currentUser = auth()->user();
         $query = Organization::query()
             ->when($request->filled('search'), function ($q) use ($request) {
                 $q->where('name', 'like', "%{$request->search}%")
@@ -32,9 +34,9 @@ class OrganizationController extends Controller
             'organizations' => $organizations,
             'filters' => $request->only(['search', 'status']),
             'can' => [
-                "create" => true,
-                "edit" => true,
-                "delete" => true
+                "create" => $currentUser->can(PermissionEnum::CREATE_ORGANIZATION),
+                "edit" => $currentUser->can(PermissionEnum::EDIT_ORGANIZATION),
+                "delete" => $currentUser->can(PermissionEnum::DELETE_ORGANIZATION)
             ]
         ]);
     }
@@ -44,6 +46,9 @@ class OrganizationController extends Controller
      */
     public function create()
     {
+        if (!auth()->user()->can(PermissionEnum::CREATE_ORGANIZATION)) {
+            abort(403, 'شما دسترسی ایجاد سازمان را ندارید.');
+        }
         return Inertia::render('organizations/create');
     }
 

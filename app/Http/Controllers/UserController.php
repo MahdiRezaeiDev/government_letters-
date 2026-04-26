@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PermissionEnum;
 use App\Models\User;
 use App\Models\Organization;
 use App\Models\Department;
@@ -89,10 +90,10 @@ class UserController extends Controller
             'roles' => $roles,
             'filters' => $request->only(['search', 'status', 'organization_id', 'role']),
             'can' => [
-                'create' => $currentUser->can('create-user-in-org') && ($currentUser->isSuperAdmin() || $currentUser->isOrgAdmin()),
-                'edit' => $currentUser->can('edit-user'),
-                'delete' => $currentUser->can('delete-user'),
-                'assign_role' => $currentUser->can('assign-role'),
+                'create' => $currentUser->can(PermissionEnum::CREATE_USER) && ($currentUser->isSuperAdmin() || $currentUser->isOrgAdmin()),
+                'edit' => $currentUser->can(PermissionEnum::EDIT_USER),
+                'delete' => $currentUser->can(PermissionEnum::DELETE_USER),
+                'assign_role' => $currentUser->can(PermissionEnum::ASSIGN_ROLE),
             ],
         ]);
     }
@@ -105,7 +106,7 @@ class UserController extends Controller
         $currentUser = auth()->user();
 
         // بررسی دسترسی کلی برای ایجاد کاربر
-        if (!$currentUser->can('create-user-in-org')) {
+        if (!$currentUser->can(PermissionEnum::CREATE_USER)) {
             abort(403, 'شما دسترسی ایجاد کاربر را ندارید.');
         }
 

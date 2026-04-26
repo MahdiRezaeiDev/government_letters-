@@ -17,12 +17,12 @@ interface Props {
 // ─── Level config ──────────────────────────────────────────────────────────
 
 const LEVELS = [
-    { min: 0, max: 0, label: 'پایه',        icon: Users,     color: '#94a3b8', bg: '#f1f5f9' },
-    { min: 1, max: 1, label: 'کارشناس',     icon: Shield,    color: '#3b82f6', bg: '#eff6ff' },
-    { min: 2, max: 2, label: 'کارشناس ارشد',icon: Star,      color: '#10b981', bg: '#ecfdf5' },
-    { min: 3, max: 3, label: 'مدیر',        icon: Crown,     color: '#f59e0b', bg: '#fffbeb' },
-    { min: 4, max: 4, label: 'مدیر ارشد',   icon: Zap,       color: '#f97316', bg: '#fff7ed' },
-    { min: 5, max: 99,label: 'سطح بالا',    icon: TrendingUp,color: '#8b5cf6', bg: '#f5f3ff' },
+    { min: 0, max: 0, label: 'پایه', icon: Users, color: '#94a3b8', bg: '#f1f5f9' },
+    { min: 1, max: 1, label: 'کارشناس', icon: Shield, color: '#3b82f6', bg: '#eff6ff' },
+    { min: 2, max: 2, label: 'کارشناس ارشد', icon: Star, color: '#10b981', bg: '#ecfdf5' },
+    { min: 3, max: 3, label: 'مدیر', icon: Crown, color: '#f59e0b', bg: '#fffbeb' },
+    { min: 4, max: 4, label: 'مدیر ارشد', icon: Zap, color: '#f97316', bg: '#fff7ed' },
+    { min: 5, max: 99, label: 'سطح بالا', icon: TrendingUp, color: '#8b5cf6', bg: '#f5f3ff' },
 ];
 
 function getLevelInfo(level: number) {
@@ -48,11 +48,10 @@ function InputField({
     onBlur?: () => void; error?: string | null; placeholder?: string; type?: string;
     min?: number; max?: number; textarea?: boolean; rows?: number;
 }) {
-    const wrapClass = `relative flex items-start rounded-xl border bg-white transition-all duration-200 ${
-        error
+    const wrapClass = `relative flex items-start rounded-xl border bg-white transition-all duration-200 ${error
             ? 'border-rose-300 ring-1 ring-rose-300'
             : 'border-slate-200 hover:border-slate-300 focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-100'
-    }`;
+        }`;
     const inputClass = `w-full ${Icon ? 'pr-10' : 'pr-4'} pl-4 py-3 text-sm bg-transparent focus:outline-none text-slate-700 placeholder-slate-300`;
 
     return (
@@ -98,11 +97,10 @@ function SelectField({
 }) {
     return (
         <div>
-            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${
-                error
+            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${error
                     ? 'border-rose-300 ring-1 ring-rose-300'
                     : 'border-slate-200 hover:border-slate-300 focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-100'
-            }`}>
+                }`}>
                 {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
                 <select
                     value={value}
@@ -326,49 +324,68 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                                         {/* Management toggle card */}
                                         <div>
                                             <FieldLabel>نوع وظیفه</FieldLabel>
-                                            <button
-                                                type="button"
-                                                onClick={() => setData('is_management', !data.is_management)}
-                                                style={data.is_management ? {
-                                                    borderColor: '#fbbf24',
-                                                    backgroundColor: '#fffbeb',
-                                                } : {}}
-                                                className={`w-full p-4 rounded-xl border-2 transition-all duration-200 text-right focus:outline-none ${
-                                                    data.is_management
-                                                        ? ''
-                                                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
-                                                }`}
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <div
-                                                        className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
-                                                        style={{ backgroundColor: data.is_management ? '#fef3c7' : '#f1f5f9' }}
-                                                    >
-                                                        <Award
-                                                            className="h-5 w-5 transition-colors"
-                                                            style={{ color: data.is_management ? '#d97706' : '#94a3b8' }}
-                                                        />
-                                                    </div>
-                                                    <div className="flex-1 text-right">
-                                                        <p
-                                                            className="text-sm font-bold transition-colors"
-                                                            style={{ color: data.is_management ? '#92400e' : '#334155' }}
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {[
+                                                    {
+                                                        value: false,
+                                                        icon: Users,
+                                                        title: 'عملیاتی',
+                                                        desc: 'اجرای وظایف روزمره',
+                                                    },
+                                                    {
+                                                        value: true,
+                                                        icon: Crown,
+                                                        title: 'مدیریتی',
+                                                        desc: 'تصمیم‌گیری و سرپرستی',
+                                                    },
+                                                ].map(opt => {
+                                                    const Icon = opt.icon;
+                                                    const active = data.is_management === opt.value;
+                                                    return (
+                                                        <button
+                                                            key={String(opt.value)}
+                                                            type="button"
+                                                            onClick={() => setData('is_management', opt.value)}
+                                                            className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 text-center transition-all duration-150 focus:outline-none ${active
+                                                                    ? opt.value
+                                                                        ? 'border-amber-400 bg-amber-50 shadow-sm'
+                                                                        : 'border-slate-800 bg-slate-50 shadow-sm'
+                                                                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                                                                }`}
                                                         >
-                                                            {data.is_management ? 'وظیفه مدیریتی' : 'وظیفه عادی'}
-                                                        </p>
-                                                        <p className="text-xs text-slate-500 mt-0.5">
-                                                            {data.is_management
-                                                                ? 'دارای مسئولیت مدیریتی و تصمیم‌گیری'
-                                                                : 'وظیفه عملیاتی و اجرایی'}
-                                                        </p>
-                                                    </div>
-                                                    {data.is_management && (
-                                                        <div className="h-5 w-5 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
-                                                            <CheckCircle className="h-3.5 w-3.5 text-white" />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </button>
+                                                            {/* آیکون */}
+                                                            <div className={`h-10 w-10 rounded-xl flex items-center justify-center transition-colors ${active
+                                                                    ? opt.value ? 'bg-amber-100' : 'bg-slate-200'
+                                                                    : 'bg-slate-100'
+                                                                }`}>
+                                                                <Icon className={`h-5 w-5 transition-colors ${active
+                                                                        ? opt.value ? 'text-amber-600' : 'text-slate-700'
+                                                                        : 'text-slate-400'
+                                                                    }`} />
+                                                            </div>
+
+                                                            {/* متن */}
+                                                            <div>
+                                                                <p className={`text-sm font-bold ${active
+                                                                        ? opt.value ? 'text-amber-800' : 'text-slate-800'
+                                                                        : 'text-slate-500'
+                                                                    }`}>
+                                                                    {opt.title}
+                                                                </p>
+                                                                <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
+                                                                    {opt.desc}
+                                                                </p>
+                                                            </div>
+
+                                                            {/* نشانگر انتخاب */}
+                                                            {active && (
+                                                                <span className={`absolute top-2.5 left-2.5 h-2 w-2 rounded-full ${opt.value ? 'bg-amber-400' : 'bg-slate-800'
+                                                                    }`} />
+                                                            )}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
                                     </div>
 
