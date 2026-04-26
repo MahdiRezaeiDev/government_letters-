@@ -1,128 +1,63 @@
 <?php
+// RolePermissionSeeder.php - همه چیز از PermissionEnum می‌خواند
 
 namespace Database\Seeders;
 
+use App\Enums\PermissionEnum;
 use App\Enums\RoleEnum;
-use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 use App\Models\User;
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        // پاک کردن کش قبلی
         app()->make(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
         // ============================================
-        // تعریف مجوزها (Permissions)
+        // ایجاد همه مجوزها از روی Enum (منبع واحد)
         // ============================================
-        
-        // مجوزهای مدیریت سازمان (فقط برای ادمین کل)
-        $orgPermissions = [
-            'create-organization',
-            'edit-organization',
-            'delete-organization',
-            'view-all-organizations',
-        ];
-        
-        // مجوزهای مدیریت دپارتمان
-        $deptPermissions = [
-            'create-department',
-            'edit-department',
-            'delete-department',
-            'view-department',
-        ];
-        
-        // مجوزهای مدیریت کاربران در سازمان
-        $userPermissions = [
-            'create-user-in-org',
-            'edit-user-in-org',
-            'delete-user-in-org',
-            'view-users-in-org',
-            'assign-role-to-user',
-        ];
-        
-        // مجوزهای مدیریت نامه‌ها
-        $letterPermissions = [
-            'create-letter',
-            'edit-letter',
-            'delete-letter',
-            'view-letter',
-            'archive-letter',
-            'sign-letter',
-            'route-letter',
-        ];
-        
-        // ایجاد همه مجوزها
-        $allPermissions = array_merge(
-            $orgPermissions,
-            $deptPermissions,
-            $userPermissions,
-            $letterPermissions
-        );
-        
-        foreach ($allPermissions as $permission) {
-            Permission::create(['name' => $permission]);
+        foreach (PermissionEnum::all() as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
         }
-        
+
         // ============================================
         // ایجاد نقش‌ها و تخصیص مجوزها
         // ============================================
-        
-        // 1. نقش ادمین کل (دسترسی به همه چیز)
-        $superAdmin = Role::create(['name' => 'super-admin']);
-        $superAdmin->givePermissionTo(Permission::all());
-        
-        // 2. نقش ادمین سازمان
-        $orgAdmin = Role::create(['name' => 'org-admin']);
-        $orgAdmin->givePermissionTo([
-            'create-department',
-            'edit-department',
-            'delete-department',
-            'view-department',
-            'create-user-in-org',
-            'edit-user-in-org',
-            'view-users-in-org',
-            'assign-role-to-user',
-            'create-letter',
-            'edit-letter',
-            'view-letter',
-            'archive-letter',
-            'route-letter',
-        ]);
-        
-        // 3. نقش مدیر دپارتمان
-        $deptManager = Role::create(['name' => 'dept-manager']);
-        $deptManager->givePermissionTo([
-            'view-department',
-            'create-letter',
-            'edit-letter',
-            'view-letter',
-            'route-letter',
-        ]);
-        
-        // 4. نقش کاربر عادی
-        $user = Role::create(['name' => 'user']);
-        $user->givePermissionTo([
-            'create-letter',
-            'view-letter',
-        ]);
-        
+
+        // 1. ادمین کل — همه مجوزها
+        $superAdmin = Role::firstOrCreate(['name' => RoleEnum::SUPER_ADMIN->value]);
+        $superAdmin->syncPermissions(PermissionEnum::superAdminPermissions());
+
+        // 2. ادمین سازمان — همه چیز مربوط به سازمان خودش
+        //    (Policy بعداً محدودیت سازمان را اعمال می‌کند)
+        $orgAdmin = Role::firstOrCreate(['name' => RoleEnum::ORG_ADMIN->value]);
+        $orgAdmin->syncPermissions(PermissionEnum::orgAdminPermissions());
+
+        // 3. مدیر دپارتمان — فقط مشاهده
+        $deptManager = Role::firstOrCreate(['name' => RoleEnum::DEPT_MANAGER->value]);
+        $deptManager->syncPermissions(PermissionEnum::deptManagerPermissions());
+
+        // 4. کاربر عادی — فقط مشاهده نامه‌ها
+        $user = Role::firstOrCreate(['name' => RoleEnum::USER->value]);
+        $user->syncPermissions(PermissionEnum::userPermissions());
+
         // ============================================
         // ایجاد کاربر ادمین کل پیش‌فرض
         // ============================================
-        
-        $superUser = User::create([
-            'organization_id' => null,
-            'email' => 'superadmin@system.com',
-            'password' => bcrypt('password'),
-            'first_name' => 'مدیر',
-            'last_name' => 'کل',
-            'national_code' => '1111111111',
-            'status' => 'active',
-        ]);
+        $superUser = User::firstOrCreate(
+            ['email' => 'superadmin@system.com'],
+            [
+                'organization_id' => null,
+                'password'        => bcrypt('password'),
+                'first_name'      => 'مدیر',
+                'last_name'       => 'کل',
+                'national_code'   => '1111111111',
+                'status'          => 'active',
+            ]
+        );
         $superUser->assignRole(RoleEnum::SUPER_ADMIN->value);
     }
 }
