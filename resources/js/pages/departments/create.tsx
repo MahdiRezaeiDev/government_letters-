@@ -1,10 +1,13 @@
 import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import {
-    Save, X, Building2, ChevronDown, Layers, Hash,
-    CheckCircle, AlertCircle, FolderTree, Sparkles
+    Save, X, Building2, Layers,
+    CheckCircle, AlertCircle, FolderTree
 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import FieldLabel from '@/components/ui/FieldLabel';
+import InputField from '@/components/ui/InputField';
+import SelectField from '@/components/ui/SelectField';
 import departments from '@/routes/departments';
 import type { Organization, Department } from '@/types';
 
@@ -12,82 +15,6 @@ interface Props {
     organizations: Organization[];
     parentDepartments: Department[];
     selectedOrganization?: number;
-}
-
-// ─── Shared Field Components ───────────────────────────────────────────────
-
-function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
-    return (
-        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-            {children}
-            {required && <span className="text-rose-400 mr-1">*</span>}
-        </label>
-    );
-}
-
-function InputField({
-    icon: Icon, value, onChange, onBlur, error, placeholder, type = 'text'
-}: {
-    icon?: React.ElementType; value: string; onChange: (v: string) => void;
-    onBlur?: () => void; error?: string | null; placeholder?: string; type?: string;
-}) {
-    return (
-        <div>
-            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${error
-                ? 'border-rose-300 ring-1 ring-rose-300'
-                : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
-                }`}>
-                {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
-                <input
-                    type={type}
-                    value={value}
-                    onChange={e => onChange(e.target.value)}
-                    onBlur={onBlur}
-                    placeholder={placeholder}
-                    className={`w-full ${Icon ? 'pr-10' : 'pr-4'} pl-4 py-3 text-sm bg-transparent focus:outline-none text-slate-700 placeholder-slate-300`}
-                />
-            </div>
-            {error && (
-                <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3 shrink-0" />{error}
-                </p>
-            )}
-        </div>
-    );
-}
-
-function SelectField({
-    icon: Icon, value, onChange, onBlur, error, children, disabled = false
-}: {
-    icon?: React.ElementType; value: string | number; onChange: (v: string) => void;
-    onBlur?: () => void; error?: string | null; children: React.ReactNode; disabled?: boolean;
-}) {
-    return (
-        <div>
-            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${disabled ? 'opacity-60 cursor-not-allowed bg-slate-50' :
-                error
-                    ? 'border-rose-300 ring-1 ring-rose-300'
-                    : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100'
-                }`}>
-                {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
-                <select
-                    value={value}
-                    onChange={e => onChange(e.target.value)}
-                    onBlur={onBlur}
-                    disabled={disabled}
-                    className={`w-full ${Icon ? 'pr-10' : 'pr-4'} pl-9 py-3 text-sm bg-transparent focus:outline-none appearance-none text-slate-700 ${disabled ? 'cursor-not-allowed' : ''}`}
-                >
-                    {children}
-                </select>
-                <ChevronDown className="absolute left-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
-            </div>
-            {error && (
-                <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />{error}
-                </p>
-            )}
-        </div>
-    );
 }
 
 // ─── Main Component ────────────────────────────────────────────────────────
@@ -102,67 +29,83 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
     });
 
     const [availableParentDepts, setAvailableParentDepts] = useState<Department[]>(parentDepartments);
-    const [touched, setTouched] = useState<Record<string, boolean>>({});
-    const [selectedOrgName, setSelectedOrgName] = useState('');
     const [loadingParents, setLoadingParents] = useState(false);
 
-    useEffect(() => {
-        if (data.organization_id) {
-            const org = organizations.find(o => o.id === Number(data.organization_id));
-            setSelectedOrgName(org?.name || '');
-            setLoadingParents(true);
-            fetch(`/departments-list?organization_id=${data.organization_id}`)
-                .then(r => r.json())
-                .then(d => { setAvailableParentDepts(d); setLoadingParents(false); })
-                .catch(() => setLoadingParents(false));
+    const selectedOrgName = useMemo(() => {
+        if (!data.organization_id) {
+            return '';
         }
+
+        const org = organizations.find(o => o.id === Number(data.organization_id));
+
+        return org?.name || '';
     }, [data.organization_id, organizations]);
+
+    useEffect(() => {
+        if (!data.organization_id) {
+            setAvailableParentDepts([]);
+
+            return;
+        }
+
+        let cancelled = false;
+        setLoadingParents(true);
+
+        fetch(`/departments-list?organization_id=${data.organization_id}`)
+            .then(r => r.json())
+            .then(d => {
+                if (!cancelled) {
+                    setAvailableParentDepts(d);
+                    setLoadingParents(false);
+                }
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setLoadingParents(false);
+                }
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [data.organization_id]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(departments.store(), { onSuccess: () => reset() });
+        post(departments.store(), {
+            preserveScroll: true,
+            onSuccess: () => reset()
+        });
     };
 
-    const handleBlur = (field: string) => setTouched(prev => ({ ...prev, [field]: true }));
-    const getFieldError = (field: string) => touched[field] && errors[field] ? errors[field] : null;
-
     const statusOptions = [
-        { value: 'active', label: 'فعال', desc: 'ریاست فعال و قابل استفاده است', icon: CheckCircle, color: '#10b981', bg: '#d1fae5' },
-        { value: 'inactive', label: 'غیرفعال', desc: 'ریاست غیرفعال و در دسترس نیست', icon: AlertCircle, color: '#94a3b8', bg: '#f1f5f9' },
+        { value: 'active', label: 'فعال', icon: CheckCircle },
+        { value: 'inactive', label: 'غیرفعال', icon: AlertCircle },
     ];
-
-    const selectedStatus = statusOptions.find(s => s.value === data.status)!;
-    const StatusIcon = selectedStatus.icon;
 
     return (
         <>
             <Head title="ایجاد ریاست جدید" />
 
-            <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
-                * { font-family: 'Vazirmatn', sans-serif; }
-                :root { direction: rtl; }
-                @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-                .fade-up { animation: fadeUp 0.25s ease-out both; }
-            `}</style>
-
-            <div className="min-h-screen bg-slate-50/70" dir="rtl">
-
-                {/* ── Sticky Top Bar ── */}
-                <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
-                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="min-h-screen bg-slate-50/50" dir="rtl">
+                {/* Header */}
+                <div className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+                    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between h-16">
                             <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-xl bg-linear-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md">
-                                    <Layers className="h-4 w-4 text-white" />
+                                <div className="h-10 w-10 rounded-lg bg-indigo-50 flex items-center justify-center">
+                                    <Layers className="h-5 w-5 text-indigo-600" />
                                 </div>
-                                <h1 className="text-sm font-bold text-slate-800">ایجاد ریاست جدید</h1>
+                                <div>
+                                    <h1 className="text-lg font-bold text-slate-900">ایجاد ریاست جدید</h1>
+                                    <p className="text-xs text-slate-500">اطلاعات ریاست را وارد کنید</p>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2.5">
+                            <div className="flex items-center gap-3">
                                 <button
                                     type="button"
                                     onClick={() => router.get(departments.index())}
-                                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+                                    className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
                                 >
                                     <X className="h-4 w-4" />
                                     انصراف
@@ -171,164 +114,138 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                                     type="submit"
                                     form="dept-form"
                                     disabled={processing}
-                                    className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-all disabled:opacity-50"
+                                    className="flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                                 >
                                     <Save className="h-4 w-4" />
-                                    {processing ? 'در حال ذخیره...' : 'ایجاد ریاست'}
+                                    {processing ? 'در حال ذخیره...' : 'ذخیره ریاست'}
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Form Content */}
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <form id="dept-form" onSubmit={handleSubmit}>
-                        <div className="space-y-5">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                            {/* ── Intro Card ── */}
-                            <div className="rounded-2xl border border-indigo-100 bg-linear-to-l from-indigo-50 to-violet-50 px-6 py-5 flex items-center gap-4 fade-up">
-                                <div className="h-12 w-12 rounded-xl bg-linear-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shrink-0">
-                                    <Sparkles className="h-6 w-6 text-white" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-slate-800">ایجاد ریاست جدید</p>
-                                    <p className="text-xs text-slate-500 mt-0.5">اطلاعات ریاست را تکمیل کنید. فیلدهای ستاره‌دار الزامی هستند.</p>
-                                </div>
-                            </div>
+                            {/* Main Content */}
+                            <div className="lg:col-span-2 space-y-6">
 
-                            {/* ── Main Form Card ── */}
-                            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden fade-up">
-                                <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-linear-to-l from-white to-slate-50/60">
-                                    <div className="h-9 w-9 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
-                                        <FolderTree className="h-4 w-4 text-indigo-600" />
+                                {/* Department Info Card */}
+                                <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+                                    <div className="px-6 py-4 border-b border-slate-100">
+                                        <h3 className="font-semibold text-slate-900">اطلاعات ریاست</h3>
                                     </div>
-                                    <div>
-                                        <h2 className="text-sm font-bold text-slate-800">اطلاعات ریاست</h2>
-                                        <p className="text-xs text-slate-400 mt-0.5">مشخصات اصلی و وضعیت ریاست</p>
-                                    </div>
-                                </div>
-
-                                <div className="p-6 space-y-6">
-                                    {/* سازمان */}
-                                    <div>
-                                        <FieldLabel required>وزارت</FieldLabel>
-                                        <SelectField
-                                            icon={Building2}
-                                            value={data.organization_id}
-                                            onChange={v => setData('organization_id', v)}
-                                            onBlur={() => handleBlur('organization_id')}
-                                            error={getFieldError('organization_id')}
-                                        >
-                                            {organizations.map(org => (
-                                                <option key={org.id} value={org.id}>{org.name}</option>
-                                            ))}
-                                        </SelectField>
-                                        {selectedOrgName && !getFieldError('organization_id') && (
-                                            <div className="mt-2.5 inline-flex items-center gap-2 text-xs font-medium text-indigo-600 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-full">
-                                                <Building2 className="h-3 w-3" />
-                                                ریاست برای: {selectedOrgName}
+                                    <div className="p-6 space-y-5">
+                                        {/* Name & Organization */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <FieldLabel required>وزارت مربوطه</FieldLabel>
+                                                <SelectField
+                                                    icon={Building2}
+                                                    value={data.organization_id}
+                                                    onChange={v => {
+                                                        setData('organization_id', v);
+                                                        setData('parent_id', '');
+                                                    }}
+                                                    error={errors.organization_id}
+                                                >
+                                                    {organizations.map(org => (
+                                                        <option key={org.id} value={org.id}>{org.name}</option>
+                                                    ))}
+                                                </SelectField>
                                             </div>
-                                        )}
-                                    </div>
-
-                                    <div className="border-t border-slate-100" />
-
-                                    {/* نام + کد */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        <div>
-                                            <FieldLabel required>نام ریاست</FieldLabel>
-                                            <InputField
-                                                icon={FolderTree}
-                                                value={data.name}
-                                                onChange={v => setData('name', v)}
-                                                onBlur={() => handleBlur('name')}
-                                                error={getFieldError('name')}
-                                                placeholder="مثال: اداره مالی"
-                                            />
+                                            <div>
+                                                <FieldLabel required>نام ریاست</FieldLabel>
+                                                <InputField
+                                                    icon={FolderTree}
+                                                    value={data.name}
+                                                    onChange={v => setData('name', v)}
+                                                    error={errors.name}
+                                                    placeholder="نام ریاست را وارد کنید"
+                                                />
+                                            </div>
                                         </div>
+
+                                        {/* Parent Department */}
                                         <div>
-                                            <FieldLabel required>کد ریاست</FieldLabel>
-                                            <InputField
-                                                icon={Hash}
-                                                value={data.code}
-                                                onChange={v => setData('code', v)}
-                                                onBlur={() => handleBlur('code')}
-                                                error={getFieldError('code')}
-                                                placeholder="مثال: FIN-001"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="border-t border-slate-100" />
-
-                                    {/* ریاست والد */}
-                                    <div>
-                                        <FieldLabel>ریاست والد</FieldLabel>
-                                        <div className="relative">
-                                            <SelectField
-                                                icon={Layers}
-                                                value={data.parent_id}
-                                                onChange={v => setData('parent_id', v)}
-                                                disabled={loadingParents || availableParentDepts?.length === 0}
-                                            >
-                                                <option value="">بدون والد (سطح اول)</option>
-                                                {availableParentDepts.map(dept => (
-                                                    <option key={dept.id} value={dept.id}>
-                                                        {dept.name}{dept.code ? ` (${dept.code})` : ''}
-                                                    </option>
-                                                ))}
-                                            </SelectField>
-                                            {loadingParents && (
-                                                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                                                    <div className="h-4 w-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
-                                                </div>
+                                            <FieldLabel>ریاست والد</FieldLabel>
+                                            <div className="relative">
+                                                <SelectField
+                                                    icon={Layers}
+                                                    value={data.parent_id}
+                                                    onChange={v => setData('parent_id', v)}
+                                                    disabled={loadingParents || !data.organization_id}
+                                                >
+                                                    <option value="">بدون والد (ریاست سطح اول)</option>
+                                                    {availableParentDepts.map(dept => (
+                                                        <option key={dept.id} value={dept.id}>
+                                                            {dept.name}{dept.code ? ` (${dept.code})` : ''}
+                                                        </option>
+                                                    ))}
+                                                </SelectField>
+                                                {loadingParents && (
+                                                    <div className="absolute left-3 top-3">
+                                                        <div className="h-4 w-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {data.organization_id && !loadingParents && availableParentDepts.length === 0 && (
+                                                <p className="text-xs text-slate-400 mt-1.5 flex items-center gap-1">
+                                                    <AlertCircle className="h-3 w-3" />
+                                                    هیچ ریاست والدی در این سازمان وجود ندارد
+                                                </p>
                                             )}
                                         </div>
-                                        {availableParentDepts.length === 0 && data.organization_id && !loadingParents && (
-                                            <div className="mt-2.5 flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5">
-                                                <AlertCircle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-amber-500" />
-                                                <span>هیچ ریاست والدی یافت نشد. این ریاست به عنوان سطح اول ایجاد می‌شود.</span>
-                                            </div>
-                                        )}
                                     </div>
+                                </div>
 
-                                    <div className="border-t border-slate-100" />
+                                {/* Status Card */}
+                                <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+                                    <div className="px-6 py-4 border-b border-slate-100">
+                                        <h3 className="font-semibold text-slate-900">وضعیت ریاست</h3>
+                                    </div>
+                                    <div className="p-6">
+                                        <div className="flex gap-3">
+                                            {statusOptions.map((option) => {
+                                                const Icon = option.icon;
+                                                const isActive = data.status === option.value;
 
-                                    {/* وضعیت */}
-                                    <div>
-                                        <FieldLabel required>وضعیت ریاست</FieldLabel>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            {statusOptions.map(opt => {
-                                                const Icon = opt.icon;
-                                                const isSelected = data.status === opt.value;
-                                                
                                                 return (
-                                                    <button
-                                                        key={opt.value}
-                                                        type="button"
-                                                        onClick={() => setData('status', opt.value)}
-                                                        className={`p-4 rounded-xl border-2 transition-all duration-200 text-right ${isSelected
-                                                            ? `border-${opt.value === 'active' ? 'emerald' : 'gray'}-500 bg-${opt.value === 'active' ? 'emerald' : 'gray'}-50`
-                                                            : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
+                                                    <label
+                                                        key={option.value}
+                                                        className={`flex-1 flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${isActive
+                                                            ? 'border-indigo-500 bg-indigo-50'
+                                                            : 'border-slate-200 hover:border-slate-300 bg-white'
                                                             }`}
                                                     >
-                                                        <div className="flex items-center gap-3">
-                                                            <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${isSelected ? `bg-${opt.value === 'active' ? 'emerald' : 'gray'}-100` : 'bg-slate-100'}`}>
-                                                                <Icon className={`h-5 w-5 ${isSelected ? `text-${opt.value === 'active' ? 'emerald' : 'gray'}-600` : 'text-slate-500'}`} />
-                                                            </div>
-                                                            <div className="flex-1 text-right">
-                                                                <p className={`text-sm font-bold ${isSelected ? `text-${opt.value === 'active' ? 'emerald' : 'gray'}-700` : 'text-slate-700'}`}>
-                                                                    {opt.label}
-                                                                </p>
-                                                                <p className="text-xs text-slate-500 mt-0.5">{opt.desc}</p>
-                                                            </div>
-                                                            {isSelected && (
-                                                                <div className="h-5 w-5 rounded-full flex items-center justify-center bg-emerald-500">
-                                                                    <CheckCircle className="h-3.5 w-3.5 text-white" />
-                                                                </div>
-                                                            )}
+                                                        <input
+                                                            type="radio"
+                                                            name="status"
+                                                            value={option.value}
+                                                            checked={isActive}
+                                                            onChange={() => setData('status', option.value)}
+                                                            className="sr-only"
+                                                        />
+                                                        <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${isActive ? 'bg-indigo-100' : 'bg-slate-100'
+                                                            }`}>
+                                                            <Icon className={`h-5 w-5 ${isActive ? 'text-indigo-600' : 'text-slate-400'
+                                                                }`} />
                                                         </div>
-                                                    </button>
+                                                        <div>
+                                                            <p className={`font-medium text-sm ${isActive ? 'text-indigo-700' : 'text-slate-700'
+                                                                }`}>
+                                                                {option.label}
+                                                            </p>
+                                                            <p className="text-xs text-slate-500 mt-0.5">
+                                                                {option.value === 'active' ? 'ریاست فعال و در دسترس' : 'ریاست غیرفعال شده'}
+                                                            </p>
+                                                        </div>
+                                                        {isActive && (
+                                                            <CheckCircle className="h-5 w-5 text-indigo-600 mr-auto" />
+                                                        )}
+                                                    </label>
                                                 );
                                             })}
                                         </div>
@@ -336,38 +253,109 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                                 </div>
                             </div>
 
-                            {/* ── Live Preview ── */}
-                            {data.name && data.code && selectedOrgName && (
-                                <div className="rounded-2xl border border-indigo-100 bg-linear-to-l from-indigo-600 to-violet-700 px-6 py-4 flex items-center gap-4 fade-up">
-                                    <div className="h-10 w-10 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center shrink-0">
-                                        <Layers className="h-5 w-5 text-white" />
+                            {/* Sidebar */}
+                            <div className="space-y-6">
+
+                                {/* Preview Card */}
+                                <div className="bg-white rounded-xl border border-slate-200 shadow-sm sticky top-24">
+                                    <div className="px-6 py-4 border-b border-slate-100">
+                                        <h3 className="font-semibold text-slate-900">پیش‌نمایش</h3>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-semibold text-white/70 mb-1">پیش‌نمایش ریاست</p>
-                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                            <span className="text-sm font-bold text-white">{data.name}</span>
-                                            <span className="text-white/40 text-xs">•</span>
-                                            <span className="text-xs font-mono text-indigo-200 bg-white/10 px-2 py-0.5 rounded-md">{data.code}</span>
-                                            <span className="text-white/40 text-xs">•</span>
-                                            <span className="text-xs text-white/70 flex items-center gap-1">
-                                                <Building2 className="h-3 w-3" />{selectedOrgName}
-                                            </span>
-                                            {data.parent_id && (
-                                                <>
-                                                    <span className="text-white/40 text-xs">•</span>
-                                                    <span className="text-xs text-white/70 flex items-center gap-1">
-                                                        <Layers className="h-3 w-3" />
-                                                        {availableParentDepts.find(d => d.id === Number(data.parent_id))?.name}
-                                                    </span>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="shrink-0 h-7 w-7 rounded-full flex items-center justify-center" style={{ backgroundColor: selectedStatus.color }}>
-                                        <CheckCircle className="h-4 w-4 text-white" />
+                                    <div className="p-6">
+                                        {data.name && selectedOrgName ? (
+                                            <div className="space-y-4">
+                                                <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                                                    <div className="flex items-center gap-2 mb-3">
+                                                        <FolderTree className="h-4 w-4 text-indigo-500" />
+                                                        <span className="text-sm font-medium text-indigo-700">
+                                                            {data.name}
+                                                        </span>
+                                                    </div>
+                                                    <div className="space-y-2 text-xs">
+                                                        {data.code && (
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="text-slate-500">کد:</span>
+                                                                <span className="font-mono text-slate-700">{data.code}</span>
+                                                            </div>
+                                                        )}
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-slate-500">وزارت:</span>
+                                                            <span className="text-slate-700">{selectedOrgName}</span>
+                                                        </div>
+                                                        {data.parent_id && (
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="text-slate-500">والد:</span>
+                                                                <span className="text-slate-700">
+                                                                    {availableParentDepts.find(d => d.id === Number(data.parent_id))?.name}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                        <div className="flex items-center justify-between pt-2 border-t border-indigo-100">
+                                                            <span className="text-slate-500">وضعیت:</span>
+                                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${data.status === 'active'
+                                                                ? 'bg-green-100 text-green-700'
+                                                                : 'bg-slate-100 text-slate-600'
+                                                                }`}>
+                                                                <span className={`w-1.5 h-1.5 rounded-full ${data.status === 'active' ? 'bg-green-500' : 'bg-slate-400'
+                                                                    }`}></span>
+                                                                {data.status === 'active' ? 'فعال' : 'غیرفعال'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-8">
+                                                <FolderTree className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                                                <p className="text-sm text-slate-400">
+                                                    با تکمیل فرم، پیش‌نمایش ریاست در اینجا نمایش داده می‌شود
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                            )}
+
+                                {/* Tips Card */}
+                                <div className="bg-indigo-50/50 rounded-xl border border-indigo-100 p-5">
+                                    <h4 className="text-sm font-semibold text-indigo-900 mb-3">نکات مهم</h4>
+                                    <ul className="space-y-2">
+                                        <li className="flex items-start gap-2 text-xs text-indigo-700">
+                                            <CheckCircle className="h-4 w-4 text-indigo-500 mt-0.5 shrink-0" />
+                                            هر ریاست باید به یک وزارت تعلق داشته باشد
+                                        </li>
+                                        <li className="flex items-start gap-2 text-xs text-indigo-700">
+                                            <CheckCircle className="h-4 w-4 text-indigo-500 mt-0.5 shrink-0" />
+                                            ریاست‌های والد باید در همان سازمان باشند
+                                        </li>
+                                        <li className="flex items-start gap-2 text-xs text-indigo-700">
+                                            <CheckCircle className="h-4 w-4 text-indigo-500 mt-0.5 shrink-0" />
+                                            کد ریاست می‌تواند خالی باشد
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Mobile Actions */}
+                        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 z-20">
+                            <div className="flex gap-3 max-w-5xl mx-auto">
+                                <button
+                                    type="button"
+                                    onClick={() => router.get(departments.index())}
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                                >
+                                    <X className="h-4 w-4" />
+                                    انصراف
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50 shadow-sm"
+                                >
+                                    <Save className="h-4 w-4" />
+                                    {processing ? 'در حال ذخیره...' : 'ذخیره ریاست'}
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
