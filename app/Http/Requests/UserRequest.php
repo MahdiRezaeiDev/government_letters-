@@ -45,7 +45,9 @@ class UserRequest extends FormRequest
             // فیلدهای اضافی جدید
             'gender' => 'nullable|in:male,female',
             'birth_date' => [
-                'nullable','date','before:today',
+                'nullable',
+                'date',
+                'before:today',
             ],
             'emergency_phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
@@ -202,9 +204,9 @@ class UserRequest extends FormRequest
             'role' => 'نقش کاربری',
         ];
     }
-    protected function prepareForValidation(): void
+    protected function prepareForValidation()
     {
-        $dateFields = ['birth_date'];
+        $dateFields = ['date', 'due_date', 'response_deadline'];
         $merged = [];
 
         foreach ($dateFields as $field) {
@@ -264,16 +266,10 @@ class UserRequest extends FormRequest
                     $value
                 );
 
-                // ۲. تشخیص جداکننده (slash یا dash)
-                $format = str_contains($englishDigits, '/') ? 'Y/m/d' : 'Y-m-d';
+                $normalized = str_replace('-', '/', $englishDigits);
 
-                // ۳. تبدیل جلالی به میلادی
-                $merged[$field] = Jalalian::fromFormat($format, $englishDigits)
-                    ->toCarbon()
-                    ->toDateString(); // خروجی: Y-m-d میلادی
-
+                return $normalized;
             } catch (\Exception $e) {
-                // اگر تبدیل شکست، مقدار خام را نگه می‌داریم تا Validator خطا بدهد
             }
         }
 
