@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PermissionEnum;
+use App\Http\Requests\OrganizationRequest;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -57,28 +58,15 @@ class OrganizationController extends Controller
     /**
      * ذخیره سازمان جدید
      */
-    public function store(Request $request)
+    public function store(OrganizationRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string',
-            'website' => 'nullable|url|max:255',
-            'status' => 'required|in:active,inactive',
-        ]);
-
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
-        }
-
         $logoPath = null;
+
         if ($request->hasFile('logo')) {
             $logoPath = $request->file('logo')->store('organizations/logos', 'public');
         }
 
-        $organization = Organization::create([
+        Organization::create([
             'name' => $request->name,
             'code' => Organization::generateCode(),
             'logo' => $logoPath,
@@ -137,23 +125,8 @@ class OrganizationController extends Controller
     /**
      * به‌روزرسانی سازمان
      */
-    public function update(Request $request, Organization $organization)
+    public function update(OrganizationRequest $request, Organization $organization)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:organizations,code,' . $organization->id,
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string',
-            'website' => 'nullable|url|max:255',
-            'status' => 'required|in:active,inactive',
-        ]);
-
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
-        }
-
         // پردازش لوگو
         if ($request->hasFile('logo')) {
             // حذف لوگوی قدیمی
