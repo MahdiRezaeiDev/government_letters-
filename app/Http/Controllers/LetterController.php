@@ -203,9 +203,9 @@ class LetterController extends Controller
             'departments' => $departments,
             'positions' => $positions,
             'can' => [
-                'create' => $currentUser->can('create-department'),
-                'edit' => $currentUser->can('edit-department'),
-                'delete' => $currentUser->can('delete-department'),
+                'create' => $currentUser->can('create-letter-in-org'),
+                'edit' => $currentUser->can('edit-letter-in-org'),
+                'delete' => $currentUser->can('delete-letter-in-org'),
             ],
             'externalOrganizations' => $externalOrganizations,
             'securityLevels' => config('correspondence.security_levels'),

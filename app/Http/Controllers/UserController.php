@@ -89,7 +89,7 @@ class UserController extends Controller
             'roles' => $roles,
             'filters' => $request->only(['search', 'status', 'organization_id', 'role']),
             'can' => [
-                'create' => $currentUser->can('create-user') && ($currentUser->isSuperAdmin() || $currentUser->isOrgAdmin()),
+                'create' => $currentUser->can('create-user-in-org') && ($currentUser->isSuperAdmin() || $currentUser->isOrgAdmin()),
                 'edit' => $currentUser->can('edit-user'),
                 'delete' => $currentUser->can('delete-user'),
                 'assign_role' => $currentUser->can('assign-role'),
@@ -105,7 +105,7 @@ class UserController extends Controller
         $currentUser = auth()->user();
 
         // بررسی دسترسی کلی برای ایجاد کاربر
-        if (!$currentUser->can('create-user')) {
+        if (!$currentUser->can('create-user-in-org')) {
             abort(403, 'شما دسترسی ایجاد کاربر را ندارید.');
         }
 
