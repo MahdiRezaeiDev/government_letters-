@@ -45,9 +45,7 @@ class UserRequest extends FormRequest
             // فیلدهای اضافی جدید
             'gender' => 'nullable|in:male,female',
             'birth_date' => [
-                'nullable',
-                new \App\Rules\JalaliDate(),
-                'before:today',
+                'nullable','date','before:today',
             ],
             'emergency_phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
@@ -204,32 +202,83 @@ class UserRequest extends FormRequest
             'role' => 'نقش کاربری',
         ];
     }
-    protected function prepareForValidation()
+    protected function prepareForValidation(): void
     {
-        if ($this->birth_date) {
+        $dateFields = ['birth_date'];
+        $merged = [];
+
+        foreach ($dateFields as $field) {
+            $value = $this->$field;
+
+            if (empty($value)) {
+                continue;
+            }
+
             try {
-                // ۱. تبدیل اعداد فارسی به انگلیسی
+                // ۱. تبدیل اعداد فارسی/عربی به انگلیسی
                 $englishDigits = str_replace(
-                    ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'],
-                    ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
-                    $this->birth_date
+                    [
+                        '۰',
+                        '۱',
+                        '۲',
+                        '۳',
+                        '۴',
+                        '۵',
+                        '۶',
+                        '۷',
+                        '۸',
+                        '۹',
+                        '٠',
+                        '١',
+                        '٢',
+                        '٣',
+                        '٤',
+                        '٥',
+                        '٦',
+                        '٧',
+                        '٨',
+                        '٩'
+                    ],
+                    [
+                        '0',
+                        '1',
+                        '2',
+                        '3',
+                        '4',
+                        '5',
+                        '6',
+                        '7',
+                        '8',
+                        '9',
+                        '0',
+                        '1',
+                        '2',
+                        '3',
+                        '4',
+                        '5',
+                        '6',
+                        '7',
+                        '8',
+                        '9'
+                    ],
+                    $value
                 );
 
-                // ۲. تشخیص فرمت (اگر با خط تیره است Y-m-d و اگر با اسلش Y/m/d)
-                $format = str_contains($englishDigits, '-') ? 'Y-m-d' : 'Y/m/d';
+                // ۲. تشخیص جداکننده (slash یا dash)
+                $format = str_contains($englishDigits, '/') ? 'Y/m/d' : 'Y-m-d';
 
-                // ۳. تبدیل به تاریخ میلادی برای اینکه قانون 'date' لاراول پاس شود
-                $miladiDate = Jalalian::fromFormat($format, $englishDigits)
+                // ۳. تبدیل جلالی به میلادی
+                $merged[$field] = Jalalian::fromFormat($format, $englishDigits)
                     ->toCarbon()
-                    ->toDateString();
+                    ->toDateString(); // خروجی: Y-m-d میلادی
 
-                // ۴. جایگزینی در درخواست
-                $this->merge([
-                    'birth_date' => $miladiDate,
-                ]);
             } catch (\Exception $e) {
-                // در صورت خطا کاری نمی‌کنیم تا خودِ Validation پیام خطا بدهد
+                // اگر تبدیل شکست، مقدار خام را نگه می‌داریم تا Validator خطا بدهد
             }
+        }
+
+        if (!empty($merged)) {
+            $this->merge($merged);
         }
     }
 }

@@ -43,13 +43,29 @@ interface FormData {
     external_department_id: number | null;
     external_position_id: number | null;
     instruction: string;
-    attachments?: File[];
+    attachments: File[];
+    // ✅ اضافه شد
+    is_draft: boolean;
 }
 
+/**
+ * تولید تاریخ امروز به فرمت شمسی با اعداد انگلیسی
+ * خروجی مثال: "1404/02/05"
+ */
+const getTodayJalali = (): string => {
+    return new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    })
+        .format(new Date())
+        .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString())
+        .replace(/،|,/g, '/'); // جایگزینی جداکننده‌ها با /
+    // خروجی: "1404/02/05"
+};
+
 export default function LettersCreate({
-    categories, departments, positions, externalOrganizations = [],
-    securityLevels, priorityLevels
-}: Props) {
+    departments, positions, externalOrganizations = [] }: Props) {
     const { auth } = usePage().props as any;
     const currentUser = auth.user;
 
@@ -60,7 +76,7 @@ export default function LettersCreate({
         content: '',
         security_level: 'internal',
         priority: 'normal',
-        date: '',
+        date: getTodayJalali(),
         recipient_type: 'internal',
         recipient_department_id: null,
         recipient_position_id: null,
@@ -71,6 +87,7 @@ export default function LettersCreate({
         external_position_id: null,
         instruction: '',
         attachments: [],
+        is_draft: false, // ✅ مقدار پیش‌فرض
     });
 
     const [selectedDept, setSelectedDept] = useState<number | null>(null);
@@ -135,10 +152,13 @@ export default function LettersCreate({
         }
     }, [selectedExtDept]);
 
+    // ✅ اصلاح: ابتدا is_draft را set می‌کنیم، سپس post می‌زنیم
     const handleSubmit = (e: React.FormEvent, isDraft: boolean) => {
         e.preventDefault();
-        setData('is_draft', isDraft);
+
+        // setData async است؛ مستقیم transform استفاده می‌کنیم
         post(LetterCreate(), {
+            data: { ...data, is_draft: isDraft },
             preserveScroll: true,
             onSuccess: () => {
                 if (!isDraft) {
@@ -191,7 +211,7 @@ export default function LettersCreate({
             normal: 'معمولی',
             high: 'مهم',
             urgent: 'فوری',
-            very_urgent: 'فوقالعاده',
+            very_urgent: 'فوق‌العاده',
         };
 
         return labels[key] || 'معمولی';
@@ -226,10 +246,9 @@ export default function LettersCreate({
             <Head title="ایجاد نامه جدید" />
 
             <div className="min-h-screen bg-[#f5f6fa]" dir="rtl">
-                {/* Header - سبک اداری */}
+                {/* Header */}
                 <div className="bg-white border-b shadow-lg sticky top-0 z-30">
                     <div className="max-w-7xl mx-auto px-6 py-4">
-                        {/* Action Bar */}
                         <div className="flex items-center justify-between pt-3">
                             <div className="flex items-center gap-3">
                                 <div className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 ${getPriorityColor(data.priority)}`}>
@@ -283,10 +302,11 @@ export default function LettersCreate({
                 <div className="max-w-7xl mx-auto px-6 py-6">
                     <form id="letter-form" onSubmit={(e) => handleSubmit(e, false)}>
                         <div className="grid grid-cols-12 gap-5">
-                            {/* ستون اصلی - فرم */}
+
+                            {/* ستون اصلی */}
                             <div className="col-span-12 lg:col-span-8 space-y-5">
 
-                                {/* کارت اطلاعات اصلی نامه */}
+                                {/* اطلاعات نامه */}
                                 <div className="bg-white rounded-lg shadow-sm border">
                                     <div className="px-5 py-3 border-b bg-slate-50/50 flex items-center gap-2">
                                         <PenLine className="h-4 w-4 text-slate-500" />
@@ -324,21 +344,7 @@ export default function LettersCreate({
                                             </div>
                                         </div>
 
-                                        {/* خلاصه */}
-                                        {/* <div>
-                                            <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                                                خلاصه / چکیده
-                                            </label>
-                                            <textarea
-                                                value={data.summary}
-                                                onChange={(e) => setData('summary', e.target.value)}
-                                                rows={2}
-                                                placeholder="خلاصه‌ای از محتوای نامه..."
-                                                className="w-full border-slate-300 rounded-md px-3 py-2 text-sm resize-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder:text-slate-400"
-                                            />
-                                        </div> */}
-
-                                        {/* متن نامه با TipTap */}
+                                        {/* متن نامه */}
                                         <div>
                                             <TextEditor
                                                 content={data.content}
@@ -361,13 +367,13 @@ export default function LettersCreate({
                                                 onChange={(e) => setData('instruction', e.target.value)}
                                                 rows={3}
                                                 placeholder="دستورالعمل‌های لازم برای گیرنده..."
-                                                className="w-full border-slate-300 rounded-md px-3 py-2 text-sm resize-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder:text-slate-400"
+                                                className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm resize-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder:text-slate-400"
                                             />
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* کارت پیوست‌ها */}
+                                {/* پیوست‌ها */}
                                 <div className="bg-white rounded-lg shadow-sm border">
                                     <div className="px-5 py-3 border-b bg-slate-50/50 flex items-center gap-2">
                                         <Paperclip className="h-4 w-4 text-slate-500" />
@@ -384,7 +390,13 @@ export default function LettersCreate({
                                                     PDF, DOC, DOCX, JPG, PNG (حداکثر 10MB)
                                                 </p>
                                             </div>
-                                            <input type="file" multiple onChange={handleFileChange} className="hidden" />
+                                            <input
+                                                type="file"
+                                                multiple
+                                                onChange={handleFileChange}
+                                                className="hidden"
+                                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                            />
                                         </label>
 
                                         {data.attachments && data.attachments.length > 0 && (
@@ -411,8 +423,9 @@ export default function LettersCreate({
                                 </div>
                             </div>
 
-                            {/* ستون کناری - اطلاعات تکمیلی */}
+                            {/* ستون کناری */}
                             <div className="col-span-12 lg:col-span-4 space-y-5">
+
                                 {/* فرستنده */}
                                 <div className="bg-white rounded-lg shadow-sm border">
                                     <div className="px-5 py-3 border-b bg-slate-50/50 flex items-center gap-2">
@@ -465,14 +478,14 @@ export default function LettersCreate({
                                                     { key: 'very_urgent', label: 'فوق' },
                                                 ].map((item) => {
                                                     const isActive = data.priority === item.key;
-                                                    const activeClass = {
+                                                    const activeClass: Record<string, string> = {
                                                         low: 'border-slate-500 bg-slate-100 text-slate-800',
                                                         normal: 'border-blue-500 bg-blue-100 text-blue-800',
                                                         high: 'border-yellow-500 bg-yellow-100 text-yellow-800',
                                                         urgent: 'border-orange-500 bg-orange-100 text-orange-800',
                                                         very_urgent: 'border-red-500 bg-red-100 text-red-800',
                                                     };
-                                                    const inactiveClass = {
+                                                    const inactiveClass: Record<string, string> = {
                                                         low: 'border-slate-300 text-slate-600 hover:bg-slate-50',
                                                         normal: 'border-blue-300 text-blue-600 hover:bg-blue-50',
                                                         high: 'border-yellow-300 text-yellow-600 hover:bg-yellow-50',
@@ -506,7 +519,7 @@ export default function LettersCreate({
                                             <select
                                                 value={data.security_level}
                                                 onChange={(e) => setData('security_level', e.target.value)}
-                                                className="w-full border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                             >
                                                 <option value="public">عمومی</option>
                                                 <option value="internal">داخلی</option>
@@ -570,8 +583,11 @@ export default function LettersCreate({
                                                             const id = parseInt(e.target.value) || null;
                                                             setSelectedDept(id);
                                                             setData('recipient_department_id', id);
+                                                            // reset position when dept changes
+                                                            setData('recipient_position_id', null);
+                                                            setData('recipient_position_name', '');
                                                         }}
-                                                        className="w-full border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                        className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                                     >
                                                         <option value="">انتخاب دپارتمان...</option>
                                                         {departments.map(dept => (
@@ -592,7 +608,7 @@ export default function LettersCreate({
                                                                 const pos = availablePositions.find(p => p.id === id);
                                                                 setData('recipient_position_name', pos?.name || '');
                                                             }}
-                                                            className="w-full border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                                            className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                                             disabled={!selectedDept || loadingPositions}
                                                         >
                                                             <option value="">انتخاب سمت...</option>
@@ -623,6 +639,9 @@ export default function LettersCreate({
                                                             const id = parseInt(e.target.value) || null;
                                                             setSelectedExtOrg(id);
                                                             setData('external_organization_id', id);
+                                                            setSelectedExtDept(null);
+                                                            setData('external_department_id', null);
+                                                            setData('external_position_id', null);
                                                         }}
                                                         className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                                     >
@@ -643,6 +662,7 @@ export default function LettersCreate({
                                                                 const id = parseInt(e.target.value) || null;
                                                                 setSelectedExtDept(id);
                                                                 setData('external_department_id', id);
+                                                                setData('external_position_id', null);
                                                             }}
                                                             className="border w-full border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                                             disabled={!selectedExtOrg || loadingExtDepts}
@@ -692,7 +712,7 @@ export default function LettersCreate({
                                     </div>
                                 </div>
 
-                                {/* خلاصه وضعیت نامه */}
+                                {/* خلاصه وضعیت */}
                                 <div className="bg-white rounded-lg shadow-sm border">
                                     <div className="px-5 py-3 border-b bg-slate-50/50 flex items-center gap-2">
                                         <Info className="h-4 w-4 text-slate-500" />
