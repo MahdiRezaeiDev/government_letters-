@@ -19,15 +19,17 @@ class LetterService
         DB::beginTransaction();
 
         try {
-            // آماده‌سازی داده‌های فرستنده
+            // آماده‌سازی داده‌های فرستنده (همیشه از کاربر جاری)
             $senderData = $this->prepareSenderData($creator);
 
-            // آماده‌سازی داده‌های گیرنده
-            $recipientData = $this->prepareRecipientData($data, $creator);
+            
+            // آماده‌سازی داده‌های گیرنده (داخلی یا خارجی)
+            $recipientData = $this->prepareRecipientData($data);
+            dd($recipientData);
 
             // تولید شماره‌های نامه
             $trackingNumber = $this->generateTrackingNumber();
-            $letterNumber = $this->generateLetterNumber($data);
+            $letterNumber   = $this->generateLetterNumber($data);
 
             // ایجاد نامه
             $letter = $this->storeLetter(
@@ -44,7 +46,7 @@ class LetterService
                 $this->handleAttachments($letter, $data['attachments'], $creator);
             }
 
-            // ایجاد ارجاع اولیه
+            // ایجاد ارجاع اولیه (فقط برای گیرنده داخلی با user_id)
             if ($this->shouldCreateRouting($data, $recipientData)) {
                 $this->createInitialRouting($letter, $recipientData['user_id'], $data['instruction'] ?? null);
             }
@@ -60,32 +62,47 @@ class LetterService
     }
 
     /**
-     * آماده‌سازی اطلاعات فرستنده
+     * آماده‌سازی اطلاعات فرستنده از کاربر جاری
      */
     protected function prepareSenderData(User $creator): array
     {
         return [
-            'name' => $creator->full_name,
+            'name'          => $creator->full_name,
             'position_name' => $creator->primaryPosition?->name,
             'department_id' => $creator->department?->id,
-            'user_id' => $creator->id,
-            'position_id' => $creator->primaryPosition?->id,
+            'user_id'       => $creator->id,
+            'position_id'   => $creator->primaryPosition?->id,
         ];
     }
 
     /**
      * آماده‌سازی اطلاعات گیرنده
+     * دو حالت: داخلی (internal) و خارجی (external)
      */
-    protected function prepareRecipientData(array $data, User $creator): array
+    protected function prepareRecipientData(array $data): array
     {
-        $isInternal = ($data['recipient_type'] ?? 'internal') === 'internal';
+        $recipientType = $data['recipient_type'] ?? 'internal';
 
+        if ($recipientType === 'external') {
+            return [
+                'name'          => $data['recipient_name'] ?? null,
+                'position_name' => $data['recipient_position_name'] ?? null,
+                'department_id' => $data['external_department_id'] ?? null,
+                'user_id'       => null,
+                'position_id'   => $data['external_position_id'] ?? null,
+                'external_organization_id' => $data['external_organization_id'] ?? null,
+                'external_department_id'   => $data['external_department_id'] ?? null,
+                'external_position_id'     => $data['external_position_id'] ?? null,
+            ];
+        }
+
+        // گیرنده داخلی
         return [
-            'name' => $isInternal ? ($data['recipient_name'] ?? null) : null,
-            'position_name' => $isInternal ? ($data['recipient_position_name'] ?? null) : null,
-            'department_id' => $isInternal ? ($data['recipient_department_id'] ?? null) : null,
-            'user_id' => $isInternal ? ($data['recipient_user_id'] ?? null) : null,
-            'position_id' => $isInternal ? ($data['recipient_position_id'] ?? null) : null,
+            'name'          => $data['recipient_name'] ?? null,
+            'position_name' => $data['recipient_position_name'] ?? null,
+            'department_id' => $data['recipient_department_id'] ?? null,
+            'user_id'       => $data['recipient_user_id'] ?? null,
+            'position_id'   => $data['recipient_position_id'] ?? null,
         ];
     }
 
@@ -93,48 +110,48 @@ class LetterService
      * ذخیره نامه در دیتابیس
      */
     protected function storeLetter(
-        array $data,
-        User $creator,
-        array $senderData,
-        array $recipientData,
+        array  $data,
+        User   $creator,
+        array  $senderData,
+        array  $recipientData,
         string $trackingNumber,
         string $letterNumber
     ): Letter {
         return Letter::create([
-            'organization_id' => $creator->organization_id,
-            'letter_type' => $data['letter_type'] ?? 'internal',
-            'letter_number' => $letterNumber,
-            'tracking_number' => $trackingNumber,
-            'security_level' => $data['security_level'],
-            'priority' => $data['priority'],
-            'category_id' => $data['category_id'] ?? null,
-            'subject' => $data['subject'],
-            'summary' => $data['summary'] ?? null,
-            'content' => $data['content'] ?? null,
-            'is_public' => ($data['security_level'] ?? '') === 'public',
+            'organization_id'   => $creator->organization_id,
+            'letter_type'       => $data['recipient_type'] ?? 'internal',
+            'letter_number'     => $letterNumber,
+            'tracking_number'   => $trackingNumber,
+            'security_level'    => $data['security_level'],
+            'priority'          => $data['priority'],
+            'category_id'       => $data['category_id'] ?? null,
+            'subject'           => $data['subject'],
+            'summary'           => $data['summary'] ?? null,
+            'content'           => $data['content'] ?? null,
+            'is_public'         => ($data['security_level'] ?? '') === 'public',
 
             // فرستنده
-            'sender_name' => $senderData['name'],
-            'sender_position_name' => $senderData['position_name'],
-            'sender_department_id' => $senderData['department_id'],
-            'sender_user_id' => $senderData['user_id'],
-            'sender_position_id' => $senderData['position_id'],
+            'sender_name'           => $senderData['name'],
+            'sender_position_name'  => $senderData['position_name'],
+            'sender_department_id'  => $senderData['department_id'],
+            'sender_user_id'        => $senderData['user_id'],
+            'sender_position_id'    => $senderData['position_id'],
 
             // گیرنده
-            'recipient_name' => $recipientData['name'],
-            'recipient_position_name' => $recipientData['position_name'],
-            'recipient_department_id' => $recipientData['department_id'],
-            'recipient_user_id' => $recipientData['user_id'],
-            'recipient_position_id' => $recipientData['position_id'],
+            'recipient_name'            => $recipientData['name'],
+            'recipient_position_name'   => $recipientData['position_name'],
+            'recipient_department_id'   => $recipientData['department_id'],
+            'recipient_user_id'         => $recipientData['user_id'],
+            'recipient_position_id'     => $recipientData['position_id'],
 
-            'cc_recipients' => $data['cc_recipients'] ?? [],
-            'date' => $data['date'] ?? now(),
-            'due_date' => $data['due_date'] ?? null,
+            'cc_recipients'     => $data['cc_recipients'] ?? [],
+            'date'              => $data['date'] ?? now(),
+            'due_date'          => $data['due_date'] ?? null,
             'response_deadline' => $data['response_deadline'] ?? null,
-            'sheet_count' => $data['sheet_count'] ?? 1,
-            'is_draft' => $data['is_draft'] ?? false,
-            'final_status' => ($data['is_draft'] ?? false) ? 'draft' : 'pending',
-            'created_by' => $creator->id,
+            'sheet_count'       => $data['sheet_count'] ?? 1,
+            'is_draft'          => $data['is_draft'] ?? false,
+            'final_status'      => ($data['is_draft'] ?? false) ? 'draft' : 'pending',
+            'created_by'        => $creator->id,
         ]);
     }
 
@@ -152,25 +169,25 @@ class LetterService
                 $path = $file->store("attachments/{$letter->id}", 'public');
 
                 Attachment::create([
-                    'letter_id' => $letter->id,
-                    'user_id' => $uploader->id,
-                    'file_name' => $file->getClientOriginalName(),
-                    'file_path' => $path,
-                    'file_size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                    'extension' => $file->getClientOriginalExtension(),
+                    'letter_id'  => $letter->id,
+                    'user_id'    => $uploader->id,
+                    'file_name'  => $file->getClientOriginalName(),
+                    'file_path'  => $path,
+                    'file_size'  => $file->getSize(),
+                    'mime_type'  => $file->getMimeType(),
+                    'extension'  => $file->getClientOriginalExtension(),
                 ]);
             } catch (\Exception $e) {
                 $this->logError('Attachment upload failed', $e, [
                     'letter_id' => $letter->id,
-                    'file_name' => $file->getClientOriginalName()
+                    'file_name' => $file->getClientOriginalName(),
                 ]);
             }
         }
     }
 
     /**
-     * ایجاد ارجاع اولیه
+     * ایجاد ارجاع اولیه (فقط برای گیرنده داخلی)
      */
     protected function createInitialRouting(Letter $letter, ?int $recipientUserId, ?string $instruction): void
     {
@@ -178,31 +195,37 @@ class LetterService
             return;
         }
 
-        // منطق ایجاد ارجاع را اینجا قرار دهید
-        // می‌توانید از یک سرویس جداگانه RoutingService استفاده کنید
+        // منطق ارجاع را اینجا یا در RoutingService جداگانه پیاده کنید
     }
 
     /**
      * بررسی نیاز به ایجاد ارجاع
+     * فقط وقتی گیرنده داخلی با user_id باشد ارجاع ایجاد می‌شود
      */
     protected function shouldCreateRouting(array $data, array $recipientData): bool
     {
+        $isExternal = ($data['recipient_type'] ?? 'internal') === 'external';
+
         return !($data['is_draft'] ?? false)
+            && !$isExternal
             && !empty($recipientData['user_id'])
             && ($data['letter_type'] ?? '') !== 'incoming';
     }
 
     /**
-     * تولید شماره رهگیری
+     * تولید شماره رهگیری یکتا
      */
     protected function generateTrackingNumber(): string
     {
         $prefix = date('Ymd');
+
         $lastLetter = Letter::whereDate('created_at', today())
             ->orderBy('id', 'desc')
             ->first();
 
-        $sequence = $lastLetter ? (intval(substr($lastLetter->tracking_number, -4)) + 1) : 1;
+        $sequence = $lastLetter
+            ? (intval(substr($lastLetter->tracking_number, -4)) + 1)
+            : 1;
 
         return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
@@ -217,22 +240,20 @@ class LetterService
         }
 
         $prefix = 'LETR';
-
-        $year = date('Y');
-        $count = Letter::whereYear('created_at', $year)
-            ->count();
+        $year   = date('Y');
+        $count  = Letter::whereYear('created_at', $year)->count();
 
         return sprintf('%s-%s-%04d', $prefix, $year, $count + 1);
     }
 
     /**
-     * ثبت خطا
+     * ثبت خطا در لاگ
      */
     protected function logError(string $message, \Exception $e, array $context = []): void
     {
         Log::error($message, array_merge([
             'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
+            'trace' => $e->getTraceAsString(),
         ], $context));
     }
 }

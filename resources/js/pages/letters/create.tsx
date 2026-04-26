@@ -8,7 +8,7 @@ import {
     FileText, Shield,
     Flag, UserCheck,
     User,
-    Info, Users, Loader2, Printer,
+    Info, Users, Loader2, 
     MessageSquare, PenLine
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
@@ -17,7 +17,7 @@ import TextEditor from '@/components/TextEditor';
 import { store as LetterCreate } from '@/routes/letters';
 import type { LetterCategory, Organization } from '@/types';
 
-// ✅ کلاس مشترک برای همه input/select/textarea ها - یکبار تعریف، همه جا استفاده
+// کلاس مشترک برای همه input/select/textarea
 const inputClass = "w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white";
 
 interface Props {
@@ -40,6 +40,7 @@ interface FormData {
     recipient_type: 'internal' | 'external';
     recipient_department_id: number | null;
     recipient_position_id: number | null;
+    recipient_user_id: number | null;
     recipient_name: string;
     recipient_position_name: string;
     external_organization_id: number | null;
@@ -47,54 +48,35 @@ interface FormData {
     external_position_id: number | null;
     instruction: string;
     attachments: File[];
-<<<<<<< HEAD
-    // ✅ اضافه شد
     is_draft: boolean;
 }
 
 /**
- * تولید تاریخ امروز به فرمت شمسی با اعداد انگلیسی
- * خروجی مثال: "1404/02/05"
+ * تولید تاریخ امروز به فرمت شمسی با اعداد انگلیسی → "1404/02/05"
  */
 const getTodayJalali = (): string => {
-    return new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-    })
-        .format(new Date())
-        .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d).toString())
-        .replace(/،|,/g, '/'); // جایگزینی جداکننده‌ها با /
-    // خروجی: "1404/02/05"
-=======
-    is_draft: boolean;
-}
-
-const getTodayJalali = (): string => {
     try {
-        const now = new Date();
         const formatter = new Intl.DateTimeFormat('fa-IR', {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
             calendar: 'persian',
         } as Intl.DateTimeFormatOptions);
-        const parts = formatter.formatToParts(now);
+        const parts = formatter.formatToParts(new Date());
         const y = parts.find(p => p.type === 'year')?.value ?? '';
         const m = parts.find(p => p.type === 'month')?.value ?? '';
         const d = parts.find(p => p.type === 'day')?.value ?? '';
-        const toEnglish = (str: string) =>
-            str.replace(/[۰-۹]/g, c => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c)));
+        const toEn = (s: string) => s.replace(/[۰-۹]/g, c => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c)));
 
-        return `${toEnglish(y)}/${toEnglish(m)}/${toEnglish(d)}`;
+        return `${toEn(y)}/${toEn(m)}/${toEn(d)}`;
     } catch {
         return '';
     }
->>>>>>> bd86417e0e426da99a5d9293f3191585a6b1f123
 };
 
 export default function LettersCreate({
-    departments, positions, externalOrganizations = [] }: Props) {
+    departments, positions, externalOrganizations = [],
+}: Props) {
     const { auth } = usePage().props as any;
     const currentUser = auth.user;
 
@@ -105,18 +87,11 @@ export default function LettersCreate({
         content: '',
         security_level: 'internal',
         priority: 'normal',
-<<<<<<< HEAD
         date: getTodayJalali(),
-=======
-        date: new Date().toLocaleDateString('fa-IR', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-        }),
->>>>>>> bd86417e0e426da99a5d9293f3191585a6b1f123
         recipient_type: 'internal',
         recipient_department_id: null,
         recipient_position_id: null,
+        recipient_user_id: null,
         recipient_name: '',
         recipient_position_name: '',
         external_organization_id: null,
@@ -124,11 +99,7 @@ export default function LettersCreate({
         external_position_id: null,
         instruction: '',
         attachments: [],
-<<<<<<< HEAD
-        is_draft: false, // ✅ مقدار پیش‌فرض
-=======
         is_draft: false,
->>>>>>> bd86417e0e426da99a5d9293f3191585a6b1f123
     });
 
     const [selectedDept, setSelectedDept] = useState<number | null>(null);
@@ -141,6 +112,7 @@ export default function LettersCreate({
     const [loadingExtDepts, setLoadingExtDepts] = useState(false);
     const [loadingExtPositions, setLoadingExtPositions] = useState(false);
 
+    // فیلتر پست‌های داخلی بر اساس دپارتمان انتخابی
     useEffect(() => {
         if (selectedDept) {
             setLoadingPositions(true);
@@ -153,6 +125,7 @@ export default function LettersCreate({
         }
     }, [selectedDept, positions]);
 
+    // دریافت دپارتمان‌های سازمان خارجی
     useEffect(() => {
         if (selectedExtOrg) {
             setLoadingExtDepts(true);
@@ -170,6 +143,7 @@ export default function LettersCreate({
         }
     }, [selectedExtOrg]);
 
+    // دریافت پست‌های دپارتمان خارجی
     useEffect(() => {
         if (selectedExtDept) {
             setLoadingExtPositions(true);
@@ -185,16 +159,25 @@ export default function LettersCreate({
         }
     }, [selectedExtDept]);
 
-    // ✅ اصلاح: ابتدا is_draft را set می‌کنیم، سپس post می‌زنیم
     const handleSubmit = (e: React.FormEvent, isDraft: boolean) => {
         e.preventDefault();
-<<<<<<< HEAD
 
-        // setData async است؛ مستقیم transform استفاده می‌کنیم
-=======
->>>>>>> bd86417e0e426da99a5d9293f3191585a6b1f123
+        // ✅ آماده‌سازی داده برای ارسال
+        const submittedData: FormData & { is_draft: boolean } = { ...data, is_draft: isDraft };
+
+        if (data.recipient_type === 'external') {
+            // گیرنده خارجی: نام سازمان را به عنوان recipient_name ارسال می‌کنیم
+            const org = externalOrganizations.find(o => o.id === data.external_organization_id);
+            submittedData.recipient_name = org?.name ?? '';
+            // recipient_position_name از قبل در setData پر شده (هنگام انتخاب سمت خارجی)
+            // فیلدهای داخلی را خالی می‌کنیم تا تداخل نباشد
+            submittedData.recipient_department_id = null;
+            submittedData.recipient_position_id = null;
+            submittedData.recipient_user_id = null;
+        }
+
         post(LetterCreate(), {
-            data: { ...data, is_draft: isDraft },
+            data: submittedData,
             preserveScroll: true,
             onSuccess: () => {
                 if (!isDraft) {
@@ -209,30 +192,27 @@ export default function LettersCreate({
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            setData('attachments', [...(data.attachments || []), ...Array.from(e.target.files)]);
+            setData('attachments', [...data.attachments, ...Array.from(e.target.files)]);
         }
     };
 
     const removeAttachment = (index: number) =>
-        setData('attachments', (data.attachments || []).filter((_, i) => i !== index));
+        setData('attachments', data.attachments.filter((_, i) => i !== index));
 
     const formatFileSize = (bytes: number): string => {
         if (bytes === 0) {
             return '0 Bytes';
         }
 
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
 
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
     const getPriorityColor = (key: string) => ({
-        low: 'bg-slate-100 text-slate-700',
-        normal: 'bg-blue-100 text-blue-700',
-        high: 'bg-yellow-100 text-yellow-700',
-        urgent: 'bg-orange-100 text-orange-700',
+        low: 'bg-slate-100 text-slate-700', normal: 'bg-blue-100 text-blue-700',
+        high: 'bg-yellow-100 text-yellow-700', urgent: 'bg-orange-100 text-orange-700',
         very_urgent: 'bg-red-100 text-red-700',
     }[key] ?? 'bg-blue-100 text-blue-700');
 
@@ -240,24 +220,11 @@ export default function LettersCreate({
         low: 'عادی', normal: 'معمولی', high: 'مهم', urgent: 'فوری', very_urgent: 'فوق‌العاده',
     }[key] ?? 'معمولی');
 
-<<<<<<< HEAD
-    const getPriorityLabel = (key: string): string => {
-        const labels: Record<string, string> = {
-            low: 'عادی',
-            normal: 'معمولی',
-            high: 'مهم',
-            urgent: 'فوری',
-            very_urgent: 'فوق‌العاده',
-        };
-=======
     const getSecurityColor = (key: string) => ({
-        public: 'bg-slate-100 text-slate-700',
-        internal: 'bg-blue-100 text-blue-700',
-        confidential: 'bg-yellow-100 text-yellow-700',
-        secret: 'bg-purple-100 text-purple-700',
+        public: 'bg-slate-100 text-slate-700', internal: 'bg-blue-100 text-blue-700',
+        confidential: 'bg-yellow-100 text-yellow-700', secret: 'bg-purple-100 text-purple-700',
         top_secret: 'bg-red-100 text-red-700',
     }[key] ?? 'bg-blue-100 text-blue-700');
->>>>>>> bd86417e0e426da99a5d9293f3191585a6b1f123
 
     const getSecurityLabel = (key: string) => ({
         public: 'عمومی', internal: 'داخلی', confidential: 'محرمانه',
@@ -269,57 +236,6 @@ export default function LettersCreate({
             <Head title="ایجاد نامه جدید" />
 
             <div className="min-h-screen bg-[#f5f6fa]" dir="rtl">
-<<<<<<< HEAD
-                {/* Header */}
-                <div className="bg-white border-b shadow-lg sticky top-0 z-30">
-                    <div className="max-w-7xl mx-auto px-6 py-4">
-                        <div className="flex items-center justify-between pt-3">
-                            <div className="flex items-center gap-3">
-                                <div className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 ${getPriorityColor(data.priority)}`}>
-                                    <Flag className="h-3 w-3" />
-                                    اولویت: {getPriorityLabel(data.priority)}
-                                </div>
-                                <div className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 ${getSecurityColor(data.security_level)}`}>
-                                    <Shield className="h-3 w-3" />
-                                    سطح: {getSecurityLabel(data.security_level)}
-                                </div>
-                                <div className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 flex items-center gap-1.5">
-                                    <Users className="h-3 w-3" />
-                                    گیرنده: {data.recipient_type === 'internal' ? 'داخلی' : 'خارجی'}
-                                </div>
-                            </div>
-                            <div className="flex gap-2">
-                                <button
-                                    type="button"
-                                    className="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition flex items-center gap-1.5"
-                                >
-                                    <Printer className="h-3.5 w-3.5" />
-                                    پیش‌نمایش چاپ
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={(e) => handleSubmit(e, true)}
-                                    disabled={processing}
-                                    className="px-5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-sm flex items-center gap-2"
-                                >
-                                    <Save className="h-4 w-4" />
-                                    ذخیره پیش‌نویس
-                                </button>
-                                <button
-                                    type="submit"
-                                    form="letter-form"
-                                    disabled={processing}
-                                    className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm flex items-center gap-2 disabled:opacity-50"
-                                >
-                                    {processing ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <Send className="h-4 w-4" />
-                                    )}
-                                    {processing ? 'در حال ارسال...' : 'ثبت و ارسال نامه'}
-                                </button>
-                            </div>
-=======
 
                 {/* ─── Header ─── */}
                 <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30">
@@ -332,14 +248,11 @@ export default function LettersCreate({
                                 <Shield className="h-3 w-3" /> سطح: {getSecurityLabel(data.security_level)}
                             </span>
                             <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 flex items-center gap-1.5">
-                                <Users className="h-3 w-3" /> گیرنده: {data.recipient_type === 'internal' ? 'داخلی' : 'خارجی'}
+                                <Users className="h-3 w-3" />
+                                گیرنده: {data.recipient_type === 'internal' ? 'داخلی' : 'خارجی'}
                             </span>
                         </div>
                         <div className="flex gap-2">
-                            <button type="button"
-                                className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg transition flex items-center gap-1.5">
-                                <Printer className="h-3.5 w-3.5" /> پیش‌نمایش چاپ
-                            </button>
                             <button type="button" onClick={(e) => handleSubmit(e, true)} disabled={processing}
                                 className="px-5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-sm flex items-center gap-2 disabled:opacity-50">
                                 <Save className="h-4 w-4" /> ذخیره پیش‌نویس
@@ -349,7 +262,6 @@ export default function LettersCreate({
                                 {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                                 {processing ? 'در حال ارسال...' : 'ثبت و ارسال نامه'}
                             </button>
->>>>>>> bd86417e0e426da99a5d9293f3191585a6b1f123
                         </div>
                     </div>
                 </div>
@@ -359,21 +271,12 @@ export default function LettersCreate({
                     <form id="letter-form" onSubmit={(e) => handleSubmit(e, false)}>
                         <div className="grid grid-cols-12 gap-5">
 
-<<<<<<< HEAD
-                            {/* ستون اصلی */}
-                            <div className="col-span-12 lg:col-span-8 space-y-5">
-
-                                {/* اطلاعات نامه */}
-                                <div className="bg-white rounded-lg shadow-sm border">
-                                    <div className="px-5 py-3 border-b bg-slate-50/50 flex items-center gap-2">
-=======
                             {/* ══ ستون اصلی ══ */}
                             <div className="col-span-12 lg:col-span-8 space-y-5">
 
                                 {/* اطلاعات نامه */}
                                 <div className="bg-white rounded-lg shadow-sm border border-slate-200">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
->>>>>>> bd86417e0e426da99a5d9293f3191585a6b1f123
                                         <PenLine className="h-4 w-4 text-slate-500" />
                                         <h3 className="text-sm font-bold text-slate-700">اطلاعات نامه</h3>
                                     </div>
@@ -429,56 +332,28 @@ export default function LettersCreate({
                                                 onChange={(e) => setData('instruction', e.target.value)}
                                                 rows={3}
                                                 placeholder="دستورالعمل‌های لازم برای گیرنده..."
-<<<<<<< HEAD
-                                                className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm resize-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 placeholder:text-slate-400"
-=======
                                                 className={`${inputClass} resize-none placeholder:text-slate-400`}
->>>>>>> bd86417e0e426da99a5d9293f3191585a6b1f123
                                             />
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* پیوست‌ها */}
-<<<<<<< HEAD
-                                <div className="bg-white rounded-lg shadow-sm border">
-                                    <div className="px-5 py-3 border-b bg-slate-50/50 flex items-center gap-2">
-=======
                                 <div className="bg-white rounded-lg shadow-sm border border-slate-200">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
->>>>>>> bd86417e0e426da99a5d9293f3191585a6b1f123
                                         <Paperclip className="h-4 w-4 text-slate-500" />
                                         <h3 className="text-sm font-bold text-slate-700">پیوست‌ها</h3>
                                     </div>
                                     <div className="p-5">
                                         <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all">
-<<<<<<< HEAD
-                                            <div className="text-center">
-                                                <Paperclip className="h-5 w-5 text-slate-400 mx-auto mb-1" />
-                                                <p className="text-xs text-slate-500">
-                                                    کلیک کنید یا فایل را بکشید و رها کنید
-                                                </p>
-                                                <p className="text-[10px] text-slate-400 mt-0.5">
-                                                    PDF, DOC, DOCX, JPG, PNG (حداکثر 10MB)
-                                                </p>
-                                            </div>
-                                            <input
-                                                type="file"
-                                                multiple
-                                                onChange={handleFileChange}
-                                                className="hidden"
-                                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                            />
-=======
                                             <Paperclip className="h-5 w-5 text-slate-400 mb-1" />
                                             <p className="text-xs text-slate-500">کلیک کنید یا فایل را بکشید و رها کنید</p>
                                             <p className="text-[10px] text-slate-400 mt-0.5">PDF, DOC, DOCX, JPG, PNG (حداکثر 10MB)</p>
                                             <input type="file" multiple onChange={handleFileChange}
                                                 className="hidden" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" />
->>>>>>> bd86417e0e426da99a5d9293f3191585a6b1f123
                                         </label>
 
-                                        {data.attachments && data.attachments.length > 0 && (
+                                        {data.attachments.length > 0 && (
                                             <div className="mt-3 space-y-1.5">
                                                 {data.attachments.map((file, i) => (
                                                     <div key={i} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-md">
@@ -499,11 +374,7 @@ export default function LettersCreate({
                                 </div>
                             </div>
 
-<<<<<<< HEAD
-                            {/* ستون کناری */}
-=======
                             {/* ══ ستون کناری ══ */}
->>>>>>> bd86417e0e426da99a5d9293f3191585a6b1f123
                             <div className="col-span-12 lg:col-span-4 space-y-5">
 
                                 {/* فرستنده */}
@@ -543,43 +414,6 @@ export default function LettersCreate({
                                                 </span>
                                             </div>
                                             <div className="grid grid-cols-5 gap-1.5">
-<<<<<<< HEAD
-                                                {[
-                                                    { key: 'low', label: 'عادی' },
-                                                    { key: 'normal', label: 'معمولی' },
-                                                    { key: 'high', label: 'مهم' },
-                                                    { key: 'urgent', label: 'فوری' },
-                                                    { key: 'very_urgent', label: 'فوق' },
-                                                ].map((item) => {
-                                                    const isActive = data.priority === item.key;
-                                                    const activeClass: Record<string, string> = {
-                                                        low: 'border-slate-500 bg-slate-100 text-slate-800',
-                                                        normal: 'border-blue-500 bg-blue-100 text-blue-800',
-                                                        high: 'border-yellow-500 bg-yellow-100 text-yellow-800',
-                                                        urgent: 'border-orange-500 bg-orange-100 text-orange-800',
-                                                        very_urgent: 'border-red-500 bg-red-100 text-red-800',
-                                                    };
-                                                    const inactiveClass: Record<string, string> = {
-                                                        low: 'border-slate-300 text-slate-600 hover:bg-slate-50',
-                                                        normal: 'border-blue-300 text-blue-600 hover:bg-blue-50',
-                                                        high: 'border-yellow-300 text-yellow-600 hover:bg-yellow-50',
-                                                        urgent: 'border-orange-300 text-orange-600 hover:bg-orange-50',
-                                                        very_urgent: 'border-red-300 text-red-600 hover:bg-red-50',
-                                                    };
-
-                                                    return (
-                                                        <button
-                                                            key={item.key}
-                                                            type="button"
-                                                            onClick={() => setData('priority', item.key)}
-                                                            className={`py-2 rounded-md text-[11px] font-medium border transition-all
-                                                                ${isActive ? activeClass[item.key] : inactiveClass[item.key]}`}
-                                                        >
-                                                            {item.label}
-                                                        </button>
-                                                    );
-                                                })}
-=======
                                                 {([
                                                     { key: 'low', label: 'عادی', active: 'border-slate-500 bg-slate-100 text-slate-800', inactive: 'border-slate-300 text-slate-600 hover:bg-slate-50' },
                                                     { key: 'normal', label: 'معمولی', active: 'border-blue-500 bg-blue-100 text-blue-800', inactive: 'border-blue-300 text-blue-600 hover:bg-blue-50' },
@@ -589,11 +423,11 @@ export default function LettersCreate({
                                                 ] as const).map(item => (
                                                     <button key={item.key} type="button"
                                                         onClick={() => setData('priority', item.key)}
-                                                        className={`py-2 rounded-md text-[11px] font-medium border transition-all ${data.priority === item.key ? item.active : item.inactive}`}>
+                                                        className={`py-2 rounded-md text-[11px] font-medium border transition-all
+                                                            ${data.priority === item.key ? item.active : item.inactive}`}>
                                                         {item.label}
                                                     </button>
                                                 ))}
->>>>>>> bd86417e0e426da99a5d9293f3191585a6b1f123
                                             </div>
                                         </div>
 
@@ -607,12 +441,7 @@ export default function LettersCreate({
                                             </div>
                                             <select value={data.security_level}
                                                 onChange={(e) => setData('security_level', e.target.value)}
-<<<<<<< HEAD
-                                                className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                            >
-=======
                                                 className={inputClass}>
->>>>>>> bd86417e0e426da99a5d9293f3191585a6b1f123
                                                 <option value="public">عمومی</option>
                                                 <option value="internal">داخلی</option>
                                                 <option value="confidential">محرمانه</option>
@@ -631,7 +460,7 @@ export default function LettersCreate({
                                     </div>
                                     <div className="p-5 space-y-4">
 
-                                        {/* نوع گیرنده */}
+                                        {/* toggle داخلی / خارجی */}
                                         <div className="flex gap-2">
                                             {(['internal', 'external'] as const).map(type => (
                                                 <button key={type} type="button"
@@ -640,11 +469,18 @@ export default function LettersCreate({
 
                                                         if (type === 'internal') {
                                                             setSelectedExtOrg(null);
+                                                            setData('external_organization_id', null);
+                                                            setData('external_department_id', null);
+                                                            setData('external_position_id', null);
                                                         } else {
                                                             setSelectedDept(null);
                                                             setData('recipient_department_id', null);
                                                             setData('recipient_position_id', null);
+                                                            setData('recipient_user_id', null);
                                                         }
+
+                                                        setData('recipient_name', '');
+                                                        setData('recipient_position_name', '');
                                                     }}
                                                     className={`flex-1 py-2 text-xs font-medium rounded-md border transition
                                                         ${data.recipient_type === type
@@ -655,7 +491,7 @@ export default function LettersCreate({
                                             ))}
                                         </div>
 
-                                        {/* گیرنده داخلی */}
+                                        {/* ── گیرنده داخلی ── */}
                                         {data.recipient_type === 'internal' && (
                                             <div className="space-y-3">
                                                 <div>
@@ -665,19 +501,10 @@ export default function LettersCreate({
                                                             const id = parseInt(e.target.value) || null;
                                                             setSelectedDept(id);
                                                             setData('recipient_department_id', id);
-<<<<<<< HEAD
-                                                            // reset position when dept changes
-                                                            setData('recipient_position_id', null);
-                                                            setData('recipient_position_name', '');
-                                                        }}
-                                                        className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                                    >
-=======
                                                             setData('recipient_position_id', null);
                                                             setData('recipient_position_name', '');
                                                         }}
                                                         className={inputClass}>
->>>>>>> bd86417e0e426da99a5d9293f3191585a6b1f123
                                                         <option value="">انتخاب دپارتمان...</option>
                                                         {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                                                     </select>
@@ -691,10 +518,6 @@ export default function LettersCreate({
                                                                 setData('recipient_position_id', id);
                                                                 setData('recipient_position_name', availablePositions.find(p => p.id === id)?.name || '');
                                                             }}
-<<<<<<< HEAD
-                                                            className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-=======
->>>>>>> bd86417e0e426da99a5d9293f3191585a6b1f123
                                                             disabled={!selectedDept || loadingPositions}
                                                             className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}>
                                                             <option value="">انتخاب سمت...</option>
@@ -710,9 +533,10 @@ export default function LettersCreate({
                                             </div>
                                         )}
 
-                                        {/* گیرنده خارجی */}
+                                        {/* ── گیرنده خارجی ── */}
                                         {data.recipient_type === 'external' && (
                                             <div className="space-y-3">
+                                                {/* سازمان خارجی */}
                                                 <div>
                                                     <label className="block text-xs font-medium text-slate-600 mb-1">سازمان</label>
                                                     <select value={selectedExtOrg || ''}
@@ -723,12 +547,15 @@ export default function LettersCreate({
                                                             setSelectedExtDept(null);
                                                             setData('external_department_id', null);
                                                             setData('external_position_id', null);
+                                                            setData('recipient_position_name', '');
                                                         }}
                                                         className={inputClass}>
                                                         <option value="">انتخاب سازمان...</option>
                                                         {externalOrganizations.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
                                                     </select>
                                                 </div>
+
+                                                {/* دپارتمان خارجی */}
                                                 <div>
                                                     <label className="block text-xs font-medium text-slate-600 mb-1">دپارتمان</label>
                                                     <div className="relative">
@@ -738,6 +565,7 @@ export default function LettersCreate({
                                                                 setSelectedExtDept(id);
                                                                 setData('external_department_id', id);
                                                                 setData('external_position_id', null);
+                                                                setData('recipient_position_name', '');
                                                             }}
                                                             disabled={!selectedExtOrg || loadingExtDepts}
                                                             className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}>
@@ -751,6 +579,8 @@ export default function LettersCreate({
                                                         )}
                                                     </div>
                                                 </div>
+
+                                                {/* سمت خارجی */}
                                                 <div>
                                                     <label className="block text-xs font-medium text-slate-600 mb-1">سمت</label>
                                                     <div className="relative">
@@ -758,7 +588,9 @@ export default function LettersCreate({
                                                             onChange={(e) => {
                                                                 const id = parseInt(e.target.value) || null;
                                                                 setData('external_position_id', id);
-                                                                setData('recipient_position_name', extPositions.find(p => p.id === id)?.name || '');
+                                                                // ✅ نام سمت را در recipient_position_name ذخیره می‌کنیم
+                                                                const pos = extPositions.find(p => p.id === id);
+                                                                setData('recipient_position_name', pos?.name || '');
                                                             }}
                                                             disabled={!selectedExtDept || loadingExtPositions}
                                                             className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}>
@@ -772,29 +604,35 @@ export default function LettersCreate({
                                                         )}
                                                     </div>
                                                 </div>
+
+                                                {/* نمایش خلاصه گیرنده خارجی انتخاب شده */}
+                                                {data.external_organization_id && (
+                                                    <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800 space-y-1">
+                                                        <p className="font-medium">گیرنده انتخاب شده:</p>
+                                                        <p>سازمان: {externalOrganizations.find(o => o.id === data.external_organization_id)?.name}</p>
+                                                        {data.recipient_position_name && (
+                                                            <p>سمت: {data.recipient_position_name}</p>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
                                 {/* خلاصه وضعیت */}
-<<<<<<< HEAD
-                                <div className="bg-white rounded-lg shadow-sm border">
-                                    <div className="px-5 py-3 border-b bg-slate-50/50 flex items-center gap-2">
-=======
                                 <div className="bg-white rounded-lg shadow-sm border border-slate-200">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
->>>>>>> bd86417e0e426da99a5d9293f3191585a6b1f123
                                         <Info className="h-4 w-4 text-slate-500" />
                                         <h3 className="text-sm font-bold text-slate-700">خلاصه وضعیت</h3>
                                     </div>
                                     <div className="p-5 space-y-3">
-                                        {[
+                                        {([
                                             { label: 'اولویت', value: <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getPriorityColor(data.priority)}`}>{getPriorityLabel(data.priority)}</span> },
                                             { label: 'سطح امنیتی', value: <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getSecurityColor(data.security_level)}`}>{getSecurityLabel(data.security_level)}</span> },
                                             { label: 'تاریخ', value: <span className="text-xs font-medium text-slate-700">{data.date}</span> },
                                             { label: 'گیرنده', value: <span className="text-xs font-medium text-slate-700">{data.recipient_type === 'internal' ? 'داخلی' : 'خارج سازمانی'}</span> },
-                                        ].map(({ label, value }) => (
+                                        ]).map(({ label, value }) => (
                                             <div key={label} className="flex items-center justify-between">
                                                 <span className="text-xs text-slate-500">{label}:</span>
                                                 {value}

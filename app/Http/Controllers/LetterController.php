@@ -218,6 +218,7 @@ class LetterController extends Controller
      */
     public function store(LetterRequest $request)
     {
+        dd($request->validated());
         try {
             $currentUser = Auth::user()->load(['primaryPosition', 'department']);
 
