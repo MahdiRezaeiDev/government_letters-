@@ -56,6 +56,14 @@ enum PermissionEnum: string
     case VIEW_REPORTS   = 'view-reports';
     case EXPORT_REPORTS = 'export-reports';
 
+        // ============================================
+        // مجوزهای پست سازمانی
+        // ============================================
+    case VIEW_POSITIONS   = 'view-positions';
+    case CREATE_POSITION  = 'create-position';
+    case EDIT_POSITION    = 'edit-position';
+    case DELETE_POSITION  = 'delete-position';
+
     // ============================================
     // متدهای کمکی
     // ============================================
@@ -108,6 +116,10 @@ enum PermissionEnum: string
             // گزارشات
             self::VIEW_REPORTS->value,
             self::EXPORT_REPORTS->value,
+            self::VIEW_POSITIONS->value,
+            self::CREATE_POSITION->value,
+            self::EDIT_POSITION->value,
+            self::DELETE_POSITION->value,
         ];
     }
 
@@ -122,6 +134,7 @@ enum PermissionEnum: string
             self::VIEW_LETTERS->value,
             self::VIEW_CASES->value,
             self::VIEW_REPORTS->value,
+            self::VIEW_POSITIONS->value,  // فقط مشاهده
         ];
     }
 
@@ -170,6 +183,11 @@ enum PermissionEnum: string
 
             self::VIEW_REPORTS   => 'مشاهده گزارشات',
             self::EXPORT_REPORTS => 'خروجی گزارشات',
+
+            self::VIEW_POSITIONS   => 'مشاهده پست‌های سازمانی',
+            self::CREATE_POSITION  => 'ایجاد پست سازمانی',
+            self::EDIT_POSITION    => 'ویرایش پست سازمانی',
+            self::DELETE_POSITION  => 'حذف پست سازمانی',
         };
     }
 }

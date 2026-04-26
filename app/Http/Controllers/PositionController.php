@@ -11,12 +11,6 @@ use Inertia\Inertia;
 
 class PositionController extends Controller
 {
-    public function __construct()
-    {
-        // $this->middleware(['auth']);
-        // $this->middleware(['role:super-admin|org-admin'])->except(['index', 'show']);
-    }
-
     /**
      * نمایش لیست سمت‌ها
      */
