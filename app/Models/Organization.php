@@ -22,7 +22,6 @@ class Organization extends Model
         'phone',
         'address',
         'website',
-        'parent_id',
         'status',
     ];
 
@@ -34,16 +33,6 @@ class Organization extends Model
     ];
 
     // ─── Relationships ─────────────────────────────────────────
-
-    public function parent(): BelongsTo
-    {
-        return $this->belongsTo(Organization::class, 'parent_id');
-    }
-
-    public function children(): HasMany
-    {
-        return $this->hasMany(Organization::class, 'parent_id');
-    }
 
     public function departments(): HasMany
     {
@@ -79,16 +68,10 @@ class Organization extends Model
 
     // ─── Helpers ───────────────────────────────────────────────
 
-    public function getFullHierarchyAttribute(): string
+    public static function generateCode()
     {
-        $hierarchy = [$this->name];
-        $parent = $this->parent;
-
-        while ($parent) {
-            array_unshift($hierarchy, $parent->name);
-            $parent = $parent->parent;
-        }
-
-        return implode(' > ', $hierarchy);
+        $prefix = 'ORG';
+        $number = str_pad(self::count() + 1, 5, '0', STR_PAD_LEFT);
+        return "$prefix-$number";
     }
 }

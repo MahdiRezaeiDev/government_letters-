@@ -18,9 +18,11 @@ class OrganizationController extends Controller
     public function index(Request $request)
     {
         $currentUser = auth()->user();
+
         $query = Organization::query()
-            ->when($request->filled('search'), function ($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%")
+            ->when($request->filled('search'), function ($query) use ($request) {
+
+                $query->where('name', 'like', "%{$request->search}%")
                     ->orWhere('code', 'like', "%{$request->search}%")
                     ->orWhere('email', 'like', "%{$request->search}%");
             })
@@ -28,7 +30,7 @@ class OrganizationController extends Controller
                 $query->where('status', $request->status);
             });
 
-        $organizations = $query->with('parent')->paginate(15);
+        $organizations = $query->paginate(15);
 
         return Inertia::render('organizations/index', [
             'organizations' => $organizations,
@@ -59,7 +61,6 @@ class OrganizationController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:organizations,code',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
@@ -79,7 +80,7 @@ class OrganizationController extends Controller
 
         $organization = Organization::create([
             'name' => $request->name,
-            'code' => $request->code,
+            'code' => Organization::generateCode(),
             'logo' => $logoPath,
             'email' => $request->email,
             'phone' => $request->phone,

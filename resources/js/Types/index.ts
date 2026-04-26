@@ -54,6 +54,8 @@ export interface User {
 }
 
 export interface Organization {
+    logo_url: string;
+    logo_url: string;
     id: number;
     name: string;
     code: string;
