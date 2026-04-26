@@ -64,6 +64,14 @@ enum PermissionEnum: string
     case EDIT_POSITION    = 'edit-position';
     case DELETE_POSITION  = 'delete-position';
 
+        // ============================================
+        // مجوزهای دسته‌بندی نامه‌ها
+        // ============================================
+    case VIEW_CATEGORIES   = 'view-categories';
+    case CREATE_CATEGORY   = 'create-category';
+    case EDIT_CATEGORY     = 'edit-category';
+    case DELETE_CATEGORY   = 'delete-category';
+
     // ============================================
     // متدهای کمکی
     // ============================================
@@ -120,6 +128,11 @@ enum PermissionEnum: string
             self::CREATE_POSITION->value,
             self::EDIT_POSITION->value,
             self::DELETE_POSITION->value,
+
+            self::VIEW_CATEGORIES->value,
+            self::CREATE_CATEGORY->value,
+            self::EDIT_CATEGORY->value,
+            self::DELETE_CATEGORY->value,
         ];
     }
 
@@ -134,7 +147,8 @@ enum PermissionEnum: string
             self::VIEW_LETTERS->value,
             self::VIEW_CASES->value,
             self::VIEW_REPORTS->value,
-            self::VIEW_POSITIONS->value,  // فقط مشاهده
+            self::VIEW_POSITIONS->value,
+            self::VIEW_CATEGORIES->value,
         ];
     }
 
@@ -188,6 +202,11 @@ enum PermissionEnum: string
             self::CREATE_POSITION  => 'ایجاد پست سازمانی',
             self::EDIT_POSITION    => 'ویرایش پست سازمانی',
             self::DELETE_POSITION  => 'حذف پست سازمانی',
+
+            self::VIEW_CATEGORIES   => 'مشاهده دسته‌بندی‌ها',
+            self::CREATE_CATEGORY   => 'ایجاد دسته‌بندی',
+            self::EDIT_CATEGORY     => 'ویرایش دسته‌بندی',
+            self::DELETE_CATEGORY   => 'حذف دسته‌بندی',
         };
     }
 }
