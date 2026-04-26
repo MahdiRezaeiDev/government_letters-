@@ -22,10 +22,8 @@ class LetterService
             // آماده‌سازی داده‌های فرستنده (همیشه از کاربر جاری)
             $senderData = $this->prepareSenderData($creator);
 
-            
             // آماده‌سازی داده‌های گیرنده (داخلی یا خارجی)
             $recipientData = $this->prepareRecipientData($data);
-            dd($recipientData);
 
             // تولید شماره‌های نامه
             $trackingNumber = $this->generateTrackingNumber();
@@ -72,37 +70,34 @@ class LetterService
             'department_id' => $creator->department?->id,
             'user_id'       => $creator->id,
             'position_id'   => $creator->primaryPosition?->id,
+            'organization_id' => $creator->organization_id,
         ];
     }
 
     /**
      * آماده‌سازی اطلاعات گیرنده
-     * دو حالت: داخلی (internal) و خارجی (external)
+     * داده‌ها از فرانت‌اند به صورت یکپارچه می‌آیند:
+     * - recipient_type: internal | external
+     * - recipient_organization_id: برای داخلی organization_id کاربر، برای خارجی id سازمان خارجی
+     * - recipient_department_id: id دپارتمان
+     * - recipient_position_id: id سمت
+     * - recipient_user_id: فقط برای داخلی (اختیاری)
+     * - recipient_name: نام شخص یا سازمان
+     * - recipient_position_name: عنوان سمت
      */
     protected function prepareRecipientData(array $data): array
     {
         $recipientType = $data['recipient_type'] ?? 'internal';
 
-        if ($recipientType === 'external') {
-            return [
-                'name'          => $data['recipient_name'] ?? null,
-                'position_name' => $data['recipient_position_name'] ?? null,
-                'department_id' => $data['external_department_id'] ?? null,
-                'user_id'       => null,
-                'position_id'   => $data['external_position_id'] ?? null,
-                'external_organization_id' => $data['external_organization_id'] ?? null,
-                'external_department_id'   => $data['external_department_id'] ?? null,
-                'external_position_id'     => $data['external_position_id'] ?? null,
-            ];
-        }
-
-        // گیرنده داخلی
+        // داده‌های پایه یکسان برای هر دو نوع گیرنده
         return [
-            'name'          => $data['recipient_name'] ?? null,
-            'position_name' => $data['recipient_position_name'] ?? null,
-            'department_id' => $data['recipient_department_id'] ?? null,
-            'user_id'       => $data['recipient_user_id'] ?? null,
-            'position_id'   => $data['recipient_position_id'] ?? null,
+            'type'                  => $recipientType,
+            'organization_id'       => $data['recipient_organization_id'] ?? null,
+            'department_id'         => $data['recipient_department_id'] ?? null,
+            'position_id'           => $data['recipient_position_id'] ?? null,
+            'user_id'               => $recipientType === 'internal' ? ($data['recipient_user_id'] ?? null) : null,
+            'name'                  => $data['recipient_name'] ?? null,
+            'position_name'         => $data['recipient_position_name'] ?? null,
         ];
     }
 
@@ -136,8 +131,11 @@ class LetterService
             'sender_department_id'  => $senderData['department_id'],
             'sender_user_id'        => $senderData['user_id'],
             'sender_position_id'    => $senderData['position_id'],
+            'sender_organization_id' => $senderData['organization_id'],
 
-            // گیرنده
+            // گیرنده - فیلدهای یکپارچه
+            'recipient_type'            => $recipientData['type'],
+            'recipient_organization_id' => $recipientData['organization_id'],
             'recipient_name'            => $recipientData['name'],
             'recipient_position_name'   => $recipientData['position_name'],
             'recipient_department_id'   => $recipientData['department_id'],
@@ -196,6 +194,14 @@ class LetterService
         }
 
         // منطق ارجاع را اینجا یا در RoutingService جداگانه پیاده کنید
+        // مثال:
+        // Routing::create([
+        //     'letter_id' => $letter->id,
+        //     'from_user_id' => $letter->sender_user_id,
+        //     'to_user_id' => $recipientUserId,
+        //     'instruction' => $instruction,
+        //     'status' => 'pending',
+        // ]);
     }
 
     /**

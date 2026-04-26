@@ -8,7 +8,7 @@ import {
     FileText, Shield,
     Flag, UserCheck,
     User,
-    Info, Users, Loader2, 
+    Info, Users, Loader2,
     MessageSquare, PenLine
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
@@ -23,7 +23,7 @@ const inputClass = "w-full border border-slate-300 rounded-md px-3 py-2 text-sm 
 interface Props {
     categories: LetterCategory[];
     departments: { id: number; name: string }[];
-    positions: { id: number; name: string; department_id: number }[];
+    positions: { id: number; name: string; department_id: number; user_id?: number }[];
     externalOrganizations?: Organization[];
     securityLevels: Record<string, string>;
     priorityLevels: Record<string, string>;
@@ -37,18 +37,18 @@ interface FormData {
     security_level: string;
     priority: string;
     date: string;
+    instruction: string;
+    attachments: File[];
+    is_draft: boolean;
+
+    // گیرنده - فیلدهای اصلی
     recipient_type: 'internal' | 'external';
+    recipient_organization_id: number | null;
     recipient_department_id: number | null;
     recipient_position_id: number | null;
     recipient_user_id: number | null;
     recipient_name: string;
     recipient_position_name: string;
-    external_organization_id: number | null;
-    external_department_id: number | null;
-    external_position_id: number | null;
-    instruction: string;
-    attachments: File[];
-    is_draft: boolean;
 }
 
 /**
@@ -75,7 +75,10 @@ const getTodayJalali = (): string => {
 };
 
 export default function LettersCreate({
-    departments, positions, externalOrganizations = [],
+    categories,
+    departments,
+    positions,
+    externalOrganizations = [],
 }: Props) {
     const { auth } = usePage().props as any;
     const currentUser = auth.user;
@@ -88,24 +91,22 @@ export default function LettersCreate({
         security_level: 'internal',
         priority: 'normal',
         date: getTodayJalali(),
+        instruction: '',
+        attachments: [],
+        is_draft: false,
+
+        // گیرنده
         recipient_type: 'internal',
+        recipient_organization_id: currentUser.organization_id,
         recipient_department_id: null,
         recipient_position_id: null,
         recipient_user_id: null,
         recipient_name: '',
         recipient_position_name: '',
-        external_organization_id: null,
-        external_department_id: null,
-        external_position_id: null,
-        instruction: '',
-        attachments: [],
-        is_draft: false,
     });
 
-    const [selectedDept, setSelectedDept] = useState<number | null>(null);
-    const [availablePositions, setAvailablePositions] = useState<{ id: number; name: string }[]>([]);
-    const [selectedExtOrg, setSelectedExtOrg] = useState<number | null>(null);
-    const [selectedExtDept, setSelectedExtDept] = useState<number | null>(null);
+    // Stateهای کمکی برای UI
+    const [availablePositions, setAvailablePositions] = useState<{ id: number; name: string; user_id?: number }[]>([]);
     const [extDepartments, setExtDepartments] = useState<{ id: number; name: string }[]>([]);
     const [extPositions, setExtPositions] = useState<{ id: number; name: string }[]>([]);
     const [loadingPositions, setLoadingPositions] = useState(false);
@@ -114,77 +115,67 @@ export default function LettersCreate({
 
     // فیلتر پست‌های داخلی بر اساس دپارتمان انتخابی
     useEffect(() => {
-        if (selectedDept) {
+        if (data.recipient_department_id && data.recipient_type === 'internal') {
             setLoadingPositions(true);
             setTimeout(() => {
-                setAvailablePositions(positions.filter(p => p.department_id === selectedDept));
+                setAvailablePositions(positions.filter(p => p.department_id === data.recipient_department_id));
                 setLoadingPositions(false);
-            }, 300);
+            }, 100);
         } else {
             setAvailablePositions([]);
         }
-    }, [selectedDept, positions]);
+    }, [data.recipient_department_id, data.recipient_type, positions]);
 
     // دریافت دپارتمان‌های سازمان خارجی
     useEffect(() => {
-        if (selectedExtOrg) {
+        if (data.recipient_organization_id && data.recipient_type === 'external') {
             setLoadingExtDepts(true);
-            axios.get('/organizations/departments', { params: { organization_id: selectedExtOrg } })
+            axios.get('/organizations/departments', { params: { organization_id: data.recipient_organization_id } })
                 .then(res => {
-                    setExtDepartments(res.data.departments || []); setLoadingExtDepts(false);
+                    setExtDepartments(res.data.departments || []);
+                    setLoadingExtDepts(false);
                 })
                 .catch(() => {
-                    setExtDepartments([]); setLoadingExtDepts(false);
+                    setExtDepartments([]);
+                    setLoadingExtDepts(false);
                 });
         } else {
             setExtDepartments([]);
-            setSelectedExtDept(null);
-            setExtPositions([]);
         }
-    }, [selectedExtOrg]);
+    }, [data.recipient_organization_id, data.recipient_type]);
 
     // دریافت پست‌های دپارتمان خارجی
     useEffect(() => {
-        if (selectedExtDept) {
+        if (data.recipient_department_id && data.recipient_type === 'external') {
             setLoadingExtPositions(true);
-            axios.get('/departments/positions', { params: { department_id: selectedExtDept } })
+            axios.get('/departments/positions', { params: { department_id: data.recipient_department_id } })
                 .then(res => {
-                    setExtPositions(res.data.positions || []); setLoadingExtPositions(false);
+                    setExtPositions(res.data.positions || []);
+                    setLoadingExtPositions(false);
                 })
                 .catch(() => {
-                    setExtPositions([]); setLoadingExtPositions(false);
+                    setExtPositions([]);
+                    setLoadingExtPositions(false);
                 });
         } else {
             setExtPositions([]);
         }
-    }, [selectedExtDept]);
+    }, [data.recipient_department_id, data.recipient_type]);
 
     const handleSubmit = (e: React.FormEvent, isDraft: boolean) => {
         e.preventDefault();
 
-        // ✅ آماده‌سازی داده برای ارسال
-        const submittedData: FormData & { is_draft: boolean } = { ...data, is_draft: isDraft };
-
-        if (data.recipient_type === 'external') {
-            // گیرنده خارجی: نام سازمان را به عنوان recipient_name ارسال می‌کنیم
-            const org = externalOrganizations.find(o => o.id === data.external_organization_id);
-            submittedData.recipient_name = org?.name ?? '';
-            // recipient_position_name از قبل در setData پر شده (هنگام انتخاب سمت خارجی)
-            // فیلدهای داخلی را خالی می‌کنیم تا تداخل نباشد
-            submittedData.recipient_department_id = null;
-            submittedData.recipient_position_id = null;
-            submittedData.recipient_user_id = null;
-        }
-
+        const submittedData = { ...data, is_draft: isDraft };
         post(LetterCreate(), {
             data: submittedData,
             preserveScroll: true,
             onSuccess: () => {
                 if (!isDraft) {
                     reset();
-                    setSelectedDept(null);
-                    setSelectedExtOrg(null);
-                    setSelectedExtDept(null);
+                    // بازنشانی استیت‌های کمکی
+                    setAvailablePositions([]);
+                    setExtDepartments([]);
+                    setExtPositions([]);
                 }
             },
         });
@@ -200,35 +191,42 @@ export default function LettersCreate({
         setData('attachments', data.attachments.filter((_, i) => i !== index));
 
     const formatFileSize = (bytes: number): string => {
-        if (bytes === 0) {
-            return '0 Bytes';
-        }
-
+        if (bytes === 0) return '0 Bytes';
         const k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
-
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
     const getPriorityColor = (key: string) => ({
-        low: 'bg-slate-100 text-slate-700', normal: 'bg-blue-100 text-blue-700',
-        high: 'bg-yellow-100 text-yellow-700', urgent: 'bg-orange-100 text-orange-700',
+        low: 'bg-slate-100 text-slate-700',
+        normal: 'bg-blue-100 text-blue-700',
+        high: 'bg-yellow-100 text-yellow-700',
+        urgent: 'bg-orange-100 text-orange-700',
         very_urgent: 'bg-red-100 text-red-700',
     }[key] ?? 'bg-blue-100 text-blue-700');
 
     const getPriorityLabel = (key: string) => ({
-        low: 'عادی', normal: 'معمولی', high: 'مهم', urgent: 'فوری', very_urgent: 'فوق‌العاده',
+        low: 'عادی',
+        normal: 'معمولی',
+        high: 'مهم',
+        urgent: 'فوری',
+        very_urgent: 'فوق‌العاده',
     }[key] ?? 'معمولی');
 
     const getSecurityColor = (key: string) => ({
-        public: 'bg-slate-100 text-slate-700', internal: 'bg-blue-100 text-blue-700',
-        confidential: 'bg-yellow-100 text-yellow-700', secret: 'bg-purple-100 text-purple-700',
+        public: 'bg-slate-100 text-slate-700',
+        internal: 'bg-blue-100 text-blue-700',
+        confidential: 'bg-yellow-100 text-yellow-700',
+        secret: 'bg-purple-100 text-purple-700',
         top_secret: 'bg-red-100 text-red-700',
     }[key] ?? 'bg-blue-100 text-blue-700');
 
     const getSecurityLabel = (key: string) => ({
-        public: 'عمومی', internal: 'داخلی', confidential: 'محرمانه',
-        secret: 'سری', top_secret: 'بسیار سری',
+        public: 'عمومی',
+        internal: 'داخلی',
+        confidential: 'محرمانه',
+        secret: 'سری',
+        top_secret: 'بسیار سری',
     }[key] ?? 'داخلی');
 
     return (
@@ -274,6 +272,27 @@ export default function LettersCreate({
                             {/* ══ ستون اصلی ══ */}
                             <div className="col-span-12 lg:col-span-8 space-y-5">
 
+                                {/* دسته‌بندی نامه */}
+                                {categories.length > 0 && (
+                                    <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+                                        <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50">
+                                            <h3 className="text-sm font-bold text-slate-700">دسته‌بندی</h3>
+                                        </div>
+                                        <div className="p-5">
+                                            <select
+                                                value={data.category_id || ''}
+                                                onChange={(e) => setData('category_id', parseInt(e.target.value) || null)}
+                                                className={inputClass}
+                                            >
+                                                <option value="">انتخاب دسته‌بندی...</option>
+                                                {categories.map(cat => (
+                                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* اطلاعات نامه */}
                                 <div className="bg-white rounded-lg shadow-sm border border-slate-200">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
@@ -307,6 +326,20 @@ export default function LettersCreate({
                                                 />
                                                 {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date}</p>}
                                             </div>
+                                        </div>
+
+                                        {/* خلاصه/چکیده */}
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                                                خلاصه نامه
+                                            </label>
+                                            <textarea
+                                                value={data.summary}
+                                                onChange={(e) => setData('summary', e.target.value)}
+                                                rows={2}
+                                                placeholder="خلاصه‌ای از نامه..."
+                                                className={`${inputClass} resize-none placeholder:text-slate-400`}
+                                            />
                                         </div>
 
                                         {/* متن نامه */}
@@ -468,19 +501,22 @@ export default function LettersCreate({
                                                         setData('recipient_type', type);
 
                                                         if (type === 'internal') {
-                                                            setSelectedExtOrg(null);
-                                                            setData('external_organization_id', null);
-                                                            setData('external_department_id', null);
-                                                            setData('external_position_id', null);
-                                                        } else {
-                                                            setSelectedDept(null);
+                                                            // بازنشانی به مقادیر داخلی
+                                                            setData('recipient_organization_id', currentUser.organization_id);
                                                             setData('recipient_department_id', null);
                                                             setData('recipient_position_id', null);
                                                             setData('recipient_user_id', null);
+                                                            setData('recipient_name', '');
+                                                            setData('recipient_position_name', '');
+                                                        } else {
+                                                            // بازنشانی برای خارجی
+                                                            setData('recipient_organization_id', null);
+                                                            setData('recipient_department_id', null);
+                                                            setData('recipient_position_id', null);
+                                                            setData('recipient_user_id', null);
+                                                            setData('recipient_name', '');
+                                                            setData('recipient_position_name', '');
                                                         }
-
-                                                        setData('recipient_name', '');
-                                                        setData('recipient_position_name', '');
                                                     }}
                                                     className={`flex-1 py-2 text-xs font-medium rounded-md border transition
                                                         ${data.recipient_type === type
@@ -495,33 +531,51 @@ export default function LettersCreate({
                                         {data.recipient_type === 'internal' && (
                                             <div className="space-y-3">
                                                 <div>
-                                                    <label className="block text-xs font-medium text-slate-600 mb-1">دپارتمان / ریاست</label>
-                                                    <select value={selectedDept || ''}
+                                                    <label className="block text-xs font-medium text-slate-600 mb-1">
+                                                        دپارتمان / ریاست <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <select
+                                                        value={data.recipient_department_id || ''}
                                                         onChange={(e) => {
                                                             const id = parseInt(e.target.value) || null;
-                                                            setSelectedDept(id);
                                                             setData('recipient_department_id', id);
                                                             setData('recipient_position_id', null);
                                                             setData('recipient_position_name', '');
+                                                            setData('recipient_user_id', null);
+                                                            setData('recipient_name', '');
                                                         }}
                                                         className={inputClass}>
                                                         <option value="">انتخاب دپارتمان...</option>
-                                                        {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                                                        {departments.map(d => (
+                                                            <option key={d.id} value={d.id}>{d.name}</option>
+                                                        ))}
                                                     </select>
                                                 </div>
+
                                                 <div>
-                                                    <label className="block text-xs font-medium text-slate-600 mb-1">سمت / عنوان</label>
+                                                    <label className="block text-xs font-medium text-slate-600 mb-1">
+                                                        سمت / عنوان <span className="text-red-500">*</span>
+                                                    </label>
                                                     <div className="relative">
-                                                        <select value={data.recipient_position_id || ''}
+                                                        <select
+                                                            value={data.recipient_position_id || ''}
                                                             onChange={(e) => {
                                                                 const id = parseInt(e.target.value) || null;
+                                                                const position = availablePositions.find(p => p.id === id);
+
                                                                 setData('recipient_position_id', id);
-                                                                setData('recipient_position_name', availablePositions.find(p => p.id === id)?.name || '');
+                                                                setData('recipient_position_name', position?.name || '');
+                                                                setData('recipient_user_id', position?.user_id || null);
+
+                                                                // اگر کاربر مشخص باشد، نام او را هم می‌توانید ست کنید
+                                                                // setData('recipient_name', position?.user?.name || '');
                                                             }}
-                                                            disabled={!selectedDept || loadingPositions}
+                                                            disabled={!data.recipient_department_id || loadingPositions}
                                                             className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}>
                                                             <option value="">انتخاب سمت...</option>
-                                                            {availablePositions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                                            {availablePositions.map(p => (
+                                                                <option key={p.id} value={p.id}>{p.name}</option>
+                                                            ))}
                                                         </select>
                                                         {loadingPositions && (
                                                             <div className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -530,47 +584,69 @@ export default function LettersCreate({
                                                         )}
                                                     </div>
                                                 </div>
+
+                                                {/* نمایش خلاصه گیرنده داخلی */}
+                                                {data.recipient_position_name && (
+                                                    <div className="bg-green-50 border border-green-200 rounded-md p-3 text-xs text-green-800">
+                                                        <p className="font-medium">گیرنده انتخاب شده:</p>
+                                                        <p>سمت: {data.recipient_position_name}</p>
+                                                        <p className="text-green-600 text-[10px] mt-1">
+                                                            دپارتمان: {departments.find(d => d.id === data.recipient_department_id)?.name}
+                                                        </p>
+                                                        {data.recipient_user_id && (
+                                                            <p className="text-green-600 text-[10px]">کد کاربری: {data.recipient_user_id}</p>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
 
                                         {/* ── گیرنده خارجی ── */}
                                         {data.recipient_type === 'external' && (
                                             <div className="space-y-3">
-                                                {/* سازمان خارجی */}
                                                 <div>
-                                                    <label className="block text-xs font-medium text-slate-600 mb-1">سازمان</label>
-                                                    <select value={selectedExtOrg || ''}
+                                                    <label className="block text-xs font-medium text-slate-600 mb-1">
+                                                        سازمان <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <select
+                                                        value={data.recipient_organization_id || ''}
                                                         onChange={(e) => {
                                                             const id = parseInt(e.target.value) || null;
-                                                            setSelectedExtOrg(id);
-                                                            setData('external_organization_id', id);
-                                                            setSelectedExtDept(null);
-                                                            setData('external_department_id', null);
-                                                            setData('external_position_id', null);
+                                                            const org = externalOrganizations.find(o => o.id === id);
+
+                                                            setData('recipient_organization_id', id);
+                                                            setData('recipient_name', org?.name || '');
+                                                            setData('recipient_department_id', null);
+                                                            setData('recipient_position_id', null);
                                                             setData('recipient_position_name', '');
                                                         }}
                                                         className={inputClass}>
                                                         <option value="">انتخاب سازمان...</option>
-                                                        {externalOrganizations.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                                                        {externalOrganizations.map(o => (
+                                                            <option key={o.id} value={o.id}>{o.name}</option>
+                                                        ))}
                                                     </select>
                                                 </div>
 
-                                                {/* دپارتمان خارجی */}
                                                 <div>
-                                                    <label className="block text-xs font-medium text-slate-600 mb-1">دپارتمان</label>
+                                                    <label className="block text-xs font-medium text-slate-600 mb-1">
+                                                        دپارتمان / واحد
+                                                    </label>
                                                     <div className="relative">
-                                                        <select value={selectedExtDept || ''}
+                                                        <select
+                                                            value={data.recipient_department_id || ''}
                                                             onChange={(e) => {
                                                                 const id = parseInt(e.target.value) || null;
-                                                                setSelectedExtDept(id);
-                                                                setData('external_department_id', id);
-                                                                setData('external_position_id', null);
+                                                                setData('recipient_department_id', id);
+                                                                setData('recipient_position_id', null);
                                                                 setData('recipient_position_name', '');
                                                             }}
-                                                            disabled={!selectedExtOrg || loadingExtDepts}
+                                                            disabled={!data.recipient_organization_id || loadingExtDepts}
                                                             className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}>
                                                             <option value="">انتخاب دپارتمان...</option>
-                                                            {extDepartments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                                                            {extDepartments.map(d => (
+                                                                <option key={d.id} value={d.id}>{d.name}</option>
+                                                            ))}
                                                         </select>
                                                         {loadingExtDepts && (
                                                             <div className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -580,22 +656,26 @@ export default function LettersCreate({
                                                     </div>
                                                 </div>
 
-                                                {/* سمت خارجی */}
                                                 <div>
-                                                    <label className="block text-xs font-medium text-slate-600 mb-1">سمت</label>
+                                                    <label className="block text-xs font-medium text-slate-600 mb-1">
+                                                        سمت
+                                                    </label>
                                                     <div className="relative">
-                                                        <select value={data.external_position_id || ''}
+                                                        <select
+                                                            value={data.recipient_position_id || ''}
                                                             onChange={(e) => {
                                                                 const id = parseInt(e.target.value) || null;
-                                                                setData('external_position_id', id);
-                                                                // ✅ نام سمت را در recipient_position_name ذخیره می‌کنیم
-                                                                const pos = extPositions.find(p => p.id === id);
-                                                                setData('recipient_position_name', pos?.name || '');
+                                                                const position = extPositions.find(p => p.id === id);
+
+                                                                setData('recipient_position_id', id);
+                                                                setData('recipient_position_name', position?.name || '');
                                                             }}
-                                                            disabled={!selectedExtDept || loadingExtPositions}
+                                                            disabled={!data.recipient_department_id || loadingExtPositions}
                                                             className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}>
                                                             <option value="">انتخاب سمت...</option>
-                                                            {extPositions.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                                            {extPositions.map(p => (
+                                                                <option key={p.id} value={p.id}>{p.name}</option>
+                                                            ))}
                                                         </select>
                                                         {loadingExtPositions && (
                                                             <div className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -605,11 +685,14 @@ export default function LettersCreate({
                                                     </div>
                                                 </div>
 
-                                                {/* نمایش خلاصه گیرنده خارجی انتخاب شده */}
-                                                {data.external_organization_id && (
+                                                {/* نمایش خلاصه گیرنده خارجی */}
+                                                {data.recipient_organization_id && (
                                                     <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800 space-y-1">
                                                         <p className="font-medium">گیرنده انتخاب شده:</p>
-                                                        <p>سازمان: {externalOrganizations.find(o => o.id === data.external_organization_id)?.name}</p>
+                                                        <p>سازمان: {data.recipient_name}</p>
+                                                        {data.recipient_department_id && (
+                                                            <p>دپارتمان: {extDepartments.find(d => d.id === data.recipient_department_id)?.name}</p>
+                                                        )}
                                                         {data.recipient_position_name && (
                                                             <p>سمت: {data.recipient_position_name}</p>
                                                         )}
@@ -627,12 +710,12 @@ export default function LettersCreate({
                                         <h3 className="text-sm font-bold text-slate-700">خلاصه وضعیت</h3>
                                     </div>
                                     <div className="p-5 space-y-3">
-                                        {([
+                                        {[
                                             { label: 'اولویت', value: <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getPriorityColor(data.priority)}`}>{getPriorityLabel(data.priority)}</span> },
                                             { label: 'سطح امنیتی', value: <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getSecurityColor(data.security_level)}`}>{getSecurityLabel(data.security_level)}</span> },
                                             { label: 'تاریخ', value: <span className="text-xs font-medium text-slate-700">{data.date}</span> },
                                             { label: 'گیرنده', value: <span className="text-xs font-medium text-slate-700">{data.recipient_type === 'internal' ? 'داخلی' : 'خارج سازمانی'}</span> },
-                                        ]).map(({ label, value }) => (
+                                        ].map(({ label, value }) => (
                                             <div key={label} className="flex items-center justify-between">
                                                 <span className="text-xs text-slate-500">{label}:</span>
                                                 {value}
