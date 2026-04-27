@@ -154,34 +154,23 @@ export default function DepartmentsEdit({ department, organizations, parentDepar
                                                 />
                                             </div>
                                             <div>
-                                                <FieldLabel>کد ریاست</FieldLabel>
-                                                <InputField
-                                                    icon={FolderTree}
-                                                    value={data.code}
-                                                    onChange={v => setData('code', v)}
-                                                    error={errors.code}
-                                                    placeholder="کد ریاست (اختیاری)"
-                                                />
+                                                <FieldLabel required>وزارت مربوطه</FieldLabel>
+                                                <SelectField
+                                                    icon={Building2}
+                                                    value={data.organization_id}
+                                                    onChange={v => {
+                                                        setData('organization_id', v);
+                                                        setData('parent_id', '');
+                                                    }}
+                                                    error={errors.organization_id}
+                                                >
+                                                    {organizations.map(org => (
+                                                        <option key={org.id} value={org.id}>{org.name}</option>
+                                                    ))}
+                                                </SelectField>
                                             </div>
                                         </div>
 
-                                        {/* Organization */}
-                                        <div>
-                                            <FieldLabel required>وزارت مربوطه</FieldLabel>
-                                            <SelectField
-                                                icon={Building2}
-                                                value={data.organization_id}
-                                                onChange={v => {
-                                                    setData('organization_id', v);
-                                                    setData('parent_id', '');
-                                                }}
-                                                error={errors.organization_id}
-                                            >
-                                                {organizations.map(org => (
-                                                    <option key={org.id} value={org.id}>{org.name}</option>
-                                                ))}
-                                            </SelectField>
-                                        </div>
 
                                         {/* Parent Department */}
                                         <div>
@@ -231,8 +220,8 @@ export default function DepartmentsEdit({ department, organizations, parentDepar
                                                     <label
                                                         key={option.value}
                                                         className={`flex-1 flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${isActive
-                                                                ? 'border-indigo-500 bg-indigo-50'
-                                                                : 'border-slate-200 hover:border-slate-300 bg-white'
+                                                            ? 'border-indigo-500 bg-indigo-50'
+                                                            : 'border-slate-200 hover:border-slate-300 bg-white'
                                                             }`}
                                                     >
                                                         <input
@@ -307,8 +296,8 @@ export default function DepartmentsEdit({ department, organizations, parentDepar
                                                     <div className="flex items-center justify-between pt-2 border-t border-indigo-100">
                                                         <span className="text-slate-500">وضعیت:</span>
                                                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${data.status === 'active'
-                                                                ? 'bg-green-100 text-green-700'
-                                                                : 'bg-slate-100 text-slate-600'
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : 'bg-slate-100 text-slate-600'
                                                             }`}>
                                                             <span className={`w-1.5 h-1.5 rounded-full ${data.status === 'active' ? 'bg-green-500' : 'bg-slate-400'
                                                                 }`}></span>

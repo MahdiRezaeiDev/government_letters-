@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PermissionEnum;
+use App\Http\Requests\PositionRequest;
 use App\Models\Position;
 use App\Models\Department;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
@@ -17,29 +18,23 @@ class PositionController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $query = Position::with(['department.organization']);
-        
-        // فیلتر بر اساس دپارتمان
-        if ($request->has('department_id') && $request->department_id) {
+
+        $positions = Position::with(['department.organization'])
+        ->when($request->has('department_id') && $request->department_id, function ($query) use ($request) {
             $query->where('department_id', $request->department_id);
-        }
-        
-        // فیلتر بر اساس سازمان (برای ادمین سازمان)
-        if ($user->isOrgAdmin()) {
-            $query->whereHas('department', function ($q) use ($user) {
-                $q->where('organization_id', $user->organization_id);
+
+        })->when($user->isOrgAdmin(), function ($query) use ($user) {
+            $query->whereHas('department', function ($query) use ($user) {
+                $query->where('organization_id', $user->organization_id);
             });
-        }
-        
-        // فیلتر جستجو
-        if ($request->has('search') && $request->search) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%")
+
+        })->when($request->has('search') && $request->search, function ($query) use ($request) {
+            $query->where(function ($query) use ($request) {
+                $query->where('name', 'like', "%{$request->search}%")
                   ->orWhere('code', 'like', "%{$request->search}%");
             });
-        }
-        
-        $positions = $query->paginate(15);
+            
+        })->paginate(15);
         
         // لیست دپارتمان‌ها برای فیلتر
         $departmentsQuery = Department::with('organization');
@@ -53,9 +48,9 @@ class PositionController extends Controller
             'departments' => $departments,
             'filters' => $request->only(['search', 'department_id']),
             'can' => [
-                'create' => $user->can('create-position'),
-                'edit' => $user->can('edit-position'),
-                'delete' => $user->can('delete-position'),
+                'create' => $user->can(PermissionEnum::CREATE_POSITION->value),
+                'edit' => $user->can(PermissionEnum::EDIT_POSITION->value),
+                'delete' => $user->can(PermissionEnum::DELETE_POSITION->value),
             ],
         ]);
     }
@@ -87,44 +82,25 @@ class PositionController extends Controller
     /**
      * ذخیره سمت جدید
      */
-    public function store(Request $request)
+    public function store(PositionRequest $request)
     {
         $user = auth()->user();
         
-        // اعتبارسنجی
-        $validator = Validator::make($request->all(), [
-            'department_id' => 'required|exists:departments,id',
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:positions,code',
-            'level' => 'required|integer|min:0',
-            'is_management' => 'boolean',
-            'description' => 'nullable|string',
-        ], [
-            'department_id.required' => 'انتخاب دپارتمان الزامی است',
-            'name.required' => 'نام سمت الزامی است',
-            'code.required' => 'کد سمت الزامی است',
-            'code.unique' => 'این کد قبلاً ثبت شده است',
-            'level.integer' => 'سطح باید عدد باشد',
-        ]);
-        
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
-        }
-        
         // بررسی دسترسی به دپارتمان
         $department = Department::find($request->department_id);
+
         if (!$user->isSuperAdmin() && $user->organization_id != $department->organization_id) {
             abort(403, 'شما دسترسی ایجاد سمت در این دپارتمان را ندارید.');
         }
         
         // ایجاد سمت
         $position = Position::create([
-            'department_id' => $request->department_id,
-            'name' => $request->name,
-            'code' => $request->code,
-            'level' => $request->level,
-            'is_management' => $request->is_management ?? false,
-            'description' => $request->description,
+            'department_id'             => $request->department_id,
+            'name'                      => $request->name,
+            'code'                      => $request->code,
+            'level'                     => $request->level,
+            'is_management'             => $request->is_management ?? false,
+            'description'               => $request->description,
         ]);
         
         // لاگ عملیات
@@ -202,30 +178,9 @@ class PositionController extends Controller
     /**
      * به‌روزرسانی سمت
      */
-    public function update(Request $request, Position $position)
+    public function update(PositionRequest $request, Position $position)
     {
         $user = auth()->user();
-        
-        // بررسی دسترسی
-        if (!$user->isSuperAdmin() && $user->organization_id != $position->department->organization_id) {
-            abort(403);
-        }
-        
-        // اعتبارسنجی
-        $validator = Validator::make($request->all(), [
-            'department_id' => 'required|exists:departments,id',
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:positions,code,' . $position->id,
-            'level' => 'required|integer|min:0',
-            'is_management' => 'boolean',
-            'description' => 'nullable|string',
-        ], [
-            'code.unique' => 'این کد قبلاً ثبت شده است',
-        ]);
-        
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
-        }
         
         $oldName = $position->name;
         
