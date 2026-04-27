@@ -190,20 +190,20 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                         <div className=" bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 z-20">
                             <div className="flex gap-3 max-w-5xl mx-auto">
                                 <button
-                                    type="button"
-                                    onClick={() => router.get(positions.index())}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
-                                >
-                                    <X className="h-4 w-4" />
-                                    انصراف
-                                </button>
-                                <button
                                     type="submit"
                                     disabled={processing}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 rounded-lg transition-colors disabled:opacity-50 shadow-sm"
+                                    className="cursor-pointer flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 rounded-lg transition-colors disabled:opacity-50 shadow-sm"
                                 >
-                                    <Save className="h-4 w-4" />
                                     {processing ? 'در حال ذخیره...' : 'ایجاد وظیفه'}
+                                    <Save className="h-4 w-4" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => router.get(positions.index())}
+                                    className="cursor-pointer flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-slate-700 bg-slate-200 hover:bg-slate-200 rounded-lg transition-colors"
+                                >
+                                    انصراف
+                                    <X className="h-4 w-4" />
                                 </button>
                             </div>
                         </div>
