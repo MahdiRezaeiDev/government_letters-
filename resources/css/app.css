@@ -70,14 +70,14 @@
 }
 @font-face {
     font-family: 'DroidArabicKufi';
-    src: url('/resources/fonts/DroidArabicKufiBold.ttf') format('truetype');
-    font-weight: 700;
+    src: url('/resources/fonts/KufyanArabicRegular.ttf') format('truetype');
+    font-weight: 300;
     font-style: normal;
     font-display: swap;
 }
 
 * {
-    font-family: 'DroidArabicKufi', sans-serif;
+    font-family: 'DroidArabicKufi', serif;
 }
 
 .nastaliq {

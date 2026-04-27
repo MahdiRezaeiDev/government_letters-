@@ -46,7 +46,7 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                                 {/* Position Info Card */}
                                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
                                     <div className="px-6 py-4 border-b border-slate-100">
-                                        <h3 className="font-semibold text-slate-900 new">اطلاعات وظیفه</h3>
+                                        <h3 className="font-semibold text-slate-900">اطلاعات وظیفه</h3>
                                     </div>
                                     <div className="p-6 space-y-5">
                                         {/* Name & Department */}

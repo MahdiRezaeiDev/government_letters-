@@ -109,7 +109,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                     </div>
                     {!collapsed && (
                         <div className="flex flex-col animate-in fade-in slide-in-from-right-4 duration-700">
-                            <span className="font-bold text-slate-900 leading-none">سیستم مدیریت مکاتیب</span>
+                            <span className="font-semibold text-xs text-slate-900 leading-none">سیستم مدیریت مکاتیب</span>
                             <span className="text-[10px] text-slate-500 font-medium mt-1">Correspondence System</span>
                         </div>
                     )}

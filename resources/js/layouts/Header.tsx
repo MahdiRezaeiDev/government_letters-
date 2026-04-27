@@ -39,7 +39,7 @@ export function Header({ onMenuClick, isMobile }: HeaderProps) {
     }, []);
 
     return (
-        <header className="sticky top-0 z-40 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
+        <header className="sticky shadow-md top-0 z-40 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
             <div className="max-w-[1600px] mx-auto px-6 h-20 flex items-center justify-between">
 
                 {/* بخش راست: لوگو و جستجو */}
@@ -54,7 +54,7 @@ export function Header({ onMenuClick, isMobile }: HeaderProps) {
                                 <LayoutDashboard className="text-white h-6 w-6" />
                             </div>
                         )}
-                        <h1 className="text-xl font-black tracking-tight text-slate-800 hidden sm:block new">
+                        <h1 className="text-xl font-black tracking-tight text-slate-800 hidden sm:block">
                             سیستم مدیریت <span className="text-indigo-600">مکاتبات</span>
                         </h1>
                     </div>
@@ -102,14 +102,11 @@ export function Header({ onMenuClick, isMobile }: HeaderProps) {
                     <div className="relative" ref={profileRef}>
                         <button
                             onClick={() => setShowProfileMenu(!showProfileMenu)}
-                            className="flex items-center gap-3 p-1.5 pr-3 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-all shadow-sm group"
+                            className="flex items-center gap-3 p-0.5 pr-3 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-all shadow-sm group"
                         >
                             <div className="flex flex-col text-left hidden sm:flex">
                                 <span className="text-xs font-bold text-slate-800 leading-none">
                                     {auth?.user?.first_name || 'کاربر'}
-                                </span>
-                                <span className="text-[9px] text-slate-400 font-bold mt-1 uppercase">
-                                    {auth?.user?.roles?.[0]?.name || 'User'}
                                 </span>
                             </div>
                             <div className="h-9 w-9 rounded-xl bg-slate-900 flex items-center justify-center text-white font-bold text-sm shadow-md group-hover:bg-indigo-600 transition-colors">
