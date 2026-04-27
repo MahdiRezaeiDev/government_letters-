@@ -37,19 +37,10 @@ const SECURITY_LEVELS = [
     { value: 'secret', label: 'سری', desc: 'دسترسی به اطلاعات سری و حساس', icon: Shield, color: '#ef4444', bg: '#fee2e2' },
 ] as const;
 
-const ROLE_LABELS: Record<string, string> = {
-    'super-admin': 'ادمین کل',
-    'org-admin': 'ادمین وزارت',
-    'dept-manager': 'مدیر ریاست',
-    'user': 'کاربر عادی',
-};
-
 // ─── Main Component ────────────────────────────────────────────────────────
 
-export default function UsersCreate({
-    organizations, departments: initialDepartments, positions: initialPositions,
-    roles, myOrganizationId
-}: Props) {
+export default function UsersCreate({ organizations, departments: initialDepartments, positions: initialPositions, roles, myOrganizationId }: Props) {
+
     const [departments, setDepartments] = useState<Department[]>(initialDepartments);
     const [positions, setPositions] = useState<Position[]>(initialPositions);
 
@@ -57,15 +48,13 @@ export default function UsersCreate({
         organization_id: myOrganizationId || organizations[0]?.id || 0,
         department_id: null,
         primary_position_id: null,
-        email: '',
-        password: '',
-        password_confirmation: '',
-        first_name: '',
-        last_name: '',
-        national_code: '',
-        mobile: '',
-        employment_code: '',
-        gender: null,
+        email: 'mahdi@gmail.com',
+        password: '123321123',
+        password_confirmation: '123321123',
+        first_name: 'mahdi',
+        last_name: 'rezaei',
+        national_code: '1234567890',
+        mobile: '0781234567',
         birth_date: '',
         emergency_phone: '',
         address: '',
@@ -74,7 +63,8 @@ export default function UsersCreate({
         role: 'user',
     });
 
-    // بارگذاری دپارتمان‌ها
+    console.log(errors);
+
     useEffect(() => {
         if (data.organization_id) {
             fetch(`/users/departments-by-organization?organization_id=${data.organization_id}`)
@@ -86,7 +76,6 @@ export default function UsersCreate({
         }
     }, [data.organization_id]);
 
-    // بارگذاری پست‌ها
     useEffect(() => {
         if (data.department_id) {
             fetch(`/users/positions-by-department?department_id=${data.department_id}`)
@@ -277,7 +266,7 @@ export default function UsersCreate({
                                             value={data.role}
                                             onChange={v => setData('role', v)}
                                             error={errors.role}>
-                                            {roles.map(role => <option key={role.name} value={role.name}>{ROLE_LABELS[role.name] || role.name}</option>)}
+                                            {roles.map(role => <option key={role.name} value={role.name}>{role.label}</option>)}
                                         </SelectField>
                                         <p className="text-xs text-slate-400 mt-1.5">نقش تعیین می‌کند کاربر چه مجوزهایی در سیستم دارد</p>
                                     </div>
@@ -357,7 +346,7 @@ export default function UsersCreate({
                                             <selectedSecurity.icon className="h-3 w-3" /> {selectedSecurity.label}
                                         </span>
                                         <span className="text-slate-300">•</span>
-                                        <span className="text-xs font-bold text-slate-600 bg-slate-200 px-2.5 py-1 rounded-full">{ROLE_LABELS[data.role] || data.role}</span>
+                                        <span className="text-xs font-bold text-slate-600 bg-slate-200 px-2.5 py-1 rounded-full">{roles.find(r => r.name === data.role)?.label || data.role}</span>
                                     </div>
                                     {/* Mobile Actions */}
                                     <div className="bg-white border-slate-200 p-4 z-20">

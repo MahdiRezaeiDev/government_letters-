@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Morilog\Jalali\Jalalian;
+use App\Rules\JalaliDate;
 
 class UserRequest extends FormRequest
 {
@@ -46,7 +46,7 @@ class UserRequest extends FormRequest
             'gender' => 'nullable|in:male,female',
             'birth_date' => [
                 'nullable',
-                'date',
+                new JalaliDate(),
                 'before:today',
             ],
             'emergency_phone' => 'nullable|string|max:20',
@@ -267,6 +267,8 @@ class UserRequest extends FormRequest
                 );
 
                 $normalized = str_replace('-', '/', $englishDigits);
+
+                dd($normalized);
 
                 return $normalized;
             } catch (\Exception $e) {

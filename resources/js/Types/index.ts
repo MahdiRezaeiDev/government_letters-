@@ -1,5 +1,7 @@
 // resources/js/types/index.ts
 
+import { ReactNode } from 'react';
+
 export type * from './auth';
 export type * from './navigation';
 export type * from './ui';
@@ -235,6 +237,7 @@ export interface Case {
 }
 
 export interface Role {
+    label: ReactNode;
     id: number;
     name: string;
     guard_name: string;

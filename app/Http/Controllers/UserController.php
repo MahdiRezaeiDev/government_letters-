@@ -120,14 +120,11 @@ class UserController extends Controller
         } else {
             $organizations = collect();
         }
-
-        // لیست دپارتمان‌ها (برای زمانی که سازمان انتخاب شود)
+       
         $departments = collect();
 
-        // لیست پست‌ها (برای زمانی که دپارتمان انتخاب شود)
         $positions = collect();
 
-        // نقش‌های قابل تخصیص
         $roles = collect(RoleEnum::cases())->map(fn($role) => [
             'name'                              => $role->value,
             'label'                             => $role->label(),
