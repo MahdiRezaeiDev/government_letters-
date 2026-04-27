@@ -96,8 +96,8 @@ class PositionController extends Controller
         $position = Position::create([
             'department_id'             => $request->department_id,
             'name'                      => $request->name,
-            'code'                      => $request->code,
-            'level'                     => $request->level,
+            'code'                      => Position::generateCode(),
+            'level'                     => 0,
             'is_management'             => $request->is_management ?? false,
             'description'               => $request->description,
         ]);

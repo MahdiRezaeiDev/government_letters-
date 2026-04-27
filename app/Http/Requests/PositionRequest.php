@@ -25,8 +25,8 @@ class PositionRequest extends FormRequest
         return [
             'department_id'              => 'required|exists:departments,id',
             'name'                       => 'required|string|max:255',
-            'code'                       => 'required|string|max:50|unique:positions,code',
-            'level'                      => 'required|integer|min:0',
+            'code'                       => 'nullable|string|max:50|unique:positions,code',
+            'level'                      => 'nullable|integer|min:0',
             'is_management'              => 'boolean',
             'description'                => 'nullable|string',
         ];

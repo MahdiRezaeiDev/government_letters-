@@ -54,7 +54,7 @@ export function Header({ onMenuClick, isMobile }: HeaderProps) {
                                 <LayoutDashboard className="text-white h-6 w-6" />
                             </div>
                         )}
-                        <h1 className="text-xl font-black tracking-tight text-slate-800 hidden sm:block">
+                        <h1 className="text-xl font-black tracking-tight text-slate-800 hidden sm:block new">
                             سیستم مدیریت <span className="text-indigo-600">مکاتبات</span>
                         </h1>
                     </div>
