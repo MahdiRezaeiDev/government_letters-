@@ -1,284 +1,355 @@
 import { Head, Link } from '@inertiajs/react';
 import {
-    Inbox, FileText, Clock, Archive, Users, 
-    AlertCircle, BedDoubleIcon as CheckDouble, ArrowUpRight,
-    History, ChevronLeft, Activity, 
-    MoreHorizontal, Download, ArrowLeftRight
+    Inbox, FileText, Clock, Archive, Users,
+    AlertCircle, ArrowUpRight, History,
+    ChevronLeft, Activity, Download,
+    BookOpen, LayoutGrid, Bell, Search,
+    TrendingUp, CheckCircle2, Send, Edit3
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid,
-    Tooltip, ResponsiveContainer, PieChart, Pie, Cell
+    Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend
 } from 'recharts';
 
-// فرض بر این است که تایپ‌ها از قبل تعریف شده‌اند
 interface Props {
-    stats: any;
-    recentLetters: any[];
-    monthlyStats: any[];
+    stats: {
+        pending_actions?: number;
+        incoming_new?: number;
+        outgoing_new?: number;
+        my_drafts?: number;
+        total_letters?: number;
+        total_users?: number;
+        total_departments?: number;
+        archived_count?: number;
+    };
+    recentLetters: {
+        id: number;
+        subject: string;
+        letter_number?: string;
+        priority?: string;
+        final_status?: string;
+        created_at?: string;
+    }[];
+    monthlyStats?: { month: string; count: number }[];
 }
 
-export default function FinalProfessionalDashboard({ stats, recentLetters, monthlyStats }: Props) {
+const priorityConfig: Record<string, { label: string; bg: string; text: string; dot: string }> = {
+    urgent: { label: 'فوری', bg: 'bg-red-50', text: 'text-red-600', dot: 'bg-red-500' },
+    high: { label: 'مهم', bg: 'bg-amber-50', text: 'text-amber-600', dot: 'bg-amber-500' },
+    normal: { label: 'عادی', bg: 'bg-blue-50', text: 'text-blue-600', dot: 'bg-blue-500' },
+    low: { label: 'پایین', bg: 'bg-slate-100', text: 'text-slate-500', dot: 'bg-slate-400' },
+};
+
+const statusConfig: Record<string, { label: string; color: string }> = {
+    pending: { label: 'در انتظار', color: 'text-amber-600' },
+    approved: { label: 'تأیید شده', color: 'text-emerald-600' },
+    rejected: { label: 'رد شده', color: 'text-red-600' },
+    archived: { label: 'بایگانی', color: 'text-slate-500' },
+};
+
+const PIE_COLORS = ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'];
+
+export default function Dashboard({ stats = {}, recentLetters = [], monthlyStats = [] }: Props) {
+    const [activeTab, setActiveTab] = useState<'همه' | 'وارده' | 'صادره' | 'داخلی'>('همه');
     const [currentTime, setCurrentTime] = useState(new Date());
+    const [searchOpen, setSearchOpen] = useState(false);
 
     useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-
-        return () => clearInterval(timer);
+        const t = setInterval(() => setCurrentTime(new Date()), 60000);
+        return () => clearInterval(t);
     }, []);
 
+    const persianDate = currentTime.toLocaleDateString('fa-IR', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
     const pieData = useMemo(() => [
-        { name: 'فوری', value: stats.urgent_count || 12, color: '#ef4444' },
-        { name: 'عادی', value: stats.normal_count || 45, color: '#3b82f6' },
-        { name: 'مهم', value: stats.high_count || 23, color: '#f59e0b' },
-    ], [stats]);
+        { name: 'فوری', value: 12, color: PIE_COLORS[0] },
+        { name: 'مهم', value: 23, color: PIE_COLORS[1] },
+        { name: 'عادی', value: 45, color: PIE_COLORS[2] },
+        { name: 'پایین', value: 8, color: PIE_COLORS[3] },
+    ], []);
+
+    const statCards = [
+        { label: 'کارتابل فعال', value: stats.pending_actions ?? 42, icon: LayoutGrid, gradient: 'from-violet-500 to-indigo-600', iconBg: 'bg-white/20' },
+        { label: 'وارده امروز', value: stats.incoming_new ?? 8, icon: Inbox, gradient: 'from-blue-500 to-cyan-500', iconBg: 'bg-white/20' },
+        { label: 'صادره امروز', value: stats.outgoing_new ?? 5, icon: Send, gradient: 'from-emerald-500 to-teal-500', iconBg: 'bg-white/20' },
+        { label: 'پیش‌نویس‌ها', value: stats.my_drafts ?? 3, icon: Edit3, gradient: 'from-amber-500 to-orange-500', iconBg: 'bg-white/20' },
+    ];
+
+    const infoCards = [
+        { label: 'کل مکتوبات', value: stats.total_letters ?? 234, icon: BookOpen, color: 'text-violet-600' },
+        { label: 'کاربران سیستم', value: stats.total_users ?? 18, icon: Users, color: 'text-blue-600' },
+        { label: 'دپارتمان‌ها', value: stats.total_departments ?? 7, icon: Archive, color: 'text-emerald-600' },
+        { label: 'بایگانی شده', value: stats.archived_count ?? 89, icon: CheckCircle2, color: 'text-amber-600' },
+    ];
+
+    const sampleMonthly = monthlyStats.length > 0 ? monthlyStats : [
+        { month: 'فروردین', count: 30 },
+        { month: 'اردیبهشت', count: 52 },
+        { month: 'خرداد', count: 41 },
+        { month: 'تیر', count: 63 },
+        { month: 'مرداد', count: 55 },
+        { month: 'شهریور', count: 78 },
+    ];
+
+    const notifications = [
+        { time: '۱۰:۴۵', msg: 'مکتوب شماره ۱۲۰ با موفقیت امضا شد', icon: CheckCircle2, color: 'text-emerald-500', dot: 'bg-emerald-500' },
+        { time: '۰۹:۳۰', msg: 'ارجاع جدید از واحد فناوری اطلاعات', icon: ArrowUpRight, color: 'text-indigo-500', dot: 'bg-indigo-500' },
+        { time: '۰۸:۱۵', msg: 'یادآوری: مهلت پاسخ نامه شماره ۴۴', icon: AlertCircle, color: 'text-red-500', dot: 'bg-red-500' },
+        { time: '۰۷:۵۰', msg: 'پیش‌نویس جدید ذخیره شد', icon: Edit3, color: 'text-amber-500', dot: 'bg-amber-500' },
+    ];
 
     return (
-        <div className="min-h-screen bg-gray-200 text-slate-900 font-['vazir'] selection:bg-indigo-100" dir="rtl">
-            <Head title="داشبورد عملیاتی مکاتبات" />
-
-            <main className="max-w-[1600px] mx-auto px-6 py-8">
-
-                {/* --- QUICK ACTION TOOLBAR --- */}
-                <section className="mb-10 flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <button className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-700 rounded-xl text-xs font-black border border-rose-100 hover:bg-rose-100 transition">
-                            <AlertCircle className="h-4 w-4" />
-                            {stats.overdue || 5} پاسخ دیرهنگام
-                        </button>
-                        <button className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-xl text-xs font-black border border-amber-100 hover:bg-amber-100 transition">
-                            <Clock className="h-4 w-4" />
-                            {stats.waiting_sign || 12} در انتظار امضا
-                        </button>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-400 font-medium ml-2">فیلتر نمایش:</span>
-                        {['همه', 'وارده', 'صادره', 'داخلی'].map((tab) => (
-                            <button key={tab} className="px-4 py-1.5 rounded-lg text-xs font-bold transition bg-white border border-slate-200 text-slate-600 hover:border-indigo-300">
-                                {tab}
-                            </button>
-                        ))}
-                    </div>
-                </section>
-
-                <div className="grid grid-cols-12 gap-8">
-
-                    {/* --- LEFT COLUMN: CORE OPS --- */}
-                    <div className="col-span-12 xl:col-span-9 space-y-8">
-
-                        {/* BENTO STATS GRID */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            {/* Main Hero Card */}
-                            <div className="md:col-span-2 bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-100 relative overflow-hidden group">
-                                <div className="relative z-10 flex flex-col h-full justify-between">
-                                    <div>
-                                        <p className="text-indigo-100 text-sm font-medium">مجموع مکاتبات در جریان</p>
-                                        <h3 className="text-5xl font-black mt-2 tracking-tighter">{stats.pending_actions || 42}</h3>
-                                    </div>
-                                    <div className="mt-8 flex items-center gap-4">
-                                        <Link href="/cartable" className="bg-white text-indigo-600 px-6 py-2 rounded-2xl text-xs font-black hover:bg-indigo-50 transition">
-                                            مدیریت کارتابل
-                                        </Link>
-                                        <span className="text-indigo-100 text-[11px] flex items-center gap-1">
-                                            <Activity className="h-3 w-3" />
-                                            ۱۲٪ افزایش نسبت به هفته قبل
-                                        </span>
-                                    </div>
-                                </div>
-                                <ArrowLeftRight className="absolute -left-10 -bottom-10 h-48 w-48 text-white/10 group-hover:rotate-12 transition-transform duration-700" />
-                            </div>
-
-                            {/* Mini Metrics */}
-                            <div className="bg-white border border-slate-100 rounded-[2.5rem] p-6 flex flex-col justify-between hover:shadow-lg transition">
-                                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
-                                    <Inbox className="h-6 w-6" />
-                                </div>
+        <div className="min-h-screen">
+            <Head title="داشبورد مکاتبات" />
+            <main className="max-w-[1600px] mx-auto px-4 sm:px-6 space-y-6">
+                {/* ═══════════════ MAIN STAT CARDS ═══════════════ */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    {statCards.map(({ label, value, icon: Icon, gradient, iconBg }) => (
+                        <div key={label}
+                            className={`relative bg-gradient-to-br ${gradient} rounded-xl p-5 overflow-hidden shadow-md`}>
+                            <div className="relative z-10 flex items-start justify-between">
                                 <div>
-                                    <p className="text-slate-400 text-xs font-bold uppercase">وارده امروز</p>
-                                    <p className="text-2xl font-black text-slate-800">{stats.incoming_new || 8}</p>
+                                    <p className="text-white/80 text-xs font-medium">{label}</p>
+                                    <p className="text-3xl font-bold text-white mt-1">{value}</p>
+                                </div>
+                                <div className={`${iconBg} p-2.5 rounded-lg`}>
+                                    <Icon className="h-5 w-5 text-white" />
                                 </div>
                             </div>
+                            <div className="relative z-10 mt-4 flex items-center gap-1 text-white/70 text-xs">
+                                <TrendingUp className="h-3 w-3" />
+                                ۸٪ نسبت به هفته قبل
+                            </div>
+                        </div>
+                    ))}
+                </div>
 
-                            <div className="bg-white border border-slate-100 rounded-[2.5rem] p-6 flex flex-col justify-between hover:shadow-lg transition">
-                                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
-                                    <CheckDouble className="h-6 w-6" />
+                {/* ═══════════════ SECONDARY INFO CARDS ═══════════════ */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    {infoCards.map(({ label, value, icon: Icon, color }) => (
+                        <div key={label}
+                            className="rounded-xl border border-slate-200 bg-white p-5 flex items-center gap-4 hover:border-slate-300 hover:shadow-sm transition-all">
+                            <div className="w-11 h-11 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                                <Icon className={`h-5 w-5 ${color}`} />
+                            </div>
+                            <div>
+                                <p className="text-slate-500 text-xs">{label}</p>
+                                <p className="text-2xl font-bold text-slate-900">{value}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* ═══════════════ CHART + PIE ═══════════════ */}
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+                    {/* Area Chart */}
+                    <div className="xl:col-span-2 rounded-xl border border-slate-200 bg-white p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 className="font-bold text-slate-900 text-base">تحلیل گردش مکاتبات</h3>
+                                <p className="text-slate-500 text-xs mt-0.5">حجم نامه‌های ورودی بر اساس ماه</p>
+                            </div>
+                            <span className="flex items-center gap-1.5 text-emerald-600 text-xs font-medium">
+                                <Activity className="h-3.5 w-3.5" />
+                                زنده
+                            </span>
+                        </div>
+                        <div className="h-[260px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={sampleMonthly}>
+                                    <defs>
+                                        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                    <XAxis dataKey="month" axisLine={false} tickLine={false}
+                                        tick={{ fill: '#94a3b8', fontSize: 11 }} dy={10} />
+                                    <YAxis hide />
+                                    <Tooltip
+                                        contentStyle={{
+                                            background: '#fff',
+                                            border: '1px solid #e2e8f0',
+                                            borderRadius: '8px',
+                                            color: '#334155',
+                                            fontSize: 12,
+                                            padding: '10px 16px',
+                                            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+                                        }}
+                                        cursor={{ stroke: '#6366f1', strokeWidth: 1.5, strokeDasharray: '4 4' }}
+                                    />
+                                    <Area type="monotone" dataKey="count" stroke="#6366f1"
+                                        strokeWidth={3} fill="url(#areaGrad)" dot={false}
+                                        activeDot={{ r: 5, fill: '#6366f1', stroke: '#fff', strokeWidth: 2 }} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    {/* Donut Chart */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-6">
+                        <h3 className="font-bold text-slate-900 text-base mb-1">تفکیک اولویت‌ها</h3>
+                        <p className="text-slate-500 text-xs mb-4">توزیع مکتوبات بر اساس اولویت</p>
+                        <div className="h-44 relative">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie data={pieData} innerRadius={52} outerRadius={72}
+                                        paddingAngle={6} dataKey="value" stroke="none">
+                                        {pieData.map((entry, i) => (
+                                            <Cell key={i} fill={entry.color} />
+                                        ))}
+                                    </Pie>
+                                </PieChart>
+                            </ResponsiveContainer>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <span className="text-2xl font-bold text-slate-900">{stats.total_letters ?? 88}</span>
+                                <span className="text-xs text-slate-500 font-medium">کل نامه</span>
+                            </div>
+                        </div>
+                        <div className="space-y-2.5 mt-4">
+                            {pieData.map(p => (
+                                <div key={p.name} className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
+                                        <span className="text-xs text-slate-600">{p.name}</span>
+                                    </div>
+                                    <span className="text-xs font-bold text-slate-700">{p.value}</span>
                                 </div>
-                                <div>
-                                    <p className="text-slate-400 text-xs font-bold uppercase">مختومه شده</p>
-                                    <p className="text-2xl font-black text-slate-800">{stats.closed_today || 15}</p>
-                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ═══════════════ TABLE + NOTIFICATIONS ═══════════════ */}
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+                    {/* Letters Table */}
+                    <div className="xl:col-span-2 rounded-xl border border-slate-200 bg-white overflow-hidden">
+                        {/* Table Header */}
+                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-3">
+                            <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                                <History className="h-4 w-4 text-indigo-500" />
+                                آخرین مکتوبات
+                            </h3>
+                            <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+                                {(['همه', 'وارده', 'صادره', 'داخلی'] as const).map(tab => (
+                                    <button key={tab}
+                                        onClick={() => setActiveTab(tab)}
+                                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${activeTab === tab ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                                        {tab}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
-                        {/* ANALYTICS SECTION */}
-                        <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm">
-                            <div className="flex items-center justify-between mb-10">
-                                <div>
-                                    <h3 className="text-lg font-black text-slate-800">تحلیل زمانی گردش مکاتبات</h3>
-                                    <p className="text-sm text-slate-400 mt-1">مقایسه حجم نامه‌های ورودی در بازه‌های زمانی</p>
-                                </div>
-                                <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50">
-                                    <Download className="h-4 w-4" />
-                                    دریافت گزارش PDF
-                                </button>
-                            </div>
-                            <div className="h-[320px] w-full">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={monthlyStats}>
-                                        <defs>
-                                            <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.15} />
-                                                <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} dy={15} />
-                                        <YAxis hide />
-                                        <Tooltip
-                                            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', padding: '15px' }}
-                                            cursor={{ stroke: '#4f46e5', strokeWidth: 2, strokeDasharray: '5 5' }}
-                                        />
-                                        <Area type="monotone" dataKey="count" stroke="#4f46e5" strokeWidth={4} fillOpacity={1} fill="url(#chartGradient)" />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-
-                        {/* RECENT LETTERS TABLE */}
-                        <div className="bg-white border border-slate-100 rounded-[2.5rem] shadow-sm overflow-hidden">
-                            <div className="p-7 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
-                                <h3 className="font-black text-slate-800 flex items-center gap-2">
-                                    <History className="h-5 w-5 text-indigo-500" />
-                                    آخرین مکتوبات در جریان
-                                </h3>
-                                <button className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
-                                    مشاهده همه
-                                    <ChevronLeft className="h-4 w-4" />
-                                </button>
-                            </div>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-right">
-                                    <thead>
-                                        <tr className="text-slate-400 text-[11px] uppercase tracking-widest border-b border-slate-50">
-                                            <th className="px-8 py-5 font-bold">موضوع و عنوان مکتوب</th>
-                                            <th className="px-8 py-5 font-bold">فرستنده / واحد</th>
-                                            <th className="px-8 py-5 font-bold text-center">اولویت</th>
-                                            <th className="px-8 py-5 font-bold">وضعیت فعلی</th>
-                                            <th className="px-8 py-5 font-bold"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-50">
-                                        {recentLetters.map((letter) => (
-                                            <tr key={letter.id} className="hover:bg-indigo-50/30 transition-colors group cursor-pointer">
-                                                <td className="px-8 py-5">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-white group-hover:text-indigo-600 transition-all shadow-sm">
-                                                            <FileText className="h-5 w-5" />
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-right">
+                                <thead>
+                                    <tr className="text-slate-500 text-xs font-medium border-b border-slate-100">
+                                        <th className="px-6 py-3">موضوع</th>
+                                        <th className="px-6 py-3 text-center">اولویت</th>
+                                        <th className="px-6 py-3">وضعیت</th>
+                                        <th className="px-6 py-3" />
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(recentLetters.length > 0 ? recentLetters : [
+                                        { id: 1, subject: 'درخواست تأمین بودجه سالانه واحد IT', letter_number: 'NSIA-1403-001', priority: 'urgent', final_status: 'pending' },
+                                        { id: 2, subject: 'گزارش عملکرد ماهانه منابع بشری', letter_number: 'NSIA-1403-002', priority: 'high', final_status: 'approved' },
+                                        { id: 3, subject: 'اطلاعیه تغییر ساعات اداری', letter_number: 'NSIA-1403-003', priority: 'normal', final_status: 'pending' },
+                                        { id: 4, subject: 'درخواست مرخصی کارمندان دفتر مرکزی', letter_number: 'NSIA-1403-004', priority: 'low', final_status: 'archived' },
+                                        { id: 5, subject: 'صورت‌جلسه کمیسیون بودجه مشترک', letter_number: 'NSIA-1403-005', priority: 'high', final_status: 'rejected' },
+                                    ]).map(letter => {
+                                        const pri = priorityConfig[letter.priority ?? 'normal'] ?? priorityConfig.normal;
+                                        const sts = statusConfig[letter.final_status ?? 'pending'] ?? statusConfig.pending;
+                                        return (
+                                            <tr key={letter.id}
+                                                className="border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer group">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-9 h-9 rounded-lg bg-slate-100 group-hover:bg-indigo-50 flex items-center justify-center transition">
+                                                            <FileText className="h-4 w-4 text-slate-400 group-hover:text-indigo-500" />
                                                         </div>
                                                         <div>
-                                                            <p className="text-sm font-black text-slate-700">{letter.subject}</p>
-                                                            <p className="text-[10px] text-slate-400 mt-1 font-mono">{letter.letter_no || 'NSIA-1402-120'}</p>
+                                                            <p className="text-sm font-medium text-slate-700 line-clamp-1">{letter.subject}</p>
+                                                            <p className="text-xs text-slate-400 font-mono mt-0.5">{letter.letter_number ?? '—'}</p>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-8 py-5 text-sm font-medium text-slate-600">ریاست منابع بشری</td>
-                                                <td className="px-8 py-5 text-center">
-                                                    <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-rose-50 text-rose-600 border border-rose-100">فوری</span>
+                                                <td className="px-6 py-4 text-center">
+                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${pri.bg} ${pri.text}`}>
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${pri.dot}`} />
+                                                        {pri.label}
+                                                    </span>
                                                 </td>
-                                                <td className="px-8 py-5">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                                                        <span className="text-xs font-bold text-slate-600">در انتظار پاراف</span>
-                                                    </div>
+                                                <td className="px-6 py-4">
+                                                    <span className={`text-xs font-medium ${sts.color}`}>{sts.label}</span>
                                                 </td>
-                                                <td className="px-8 py-5">
-                                                    <button className="p-2 hover:bg-white rounded-lg transition text-slate-400 hover:text-indigo-600 shadow-sm">
-                                                        <MoreHorizontal className="h-5 w-5" />
-                                                    </button>
+                                                <td className="px-6 py-4">
+                                                    <Link href={`/letters/${letter.id}`}
+                                                        className="opacity-0 group-hover:opacity-100 text-indigo-600 hover:text-indigo-700 transition text-xs font-medium flex items-center gap-1">
+                                                        مشاهده <ChevronLeft className="h-3.5 w-3.5" />
+                                                    </Link>
                                                 </td>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="px-6 py-3 border-t border-slate-100 text-center">
+                            <Link href="/letters" className="text-xs text-indigo-600 hover:text-indigo-700 font-medium transition">
+                                مشاهده همه مکتوبات ←
+                            </Link>
                         </div>
                     </div>
 
-                    {/* --- RIGHT COLUMN: INSIGHTS & UTILS --- */}
-                    <div className="col-span-12 xl:col-span-3 space-y-8">
+                    {/* Notifications + Shortcuts */}
+                    <div className="space-y-5">
 
-                        {/* PRIORITY DONUT CHART */}
-                        <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm">
-                            <h3 className="font-black text-slate-800 mb-8">تفکیک اولویت‌ها</h3>
-                            <div className="h-60 relative">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie
-                                            data={pieData}
-                                            innerRadius={65}
-                                            outerRadius={85}
-                                            paddingAngle={10}
-                                            dataKey="value"
-                                            stroke="none"
-                                        >
-                                            {pieData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                            ))}
-                                        </Pie>
-                                    </PieChart>
-                                </ResponsiveContainer>
-                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span className="text-3xl font-black text-slate-800">{stats.total_letters || 80}</span>
-                                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">کل مکتوبات</span>
-                                </div>
+                        {/* Notifications */}
+                        <div className="rounded-xl border border-slate-200 bg-white p-6">
+                            <div className="flex items-center justify-between mb-5">
+                                <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                                    <Bell className="h-4 w-4 text-indigo-500" />
+                                    رویدادهای اخیر
+                                </h3>
+                                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                             </div>
-                            <div className="grid grid-cols-1 gap-3 mt-8">
-                                {pieData.map((p) => (
-                                    <div key={p.name} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition border border-transparent hover:border-slate-100">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }} />
-                                            <span className="text-xs font-bold text-slate-600">{p.name}</span>
+                            <div className="space-y-4 relative">
+                                <div className="absolute right-3 top-2 bottom-2 w-px bg-slate-200" />
+                                {notifications.map((n, i) => (
+                                    <div key={i} className="relative pr-8 group">
+                                        <div className="absolute right-0 top-0 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center z-10 group-hover:border-indigo-300 transition">
+                                            <n.icon className={`h-2.5 w-2.5 ${n.color}`} />
                                         </div>
-                                        <span className="text-xs font-black text-slate-800">{p.value}</span>
+                                        <p className="text-xs font-mono text-slate-400">{n.time}</p>
+                                        <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{n.msg}</p>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        {/* LIVE NOTIFICATIONS FEED */}
-                        <div className="bg-white border border-slate-100 rounded-[2.5rem] p-7 shadow-sm">
-                            <h3 className="font-black text-slate-800 mb-6 flex items-center justify-between">
-                                رویدادهای اخیر
-                                <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
-                            </h3>
-                            <div className="space-y-6 relative before:absolute before:right-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100">
-                                {[
-                                    { time: '۱۰:۴۵', msg: 'مکتوب شماره ۱۲۰ امضا شد', icon: CheckDouble, color: 'text-emerald-500' },
-                                    { time: '۰۹:۳۰', msg: 'ارجاع جدید از واحد IT', icon: ArrowUpRight, color: 'text-indigo-500' },
-                                    { time: '۰۸:۱۵', msg: 'یادآوری: مهلت پاسخ نامه ۴۴', icon: AlertCircle, color: 'text-rose-500' },
-                                ].map((item, idx) => (
-                                    <div key={idx} className="relative pr-9 group">
-                                        <div className="absolute right-0 top-0 w-[24px] h-[24px] bg-white border-2 border-slate-100 rounded-full flex items-center justify-center z-10 group-hover:border-indigo-400 transition-colors">
-                                            <item.icon className={`h-3 w-3 ${item.color}`} />
-                                        </div>
-                                        <p className="text-[10px] font-mono text-slate-400 leading-none">{item.time}</p>
-                                        <p className="text-xs font-bold text-slate-600 mt-1.5 leading-relaxed">{item.msg}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* QUICK SHORTCUTS */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <button className="flex flex-col items-center justify-center p-5 bg-white border border-slate-100 rounded-[2rem] hover:shadow-lg transition group">
-                                <Users className="h-6 w-6 text-purple-600 mb-2 group-hover:scale-110 transition" />
-                                <span className="text-[11px] font-black text-slate-600">دفترچه تلفن</span>
-                            </button>
-                            <button className="flex flex-col items-center justify-center p-5 bg-white border border-slate-100 rounded-[2rem] hover:shadow-lg transition group">
-                                <Archive className="h-6 w-6 text-amber-600 mb-2 group-hover:scale-110 transition" />
-                                <span className="text-[11px] font-black text-slate-600">بایگانی راکد</span>
-                            </button>
+                        {/* Shortcuts */}
+                        <div className="grid grid-cols-2 gap-3">
+                            {[
+                                { label: 'دفترچه تلفن', icon: Users, color: 'text-violet-600', bg: 'bg-violet-50', href: '/contacts' },
+                                { label: 'بایگانی', icon: Archive, color: 'text-amber-600', bg: 'bg-amber-50', href: '/archive' },
+                                { label: 'کارتابل', icon: LayoutGrid, color: 'text-blue-600', bg: 'bg-blue-50', href: '/cartable' },
+                                { label: 'نامه جدید', icon: Edit3, color: 'text-emerald-600', bg: 'bg-emerald-50', href: '/letters/create' },
+                            ].map(s => (
+                                <Link key={s.label} href={s.href}
+                                    className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-slate-200 ${s.bg} hover:border-slate-300 hover:shadow-sm transition-all group`}>
+                                    <s.icon className={`h-5 w-5 ${s.color} group-hover:scale-110 transition-transform`} />
+                                    <span className="text-xs font-medium text-slate-600 group-hover:text-slate-800">{s.label}</span>
+                                </Link>
+                            ))}
                         </div>
                     </div>
                 </div>

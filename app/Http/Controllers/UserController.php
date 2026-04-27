@@ -312,7 +312,95 @@ class UserController extends Controller
     public function update(UserRequest $request, User $user)
     {
         $currentUser = auth()->user();
-        dd($currentUser);
+        $targetOrganizationId = $request->organization_id;
+
+        // ============================================
+        // 1. بررسی دسترسی به سازمان
+        // ============================================
+        if (!$currentUser->canManageOrganization($targetOrganizationId)) {
+            return back()->withErrors(['organization_id' => 'شما دسترسی ویرایش کاربر در این سازمان را ندارید.'])->withInput();
+        }
+
+        // ============================================
+        // 2. محدودیت org-admin برای نقش super-admin
+        // ============================================
+        if ($currentUser->isOrgAdmin() && $request->role === RoleEnum::SUPER_ADMIN->value) {
+            return back()->withErrors(['role' => 'شما نمی‌توانید نقش ادمین کل را تخصیص دهید.'])->withInput();
+        }
+
+        // ============================================
+        // 3. محدودیت سلسله مراتب نقش‌ها
+        // ============================================
+        if ($currentUser->isOrgAdmin()) {
+            $roleHierarchy = [
+                'super-admin'   => 4,
+                'org-admin'     => 3,
+                'dept-manager'  => 2,
+                'user'          => 1,
+            ];
+
+            $currentUserRoleLevel = $roleHierarchy[$currentUser->roles->first()->name] ?? 0;
+            $targetRoleLevel = $roleHierarchy[$request->role] ?? 0;
+
+            if ($targetRoleLevel > $currentUserRoleLevel) {
+                return back()->withErrors(['role' => 'شما نمی‌توانید نقشی بالاتر از نقش خود تخصیص دهید.'])->withInput();
+            }
+        }
+
+        // ============================================
+        // 4. آماده‌سازی داده‌ها برای آپدیت
+        // ============================================
+        $data = [
+            'organization_id'       => $request->organization_id,
+            'department_id'         => $request->department_id,
+            'primary_position_id'   => $request->primary_position_id,
+            'email'                 => $request->email,
+            'first_name'            => $request->first_name,
+            'last_name'             => $request->last_name,
+            'national_code'         => $request->national_code,
+            'mobile'                => $request->mobile,
+            'birth_date'            => $request->birth_date,
+            'emergency_phone'       => $request->emergency_phone,
+            'address'               => $request->address,
+            'status'                => $request->status,
+            'security_clearance'    => $request->security_clearance,
+        ];
+
+        // فقط اگر رمز عبور جدید وارد شده باشد، آن را آپدیت کن
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        // ============================================
+        // 5. آپدیت کاربر
+        // ============================================
+        $user->update($data);
+
+        // ============================================
+        // 6. همگام‌سازی نقش
+        // ============================================
+        $user->syncRoles([$request->role]);
+
+        // ============================================
+        // 7. آپدیت رابطه user_positions
+        // ============================================
+        if ($request->department_id && $request->primary_position_id) {
+            // حذف position های قبلی
+            $user->positions()->detach();
+
+            // اضافه کردن position جدید
+            $user->positions()->attach($request->primary_position_id, [
+                'is_primary' => true,
+                'start_date' => now(),
+                'status' => 'active',
+            ]);
+        } else {
+            // اگر department یا position نال است، همه position ها را حذف کن
+            $user->positions()->detach();
+        }
+
+        return redirect()->route('users.index')
+            ->with('success', 'کاربر با موفقیت به‌روزرسانی شد.');
     }
 
     /**

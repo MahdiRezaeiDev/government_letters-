@@ -24,7 +24,7 @@ return new class extends Migration
             // اطلاعات شخصی
             $table->string('first_name');
             $table->string('last_name');
-            $table->string('national_code', 10)->unique();
+            $table->string('national_code', 20)->unique();
             $table->string('mobile', 20)->nullable();
             $table->string('employment_code', 50)->unique()->nullable();
             $table->string('avatar')->nullable();
