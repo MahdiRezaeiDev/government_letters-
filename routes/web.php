@@ -19,9 +19,9 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Symfony\Component\HttpFoundation\Request;
 
-Route::inertia('/', 'welcome', [
-    'canRegister' => Features::enabled(Features::registration()),
-])->name('home');
+Route::get('/', function () {
+    return redirect()->route('login');
+})->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
 

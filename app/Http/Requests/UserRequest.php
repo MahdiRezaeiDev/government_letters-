@@ -206,77 +206,29 @@ class UserRequest extends FormRequest
     }
     protected function prepareForValidation()
     {
-        $dateFields = ['date', 'due_date', 'response_deadline'];
-        $merged = [];
+        $dateFields = ['birth_date'];
 
         foreach ($dateFields as $field) {
-            $value = $this->$field;
+            if ($this->has($field) && !empty($this->$field)) {
+                try {
+                    // تبدیل اعداد فارسی/عربی به انگلیسی
+                    $englishDigits = str_replace(
+                        ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'],
+                        ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+                        $this->$field
+                    );
 
-            if (empty($value)) {
-                continue;
+                    // تبدیل جداکننده‌های مختلف به /
+                    $normalized = str_replace(['/'], '-', $englishDigits);
+
+                    // ذخیره مقدار نرمال‌سازی شده
+                    $this->merge([
+                        $field => $normalized,
+                    ]);
+                } catch (\Exception $e) {
+                    // در صورت خطا، مقدار اصلی حفظ می‌شود
+                }
             }
-
-            try {
-                // ۱. تبدیل اعداد فارسی/عربی به انگلیسی
-                $englishDigits = str_replace(
-                    [
-                        '۰',
-                        '۱',
-                        '۲',
-                        '۳',
-                        '۴',
-                        '۵',
-                        '۶',
-                        '۷',
-                        '۸',
-                        '۹',
-                        '٠',
-                        '١',
-                        '٢',
-                        '٣',
-                        '٤',
-                        '٥',
-                        '٦',
-                        '٧',
-                        '٨',
-                        '٩'
-                    ],
-                    [
-                        '0',
-                        '1',
-                        '2',
-                        '3',
-                        '4',
-                        '5',
-                        '6',
-                        '7',
-                        '8',
-                        '9',
-                        '0',
-                        '1',
-                        '2',
-                        '3',
-                        '4',
-                        '5',
-                        '6',
-                        '7',
-                        '8',
-                        '9'
-                    ],
-                    $value
-                );
-
-                $normalized = str_replace('-', '/', $englishDigits);
-
-                dd($normalized);
-
-                return $normalized;
-            } catch (\Exception $e) {
-            }
-        }
-
-        if (!empty($merged)) {
-            $this->merge($merged);
         }
     }
 }

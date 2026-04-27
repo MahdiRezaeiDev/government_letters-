@@ -63,8 +63,6 @@ export default function UsersCreate({ organizations, departments: initialDepartm
         role: 'user',
     });
 
-    console.log(errors);
-
     useEffect(() => {
         if (data.organization_id) {
             fetch(`/users/departments-by-organization?organization_id=${data.organization_id}`)

@@ -117,14 +117,6 @@ export default function CategoriesCreate({ organizations, parentCategories }: Pr
         <>
             <Head title="ایجاد دسته‌بندی جدید" />
 
-            <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
-                * { font-family: 'Vazirmatn', sans-serif; }
-                :root { direction: rtl; }
-                input[type=color]::-webkit-color-swatch-wrapper { padding: 0; }
-                input[type=color]::-webkit-color-swatch { border: none; border-radius: 8px; }
-            `}</style>
-
             <div className="min-h-screen bg-slate-50/70" dir="rtl">
 
                 {/* ── Sticky Top Bar ── */}

@@ -120,7 +120,7 @@ class UserController extends Controller
         } else {
             $organizations = collect();
         }
-       
+
         $departments = collect();
 
         $positions = collect();
@@ -184,15 +184,15 @@ class UserController extends Controller
             'last_name'                                 => $request->last_name,
             'national_code'                             => $request->national_code,
             'mobile'                                    => $request->mobile,
-            'employment_code'                           => $request->employment_code,
-            'gender'                                    => $request->gender,
+            'employment_code'                           => User::generateCode(),
+            'gender'                                    => 'male',
             'birth_date'                                => $request->birth_date,
             'emergency_phone'                           => $request->emergency_phone,
             'address'                                   => $request->address,
             'status'                                    => $request->status,
             'security_clearance'                        => $request->security_clearance,
             'locale'                                    => 'fa',
-            'timezone'                                  => 'Asia/Tehran',
+            'timezone'                                  => 'Asia/Kabul',
         ]);
 
         // ============================================
@@ -210,16 +210,6 @@ class UserController extends Controller
                 'status' => 'active',
             ]);
         }
-
-        // ============================================
-        // 7. لاگ عملیات
-        // ============================================
-        \App\Models\EventLog::log(
-            'user_created',
-            "کاربر {$user->full_name} با نقش {$request->role} ایجاد شد",
-            $user,
-            ['role' => $request->role]
-        );
 
         return redirect()->route('users.index')
             ->with('success', 'کاربر با موفقیت ایجاد شد.');
