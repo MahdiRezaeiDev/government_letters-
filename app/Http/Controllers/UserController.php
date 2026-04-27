@@ -79,21 +79,21 @@ class UserController extends Controller
 
         $roles = $currentUser->isSuperAdmin() || $currentUser->isOrgAdmin()
             ? collect(RoleEnum::cases())->map(fn($role) => [
-                'name' => $role->value,
-                'label' => $role->label(),
+                'name'                  => $role->value,
+                'label'                 => $role->label(),
             ])
             : collect();
 
         return Inertia::render('users/index', [
-            'users' => $users,
-            'organizations' => $organizations,
-            'roles' => $roles,
-            'filters' => $request->only(['search', 'status', 'organization_id', 'role']),
-            'can' => [
-                'create' => $currentUser->can(PermissionEnum::CREATE_USER) && ($currentUser->isSuperAdmin() || $currentUser->isOrgAdmin()),
-                'edit' => $currentUser->can(PermissionEnum::EDIT_USER),
-                'delete' => $currentUser->can(PermissionEnum::DELETE_USER),
-                'assign_role' => $currentUser->can(PermissionEnum::ASSIGN_ROLE),
+            'users'                     => $users,
+            'organizations'             => $organizations,
+            'roles'                     => $roles,
+            'filters'                   => $request->only(['search', 'status', 'organization_id', 'role']),
+            'can'                       => [
+                'create'                => $currentUser->can(PermissionEnum::CREATE_USER) && ($currentUser->isSuperAdmin() || $currentUser->isOrgAdmin()),
+                'edit'                  => $currentUser->can(PermissionEnum::EDIT_USER),
+                'delete'                => $currentUser->can(PermissionEnum::DELETE_USER),
+                'assign_role'           => $currentUser->can(PermissionEnum::ASSIGN_ROLE),
             ],
         ]);
     }
@@ -129,16 +129,16 @@ class UserController extends Controller
 
         // نقش‌های قابل تخصیص
         $roles = collect(RoleEnum::cases())->map(fn($role) => [
-            'name' => $role->value,
-            'label' => $role->label(),
+            'name'                              => $role->value,
+            'label'                             => $role->label(),
         ]);
 
         return Inertia::render('users/create', [
-            'organizations' => $organizations,
-            'departments' => $departments,
-            'positions' => $positions,
-            'roles' => $roles,
-            'myOrganizationId' => $currentUser->organization_id,
+            'organizations'                     => $organizations,
+            'departments'                       => $departments,
+            'positions'                         => $positions,
+            'roles'                             => $roles,
+            'myOrganizationId'                  => $currentUser->organization_id,
         ]);
     }
 
@@ -148,32 +148,22 @@ class UserController extends Controller
     public function store(UserRequest $request)
     {
         $currentUser = auth()->user();
-
-        // ============================================
-        // 1. بررسی دسترسی برای ایجاد کاربر در سازمان خاص
-        // ============================================
         $targetOrganizationId = $request->organization_id;
 
         if (!$currentUser->canManageOrganization($targetOrganizationId)) {
             return back()->withErrors(['organization_id' => 'شما دسترسی ایجاد کاربر در این سازمان را ندارید.'])->withInput();
         }
 
-        // ============================================
-        // 2. بررسی نقش: ادمین سازمان نمی‌تواند نقش ادمین کل بدهد
-        // ============================================
         if ($currentUser->isOrgAdmin() && $request->role === RoleEnum::SUPER_ADMIN->value) {
             return back()->withErrors(['role' => 'شما نمی‌توانید نقش ادمین کل را تخصیص دهید.'])->withInput();
         }
 
-        // ============================================
-        // 3. بررسی: ادمین سازمان نمی‌تواند نقش بالاتر از خودش بدهد
-        // ============================================
         if ($currentUser->isOrgAdmin()) {
             $roleHierarchy = [
-                'super-admin' => 4,
-                'org-admin' => 3,
-                'dept-manager' => 2,
-                'user' => 1,
+                'super-admin'                   => 4,
+                'org-admin'                     => 3,
+                'dept-manager'                  => 2,
+                'user'                          => 1,
             ];
 
             $currentUserRoleLevel = $roleHierarchy[$currentUser->roles->first()->name] ?? 0;
@@ -188,24 +178,24 @@ class UserController extends Controller
         // 4. ایجاد کاربر
         // ============================================
         $user = User::create([
-            'organization_id' => $request->organization_id,
-            'department_id' => $request->department_id,
-            'primary_position_id' => $request->primary_position_id,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'national_code' => $request->national_code,
-            'mobile' => $request->mobile,
-            'employment_code' => $request->employment_code,
-            'gender' => $request->gender,
-            'birth_date' => $request->birth_date,
-            'emergency_phone' => $request->emergency_phone,
-            'address' => $request->address,
-            'status' => $request->status,
-            'security_clearance' => $request->security_clearance,
-            'locale' => 'fa',
-            'timezone' => 'Asia/Tehran',
+            'organization_id'                           => $request->organization_id,
+            'department_id'                             => $request->department_id,
+            'primary_position_id'                       => $request->primary_position_id,
+            'email'                                     => $request->email,
+            'password'                                  => Hash::make($request->password),
+            'first_name'                                => $request->first_name,
+            'last_name'                                 => $request->last_name,
+            'national_code'                             => $request->national_code,
+            'mobile'                                    => $request->mobile,
+            'employment_code'                           => $request->employment_code,
+            'gender'                                    => $request->gender,
+            'birth_date'                                => $request->birth_date,
+            'emergency_phone'                           => $request->emergency_phone,
+            'address'                                   => $request->address,
+            'status'                                    => $request->status,
+            'security_clearance'                        => $request->security_clearance,
+            'locale'                                    => 'fa',
+            'timezone'                                  => 'Asia/Tehran',
         ]);
 
         // ============================================
