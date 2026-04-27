@@ -58,7 +58,7 @@ export default function DeleteConfirmationModal({
                                     </Dialog.Title>
                                     <button
                                         onClick={onClose}
-                                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                                        className="p-1.5 cursor-pointer rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
                                     >
                                         <X className="h-4 w-4" />
                                     </button>
@@ -96,17 +96,9 @@ export default function DeleteConfirmationModal({
                                     <div className="mt-5 flex gap-3">
                                         <button
                                             type="button"
-                                            onClick={onClose}
-                                            disabled={isLoading}
-                                            className="flex-1 px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
-                                        >
-                                            انصراف
-                                        </button>
-                                        <button
-                                            type="button"
                                             onClick={onConfirm}
                                             disabled={isLoading}
-                                            className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                            className="flex-1 cursor-pointer px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                         >
                                             {isLoading ? (
                                                 <>
@@ -119,6 +111,14 @@ export default function DeleteConfirmationModal({
                                                     <span>حذف</span>
                                                 </>
                                             )}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={onClose}
+                                            disabled={isLoading}
+                                            className="flex-1 cursor-pointer px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+                                        >
+                                            انصراف
                                         </button>
                                     </div>
                                 </div>

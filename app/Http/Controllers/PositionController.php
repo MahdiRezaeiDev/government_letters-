@@ -97,7 +97,7 @@ class PositionController extends Controller
             'department_id'             => $request->department_id,
             'name'                      => $request->name,
             'code'                      => Position::generateCode(),
-            'level'                     => 0,
+            'level'                     => 10,
             'is_management'             => $request->is_management ?? false,
             'description'               => $request->description,
         ]);
@@ -187,8 +187,6 @@ class PositionController extends Controller
         $position->update([
             'department_id'                 => $request->department_id,
             'name'                          => $request->name,
-            'code'                          => $request->code,
-            'level'                         => $request->level,
             'is_management'                 => $request->is_management ?? false,
             'description'                   => $request->description,
         ]);
