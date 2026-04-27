@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PermissionEnum;
+use App\Http\Requests\DepartmentRequest;
 use App\Models\Department;
 use App\Models\Organization;
 use App\Models\User;
 use App\Models\Position;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 
 class DepartmentController extends Controller
@@ -91,25 +91,9 @@ class DepartmentController extends Controller
     /**
      * ذخیره دپارتمان جدید
      */
-    public function store(Request $request)
+    public function store(DepartmentRequest $request)
     {
         $user = auth()->user();
-
-        // اعتبارسنجی
-        $validator = Validator::make($request->all(), [
-            'organization_id' => 'required|exists:organizations,id',
-            'name' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:departments,id',
-            'manager_position_id' => 'nullable|exists:positions,id',
-            'status' => 'required|in:active,inactive',
-        ], [
-            'organization_id.required' => 'انتخاب سازمان الزامی است',
-            'name.required' => 'نام دپارتمان الزامی است',
-        ]);
-
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
-        }
 
         // بررسی دسترسی به سازمان
         if (!$user->isSuperAdmin() && $user->organization_id != $request->organization_id) {
@@ -234,7 +218,7 @@ class DepartmentController extends Controller
     /**
      * به‌روزرسانی دپارتمان
      */
-    public function update(Request $request, Department $department)
+    public function update(DepartmentRequest $request, Department $department)
     {
         $user = auth()->user();
 
@@ -242,24 +226,6 @@ class DepartmentController extends Controller
         if (!$user->isSuperAdmin() && $user->organization_id != $department->organization_id) {
             abort(403);
         }
-
-        // اعتبارسنجی
-        $validator = Validator::make($request->all(), [
-            'organization_id' => 'required|exists:organizations,id',
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:departments,code,' . $department->id,
-            'parent_id' => 'nullable|exists:departments,id|not_in:' . $department->id,
-            'manager_position_id' => 'nullable|exists:positions,id',
-            'status' => 'required|in:active,inactive',
-        ], [
-            'code.unique' => 'این کد قبلاً ثبت شده است',
-            'parent_id.not_in' => 'دپارتمان نمی‌تواند والد خودش باشد',
-        ]);
-
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
-        }
-
         // محاسبه سطح و مسیر
         $level = 0;
         $path = null;
