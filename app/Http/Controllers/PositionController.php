@@ -7,7 +7,6 @@ use App\Http\Requests\PositionRequest;
 use App\Models\Position;
 use App\Models\Department;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 
 class PositionController extends Controller
@@ -33,7 +32,7 @@ class PositionController extends Controller
                 $query->where('name', 'like', "%{$request->search}%")
                   ->orWhere('code', 'like', "%{$request->search}%");
             });
-            
+
         })->paginate(15);
         
         // لیست دپارتمان‌ها برای فیلتر
@@ -44,13 +43,13 @@ class PositionController extends Controller
         $departments = $departmentsQuery->get();
         
         return Inertia::render('positions/index', [
-            'positions' => $positions,
-            'departments' => $departments,
-            'filters' => $request->only(['search', 'department_id']),
+            'positions'                 => $positions,
+            'departments'               => $departments,
+            'filters'                   => $request->only(['search', 'department_id']),
             'can' => [
-                'create' => $user->can(PermissionEnum::CREATE_POSITION->value),
-                'edit' => $user->can(PermissionEnum::EDIT_POSITION->value),
-                'delete' => $user->can(PermissionEnum::DELETE_POSITION->value),
+                'create'                => $user->can(PermissionEnum::CREATE_POSITION->value),
+                'edit'                  => $user->can(PermissionEnum::EDIT_POSITION->value),
+                'delete'                => $user->can(PermissionEnum::DELETE_POSITION->value),
             ],
         ]);
     }
@@ -74,8 +73,8 @@ class PositionController extends Controller
         $selectedDepartment = $request->department_id;
         
         return Inertia::render('positions/create', [
-            'departments' => $departments,
-            'selectedDepartment' => $selectedDepartment,
+            'departments'               => $departments,
+            'selectedDepartment'        => $selectedDepartment,
         ]);
     }
 
@@ -137,14 +136,14 @@ class PositionController extends Controller
         
         // آمار
         $stats = [
-            'total_users' => $position->users()->count(),
-            'active_users' => $position->users()->wherePivot('status', 'active')->count(),
-            'primary_users' => $position->users()->wherePivot('is_primary', true)->count(),
+            'total_users'               => $position->users()->count(),
+            'active_users'              => $position->users()->wherePivot('status', 'active')->count(),
+            'primary_users'             => $position->users()->wherePivot('is_primary', true)->count(),
         ];
         
         return Inertia::render('positions/show', [
-            'position' => $position,
-            'stats' => $stats,
+            'position'                  => $position,
+            'stats'                     => $stats,
         ]);
     }
 
@@ -170,8 +169,8 @@ class PositionController extends Controller
         $departments = $query->get();
         
         return Inertia::render('positions/edit', [
-            'position' => $position->load('department'),
-            'departments' => $departments,
+            'position'                  => $position->load('department'),
+            'departments'               => $departments,
         ]);
     }
 
@@ -186,12 +185,12 @@ class PositionController extends Controller
         
         // به‌روزرسانی
         $position->update([
-            'department_id' => $request->department_id,
-            'name' => $request->name,
-            'code' => $request->code,
-            'level' => $request->level,
-            'is_management' => $request->is_management ?? false,
-            'description' => $request->description,
+            'department_id'                 => $request->department_id,
+            'name'                          => $request->name,
+            'code'                          => $request->code,
+            'level'                         => $request->level,
+            'is_management'                 => $request->is_management ?? false,
+            'description'                   => $request->description,
         ]);
         
         // لاگ عملیات
