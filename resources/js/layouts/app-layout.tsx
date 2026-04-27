@@ -50,7 +50,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
             )}
 
             {/* بخش محتوا و هدر: عرض این بخش با انیمیشن تغییر می‌کند */}
-            <div className={`flex flex-col min-h-screen transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${!isMobile ? sidebarWidthClasses : ''}`}>
+            <div className={`flex flex-col min-h-screen  bg-gray-200 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${!isMobile ? sidebarWidthClasses : ''}`}>
                 <Header
                     onMenuClick={() => setSidebarOpen(true)}
                     isMobile={isMobile}

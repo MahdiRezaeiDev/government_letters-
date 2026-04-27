@@ -170,22 +170,6 @@ export default function SystemSettings({ settings }: Props) {
         <>
             <Head title="تنظیمات سیستم" />
 
-            <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
-                * { font-family: 'Vazirmatn', sans-serif; }
-                :root { direction: rtl; }
-                @keyframes fadeUp {
-                    from { opacity: 0; transform: translateY(8px); }
-                    to   { opacity: 1; transform: translateY(0); }
-                }
-                .fade-up { animation: fadeUp 0.22s ease-out both; }
-                @keyframes scaleIn {
-                    from { opacity: 0; transform: scale(0.9); }
-                    to   { opacity: 1; transform: scale(1); }
-                }
-                .scale-in { animation: scaleIn 0.2s ease-out both; }
-            `}</style>
-
             <div className="min-h-screen bg-slate-50/70" dir="rtl">
 
                 {/* ── Sticky Top Bar ── */}

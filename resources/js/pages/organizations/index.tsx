@@ -119,7 +119,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
         <>
             <Head title="مدیریت وزارت ها" />
 
-            <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-slate-100">
+            <div className="min-h-screen bg-gray-200">
                 <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="space-y-6">
                         {/* Header Section */}

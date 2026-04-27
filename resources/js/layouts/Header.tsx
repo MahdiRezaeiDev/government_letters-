@@ -44,7 +44,7 @@ export function Header({ onMenuClick, isMobile }: HeaderProps) {
 
                 {/* بخش راست: لوگو و جستجو */}
                 <div className="flex items-center gap-10">
-                    <div className="flex items-center gap-3">
+                    {/* <div className="flex items-center gap-3">
                         {isMobile ? (
                             <button onClick={onMenuClick} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
                                 <Menu className="text-slate-600 h-6 w-6" />
@@ -57,7 +57,7 @@ export function Header({ onMenuClick, isMobile }: HeaderProps) {
                         <h1 className="text-xl font-black tracking-tight text-slate-800 hidden sm:block">
                             سیستم مدیریت <span className="text-indigo-600">مکاتبات</span>
                         </h1>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* بخش چپ: تاریخ، نوتفیکیشن و پروفایل */}

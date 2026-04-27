@@ -1,8 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
 import {
     Inbox, FileText, Clock, Archive, Users, 
-    Search, Plus, Bell, AlertCircle, BedDoubleIcon as CheckDouble, ArrowUpRight,
-    History, ChevronLeft, Activity, LayoutDashboard,
+    AlertCircle, BedDoubleIcon as CheckDouble, ArrowUpRight,
+    History, ChevronLeft, Activity, 
     MoreHorizontal, Download, ArrowLeftRight
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
@@ -34,7 +34,7 @@ export default function FinalProfessionalDashboard({ stats, recentLetters, month
     ], [stats]);
 
     return (
-        <div className="min-h-screen bg-[#fcfdfe] text-slate-900 font-['vazir'] selection:bg-indigo-100" dir="rtl">
+        <div className="min-h-screen bg-gray-200 text-slate-900 font-['vazir'] selection:bg-indigo-100" dir="rtl">
             <Head title="داشبورد عملیاتی مکاتبات" />
 
             <main className="max-w-[1600px] mx-auto px-6 py-8">

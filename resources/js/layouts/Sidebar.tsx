@@ -101,7 +101,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
     }, [userRole]);
 
     return (
-        <aside className={`fixed right-0 top-0 h-screen bg-white/80 backdrop-blur-2xl border-l border-slate-200/60 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] z-50 ${collapsed ? 'w-20' : 'w-72'}`}>
+        <aside className={`fixed right-0 top-0 h-screen bg-[#c3e3e8] backdrop-blur-2xl border-l border-slate-200/60 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] z-50 ${collapsed ? 'w-20' : 'w-72'}`}>
             <div className="h-24 flex items-center px-6">
                 <div className="flex items-center gap-3">
                     <div className="h-10 w-10 shrink-0 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-100 ring-2 ring-white">
