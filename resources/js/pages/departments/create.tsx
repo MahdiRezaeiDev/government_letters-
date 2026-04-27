@@ -72,7 +72,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(departments.store(), {
+        post(departments.store().url, {
             preserveScroll: true,
             onSuccess: () => reset()
         });

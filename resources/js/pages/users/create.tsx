@@ -3,13 +3,16 @@
 import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import {
-    Save, X, Eye, EyeOff, Building2, Users, Briefcase, Shield,
-    Mail, Phone, User, Key, Award, AlertCircle, CheckCircle,
-    Loader2, CreditCard, Hash, Globe, Lock, Calendar, MapPin,
-    Venus, Mars, Heart, PhoneCall, Info
+    Building2, Shield, Mail, Phone, User, Key, AlertCircle, CheckCircle, Hash, Globe, Lock, MapPin,
+    Save,
+    X
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import PersianDatePicker from '@/components/PersianDatePicker';
+import FieldLabel from '@/components/ui/FieldLabel';
+import InputField from '@/components/ui/InputField';
+import SectionCard from '@/components/ui/SectionCard';
+import SelectField from '@/components/ui/SelectField';
 import users from '@/routes/users';
 import type { Organization, Department, Position, Role } from '@/types';
 
@@ -19,27 +22,6 @@ interface Props {
     positions: Position[];
     roles: Role[];
     myOrganizationId: number | null;
-}
-
-interface FormData {
-    organization_id: number;
-    department_id: number | null;
-    primary_position_id: number | null;
-    email: string;
-    password: string;
-    password_confirmation: string;
-    first_name: string;
-    last_name: string;
-    national_code: string;
-    mobile: string;
-    employment_code: string;
-    gender: 'male' | 'female' | null;
-    birth_date: string;
-    emergency_phone: string;
-    address: string;
-    status: 'active' | 'inactive' | 'suspended';
-    security_clearance: 'public' | 'internal' | 'confidential' | 'secret';
-    role: string;
 }
 
 const STATUS_OPTIONS = [
@@ -55,11 +37,6 @@ const SECURITY_LEVELS = [
     { value: 'secret', label: 'سری', desc: 'دسترسی به اطلاعات سری و حساس', icon: Shield, color: '#ef4444', bg: '#fee2e2' },
 ] as const;
 
-const GENDER_OPTIONS = [
-    { value: 'male', label: 'مذکر', icon: Mars, color: '#3b82f6' },
-    { value: 'female', label: 'مونث', icon: Venus, color: '#ec4899' },
-] as const;
-
 const ROLE_LABELS: Record<string, string> = {
     'super-admin': 'ادمین کل',
     'org-admin': 'ادمین وزارت',
@@ -67,109 +44,16 @@ const ROLE_LABELS: Record<string, string> = {
     'user': 'کاربر عادی',
 };
 
-// ─── Shared Components ─────────────────────────────────────────────────────
-
-function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
-    return (
-        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-            {children}
-            {required && <span className="text-rose-400 mr-1">*</span>}
-        </label>
-    );
-}
-
-function Field({ icon: Icon, type = 'text', value, onChange, onBlur, error, placeholder, disabled = false, maxLength, suffix }: any) {
-    return (
-        <div>
-            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${disabled ? 'opacity-60 bg-slate-50' :
-                error ? 'border-rose-300 ring-1 ring-rose-300' :
-                    'border-slate-200 hover:border-slate-300 focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-sky-100'
-                }`}>
-                {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
-                <input
-                    type={type}
-                    value={value}
-                    onChange={e => onChange(e.target.value)}
-                    onBlur={onBlur}
-                    placeholder={placeholder}
-                    disabled={disabled}
-                    maxLength={maxLength}
-                    className={`w-full ${Icon ? 'pr-10' : 'pr-4'} ${suffix ? 'pl-10' : 'pl-4'} py-3 text-sm bg-transparent focus:outline-none text-slate-700 placeholder-slate-300`}
-                />
-                {suffix && <div className="absolute left-3.5">{suffix}</div>}
-            </div>
-            {error && <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{error}</p>}
-        </div>
-    );
-}
-
-function SelectField({ icon: Icon, value, onChange, onBlur, children, disabled = false, loading = false, error }: any) {
-    return (
-        <div>
-            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${disabled ? 'opacity-60 bg-slate-50' :
-                error ? 'border-rose-300 ring-1 ring-rose-300' :
-                    'border-slate-200 hover:border-slate-300 focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-sky-100'
-                }`}>
-                {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
-                <select
-                    value={value}
-                    onChange={e => onChange(e.target.value)}
-                    onBlur={onBlur}
-                    disabled={disabled || loading}
-                    className={`w-full ${Icon ? 'pr-10' : 'pr-4'} pl-9 py-3 text-sm bg-transparent focus:outline-none appearance-none text-slate-700 ${disabled ? 'cursor-not-allowed' : ''}`}
-                >
-                    {children}
-                </select>
-                {loading ? (
-                    <Loader2 className="absolute left-3.5 h-4 w-4 text-slate-400 animate-spin" />
-                ) : (
-                    <svg className="absolute left-3.5 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                )}
-            </div>
-            {error && <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{error}</p>}
-        </div>
-    );
-}
-
-function SectionCard({ icon: Icon, iconColor, title, subtitle, description, children }: any) {
-    return (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-6 py-5 border-b border-slate-100 flex items-start gap-3.5 bg-gradient-to-l from-white to-slate-50/60">
-                <div className="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: iconColor + '18' }}>
-                    <Icon className="h-4 w-4" style={{ color: iconColor }} />
-                </div>
-                <div>
-                    <h2 className="text-sm font-bold text-slate-800">{title}</h2>
-                    <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>
-                    {description && (
-                        <div className="mt-2 flex items-start gap-1.5 text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2">
-                            <Info className="h-3.5 w-3.5 text-slate-400 flex-shrink-0 mt-0.5" />
-                            <span>{description}</span>
-                        </div>
-                    )}
-                </div>
-            </div>
-            <div className="p-6">{children}</div>
-        </div>
-    );
-}
-
 // ─── Main Component ────────────────────────────────────────────────────────
 
 export default function UsersCreate({
     organizations, departments: initialDepartments, positions: initialPositions,
     roles, myOrganizationId
 }: Props) {
-    const [showPassword, setShowPassword] = useState(false);
     const [departments, setDepartments] = useState<Department[]>(initialDepartments);
     const [positions, setPositions] = useState<Position[]>(initialPositions);
-    const [loadingDepts, setLoadingDepts] = useState(false);
-    const [loadingPositions, setLoadingPositions] = useState(false);
-    const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-    const { data, setData, post, processing, errors, reset } = useForm<FormData>({
+    const { data, setData, processing, post, errors, reset } = useForm({
         organization_id: myOrganizationId || organizations[0]?.id || 0,
         department_id: null,
         primary_position_id: null,
@@ -190,38 +74,37 @@ export default function UsersCreate({
         role: 'user',
     });
 
-    const handleBlur = (field: string) => setTouched(prev => ({ ...prev, [field]: true }));
-    const getFieldError = (field: string) => touched[field] && errors[field] ? errors[field] : null;
-
     // بارگذاری دپارتمان‌ها
     useEffect(() => {
         if (data.organization_id) {
-            setLoadingDepts(true);
             fetch(`/users/departments-by-organization?organization_id=${data.organization_id}`)
                 .then(r => r.json())
-                .then(d => { setDepartments(d.departments || []); setLoadingDepts(false); })
-                .catch(() => setLoadingDepts(false));
+                .then(d => {
+                    setDepartments(d.departments || []);
+                })
+                .catch(() => { });
         }
     }, [data.organization_id]);
 
     // بارگذاری پست‌ها
     useEffect(() => {
         if (data.department_id) {
-            setLoadingPositions(true);
             fetch(`/users/positions-by-department?department_id=${data.department_id}`)
                 .then(r => r.json())
-                .then(d => { setPositions(d.positions || []); setLoadingPositions(false); })
-                .catch(() => setLoadingPositions(false));
-        } else {
-            setPositions([]);
+                .then(d => {
+                    setPositions(d.positions || []);
+                })
+                .catch(() => { });
         }
     }, [data.department_id]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(users.store(), {
+        post(users.store().url, {
             preserveScroll: true,
-            onSuccess: () => { reset(); router.get(users.index()); },
+            onSuccess: () => {
+                reset(); router.get(users.index());
+            },
         });
     };
 
@@ -232,44 +115,11 @@ export default function UsersCreate({
         <>
             <Head title="ایجاد کاربر جدید" />
 
-            <div className="min-h-screen bg-slate-50/70" dir="rtl">
-                {/* Top Bar */}
-                <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
-                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center justify-between h-16">
-                            <div className="flex items-center gap-3">
-                                <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-sky-50 text-sky-600">کاربران</span>
-                                <h1 className="text-sm font-bold text-slate-800">ایجاد کاربر جدید</h1>
-                            </div>
-                            <div className="flex items-center gap-2.5">
-                                <button type="button" onClick={() => router.get(users.index())}
-                                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl">
-                                    <X className="h-4 w-4" /> انصراف
-                                </button>
-                                <button type="submit" form="user-form" disabled={processing}
-                                    className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-sky-600 hover:bg-sky-700 rounded-xl shadow-md disabled:opacity-50">
-                                    <Save className="h-4 w-4" /> {processing ? 'در حال ثبت...' : 'ایجاد کاربر'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div className="min-h-screen bg-slate-50/70">
 
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6">
                     <form id="user-form" onSubmit={handleSubmit}>
                         <div className="space-y-5">
-
-                            {/* Intro */}
-                            <div className="rounded-2xl border border-sky-100 bg-gradient-to-l from-sky-50 to-cyan-50 px-6 py-5 flex items-center gap-4">
-                                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-sky-500 to-cyan-600 flex items-center justify-center shadow-lg">
-                                    <Users className="h-6 w-6 text-white" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-slate-800">ایجاد کاربر جدید</p>
-                                    <p className="text-xs text-slate-500">اطلاعات کاربر را تکمیل کنید. فیلدهای ستاره‌دار الزامی هستند.</p>
-                                </div>
-                            </div>
-
                             {/* 1. Personal Info */}
                             <SectionCard
                                 icon={User}
@@ -280,32 +130,28 @@ export default function UsersCreate({
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
                                         <FieldLabel required>نام</FieldLabel>
-                                        <Field
+                                        <InputField
                                             value={data.first_name}
                                             onChange={v => setData('first_name', v)}
-                                            onBlur={() => handleBlur('first_name')}
-                                            error={getFieldError('first_name')}
+                                            error={errors.first_name}
                                             placeholder="علی" />
                                     </div>
                                     <div>
                                         <FieldLabel required>نام خانوادگی</FieldLabel>
-                                        <Field
+                                        <InputField
                                             value={data.last_name}
                                             onChange={v => setData('last_name', v)}
-                                            onBlur={() => handleBlur('last_name')}
-                                            error={getFieldError('last_name')}
+                                            error={errors.last_name}
                                             placeholder="رضایی" />
                                     </div>
                                     <div>
                                         <FieldLabel required>نمبر تذکره</FieldLabel>
-                                        <Field
+                                        <InputField
                                             icon={Hash}
                                             value={data.national_code}
                                             onChange={v => setData('national_code', v)}
-                                            onBlur={() => handleBlur('national_code')}
-                                            error={getFieldError('national_code')}
-                                            placeholder="1234567890"
-                                            maxLength={10} />
+                                            error={errors.national_code}
+                                            placeholder="1234567890" />
                                         <p className="text-xs text-slate-400 mt-1.5">نمبر تذکره منحصر به فرد</p>
                                     </div>
                                     <div>
@@ -313,47 +159,26 @@ export default function UsersCreate({
                                             label="تاریخ تولد"
                                             value={data.birth_date}
                                             onChange={(date) => setData('birth_date', date as string)}
-                                            error={getFieldError('birth_date')}
+                                            error={errors.birth_date}
                                         />
                                         <p className="text-xs text-slate-400 mt-1.5">تاریخ تولد را به شمسی انتخاب کنید</p>
                                     </div>
                                     <div>
-                                        <FieldLabel>جنسیت</FieldLabel>
-                                        <div className="flex gap-3">
-                                            {GENDER_OPTIONS.map(opt => (
-                                                <button
-                                                    key={opt.value}
-                                                    type="button"
-                                                    onClick={() => setData('gender', opt.value)}
-                                                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border transition-all ${data.gender === opt.value ? 'border-sky-400 bg-sky-50 text-sky-600' : 'border-slate-200 hover:border-slate-300'}`}>
-                                                    <opt.icon className="h-4 w-4" /> {opt.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div>
                                         <FieldLabel>تلفن همراه</FieldLabel>
-                                        <Field
+                                        <InputField
                                             icon={Phone}
                                             value={data.mobile}
                                             onChange={v => setData('mobile', v)}
+                                            error={errors.mobile}
                                             placeholder="09123456789" />
                                     </div>
                                     <div>
-                                        <FieldLabel>تلفن اضطراری</FieldLabel>
-                                        <Field
-                                            icon={PhoneCall}
-                                            value={data.emergency_phone}
-                                            onChange={v => setData('emergency_phone', v)}
-                                            placeholder="تلفن همراه اضطراری" />
-                                        <p className="text-xs text-slate-400 mt-1.5">برای مواقع ضروری - اختیاری</p>
-                                    </div>
-                                    <div className="md:col-span-2">
                                         <FieldLabel>آدرس</FieldLabel>
-                                        <Field
+                                        <InputField
                                             icon={MapPin}
                                             value={data.address}
                                             onChange={v => setData('address', v)}
+                                            error={errors.address}
                                             placeholder="آدرس کامل" />
                                     </div>
                                 </div>
@@ -369,35 +194,31 @@ export default function UsersCreate({
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div className="md:col-span-2">
                                         <FieldLabel required>ایمیل</FieldLabel>
-                                        <Field
+                                        <InputField
                                             icon={Mail}
                                             type="email"
                                             value={data.email}
                                             onChange={v => setData('email', v)}
-                                            onBlur={() => handleBlur('email')}
-                                            error={getFieldError('email')}
+                                            error={errors.email}
                                             placeholder="ali@example.com" />
                                         <p className="text-xs text-slate-400 mt-1.5">ایمیل به عنوان نام کاربری استفاده می‌شود</p>
                                     </div>
                                     <div>
                                         <FieldLabel required>رمز عبور</FieldLabel>
-                                        <Field
-                                            type={showPassword ? 'text' : 'password'}
+                                        <InputField
+                                            icon={Lock}
+                                            type={'password'}
                                             value={data.password}
                                             onChange={v => setData('password', v)}
-                                            onBlur={() => handleBlur('password')}
-                                            error={getFieldError('password')}
+                                            error={errors.password}
                                             placeholder="••••••••"
-                                            suffix={
-                                                <button type="button" onClick={() => setShowPassword(p => !p)} className="text-slate-400 hover:text-slate-600">
-                                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                                </button>
-                                            } />
+                                        />
                                         <p className="text-xs text-slate-400 mt-1.5">حداقل ۸ کاراکتر، شامل حروف و اعداد</p>
                                     </div>
                                     <div>
                                         <FieldLabel required>تکرار رمز عبور</FieldLabel>
-                                        <Field
+                                        <InputField
+                                            icon={Lock}
                                             type="password"
                                             value={data.password_confirmation}
                                             onChange={v => setData('password_confirmation', v)}
@@ -419,7 +240,7 @@ export default function UsersCreate({
                                         <SelectField
                                             value={data.organization_id}
                                             onChange={v => setData('organization_id', parseInt(v))}
-                                            onBlur={() => handleBlur('organization_id')}>
+                                            error={errors.organization_id}>
                                             {organizations.map(org => <option key={org.id} value={org.id}>{org.name}</option>)}
                                         </SelectField>
                                     </div>
@@ -428,8 +249,7 @@ export default function UsersCreate({
                                         <SelectField
                                             value={data.department_id || ''}
                                             onChange={v => setData('department_id', parseInt(v) || null)}
-                                            onBlur={() => handleBlur('department_id')}
-                                            loading={loadingDepts}>
+                                            error={errors.department_id}>
                                             <option value="">انتخاب کنید...</option>
                                             {departments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}
                                         </SelectField>
@@ -440,9 +260,8 @@ export default function UsersCreate({
                                         <SelectField
                                             value={data.primary_position_id || ''}
                                             onChange={v => setData('primary_position_id', parseInt(v) || null)}
-                                            onBlur={() => handleBlur('primary_position_id')}
-                                            disabled={!data.department_id}
-                                            loading={loadingPositions}>
+                                            error={errors.primary_position_id}
+                                        >
                                             <option value="">انتخاب کنید...</option>
                                             {positions.map(pos => <option key={pos.id} value={pos.id}>{pos.name}</option>)}
                                         </SelectField>
@@ -453,13 +272,14 @@ export default function UsersCreate({
                                         )}
                                     </div>
                                     <div>
-                                        <FieldLabel>کد پرسنلی</FieldLabel>
-                                        <Field
-                                            icon={CreditCard}
-                                            value={data.employment_code}
-                                            onChange={v => setData('employment_code', v)}
-                                            placeholder="EMP001" />
-                                        <p className="text-xs text-slate-400 mt-1.5">کد شناسایی کارمندی - اختیاری</p>
+                                        <FieldLabel required>نقش کاربری</FieldLabel>
+                                        <SelectField
+                                            value={data.role}
+                                            onChange={v => setData('role', v)}
+                                            error={errors.role}>
+                                            {roles.map(role => <option key={role.name} value={role.name}>{ROLE_LABELS[role.name] || role.name}</option>)}
+                                        </SelectField>
+                                        <p className="text-xs text-slate-400 mt-1.5">نقش تعیین می‌کند کاربر چه مجوزهایی در سیستم دارد</p>
                                     </div>
                                 </div>
                             </SectionCard>
@@ -479,6 +299,7 @@ export default function UsersCreate({
                                             {STATUS_OPTIONS.map(opt => {
                                                 const Icon = opt.icon;
                                                 const isSelected = data.status === opt.value;
+
                                                 return (
                                                     <button
                                                         key={opt.value}
@@ -510,6 +331,7 @@ export default function UsersCreate({
                                             {SECURITY_LEVELS.map(lvl => {
                                                 const Icon = lvl.icon;
                                                 const isSelected = data.security_clearance === lvl.value;
+
                                                 return (
                                                     <button
                                                         key={lvl.value}
@@ -524,29 +346,6 @@ export default function UsersCreate({
                                         </div>
                                         <p className="text-xs text-slate-400 mt-1.5">سطح دسترسی به اطلاعات محرمانه را تعیین می‌کند</p>
                                     </div>
-
-                                    {/* Role */}
-                                    <div>
-                                        <FieldLabel required>نقش کاربری</FieldLabel>
-                                        <SelectField
-                                            value={data.role}
-                                            onChange={v => setData('role', v)}
-                                            onBlur={() => handleBlur('role')}
-                                            error={getFieldError('role')}>
-                                            {roles.map(role => <option key={role.name} value={role.name}>{ROLE_LABELS[role.name] || role.name}</option>)}
-                                        </SelectField>
-
-                                        {/* نمایش خطای role */}
-                                        {/* {errors.role && (
-                                            <div className="mt-2 flex items-center gap-2 text-rose-600 text-sm bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">
-                                                <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                                                <span>{errors.role}</span>
-                                            </div>
-                                        )} */}
-
-                                        <p className="text-xs text-slate-400 mt-1.5">نقش تعیین می‌کند کاربر چه مجوزهایی در سیستم دارد</p>
-                                    </div>
-
                                     {/* Summary */}
                                     <div className="flex flex-wrap items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
                                         <span className="text-xs font-semibold text-slate-500">خلاصه وضعیت:</span>
@@ -559,6 +358,27 @@ export default function UsersCreate({
                                         </span>
                                         <span className="text-slate-300">•</span>
                                         <span className="text-xs font-bold text-slate-600 bg-slate-200 px-2.5 py-1 rounded-full">{ROLE_LABELS[data.role] || data.role}</span>
+                                    </div>
+                                    {/* Mobile Actions */}
+                                    <div className="bg-white border-slate-200 p-4 z-20">
+                                        <div className="flex gap-3 max-w-5xl mx-auto">
+                                            <button
+                                                type="submit"
+                                                disabled={processing}
+                                                className="cursor-pointer flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50 shadow-sm"
+                                            >
+                                                <Save className="h-4 w-4" />
+                                                {processing ? 'در حال ذخیره...' : 'ذخیره کاربر'}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => router.get(users.index())}
+                                                className="cursor-pointer flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-slate-700 bg-slate-200 hover:bg-slate-200 rounded-lg transition-colors"
+                                            >
+                                                <X className="h-4 w-4" />
+                                                انصراف
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </SectionCard>

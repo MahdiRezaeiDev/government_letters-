@@ -4,8 +4,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import {
     Plus, Pencil, Trash2, Search, Filter, ChevronLeft, ChevronRight,
     UserCheck, UserX, UserCog, Building2, Mail, Shield, Users, X,
-    TrendingUp, Award, Calendar, Clock, MoreHorizontal, Eye,
-    Download, Upload, Settings, Bell, Zap, Star, Sparkles
+    TrendingUp, Award, Calendar, Clock, Star, Sparkles
 } from 'lucide-react';
 import { useState } from 'react';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
@@ -41,6 +40,9 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
     const [deleting, setDeleting] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+
+    console.log(can);
+    
 
     const handleSearch = () => {
         router.get(
@@ -450,10 +452,10 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
                                                                             <Pencil className="h-4 w-4" />
                                                                         </Link>
                                                                     )}
-                                                                    {can.delete && userRole?.name !== 'super-admin' && (
+                                                                    {can.delete && (
                                                                         <button
                                                                             onClick={() => handleDelete(user)}
-                                                                            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                                                                            className="cursor-pointer p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
                                                                             title="حذف"
                                                                         >
                                                                             <Trash2 className="h-4 w-4" />
