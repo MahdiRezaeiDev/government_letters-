@@ -320,7 +320,7 @@ class LetterController extends Controller
         $currentUser = auth()->user();
 
         // فقط پیش‌نویس و ایجادکننده می‌تواند ویرایش کند
-        if (!$letter->is_draft || $letter->created_by !== $currentUser->id) {
+        if (!$letter->is_draft || $letter->created_by != $currentUser->id) {
             abort(403);
         }
 
