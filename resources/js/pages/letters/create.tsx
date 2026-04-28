@@ -1,23 +1,18 @@
-// resources/js/pages/letters/create.tsx
-
 import { Head, usePage } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import axios from 'axios';
 import {
-    Save, Paperclip, Send, Trash2,
-    FileText, Shield,
-    Flag, UserCheck,
-    User,
-    Info, Users, Loader2,
-    MessageSquare, PenLine
+    Save, Paperclip, Send, Trash2, FileText, Shield,
+    Flag, UserCheck, User, Info, Users, Loader2,
+    MessageSquare, PenLine,
+    Tag
 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import PersianDatePicker from '@/components/PersianDatePicker';
 import TextEditor from '@/components/TextEditor';
 import { store as LetterCreate } from '@/routes/letters';
 import type { LetterCategory, Organization } from '@/types';
 
-// کلاس مشترک برای همه input/select/textarea
 const inputClass = "w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white";
 
 interface Props {
@@ -29,51 +24,6 @@ interface Props {
     priorityLevels: Record<string, string>;
 }
 
-interface FormData {
-    category_id: number | null;
-    subject: string;
-    summary: string;
-    content: string;
-    security_level: string;
-    priority: string;
-    date: string;
-    instruction: string;
-    attachments: File[];
-    is_draft: boolean;
-
-    // گیرنده - فیلدهای اصلی
-    recipient_type: 'internal' | 'external';
-    recipient_organization_id: number | null;
-    recipient_department_id: number | null;
-    recipient_position_id: number | null;
-    recipient_user_id: number | null;
-    recipient_name: string;
-    recipient_position_name: string;
-}
-
-/**
- * تولید تاریخ امروز به فرمت شمسی با اعداد انگلیسی → "1404/02/05"
- */
-const getTodayJalali = (): string => {
-    try {
-        const formatter = new Intl.DateTimeFormat('fa-IR', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            calendar: 'persian',
-        } as Intl.DateTimeFormatOptions);
-        const parts = formatter.formatToParts(new Date());
-        const y = parts.find(p => p.type === 'year')?.value ?? '';
-        const m = parts.find(p => p.type === 'month')?.value ?? '';
-        const d = parts.find(p => p.type === 'day')?.value ?? '';
-        const toEn = (s: string) => s.replace(/[۰-۹]/g, c => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c)));
-
-        return `${toEn(y)}/${toEn(m)}/${toEn(d)}`;
-    } catch {
-        return '';
-    }
-};
-
 export default function LettersCreate({
     categories,
     departments,
@@ -83,19 +33,15 @@ export default function LettersCreate({
     const { auth } = usePage().props as any;
     const currentUser = auth.user;
 
-    const { data, setData, post, processing, errors, reset } = useForm<FormData>({
+    const { data, setData, post, processing, errors, reset } = useForm({
         category_id: null,
-        subject: '',
-        summary: '',
-        content: '',
+        subject: 'مکنوب جدید',
+        content: 'مکتوب تست جدید',
         security_level: 'internal',
         priority: 'normal',
-        date: getTodayJalali(),
-        instruction: '',
+        date: new Date().toLocaleDateString('fa-IR', { calendar: 'persian', year: 'numeric', month: '2-digit', day: '2-digit' }),
         attachments: [],
         is_draft: false,
-
-        // گیرنده
         recipient_type: 'internal',
         recipient_organization_id: currentUser.organization_id,
         recipient_department_id: null,
@@ -105,7 +51,6 @@ export default function LettersCreate({
         recipient_position_name: '',
     });
 
-    // Stateهای کمکی برای UI
     const [availablePositions, setAvailablePositions] = useState<{ id: number; name: string; user_id?: number }[]>([]);
     const [extDepartments, setExtDepartments] = useState<{ id: number; name: string }[]>([]);
     const [extPositions, setExtPositions] = useState<{ id: number; name: string }[]>([]);
@@ -117,10 +62,8 @@ export default function LettersCreate({
     useEffect(() => {
         if (data.recipient_department_id && data.recipient_type === 'internal') {
             setLoadingPositions(true);
-            setTimeout(() => {
-                setAvailablePositions(positions.filter(p => p.department_id === data.recipient_department_id));
-                setLoadingPositions(false);
-            }, 100);
+            setAvailablePositions(positions.filter(p => p.department_id === data.recipient_department_id));
+            setLoadingPositions(false);
         } else {
             setAvailablePositions([]);
         }
@@ -129,7 +72,6 @@ export default function LettersCreate({
     // دریافت دپارتمان‌های سازمان خارجی
     useEffect(() => {
         if (data.recipient_organization_id && data.recipient_type === 'external') {
-            setLoadingExtDepts(true);
             axios.get('/organizations/departments', { params: { organization_id: data.recipient_organization_id } })
                 .then(res => {
                     setExtDepartments(res.data.departments || []);
@@ -139,8 +81,6 @@ export default function LettersCreate({
                     setExtDepartments([]);
                     setLoadingExtDepts(false);
                 });
-        } else {
-            setExtDepartments([]);
         }
     }, [data.recipient_organization_id, data.recipient_type]);
 
@@ -166,13 +106,12 @@ export default function LettersCreate({
         e.preventDefault();
 
         const submittedData = { ...data, is_draft: isDraft };
-        post(LetterCreate(), {
+        post(LetterCreate().url, {
             data: submittedData,
             preserveScroll: true,
             onSuccess: () => {
                 if (!isDraft) {
                     reset();
-                    // بازنشانی استیت‌های کمکی
                     setAvailablePositions([]);
                     setExtDepartments([]);
                     setExtPositions([]);
@@ -191,9 +130,13 @@ export default function LettersCreate({
         setData('attachments', data.attachments.filter((_, i) => i !== index));
 
     const formatFileSize = (bytes: number): string => {
-        if (bytes === 0) return '0 Bytes';
+        if (bytes === 0) {
+            return '0 Bytes';
+        }
+
         const k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
+
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
@@ -206,11 +149,9 @@ export default function LettersCreate({
     }[key] ?? 'bg-blue-100 text-blue-700');
 
     const getPriorityLabel = (key: string) => ({
-        low: 'عادی',
         normal: 'معمولی',
-        high: 'مهم',
+        high: 'محرمانه',
         urgent: 'فوری',
-        very_urgent: 'فوق‌العاده',
     }[key] ?? 'معمولی');
 
     const getSecurityColor = (key: string) => ({
@@ -226,78 +167,36 @@ export default function LettersCreate({
         internal: 'داخلی',
         confidential: 'محرمانه',
         secret: 'سری',
-        top_secret: 'بسیار سری',
     }[key] ?? 'داخلی');
 
     return (
         <>
-            <Head title="ایجاد نامه جدید" />
+            <Head title="ایجاد مکتوب جدید" />
 
-            <div className="min-h-screen bg-[#f5f6fa]" dir="rtl">
-
-                {/* ─── Header ─── */}
-                <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30">
-                    <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 ${getPriorityColor(data.priority)}`}>
-                                <Flag className="h-3 w-3" /> اولویت: {getPriorityLabel(data.priority)}
-                            </span>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 ${getSecurityColor(data.security_level)}`}>
-                                <Shield className="h-3 w-3" /> سطح: {getSecurityLabel(data.security_level)}
-                            </span>
-                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 flex items-center gap-1.5">
-                                <Users className="h-3 w-3" />
-                                گیرنده: {data.recipient_type === 'internal' ? 'داخلی' : 'خارجی'}
-                            </span>
-                        </div>
-                        <div className="flex gap-2">
-                            <button type="button" onClick={(e) => handleSubmit(e, true)} disabled={processing}
-                                className="px-5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-sm flex items-center gap-2 disabled:opacity-50">
-                                <Save className="h-4 w-4" /> ذخیره پیش‌نویس
-                            </button>
-                            <button type="submit" form="letter-form" disabled={processing}
-                                className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm flex items-center gap-2 disabled:opacity-50">
-                                {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                                {processing ? 'در حال ارسال...' : 'ثبت و ارسال نامه'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            <div className="min-h-screen">
 
                 {/* ─── Body ─── */}
-                <div className="max-w-7xl mx-auto px-6 py-6">
+                <div className="max-w-7xl mx-auto px-3 lg:px-6 py-6">
                     <form id="letter-form" onSubmit={(e) => handleSubmit(e, false)}>
                         <div className="grid grid-cols-12 gap-5">
 
                             {/* ══ ستون اصلی ══ */}
                             <div className="col-span-12 lg:col-span-8 space-y-5">
-
-                                {/* دسته‌بندی نامه */}
-                                {categories.length > 0 && (
-                                    <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-                                        <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50">
-                                            <h3 className="text-sm font-bold text-slate-700">دسته‌بندی</h3>
-                                        </div>
-                                        <div className="p-5">
-                                            <select
-                                                value={data.category_id || ''}
-                                                onChange={(e) => setData('category_id', parseInt(e.target.value) || null)}
-                                                className={inputClass}
-                                            >
-                                                <option value="">انتخاب دسته‌بندی...</option>
-                                                {categories.map(cat => (
-                                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                                ))}
-                                            </select>
-                                        </div>
+                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5 flex">
+                                    <div className="h-9 w-9 rounded-xl bg-teal-50 flex items-center justify-center flex-shrink-0">
+                                        <Tag className="h-4 w-4 text-teal-600" />
                                     </div>
-                                )}
+                                    <div>
+                                        <h2 className="text-sm font-bold text-slate-800">ثبت مکتوب جدید</h2>
+                                        <p className="text-xs text-slate-400 mt-0.5">برای ثبت مکتوب جدید فورم ذیل را با دقت پرکنید.</p>
+                                    </div>
+                                </div>
 
-                                {/* اطلاعات نامه */}
-                                <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+                                {/* اطلاعات مکتوب */}
+                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
                                         <PenLine className="h-4 w-4 text-slate-500" />
-                                        <h3 className="text-sm font-bold text-slate-700">اطلاعات نامه</h3>
+                                        <h3 className="text-sm font-bold text-slate-700">اطلاعات مکتوب</h3>
                                     </div>
                                     <div className="p-5 space-y-4">
 
@@ -305,20 +204,20 @@ export default function LettersCreate({
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div className="md:col-span-2">
                                                 <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                                                    موضوع نامه <span className="text-red-500">*</span>
+                                                    موضوع مکتوب <span className="text-red-500">*</span>
                                                 </label>
                                                 <input
                                                     type="text"
                                                     value={data.subject}
                                                     onChange={(e) => setData('subject', e.target.value)}
-                                                    placeholder="موضوع نامه را وارد نمایید..."
+                                                    placeholder="موضوع مکتوب را وارد نمایید..."
                                                     className={`${inputClass} py-3 placeholder:text-slate-400`}
                                                 />
                                                 {errors.subject && <p className="text-red-500 text-xs mt-1">{errors.subject}</p>}
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                                                    تاریخ نامه <span className="text-red-500">*</span>
+                                                    تاریخ مکتوب <span className="text-red-500">*</span>
                                                 </label>
                                                 <PersianDatePicker
                                                     value={data.date}
@@ -328,51 +227,22 @@ export default function LettersCreate({
                                             </div>
                                         </div>
 
-                                        {/* خلاصه/چکیده */}
-                                        <div>
-                                            <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                                                خلاصه نامه
-                                            </label>
-                                            <textarea
-                                                value={data.summary}
-                                                onChange={(e) => setData('summary', e.target.value)}
-                                                rows={2}
-                                                placeholder="خلاصه‌ای از نامه..."
-                                                className={`${inputClass} resize-none placeholder:text-slate-400`}
-                                            />
-                                        </div>
-
-                                        {/* متن نامه */}
+                                        {/* متن مکتوب */}
                                         <div>
                                             <TextEditor
                                                 content={data.content}
                                                 onChange={(content) => setData('content', content)}
-                                                placeholder="متن نامه را اینجا بنویسید..."
-                                                label="متن نامه"
+                                                placeholder="متن مکتوب را اینجا بنویسید..."
+                                                label="متن مکتوب"
                                                 required={true}
                                                 error={errors.content}
-                                            />
-                                        </div>
-
-                                        {/* دستورالعمل */}
-                                        <div>
-                                            <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                                                <MessageSquare className="inline h-3.5 w-3.5 ml-1" />
-                                                دستورالعمل / توضیحات اجرایی
-                                            </label>
-                                            <textarea
-                                                value={data.instruction}
-                                                onChange={(e) => setData('instruction', e.target.value)}
-                                                rows={3}
-                                                placeholder="دستورالعمل‌های لازم برای گیرنده..."
-                                                className={`${inputClass} resize-none placeholder:text-slate-400`}
                                             />
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* پیوست‌ها */}
-                                <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
                                         <Paperclip className="h-4 w-4 text-slate-500" />
                                         <h3 className="text-sm font-bold text-slate-700">پیوست‌ها</h3>
@@ -409,29 +279,8 @@ export default function LettersCreate({
 
                             {/* ══ ستون کناری ══ */}
                             <div className="col-span-12 lg:col-span-4 space-y-5">
-
-                                {/* فرستنده */}
-                                <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-                                    <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
-                                        <User className="h-4 w-4 text-slate-500" />
-                                        <h3 className="text-sm font-bold text-slate-700">فرستنده</h3>
-                                    </div>
-                                    <div className="p-5 flex items-center gap-3">
-                                        <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center shadow-md flex-shrink-0">
-                                            <span className="text-white text-base font-bold">
-                                                {currentUser.full_name?.charAt(0) || 'U'}
-                                            </span>
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-bold text-slate-800 truncate">{currentUser.full_name}</p>
-                                            <p className="text-xs text-slate-500 mt-0.5">{currentUser.primary_position?.name || 'کاربر'}</p>
-                                            <p className="text-xs text-slate-400">{currentUser.department?.name || 'سازمان'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
                                 {/* تنظیمات امنیتی */}
-                                <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
                                         <Shield className="h-4 w-4 text-slate-500" />
                                         <h3 className="text-sm font-bold text-slate-700">تنظیمات امنیتی</h3>
@@ -486,7 +335,7 @@ export default function LettersCreate({
                                 </div>
 
                                 {/* گیرنده */}
-                                <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
                                         <UserCheck className="h-4 w-4 text-slate-500" />
                                         <h3 className="text-sm font-bold text-slate-700">گیرنده</h3>
@@ -704,7 +553,7 @@ export default function LettersCreate({
                                 </div>
 
                                 {/* خلاصه وضعیت */}
-                                <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
                                         <Info className="h-4 w-4 text-slate-500" />
                                         <h3 className="text-sm font-bold text-slate-700">خلاصه وضعیت</h3>
@@ -725,20 +574,31 @@ export default function LettersCreate({
                                 </div>
 
                                 {/* راهنما */}
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 overflow-hidden">
                                     <div className="flex items-start gap-2">
                                         <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                                         <div className="text-xs text-blue-800">
-                                            <p className="font-medium mb-1">راهنمای ثبت نامه</p>
+                                            <p className="font-medium mb-1">راهنمای ثبت مکتوب</p>
                                             <ul className="space-y-1 text-blue-700">
                                                 <li>• فیلدهای ستاره‌دار الزامی هستند</li>
-                                                <li>• پس از ثبت، نامه به کارتابل گیرنده ارسال می‌شود</li>
-                                                <li>• می‌توانید نامه را به صورت پیش‌نویس ذخیره کنید</li>
+                                                <li>• پس از ثبت، مکتوب به کارتابل گیرنده ارسال می‌شود</li>
+                                                <li>• می‌توانید مکتوب را به صورت پیش‌نویس ذخیره کنید</li>
                                             </ul>
                                         </div>
                                     </div>
                                 </div>
 
+                            </div>
+                            <div className="col-span-12 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex justify-between p-5">
+                                <button type="submit" form="letter-form" disabled={processing}
+                                    className="cursor-pointer px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm flex items-center gap-2 disabled:opacity-50">
+                                    {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                                    {processing ? 'در حال ارسال...' : 'ثبت و ارسال '}
+                                </button>
+                                <button type="button" onClick={(e) => handleSubmit(e, true)} disabled={processing}
+                                    className="cursor-pointer px-5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-sm flex items-center gap-2 disabled:opacity-50">
+                                    <Save className="h-4 w-4" /> پیش‌نویس
+                                </button>
                             </div>
                         </div>
                     </form>

@@ -1,453 +1,303 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import {
-    FolderTree, ArrowRight, Edit2, Trash2,
-    FileText, Hash, CheckCircle, XCircle,
-    ChevronRight, Tag, Layers, Calendar,
-    LetterText, Inbox, Send, ArrowLeftRight
+    Pencil, Trash2, ArrowRight, Tag, Building2, FolderTree,
+    AlignLeft, ArrowUpDown, CheckCircle, Calendar, Hash
 } from 'lucide-react';
 import React, { useState } from 'react';
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import categories from '@/routes/categories';
-import lettersRoute from '@/routes/letters';
-import type { LetterCategory } from '@/types';
-
-interface Letter {
-    id: number;
-    subject: string;
-    letter_number: string;
-    date: string;
-    final_status: string;
-    letter_type: 'incoming' | 'outgoing' | 'internal';
-    priority: string;
-}
+import type { LetterCategory, Organization } from '@/types';
 
 interface Props {
     category: LetterCategory & {
-        description?: string;
-        code?: string;
-        is_active: boolean;
-        parent?: LetterCategory | null;
+        organization?: Organization;
+        parent?: LetterCategory;
         children?: LetterCategory[];
-        letters?: Letter[];
-        letters_count?: number;
-        created_at: string;
-        updated_at: string;
-    };
-    can: {
-        edit: boolean;
-        delete: boolean;
+        children_count?: number;
     };
 }
 
-// ─── Config ────────────────────────────────────────────────────────────────
-
-const LETTER_TYPE_CONFIG = {
-    incoming: { label: 'وارده', color: '#0ea5e9', bg: '#eff6ff', icon: Inbox },
-    outgoing: { label: 'صادره', color: '#8b5cf6', bg: '#f5f3ff', icon: Send },
-    internal: { label: 'داخلی', color: '#10b981', bg: '#ecfdf5', icon: ArrowLeftRight },
-} as const;
-
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    draft: { label: 'پیش‌نویس', color: '#64748b', bg: '#f1f5f9' },
-    pending: { label: 'در انتظار', color: '#b45309', bg: '#fef3c7' },
-    approved: { label: 'تأیید شده', color: '#15803d', bg: '#dcfce7' },
-    rejected: { label: 'رد شده', color: '#b91c1c', bg: '#fee2e2' },
-    archived: { label: 'بایگانی شده', color: '#475569', bg: '#f8fafc' },
-};
-
-// ─── Sub-components ────────────────────────────────────────────────────────
-
-function SectionCard({ icon: Icon, iconColor, title, subtitle, children, action }: {
-    icon: React.ElementType; iconColor: string; title: string; subtitle?: string;
-    children: React.ReactNode; action?: React.ReactNode;
-}) {
-    return (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-gradient-to-l from-white to-slate-50/60">
-                <div className="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: iconColor + '18' }}>
-                    <Icon className="h-4 w-4" style={{ color: iconColor }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                    <h2 className="text-sm font-bold text-slate-800">{title}</h2>
-                    {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
-                </div>
-                {action}
-            </div>
-            <div className="p-6">{children}</div>
-        </div>
-    );
-}
-
-function MetaRow({ label, children }: { label: string; children: React.ReactNode }) {
-    return (
-        <div className="flex items-start gap-3 py-3 border-b border-slate-100 last:border-0">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider w-28 flex-shrink-0 pt-0.5">{label}</span>
-            <div className="flex-1 text-sm text-slate-800">{children}</div>
-        </div>
-    );
-}
-
-// ─── Main Component ────────────────────────────────────────────────────────
-
-export default function CategoriesShow({ category, can }: Props) {
+export default function CategoriesShow({ category }: Props) {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [processing, setProcessing] = useState(false);
 
     const handleDelete = () => {
-        router.delete(categories.destroy(category.id), {
-            onSuccess: () => router.get(categories.index()),
+        setProcessing(true);
+        router.delete(categories.destroy(category.id).url, {
+            onFinish: () => setProcessing(false),
         });
     };
 
-    const letters = category.letters ?? [];
-    const children = category.children ?? [];
-
     return (
         <>
-            <Head title={`دسته‌بندی: ${category.name}`} />
+            <Head title={`جزئیات دسته‌بندی ${category.name}`} />
 
-            <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
-                * { font-family: 'Vazirmatn', sans-serif; }
-                :root { direction: rtl; }
-                @keyframes fadeUp {
-                    from { opacity: 0; transform: translateY(8px); }
-                    to   { opacity: 1; transform: translateY(0); }
-                }
-                .fade-up { animation: fadeUp 0.22s ease-out both; }
-            `}</style>
-
-            <div className="min-h-screen bg-slate-50/70" dir="rtl">
-
-                {/* ── Sticky Top Bar ── */}
-                <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
-                    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center justify-between h-16 gap-4">
-                            {/* Breadcrumb */}
-                            <div className="flex items-center gap-2 min-w-0">
-                                <Link href={categories.index()}
-                                    className="text-xs font-bold text-slate-500 hover:text-slate-700 px-2 py-1 rounded-lg hover:bg-slate-100 transition">
-                                    دسته‌بندی‌ها
-                                </Link>
-                                <ChevronRight className="h-3.5 w-3.5 text-slate-300 flex-shrink-0" />
-                                <span className="text-xs font-bold text-slate-800 truncate max-w-xs">{category.name}</span>
-                            </div>
-
-                            {/* Status + Actions */}
-                            <div className="flex items-center gap-2.5 flex-shrink-0">
-                                <span
-                                    className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full"
-                                    style={{
-                                        backgroundColor: category.is_active ? '#dcfce7' : '#f1f5f9',
-                                        color: category.is_active ? '#15803d' : '#64748b',
-                                    }}
-                                >
-                                    {category.is_active
-                                        ? <><CheckCircle className="h-3 w-3" />فعال</>
-                                        : <><XCircle className="h-3 w-3" />غیرفعال</>
-                                    }
-                                </span>
-
-                                {can.edit && (
-                                    <Link
-                                        href={categories.edit(category.id)}
-                                        className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
-                                    >
-                                        <Edit2 className="h-4 w-4" />
-                                        <span className="hidden sm:inline">ویرایش</span>
-                                    </Link>
-                                )}
-
-                                {can.delete && (
-                                    <button
-                                        onClick={() => setShowDeleteConfirm(true)}
-                                        className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-all"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                        <span className="hidden sm:inline">حذف</span>
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="min-h-screen">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="space-y-5">
+                        {/* ── Header Actions ── */}
+                        <div className="flex items-center justify-between">
+                            <button
+                                onClick={() => router.get(categories.index())}
+                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all"
+                            >
+                                <ArrowRight className="h-4 w-4" />
+                                بازگشت به لیست
+                            </button>
 
-                        {/* ── Hero identity card ── */}
-                        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden fade-up">
-                            <div className="h-1.5 w-full"
-                                style={{ backgroundColor: category.is_active ? '#10b981' : '#94a3b8' }} />
-                            <div className="px-6 py-6 flex items-start gap-5">
-                                <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600
-                                    flex items-center justify-center shadow-md flex-shrink-0">
-                                    <FolderTree className="h-7 w-7 text-white" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-3 flex-wrap">
-                                        <h1 className="text-xl font-black text-slate-900">{category.name}</h1>
-                                        {category.code && (
-                                            <span className="inline-flex items-center gap-1 text-xs font-mono font-bold
-                                                px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 border border-slate-200">
-                                                <Hash className="h-3 w-3" />{category.code}
-                                            </span>
-                                        )}
-                                    </div>
-                                    {category.description && (
-                                        <p className="text-sm text-slate-500 mt-2 leading-relaxed max-w-2xl">
-                                            {category.description}
-                                        </p>
-                                    )}
-
-                                    {/* Quick stats */}
-                                    <div className="flex flex-wrap gap-3 mt-4">
-                                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold
-                                            text-slate-600 bg-slate-100 px-3 py-1.5 rounded-full">
-                                            <LetterText className="h-3.5 w-3.5 text-slate-400" />
-                                            {category.letters_count ?? letters.length} نامه
-                                        </span>
-                                        {children.length > 0 && (
-                                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold
-                                                text-slate-600 bg-slate-100 px-3 py-1.5 rounded-full">
-                                                <Layers className="h-3.5 w-3.5 text-slate-400" />
-                                                {children.length} زیردسته
-                                            </span>
-                                        )}
-                                        {category.parent && (
-                                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold
-                                                text-indigo-700 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-full">
-                                                <FolderTree className="h-3.5 w-3.5 text-indigo-400" />
-                                                زیر: {category.parent.name}
-                                            </span>
-                                        )}
-                                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold
-                                            text-slate-500 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-full">
-                                            <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                                            {new Date(category.created_at).toLocaleDateString('fa-IR')}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
-                            {/* ── Left column: details ── */}
-                            <div className="lg:col-span-1 space-y-5">
-
-                                {/* Details */}
-                                <SectionCard icon={Tag} iconColor="#6366f1" title="جزئیات" subtitle="مشخصات دسته‌بندی">
-                                    <div>
-                                        <MetaRow label="نام">
-                                            <span className="font-bold">{category.name}</span>
-                                        </MetaRow>
-                                        {category.code && (
-                                            <MetaRow label="کد">
-                                                <span className="font-mono font-bold text-indigo-600">{category.code}</span>
-                                            </MetaRow>
-                                        )}
-                                        <MetaRow label="وضعیت">
-                                            <span
-                                                className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full"
-                                                style={{
-                                                    backgroundColor: category.is_active ? '#dcfce7' : '#f1f5f9',
-                                                    color: category.is_active ? '#15803d' : '#64748b',
-                                                }}
-                                            >
-                                                {category.is_active
-                                                    ? <><CheckCircle className="h-3 w-3" />فعال</>
-                                                    : <><XCircle className="h-3 w-3" />غیرفعال</>}
-                                            </span>
-                                        </MetaRow>
-                                        {category.parent && (
-                                            <MetaRow label="دسته والد">
-                                                <Link
-                                                    href={categories.show(category.parent.id)}
-                                                    className="text-indigo-600 hover:underline font-semibold text-sm"
-                                                >
-                                                    {category.parent.name}
-                                                </Link>
-                                            </MetaRow>
-                                        )}
-                                        <MetaRow label="ایجاد">
-                                            {new Date(category.created_at).toLocaleDateString('fa-IR', {
-                                                year: 'numeric', month: 'long', day: 'numeric'
-                                            })}
-                                        </MetaRow>
-                                        <MetaRow label="ویرایش">
-                                            {new Date(category.updated_at).toLocaleDateString('fa-IR', {
-                                                year: 'numeric', month: 'long', day: 'numeric'
-                                            })}
-                                        </MetaRow>
-                                    </div>
-                                </SectionCard>
-
-                                {/* Sub-categories */}
-                                {children.length > 0 && (
-                                    <SectionCard
-                                        icon={Layers} iconColor="#8b5cf6"
-                                        title="زیردسته‌ها"
-                                        subtitle={`${children.length} دسته`}
-                                    >
-                                        <div className="space-y-2">
-                                            {children.map(child => (
-                                                <Link
-                                                    key={child.id}
-                                                    href={categories.show(child.id)}
-                                                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-violet-50
-                                                        border border-transparent hover:border-violet-100 transition-all group"
-                                                >
-                                                    <div className="h-7 w-7 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0">
-                                                        <FolderTree className="h-3.5 w-3.5 text-violet-600" />
-                                                    </div>
-                                                    <span className="text-sm font-semibold text-slate-700 group-hover:text-violet-700 flex-1 truncate">
-                                                        {child.name}
-                                                    </span>
-                                                    <ChevronRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-violet-400 flex-shrink-0" />
-                                                </Link>
-                                            ))}
-                                        </div>
-                                    </SectionCard>
-                                )}
-                            </div>
-
-                            {/* ── Right column: letters ── */}
-                            <div className="lg:col-span-2">
-                                <SectionCard
-                                    icon={FileText} iconColor="#f59e0b"
-                                    title="نامه‌های این دسته‌بندی"
-                                    subtitle={`${category.letters_count ?? letters.length} نامه`}
-                                    action={
-                                        letters.length > 0 ? (
-                                            <Link
-                                                href={lettersRoute.index({ query: { category_id: category.id } })}
-                                                className="text-xs font-bold text-amber-600 hover:text-amber-700 px-3 py-1.5
-                                                    rounded-lg hover:bg-amber-50 transition flex items-center gap-1"
-                                            >
-                                                مشاهده همه
-                                                <ArrowRight className="h-3.5 w-3.5" />
-                                            </Link>
-                                        ) : undefined
-                                    }
-                                >
-                                    {letters.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center py-12 text-center">
-                                            <div className="h-14 w-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
-                                                <FileText className="h-7 w-7 text-slate-300" />
-                                            </div>
-                                            <p className="text-sm font-semibold text-slate-500">نامه‌ای در این دسته‌بندی وجود ندارد</p>
-                                            <p className="text-xs text-slate-400 mt-1">نامه‌های ثبت‌شده در این دسته اینجا نمایش داده می‌شوند</p>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-2">
-                                            {letters.map(letter => {
-                                                const typeCfg = LETTER_TYPE_CONFIG[letter.letter_type] ?? LETTER_TYPE_CONFIG.internal;
-                                                const statusCfg = STATUS_CONFIG[letter.final_status] ?? STATUS_CONFIG.pending;
-                                                const TypeIcon = typeCfg.icon;
-
-                                                return (
-                                                    <Link
-                                                        key={letter.id}
-                                                        href={lettersRoute.show(letter.id)}
-                                                        className="flex items-center gap-3 p-3.5 rounded-xl hover:bg-amber-50/50
-                                                            border border-transparent hover:border-amber-100 transition-all group"
-                                                    >
-                                                        {/* Type icon */}
-                                                        <div
-                                                            className="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                                                            style={{ backgroundColor: typeCfg.bg }}
-                                                        >
-                                                            <TypeIcon className="h-4 w-4" style={{ color: typeCfg.color }} />
-                                                        </div>
-
-                                                        {/* Title + number */}
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-sm font-bold text-slate-800 truncate
-                                                                group-hover:text-amber-700 transition-colors">
-                                                                {letter.subject}
-                                                            </p>
-                                                            <div className="flex items-center gap-2 mt-0.5">
-                                                                <span className="text-xs text-slate-400 flex items-center gap-1">
-                                                                    <Hash className="h-2.5 w-2.5" />
-                                                                    {letter.letter_number || '—'}
-                                                                </span>
-                                                                {letter.date && (
-                                                                    <>
-                                                                        <span className="text-slate-200 text-xs">•</span>
-                                                                        <span className="text-xs text-slate-400">
-                                                                            {new Date(letter.date).toLocaleDateString('fa-IR')}
-                                                                        </span>
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Status badge */}
-                                                        <span
-                                                            className="flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full"
-                                                            style={{ backgroundColor: statusCfg.bg, color: statusCfg.color }}
-                                                        >
-                                                            {statusCfg.label}
-                                                        </span>
-
-                                                        <ChevronRight className="h-3.5 w-3.5 text-slate-300
-                                                            group-hover:text-amber-400 flex-shrink-0" />
-                                                    </Link>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </SectionCard>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* ── Delete confirmation modal ── */}
-            {showDeleteConfirm && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden fade-up">
-                        <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-xl bg-rose-50 flex items-center justify-center">
-                                <Trash2 className="h-4 w-4 text-rose-600" />
-                            </div>
-                            <div>
-                                <h3 className="text-sm font-bold text-slate-800">حذف دسته‌بندی</h3>
-                                <p className="text-xs text-slate-400 mt-0.5">این عملیات قابل بازگشت نیست</p>
-                            </div>
-                        </div>
-                        <div className="px-6 py-5">
-                            <p className="text-sm text-slate-600 leading-relaxed mb-5">
-                                آیا مطمئن هستید که می‌خواهید دسته‌بندی
-                                {' '}<span className="font-bold text-slate-800">«{category.name}»</span>{' '}
-                                را حذف کنید؟
-                                {(category.letters_count ?? letters.length) > 0 && (
-                                    <span className="block mt-2 text-xs text-rose-600 bg-rose-50 px-3 py-2 rounded-lg border border-rose-100">
-                                        ⚠️ این دسته دارای {category.letters_count ?? letters.length} نامه است.
-                                    </span>
-                                )}
-                            </p>
-                            <div className="flex gap-3">
+                            <div className="flex items-center gap-3">
                                 <button
-                                    onClick={() => setShowDeleteConfirm(false)}
-                                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-600
-                                        bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+                                    onClick={() => router.get(categories.edit(category.id).url)}
+                                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-all"
                                 >
-                                    انصراف
+                                    <Pencil className="h-4 w-4" />
+                                    ویرایش
                                 </button>
                                 <button
-                                    onClick={handleDelete}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold
-                                        text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-md transition-all"
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition-all"
                                 >
                                     <Trash2 className="h-4 w-4" />
                                     حذف
                                 </button>
                             </div>
                         </div>
+
+                        {/* ── Main Info Card ── */}
+                        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                            <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-gradient-to-l from-white to-slate-50/60">
+                                <div className="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                                    style={{ backgroundColor: category.color + '22' }}>
+                                    <Tag className="h-4 w-4" style={{ color: category.color }} />
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-3">
+                                        <h2 className="text-lg font-bold text-slate-800">{category.name}</h2>
+                                        <span
+                                            className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full"
+                                            style={{ backgroundColor: category.color + '22', color: category.color, border: `1px solid ${category.color}40` }}
+                                        >
+                                            <span className="h-1.5 w-1.5 rounded-full inline-block" style={{ backgroundColor: category.color }} />
+                                            {category.code || category.name}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-slate-400 mt-1">اطلاعات کامل دسته‌بندی</p>
+                                </div>
+                                {/* Status Badge */}
+                                <span
+                                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${category.status
+                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                        : 'bg-slate-50 text-slate-500 border border-slate-200'
+                                        }`}
+                                >
+                                    <span className={`h-1.5 w-1.5 rounded-full ${category.status ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                                    {category.status ? 'فعال' : 'غیرفعال'}
+                                </span>
+                            </div>
+
+                            <div className="p-6 space-y-5">
+                                {/* Details Grid */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    {/* Organization */}
+                                    <div className="flex items-start gap-3 p-4 rounded-xl bg-slate-50/50 border border-slate-100">
+                                        <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                            <Building2 className="h-4 w-4 text-blue-600" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs text-slate-400 mb-0.5">سازمان</p>
+                                            <p className="text-sm font-semibold text-slate-800">
+                                                {category.organization?.name || 'تعیین نشده'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Parent Category */}
+                                    <div className="flex items-start gap-3 p-4 rounded-xl bg-slate-50/50 border border-slate-100">
+                                        <div className="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+                                            <FolderTree className="h-4 w-4 text-purple-600" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs text-slate-400 mb-0.5">دسته‌بندی والد</p>
+                                            <p className="text-sm font-semibold text-slate-800">
+                                                {category.parent ? (
+                                                    <span
+                                                        className="inline-flex items-center gap-1.5"
+                                                        style={{ color: category.parent.color }}
+                                                    >
+                                                        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: category.parent.color }} />
+                                                        {category.parent.name}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-slate-400">سطح اول (بدون والد)</span>
+                                                )}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Sort Order */}
+                                    <div className="flex items-start gap-3 p-4 rounded-xl bg-slate-50/50 border border-slate-100">
+                                        <div className="h-10 w-10 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+                                            <ArrowUpDown className="h-4 w-4 text-orange-600" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs text-slate-400 mb-0.5">ترتیب نمایش</p>
+                                            <p className="text-sm font-semibold text-slate-800">
+                                                {category.sort_order ?? 0}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Color */}
+                                    <div className="flex items-start gap-3 p-4 rounded-xl bg-slate-50/50 border border-slate-100">
+                                        <div className="h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                                            style={{ backgroundColor: category.color + '22' }}>
+                                            <div className="h-4 w-4 rounded" style={{ backgroundColor: category.color }} />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs text-slate-400 mb-0.5">رنگ</p>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm font-semibold text-slate-800 font-mono">
+                                                    {category.color}
+                                                </span>
+                                                <span
+                                                    className="h-5 w-5 rounded-md border border-slate-200"
+                                                    style={{ backgroundColor: category.color }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Children Count */}
+                                    <div className="flex items-start gap-3 p-4 rounded-xl bg-slate-50/50 border border-slate-100">
+                                        <div className="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+                                            <Hash className="h-4 w-4 text-teal-600" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs text-slate-400 mb-0.5">تعداد زیرمجموعه‌ها</p>
+                                            <p className="text-sm font-semibold text-slate-800">
+                                                {category.children_count ?? category.children?.length ?? 0}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Status */}
+                                    <div className="flex items-start gap-3 p-4 rounded-xl bg-slate-50/50 border border-slate-100">
+                                        <div className="h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                                            style={{ backgroundColor: category.status ? '#10b98122' : '#f1f5f9' }}>
+                                            <CheckCircle
+                                                className="h-4 w-4"
+                                                style={{ color: category.status ? '#10b981' : '#94a3b8' }}
+                                            />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs text-slate-400 mb-0.5">وضعیت</p>
+                                            <p className="text-sm font-semibold" style={{ color: category.status ? '#065f46' : '#64748b' }}>
+                                                {category.status ? 'فعال' : 'غیرفعال'}
+                                            </p>
+                                            <p className="text-xs text-slate-400 mt-0.5">
+                                                {category.status
+                                                    ? 'در لیست‌ها نمایش داده می‌شود'
+                                                    : 'از دید کاربران مخفی است'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Description */}
+                                {category.description && (
+                                    <>
+                                        <div className="border-t border-slate-100" />
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <AlignLeft className="h-4 w-4 text-slate-400" />
+                                                <h3 className="text-sm font-bold text-slate-700">توضیحات</h3>
+                                            </div>
+                                            <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100">
+                                                <p className="text-sm text-slate-600 leading-7 whitespace-pre-wrap">
+                                                    {category.description}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* Timestamps */}
+                                <div className="border-t border-slate-100" />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                                        <Calendar className="h-3.5 w-3.5" />
+                                        <span>تاریخ ایجاد: {new Date(category.created_at).toLocaleDateString('fa-IR')}</span>
+                                    </div>
+                                    {category.updated_at && (
+                                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                                            <Calendar className="h-3.5 w-3.5" />
+                                            <span>آخرین بروزرسانی: {new Date(category.updated_at).toLocaleDateString('fa-IR')}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── Children Categories ── */}
+                        {category.children && category.children.length > 0 && (
+                            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                                <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3 bg-gradient-to-l from-white to-slate-50/60">
+                                    <div className="h-8 w-8 rounded-lg bg-teal-50 flex items-center justify-center">
+                                        <FolderTree className="h-4 w-4 text-teal-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-bold text-slate-800">
+                                            زیرمجموعه‌ها ({category.children.length})
+                                        </h3>
+                                    </div>
+                                </div>
+                                <div className="p-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                        {category.children.map(child => (
+                                            <button
+                                                key={child.id}
+                                                onClick={() => router.get(categories.show(child.id).url)}
+                                                className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50/30 hover:bg-slate-50 hover:border-slate-200 transition-all text-right group"
+                                            >
+                                                <div
+                                                    className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                                                    style={{ backgroundColor: (child.color || '#64748b') + '22' }}
+                                                >
+                                                    <Tag className="h-3.5 w-3.5" style={{ color: child.color || '#64748b' }} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 truncate">
+                                                        {child.name}
+                                                    </p>
+                                                    {child.code && (
+                                                        <p className="text-xs text-slate-400 truncate">{child.code}</p>
+                                                    )}
+                                                </div>
+                                                <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-slate-500 transition-colors flex-shrink-0" />
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
+            </div>
+
+            {/* ── Delete Confirmation Modal ── */}
+
+            {showDeleteConfirm && (
+                <DeleteConfirmationModal
+                    isOpen={showDeleteConfirm}
+                    onClose={() => {
+                        setShowDeleteConfirm(false);
+                    }}
+                    onConfirm={handleDelete}
+                    title="حذف دسته‌بندی"
+                    message="آیا از حذف این دسته‌بندی اطمینان دارید؟"
+                    itemName={category.name}
+                    isLoading={processing}
+                />
             )}
         </>
     );

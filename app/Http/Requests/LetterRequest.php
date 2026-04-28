@@ -144,77 +144,26 @@ class LetterRequest extends FormRequest
     /**
      * تبدیل تاریخ‌های شمسی به میلادی قبل از اعتبارسنجی
      */
-    protected function prepareForValidation()
+protected function prepareForValidation()
     {
         $dateFields = ['date', 'due_date', 'response_deadline'];
-        $merged = [];
 
         foreach ($dateFields as $field) {
-            $value = $this->$field;
+            if ($this->has($field) && !empty($this->$field)) {
+                try {
+                    $englishDigits = str_replace(
+                        ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'],
+                        ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+                        $this->$field
+                    );
 
-            if (empty($value)) {
-                continue;
+                    $normalized = str_replace(['/'], '-', $englishDigits);
+
+                    $this->merge([
+                        $field => $normalized,
+                    ]);
+                } catch (\Exception $e) {}
             }
-
-            try {
-                // ۱. تبدیل اعداد فارسی/عربی به انگلیسی
-                $englishDigits = str_replace(
-                    [
-                        '۰',
-                        '۱',
-                        '۲',
-                        '۳',
-                        '۴',
-                        '۵',
-                        '۶',
-                        '۷',
-                        '۸',
-                        '۹',
-                        '٠',
-                        '١',
-                        '٢',
-                        '٣',
-                        '٤',
-                        '٥',
-                        '٦',
-                        '٧',
-                        '٨',
-                        '٩'
-                    ],
-                    [
-                        '0',
-                        '1',
-                        '2',
-                        '3',
-                        '4',
-                        '5',
-                        '6',
-                        '7',
-                        '8',
-                        '9',
-                        '0',
-                        '1',
-                        '2',
-                        '3',
-                        '4',
-                        '5',
-                        '6',
-                        '7',
-                        '8',
-                        '9'
-                    ],
-                    $value
-                );
-
-                $normalized = str_replace('-', '/', $englishDigits);
-
-                return $normalized;
-            } catch (\Exception $e) {
-            }
-        }
-
-        if (!empty($merged)) {
-            $this->merge($merged);
         }
     }
 }
