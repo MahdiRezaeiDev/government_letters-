@@ -172,4 +172,10 @@ class LetterCategory extends Model
         
         return $descendants;
     }
+
+    public static function generateCode() {
+        $lastCategory = self::orderBy('id', 'desc')->first();
+        $lastCode = $lastCategory ? (int) $lastCategory->code : 0;
+        return str_pad($lastCode + 1, 4, '0', STR_PAD_LEFT);
+    }
 }

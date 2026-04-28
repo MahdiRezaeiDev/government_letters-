@@ -1,13 +1,16 @@
 import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
+import axios from 'axios';
 import {
-    Save, X, Tag, Building2, Hash, FolderTree,
+    Save, X, Tag, Building2, FolderTree,
     AlignLeft, ArrowUpDown, CheckCircle, Palette
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+import FieldLabel from '@/components/ui/FieldLabel';
+import InputField from '@/components/ui/InputField';
+import SelectField from '@/components/ui/SelectField';
 import categories from '@/routes/categories';
 import type { Organization, LetterCategory } from '@/types';
-import axios from 'axios';
 
 interface Props {
     organizations: Organization[];
@@ -21,65 +24,6 @@ const COLOR_PRESETS = [
     '#ef4444', '#f97316', '#f59e0b', '#10b981',
     '#14b8a6', '#06b6d4', '#64748b', '#1e293b',
 ];
-
-// ─── Shared Field Components ───────────────────────────────────────────────
-
-function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
-    return (
-        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-            {children}
-            {required && <span className="text-rose-400 mr-1">*</span>}
-        </label>
-    );
-}
-
-function InputField({
-    icon: Icon, value, onChange, placeholder, type = 'text', error
-}: {
-    icon?: React.ElementType; value: string | number; onChange: (v: string) => void;
-    placeholder?: string; type?: string; error?: string | null;
-}) {
-    return (
-        <div>
-            <div className={`relative flex items-center rounded-xl border bg-white transition-all duration-200 ${error
-                ? 'border-rose-300 ring-1 ring-rose-300'
-                : 'border-slate-200 hover:border-slate-300 focus-within:border-teal-400 focus-within:ring-2 focus-within:ring-teal-100'
-                }`}>
-                {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
-                <input
-                    type={type}
-                    value={value}
-                    onChange={e => onChange(e.target.value)}
-                    placeholder={placeholder}
-                    className={`w-full ${Icon ? 'pr-10' : 'pr-4'} pl-4 py-3 text-sm bg-transparent focus:outline-none text-slate-700 placeholder-slate-300`}
-                />
-            </div>
-            {error && <p className="text-rose-500 text-xs mt-1.5">{error}</p>}
-        </div>
-    );
-}
-
-function SelectField({
-    icon: Icon, value, onChange, children
-}: {
-    icon?: React.ElementType; value: string | number; onChange: (v: string) => void; children: React.ReactNode;
-}) {
-    return (
-        <div className="relative flex items-center rounded-xl border border-slate-200 bg-white hover:border-slate-300 focus-within:border-teal-400 focus-within:ring-2 focus-within:ring-teal-100 transition-all duration-200">
-            {Icon && <Icon className="absolute right-3.5 h-4 w-4 text-slate-400 pointer-events-none" />}
-            <select
-                value={value}
-                onChange={e => onChange(e.target.value)}
-                className={`w-full ${Icon ? 'pr-10' : 'pr-4'} pl-9 py-3 text-sm bg-transparent focus:outline-none appearance-none text-slate-700`}
-            >
-                {children}
-            </select>
-            <svg className="absolute left-3.5 h-4 w-4 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-        </div>
-    );
-}
 
 // ─── Main Component ────────────────────────────────────────────────────────
 
@@ -99,7 +43,7 @@ export default function CategoriesCreate({ organizations, parentCategories }: Pr
 
     useEffect(() => {
         if (data.organization_id) {
-            axios.get('categories-list', { params: { organization_id: data.organization_id } })
+            axios.get(categories.list().url, { params: { organization_id: data.organization_id } })
                 .then((response) => {
                     setAvailableParents(response.data.categories as LetterCategory[]);
                 }).catch((e) => {
@@ -108,68 +52,20 @@ export default function CategoriesCreate({ organizations, parentCategories }: Pr
         }
     }, [data.organization_id]);
 
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(categories.store());
+        post(categories.store().url);
     };
 
     return (
         <>
             <Head title="ایجاد دسته‌بندی جدید" />
 
-            <div className="min-h-screen bg-slate-50/70" dir="rtl">
-
-                {/* ── Sticky Top Bar ── */}
-                <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
-                    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center justify-between h-16">
-                            <div className="flex items-center gap-3">
-                                <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-teal-50 text-teal-600 tracking-wide">
-                                    دسته‌بندی‌ها
-                                </span>
-                                <span className="text-slate-300 text-lg font-light">/</span>
-                                <h1 className="text-sm font-bold text-slate-800">ایجاد دسته‌بندی جدید</h1>
-                            </div>
-                            <div className="flex items-center gap-2.5">
-                                <button
-                                    type="button"
-                                    onClick={() => router.get(categories.index())}
-                                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200"
-                                >
-                                    <X className="h-4 w-4" />
-                                    انصراف
-                                </button>
-                                <button
-                                    type="submit"
-                                    form="cat-form"
-                                    disabled={processing}
-                                    className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-xl transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    <Save className="h-4 w-4" />
-                                    {processing ? 'در حال ذخیره...' : 'ایجاد دسته‌بندی'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="min-h-screen">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     <form id="cat-form" onSubmit={handleSubmit}>
                         <div className="space-y-5">
-
-                            {/* ── Intro strip ── */}
-                            <div className="rounded-2xl border border-teal-100 bg-gradient-to-l from-teal-50 to-cyan-50 px-6 py-5 flex items-center gap-4">
-                                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center shadow-lg flex-shrink-0">
-                                    <Tag className="h-6 w-6 text-white" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-slate-800">ایجاد دسته‌بندی جدید</p>
-                                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                                        دسته‌بندی‌ها برای سازمان‌دهی نامه‌ها بر اساس موضوع یا نوع استفاده می‌شوند.
-                                    </p>
-                                </div>
-                            </div>
-
                             {/* ── Main form card ── */}
                             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                                 <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3.5 bg-gradient-to-l from-white to-slate-50/60">
@@ -184,27 +80,23 @@ export default function CategoriesCreate({ organizations, parentCategories }: Pr
 
                                 <div className="p-6 space-y-5">
 
-                                    {/* Organization */}
-                                    <div>
-                                        <FieldLabel required>سازمان</FieldLabel>
-                                        <SelectField
-                                            icon={Building2}
-                                            value={data.organization_id}
-                                            onChange={v => setData('organization_id', v)}
-                                        >
-                                            {organizations.map(org => (
-                                                <option key={org.id} value={org.id}>{org.name}</option>
-                                            ))}
-                                        </SelectField>
-                                        {errors.organization_id && (
-                                            <p className="text-rose-500 text-xs mt-1.5">{errors.organization_id}</p>
-                                        )}
-                                    </div>
-
                                     <div className="border-t border-slate-100" />
 
                                     {/* Name + Code */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <div>
+                                            <FieldLabel required>سازمان</FieldLabel>
+                                            <SelectField
+                                                icon={Building2}
+                                                value={data.organization_id}
+                                                onChange={v => setData('organization_id', v)}
+                                                error={errors.organization_id}
+                                            >
+                                                {organizations.map(org => (
+                                                    <option key={org.id} value={org.id}>{org.name}</option>
+                                                ))}
+                                            </SelectField>
+                                        </div>
                                         <div>
                                             <FieldLabel required>نام دسته‌بندی</FieldLabel>
                                             <InputField
@@ -213,16 +105,6 @@ export default function CategoriesCreate({ organizations, parentCategories }: Pr
                                                 onChange={v => setData('name', v)}
                                                 placeholder="مثال: اداری، مالی، پرسنلی"
                                                 error={errors.name}
-                                            />
-                                        </div>
-                                        <div>
-                                            <FieldLabel required>کد دسته‌بندی</FieldLabel>
-                                            <InputField
-                                                icon={Hash}
-                                                value={data.code}
-                                                onChange={v => setData('code', v)}
-                                                placeholder="مثال: CAT-001"
-                                                error={errors.code}
                                             />
                                         </div>
                                     </div>
@@ -235,9 +117,10 @@ export default function CategoriesCreate({ organizations, parentCategories }: Pr
                                                 icon={FolderTree}
                                                 value={data.parent_id}
                                                 onChange={v => setData('parent_id', v)}
+                                                error={errors.parent_id}
                                             >
                                                 <option value="">بدون والد (سطح اول)</option>
-                                                {availableParents.map(cat => (
+                                                {availableParents?.map(cat => (
                                                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                                                 ))}
                                             </SelectField>
@@ -250,6 +133,7 @@ export default function CategoriesCreate({ organizations, parentCategories }: Pr
                                                 value={data.sort_order}
                                                 onChange={v => setData('sort_order', parseInt(v) || 0)}
                                                 placeholder="0"
+                                                error={errors.sort_order}
                                             />
                                             <p className="text-xs text-slate-400 mt-1.5">اعداد کوچکتر زودتر نمایش داده می‌شوند</p>
                                         </div>
@@ -380,22 +264,22 @@ export default function CategoriesCreate({ organizations, parentCategories }: Pr
                             </div>
 
                             {/* ── Mobile Actions ── */}
-                            <div className="flex gap-3 sm:hidden pb-4">
-                                <button
-                                    type="button"
-                                    onClick={() => router.get(categories.index())}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-all"
-                                >
-                                    <X className="h-4 w-4" />
-                                    انصراف
-                                </button>
+                            <div className="flex gap-3 pb-4">
                                 <button
                                     type="submit"
                                     disabled={processing}
                                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-white bg-teal-600 hover:bg-teal-700 transition-all shadow-md disabled:opacity-50"
                                 >
-                                    <Save className="h-4 w-4" />
                                     {processing ? 'در حال ذخیره...' : 'ایجاد دسته‌بندی'}
+                                    <Save className="h-4 w-4" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => router.get(categories.index())}
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-all"
+                                >
+                                    انصراف
+                                    <X className="h-4 w-4" />
                                 </button>
                             </div>
 

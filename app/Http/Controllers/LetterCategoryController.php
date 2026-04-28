@@ -101,7 +101,6 @@ class LetterCategoryController extends Controller
         $validator = Validator::make($request->all(), [
             'organization_id' => 'required|exists:organizations,id',
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:letter_categories,code',
             'parent_id' => 'nullable|exists:letter_categories,id',
             'description' => 'nullable|string',
             'color' => 'nullable|string|max:7|regex:/^#[a-fA-F0-9]{6}$/',
@@ -121,7 +120,7 @@ class LetterCategoryController extends Controller
         $category = LetterCategory::create([
             'organization_id' => $request->organization_id,
             'name' => $request->name,
-            'code' => $request->code,
+            'code' => LetterCategory::generateCode(),
             'parent_id' => $request->parent_id,
             'description' => $request->description,
             'color' => $request->color ?? '#3b82f6',

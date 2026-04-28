@@ -650,33 +650,6 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
                 </div>
             </div>
 
-            {/* CSS Animations */}
-            <style>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                @keyframes slideUp {
-                    from {
-                        opacity: 0;
-                        transform: translateY(20px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-                .animate-fade-in {
-                    animation: fadeIn 0.5s ease-out;
-                }
-                .animate-slide-up {
-                    animation: slideUp 0.5s ease-out;
-                }
-                .delay-300 {
-                    animation-delay: 300ms;
-                }
-            `}</style>
-
             {/* Delete Confirmation Modal */}
             {showDeleteModal && selectedCategory && (
                 <DeleteConfirmationModal
