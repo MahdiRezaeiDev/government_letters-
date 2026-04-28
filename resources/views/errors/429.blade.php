@@ -1,98 +1,79 @@
 @extends('errors::minimal')
 
-@section('title', __('Too Many Requests'))
-@section('code')
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+@section('title', __('درخواست زیاد'))
 
-        body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            background: linear-gradient(135deg, #f5af19 0%, #f12711 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .error-container {
-            text-align: center;
-            max-width: 600px;
-            width: 100%;
-        }
-
-        .error-code {
-            font-size: 120px;
-            font-weight: 800;
-            color: rgba(255, 255, 255, 0.2);
-            line-height: 1;
-            margin-bottom: 20px;
-        }
-
-        .error-title {
-            font-size: 28px;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 16px;
-        }
-
-        .error-message {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 32px;
-            line-height: 1.6;
-        }
-
-        .home-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 28px;
-            background: white;
-            color: #f12711;
-            text-decoration: none;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .home-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .timer {
-            margin-top: 30px;
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.7);
-        }
-    </style>
-
-    <body>
-        <div class="error-container">
-            <div class="error-code">429</div>
-            <h1 class="error-title">درخواست زیاد</h1>
-            <p class="error-message">
-                تعداد درخواست‌های شما بیش از حد مجاز است. لطفاً چند دقیقه دیگر تلاش کنید.
-            </p>
-            <a href="{{ url('/') }}" class="home-button">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
+@section('content')
+    <div class="error-code">429</div>
+    <div class="error-icon">
+        <div class="icon-circle warning">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v4M12 16h.01" />
+                <line x1="8" y1="4" x2="16" y2="20" />
+                <path d="M4 4 L20 20" />
+                <path d="M4 12 H20" />
+                <path d="M12 4 V20" />
+            </svg>
+        </div>
+    </div>
+    <h1 class="error-title">درخواست زیاد</h1>
+    <p class="error-message">
+        تعداد درخواست‌های شما بیش از حد مجاز است. لطفاً چند دقیقه صبر کنید و سپس دوباره تلاش کنید.
+    </p>
+    <div class="exception-details">
+        <p>به دلیل ارسال درخواست‌های مکرر، دسترسی شما به طور موقت محدود شده است.</p>
+    </div>
+    <div class="action-buttons">
+        <button onclick="location.reload()" class="btn-primary" id="retryButton" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+            </svg>
+            <span id="buttonText">تلاش مجدد</span>
+            <span id="countdown" style="margin-right: 8px;"></span>
+        </button>
+        <div class="button-group">
+            <a href="{{ url('/') }}" class="btn-outline">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-5v-7H9v7H4a2 2 0 0 1-2-2z" />
                     <polyline points="9 22 9 12 15 12 15 22" />
                 </svg>
-                بازگشت به صفحه اصلی
-                </button>
-                <div class="timer">
-                    لطفاً چند دقیقه دیگر تلاش کنید
-                </div>
+                صفحه اصلی
+            </a>
+            <a href="{{ route('login') }}" class="btn-outline">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    <polyline points="10 17 15 12 10 7" />
+                    <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
+                ورود
+            </a>
         </div>
-    </body>
-@endsection()
+    </div>
+
+    <script>
+        // Optional: Countdown timer for 60 seconds
+        let seconds = 60;
+        const retryButton = document.getElementById('retryButton');
+        const buttonText = document.getElementById('buttonText');
+        const countdownSpan = document.getElementById('countdown');
+
+        if (countdownSpan) {
+            const timer = setInterval(function () {
+                seconds--;
+                if (seconds >= 0) {
+                    countdownSpan.textContent = `(${seconds} ثانیه)`;
+                    if (seconds === 0) {
+                        clearInterval(timer);
+                        retryButton.disabled = false;
+                        buttonText.textContent = 'تلاش مجدد';
+                        countdownSpan.textContent = '';
+                    }
+                }
+            }, 1000);
+        }
+    </script>
+@endsection
+
+@section('code', '429')
 @section('message', __('Too Many Requests'))

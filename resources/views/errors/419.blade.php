@@ -1,90 +1,57 @@
 @extends('errors::minimal')
 
-@section('title', __('Page Expired'))
-@section('code')
+@section('title', __('页面 منقضی شده'))
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .error-container {
-            text-align: center;
-            max-width: 600px;
-            width: 100%;
-        }
-
-        .error-code {
-            font-size: 120px;
-            font-weight: 800;
-            color: rgba(0, 0, 0, 0.1);
-            line-height: 1;
-            margin-bottom: 20px;
-        }
-
-        .error-title {
-            font-size: 28px;
-            font-weight: 700;
-            color: #5c3b1f;
-            margin-bottom: 16px;
-        }
-
-        .error-message {
-            font-size: 16px;
-            color: #7a5a3a;
-            margin-bottom: 32px;
-            line-height: 1.6;
-        }
-
-        .home-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 28px;
-            background: #5c3b1f;
-            color: white;
-            text-decoration: none;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .home-button:hover {
-            background: #4a2e18;
-            transform: translateY(-2px);
-        }
-    </style>
-
-    <body>
-        <div class="error-container">
-            <div class="error-code">419</div>
-            <h1 class="error-title">صفحه منقضی شده</h1>
-            <p class="error-message">
-                صفحه مورد نظر منقضی شده است. لطفاً صفحه را refresh کرده و دوباره تلاش کنید.
-            </p>
-            <button onclick="location.reload()" class="home-button">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                </svg>
-                باز加载 صفحه
-            </button>
+@section('content')
+    <div class="error-code">419</div>
+    <div class="error-icon">
+        <div class="icon-circle warning">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+                <line x1="12" y1="12" x2="12" y2="12.01" />
+                <path d="M12 8v8" />
+                <path d="M8 12h8" />
+            </svg>
         </div>
-    </body>
-@endsection()
+    </div>
+    <h1 class="error-title">صفحه منقضی شده</h1>
+    <p class="error-message">
+        نشست شما منقضی شده است. لطفاً صفحه را بازخوانی کرده و دوباره تلاش کنید.
+    </p>
+    <p class="error-message" style="font-size: 0.813rem; color: #9ca3af; margin-top: -0.75rem;">
+        معمولاً این مشکل به دلیل عدم فعالیت طولانی مدت یا باز بودن صفحه برای مدت طولانی رخ می‌دهد.
+    </p>
+    <div class="action-buttons">
+        <button onclick="location.reload()" class="btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+                <path d="M12 5v3M12 16v3" />
+                <path d="M19 8l-2 2M7 14l-2 2" />
+                <path d="M5 8l2 2M19 14l-2 2" />
+            </svg>
+            بازخوانی صفحه
+        </button>
+        <div class="button-group">
+            <a href="{{ url('/') }}" class="btn-outline">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-5v-7H9v7H4a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                صفحه اصلی
+            </a>
+            <a href="{{ route('login') }}" class="btn-outline">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    <polyline points="10 17 15 12 10 7" />
+                    <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
+                ورود مجدد
+            </a>
+        </div>
+    </div>
+@endsection
+
+@section('code', '419')
 @section('message', __('Page Expired'))
