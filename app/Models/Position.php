@@ -43,7 +43,7 @@ class Position extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_positions')
-            ->withPivot('is_primary', 'start_date', 'end_date', 'status')
+            ->withPivot(['is_primary', 'start_date', 'end_date', 'status'])
             ->withTimestamps();
     }
 

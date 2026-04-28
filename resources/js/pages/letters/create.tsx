@@ -3,14 +3,12 @@ import { useForm } from '@inertiajs/react';
 import axios from 'axios';
 import {
     Save, Paperclip, Send, Trash2, FileText, Shield,
-    Flag, UserCheck, User, Info, Users, Loader2,
-    MessageSquare, PenLine,
-    Tag
+    UserCheck, Info, Loader2, PenLine, Tag
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import PersianDatePicker from '@/components/PersianDatePicker';
 import TextEditor from '@/components/TextEditor';
-import { store as LetterCreate } from '@/routes/letters';
+import LetterRoute  from '@/routes/letters';
 import type { LetterCategory, Organization } from '@/types';
 
 const inputClass = "w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white";
@@ -18,7 +16,13 @@ const inputClass = "w-full border border-slate-300 rounded-md px-3 py-2 text-sm 
 interface Props {
     categories: LetterCategory[];
     departments: { id: number; name: string }[];
-    positions: { id: number; name: string; department_id: number; user_id?: number }[];
+    positions: {
+        id: number;
+        name: string;
+        department_id: number;
+        user_id?: number;
+        user_name?: string;
+    }[];
     externalOrganizations?: Organization[];
     securityLevels: Record<string, string>;
     priorityLevels: Record<string, string>;
@@ -51,7 +55,12 @@ export default function LettersCreate({
         recipient_position_name: '',
     });
 
-    const [availablePositions, setAvailablePositions] = useState<{ id: number; name: string; user_id?: number }[]>([]);
+    const [availablePositions, setAvailablePositions] = useState<{
+        id: number;
+        name: string;
+        user_id?: number;
+        user_name?: string;
+    }[]>([]);
     const [extDepartments, setExtDepartments] = useState<{ id: number; name: string }[]>([]);
     const [extPositions, setExtPositions] = useState<{ id: number; name: string }[]>([]);
     const [loadingPositions, setLoadingPositions] = useState(false);
@@ -72,6 +81,7 @@ export default function LettersCreate({
     // دریافت دپارتمان‌های سازمان خارجی
     useEffect(() => {
         if (data.recipient_organization_id && data.recipient_type === 'external') {
+            setLoadingExtDepts(true);
             axios.get('/organizations/departments', { params: { organization_id: data.recipient_organization_id } })
                 .then(res => {
                     setExtDepartments(res.data.departments || []);
@@ -106,7 +116,7 @@ export default function LettersCreate({
         e.preventDefault();
 
         const submittedData = { ...data, is_draft: isDraft };
-        post(LetterCreate().url, {
+        post(LetterRoute.store().url, {
             data: submittedData,
             preserveScroll: true,
             onSuccess: () => {
@@ -131,8 +141,8 @@ export default function LettersCreate({
 
     const formatFileSize = (bytes: number): string => {
         if (bytes === 0) {
-            return '0 Bytes';
-        }
+return '0 Bytes';
+}
 
         const k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -149,9 +159,11 @@ export default function LettersCreate({
     }[key] ?? 'bg-blue-100 text-blue-700');
 
     const getPriorityLabel = (key: string) => ({
+        low: 'عادی',
         normal: 'معمولی',
-        high: 'محرمانه',
+        high: 'مهم',
         urgent: 'فوری',
+        very_urgent: 'فوق فوری',
     }[key] ?? 'معمولی');
 
     const getSecurityColor = (key: string) => ({
@@ -167,6 +179,7 @@ export default function LettersCreate({
         internal: 'داخلی',
         confidential: 'محرمانه',
         secret: 'سری',
+        top_secret: 'بسیار سری',
     }[key] ?? 'داخلی');
 
     return (
@@ -182,7 +195,7 @@ export default function LettersCreate({
 
                             {/* ══ ستون اصلی ══ */}
                             <div className="col-span-12 lg:col-span-8 space-y-5">
-                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5 flex">
+                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5 flex gap-3 items-center">
                                     <div className="h-9 w-9 rounded-xl bg-teal-50 flex items-center justify-center flex-shrink-0">
                                         <Tag className="h-4 w-4 text-teal-600" />
                                     </div>
@@ -275,10 +288,23 @@ export default function LettersCreate({
                                         )}
                                     </div>
                                 </div>
+
+                                <div className="hidden md:flex gap-5 col-span-12 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden p-5">
+                                    <button type="submit" form="letter-form" disabled={processing}
+                                        className="cursor-pointer px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm flex items-center gap-2 disabled:opacity-50">
+                                        {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                                        {processing ? 'در حال ارسال...' : 'ثبت و ارسال '}
+                                    </button>
+                                    <button type="button" onClick={(e) => handleSubmit(e, true)} disabled={processing}
+                                        className="cursor-pointer px-5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-sm flex items-center gap-2 disabled:opacity-50">
+                                        <Save className="h-4 w-4" /> پیش‌نویس
+                                    </button>
+                                </div>
                             </div>
 
                             {/* ══ ستون کناری ══ */}
                             <div className="col-span-12 lg:col-span-4 space-y-5">
+
                                 {/* تنظیمات امنیتی */}
                                 <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
@@ -350,7 +376,6 @@ export default function LettersCreate({
                                                         setData('recipient_type', type);
 
                                                         if (type === 'internal') {
-                                                            // بازنشانی به مقادیر داخلی
                                                             setData('recipient_organization_id', currentUser.organization_id);
                                                             setData('recipient_department_id', null);
                                                             setData('recipient_position_id', null);
@@ -358,7 +383,6 @@ export default function LettersCreate({
                                                             setData('recipient_name', '');
                                                             setData('recipient_position_name', '');
                                                         } else {
-                                                            // بازنشانی برای خارجی
                                                             setData('recipient_organization_id', null);
                                                             setData('recipient_department_id', null);
                                                             setData('recipient_position_id', null);
@@ -399,6 +423,9 @@ export default function LettersCreate({
                                                             <option key={d.id} value={d.id}>{d.name}</option>
                                                         ))}
                                                     </select>
+                                                    {errors.recipient_department_id && (
+                                                        <p className="text-red-500 text-xs mt-1">{errors.recipient_department_id}</p>
+                                                    )}
                                                 </div>
 
                                                 <div>
@@ -414,10 +441,9 @@ export default function LettersCreate({
 
                                                                 setData('recipient_position_id', id);
                                                                 setData('recipient_position_name', position?.name || '');
+                                                                // ✅ پر کردن user_id و نام کاربر از طریق user_positions
                                                                 setData('recipient_user_id', position?.user_id || null);
-
-                                                                // اگر کاربر مشخص باشد، نام او را هم می‌توانید ست کنید
-                                                                // setData('recipient_name', position?.user?.name || '');
+                                                                setData('recipient_name', position?.user_name || '');
                                                             }}
                                                             disabled={!data.recipient_department_id || loadingPositions}
                                                             className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}>
@@ -432,18 +458,33 @@ export default function LettersCreate({
                                                             </div>
                                                         )}
                                                     </div>
+                                                    {errors.recipient_position_id && (
+                                                        <p className="text-red-500 text-xs mt-1">{errors.recipient_position_id}</p>
+                                                    )}
                                                 </div>
 
                                                 {/* نمایش خلاصه گیرنده داخلی */}
                                                 {data.recipient_position_name && (
                                                     <div className="bg-green-50 border border-green-200 rounded-md p-3 text-xs text-green-800">
-                                                        <p className="font-medium">گیرنده انتخاب شده:</p>
+                                                        <p className="font-medium mb-1">گیرنده انتخاب شده:</p>
                                                         <p>سمت: {data.recipient_position_name}</p>
                                                         <p className="text-green-600 text-[10px] mt-1">
                                                             دپارتمان: {departments.find(d => d.id === data.recipient_department_id)?.name}
                                                         </p>
+                                                        {data.recipient_name && (
+                                                            <p className="text-green-700 text-[10px] font-medium">
+                                                                نام: {data.recipient_name}
+                                                            </p>
+                                                        )}
                                                         {data.recipient_user_id && (
-                                                            <p className="text-green-600 text-[10px]">کد کاربری: {data.recipient_user_id}</p>
+                                                            <p className="text-green-600 text-[10px]">
+                                                                کد کاربری: {data.recipient_user_id}
+                                                            </p>
+                                                        )}
+                                                        {!data.recipient_user_id && (
+                                                            <p className="text-yellow-600 text-[10px] mt-1">
+                                                                ⚠ کاربری به این سمت اختصاص داده نشده است
+                                                            </p>
                                                         )}
                                                     </div>
                                                 )}
@@ -468,6 +509,8 @@ export default function LettersCreate({
                                                             setData('recipient_department_id', null);
                                                             setData('recipient_position_id', null);
                                                             setData('recipient_position_name', '');
+                                                            setExtDepartments([]);
+                                                            setExtPositions([]);
                                                         }}
                                                         className={inputClass}>
                                                         <option value="">انتخاب سازمان...</option>
@@ -489,6 +532,7 @@ export default function LettersCreate({
                                                                 setData('recipient_department_id', id);
                                                                 setData('recipient_position_id', null);
                                                                 setData('recipient_position_name', '');
+                                                                setExtPositions([]);
                                                             }}
                                                             disabled={!data.recipient_organization_id || loadingExtDepts}
                                                             className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}>
@@ -560,10 +604,22 @@ export default function LettersCreate({
                                     </div>
                                     <div className="p-5 space-y-3">
                                         {[
-                                            { label: 'اولویت', value: <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getPriorityColor(data.priority)}`}>{getPriorityLabel(data.priority)}</span> },
-                                            { label: 'سطح امنیتی', value: <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getSecurityColor(data.security_level)}`}>{getSecurityLabel(data.security_level)}</span> },
-                                            { label: 'تاریخ', value: <span className="text-xs font-medium text-slate-700">{data.date}</span> },
-                                            { label: 'گیرنده', value: <span className="text-xs font-medium text-slate-700">{data.recipient_type === 'internal' ? 'داخلی' : 'خارج سازمانی'}</span> },
+                                            {
+                                                label: 'اولویت',
+                                                value: <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getPriorityColor(data.priority)}`}>{getPriorityLabel(data.priority)}</span>
+                                            },
+                                            {
+                                                label: 'سطح امنیتی',
+                                                value: <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getSecurityColor(data.security_level)}`}>{getSecurityLabel(data.security_level)}</span>
+                                            },
+                                            {
+                                                label: 'تاریخ',
+                                                value: <span className="text-xs font-medium text-slate-700">{data.date}</span>
+                                            },
+                                            {
+                                                label: 'گیرنده',
+                                                value: <span className="text-xs font-medium text-slate-700">{data.recipient_type === 'internal' ? 'داخلی' : 'خارج سازمانی'}</span>
+                                            },
                                         ].map(({ label, value }) => (
                                             <div key={label} className="flex items-center justify-between">
                                                 <span className="text-xs text-slate-500">{label}:</span>
@@ -589,7 +645,9 @@ export default function LettersCreate({
                                 </div>
 
                             </div>
-                            <div className="col-span-12 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex justify-between p-5">
+
+                            {/* دکمه‌های موبایل */}
+                            <div className="md:hidden col-span-12 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex justify-between p-5">
                                 <button type="submit" form="letter-form" disabled={processing}
                                     className="cursor-pointer px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm flex items-center gap-2 disabled:opacity-50">
                                     {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

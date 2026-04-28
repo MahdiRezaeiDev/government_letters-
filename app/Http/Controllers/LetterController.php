@@ -187,9 +187,20 @@ class LetterController extends Controller
             ->get(['id', 'name']);
 
         // پست‌ها
+        // LetterController.php - متد create()
+
         $positions = Position::whereHas('department', function ($q) use ($currentUser) {
             $q->where('organization_id', $currentUser->organization_id);
-        })->get(['id', 'name', 'department_id']);
+        })
+            ->with(['users:id,first_name,last_name'])
+            ->get(['id', 'name', 'department_id'])
+            ->map(fn($p) => [
+                'id'            => $p->id,
+                'name'          => $p->name,
+                'department_id' => $p->department_id,
+                'user_id'       => $p->users->first()?->id,
+                'user_name'     => $p->users->first()?->full_name,
+            ]);
 
         // دریافت سازمان‌های خارجی (به جز سازمان خود کاربر)
         $externalOrganizations = Organization::where('id', '!=', $currentUser->organization_id)
