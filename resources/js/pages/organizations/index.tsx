@@ -123,7 +123,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                 <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="space-y-6">
                         {/* Header Section */}
-                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 animate-fade-in">
+                        <div className="flex flex-col bg-white rounded-lg p-5 shadow-sm border lg:flex-row lg:items-center lg:justify-between gap-4">
                             <div>
                                 <div className="flex items-center gap-3">
                                     <div className="relative">
@@ -169,7 +169,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                         className="group relative inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                                     >
                                         <Plus className="ml-2 h-4 w-4 transition-transform group-hover:rotate-90 duration-200" />
-                                        وزارت جدید
+                                         ثبت وزارت
                                         <span className="absolute inset-0 rounded-xl bg-white opacity-0 group-hover:opacity-10 transition-opacity"></span>
                                     </Link>
                                 )}
@@ -177,7 +177,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                         </div>
 
                         {/* Stats Cards */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 animate-slide-up">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                             {stats.map((stat, index) => (
                                 <div key={stat.label} className="group relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                                     <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${stat.gradient} opacity-10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500`} />
@@ -199,7 +199,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                         </div>
 
                         {/* Search and Filters Bar */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 animate-slide-up">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
                             <div className="p-5">
                                 <div className="flex flex-col lg:flex-row gap-4">
                                     <div className="flex-1">
@@ -276,7 +276,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                         {/* View Mode: Table or Cards */}
                         {viewMode === 'table' ? (
                             // Table View
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in">
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                                 <div className="overflow-x-auto">
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gradient-to-r from-gray-50 to-white">
@@ -315,7 +315,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                                     const StatusIcon = status.icon;
 
                                                     return (
-                                                        <tr key={org.id} className="hover:bg-gray-50 transition-colors group animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
+                                                        <tr key={org.id} className="hover:bg-gray-50 transition-colors group" style={{ animationDelay: `${index * 50}ms` }}>
                                                             <td className="px-6 py-4">
                                                                 <div className="flex items-center">
                                                                     <div className={`shrink-0 h-11 w-11 rounded-xl bg-gradient-to-br ${getRandomGradient(org.id)} flex items-center justify-center text-white font-bold shadow-md`}>
@@ -496,7 +496,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                             </div>
                         ) : (
                             // Cards View
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-fade-in">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                                 {organizations.data.length === 0 ? (
                                     <div className="col-span-full bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center">
                                         <div className="flex flex-col items-center justify-center">
@@ -513,7 +513,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                         const StatusIcon = status.icon;
 
                                         return (
-                                            <div key={org.id} className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
+                                            <div key={org.id} className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1" style={{ animationDelay: `${index * 50}ms` }}>
                                                 {/* Header Bar */}
                                                 <div className={`h-1.5 bg-gradient-to-r ${getRandomGradient(org.id)}`} />
 
@@ -611,7 +611,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
 
                         {/* Pagination for Cards View */}
                         {viewMode === 'cards' && organizations.last_page > 1 && (
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in">
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                                 <div className="text-sm text-gray-600">
                                     نمایش <span className="font-medium text-gray-900">{organizations.from}</span> تا{' '}
                                     <span className="font-medium text-gray-900">{organizations.to}</span> از{' '}
@@ -670,30 +670,6 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                 </div>
             </div>
 
-            {/* CSS Animations */}
-            <style>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                @keyframes slideUp {
-                    from {
-                        opacity: 0;
-                        transform: translateY(20px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-                .animate-fade-in {
-                    animation: fadeIn 0.5s ease-out;
-                }
-                .animate-slide-up {
-                    animation: slideUp 0.5s ease-out;
-                }
-            `}</style>
-
             {/* Delete Confirmation Modal */}
             {showDeleteModal && selectedOrganization && (
                 <DeleteConfirmationModal
@@ -706,7 +682,6 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                     title="حذف سازمان"
                     message="آیا از حذف این سازمان اطمینان دارید؟"
                     itemName={selectedOrganization.name}
-                    type="organization"
                     isLoading={deleting}
                 />
             )}

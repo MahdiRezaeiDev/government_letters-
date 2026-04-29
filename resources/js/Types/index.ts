@@ -56,6 +56,7 @@ export interface User {
 }
 
 export interface Organization {
+    departments_count: number;
     logo_url: string;
     logo_url: string;
     id: number;

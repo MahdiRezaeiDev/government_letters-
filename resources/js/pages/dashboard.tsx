@@ -57,6 +57,7 @@ export default function Dashboard({ stats = {}, recentLetters = [], monthlyStats
 
     useEffect(() => {
         const t = setInterval(() => setCurrentTime(new Date()), 60000);
+
         return () => clearInterval(t);
     }, []);
 
@@ -79,19 +80,19 @@ export default function Dashboard({ stats = {}, recentLetters = [], monthlyStats
     ];
 
     const infoCards = [
-        { label: 'کل مکتوبات', value: stats.total_letters ?? 234, icon: BookOpen, color: 'text-violet-600' },
+        { label: 'مکاتیب', value: stats.total_letters ?? 234, icon: BookOpen, color: 'text-violet-600' },
         { label: 'کاربران سیستم', value: stats.total_users ?? 18, icon: Users, color: 'text-blue-600' },
-        { label: 'دپارتمان‌ها', value: stats.total_departments ?? 7, icon: Archive, color: 'text-emerald-600' },
-        { label: 'بایگانی شده', value: stats.archived_count ?? 89, icon: CheckCircle2, color: 'text-amber-600' },
+        { label: 'ریاست ها', value: stats.total_departments ?? 7, icon: Archive, color: 'text-emerald-600' },
+        { label: 'ثبت آرشیف', value: stats.archived_count ?? 89, icon: CheckCircle2, color: 'text-amber-600' },
     ];
 
     const sampleMonthly = monthlyStats.length > 0 ? monthlyStats : [
-        { month: 'فروردین', count: 30 },
-        { month: 'اردیبهشت', count: 52 },
-        { month: 'خرداد', count: 41 },
-        { month: 'تیر', count: 63 },
-        { month: 'مرداد', count: 55 },
-        { month: 'شهریور', count: 78 },
+        { month: 'حمل', count: 30 },
+        { month: 'ثور', count: 52 },
+        { month: 'جوزا', count: 41 },
+        { month: 'سرطان', count: 63 },
+        { month: 'اسد', count: 55 },
+        { month: 'سنبله', count: 78 },
     ];
 
     const notifications = [
@@ -151,7 +152,7 @@ export default function Dashboard({ stats = {}, recentLetters = [], monthlyStats
                         <div className="flex items-center justify-between mb-6">
                             <div>
                                 <h3 className="font-bold text-slate-900 text-base">تحلیل گردش مکاتبات</h3>
-                                <p className="text-slate-500 text-xs mt-0.5">حجم نامه‌های ورودی بر اساس ماه</p>
+                                <p className="text-slate-500 text-xs mt-0.5">حجم مکتوب های ورودی بر اساس ماه</p>
                             </div>
                             <span className="flex items-center gap-1.5 text-emerald-600 text-xs font-medium">
                                 <Activity className="h-3.5 w-3.5" />
@@ -194,7 +195,7 @@ export default function Dashboard({ stats = {}, recentLetters = [], monthlyStats
                     {/* Donut Chart */}
                     <div className="rounded-xl border border-slate-200 bg-white p-6">
                         <h3 className="font-bold text-slate-900 text-base mb-1">تفکیک اولویت‌ها</h3>
-                        <p className="text-slate-500 text-xs mb-4">توزیع مکتوبات بر اساس اولویت</p>
+                        <p className="text-slate-500 text-xs mb-4">توزیع مکاتیب بر اساس اولویت</p>
                         <div className="h-44 relative">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
@@ -234,7 +235,7 @@ export default function Dashboard({ stats = {}, recentLetters = [], monthlyStats
                         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-3">
                             <h3 className="font-bold text-slate-900 flex items-center gap-2">
                                 <History className="h-4 w-4 text-indigo-500" />
-                                آخرین مکتوبات
+                                آخرین مکاتیب
                             </h3>
                             <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
                                 {(['همه', 'وارده', 'صادره', 'داخلی'] as const).map(tab => (
@@ -267,6 +268,7 @@ export default function Dashboard({ stats = {}, recentLetters = [], monthlyStats
                                     ]).map(letter => {
                                         const pri = priorityConfig[letter.priority ?? 'normal'] ?? priorityConfig.normal;
                                         const sts = statusConfig[letter.final_status ?? 'pending'] ?? statusConfig.pending;
+
                                         return (
                                             <tr key={letter.id}
                                                 className="border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer group">
@@ -305,7 +307,7 @@ export default function Dashboard({ stats = {}, recentLetters = [], monthlyStats
 
                         <div className="px-6 py-3 border-t border-slate-100 text-center">
                             <Link href="/letters" className="text-xs text-indigo-600 hover:text-indigo-700 font-medium transition">
-                                مشاهده همه مکتوبات ←
+                                مشاهده همه مکاتیب ←
                             </Link>
                         </div>
                     </div>
@@ -339,10 +341,10 @@ export default function Dashboard({ stats = {}, recentLetters = [], monthlyStats
                         {/* Shortcuts */}
                         <div className="grid grid-cols-2 gap-3">
                             {[
-                                { label: 'دفترچه تلفن', icon: Users, color: 'text-violet-600', bg: 'bg-violet-50', href: '/contacts' },
-                                { label: 'بایگانی', icon: Archive, color: 'text-amber-600', bg: 'bg-amber-50', href: '/archive' },
-                                { label: 'کارتابل', icon: LayoutGrid, color: 'text-blue-600', bg: 'bg-blue-50', href: '/cartable' },
-                                { label: 'نامه جدید', icon: Edit3, color: 'text-emerald-600', bg: 'bg-emerald-50', href: '/letters/create' },
+                                { label: 'کارمندان', icon: Users, color: 'text-violet-600', bg: 'bg-violet-50', href: '/contacts' },
+                                { label: 'آرشیف', icon: Archive, color: 'text-amber-600', bg: 'bg-amber-50', href: '/archive' },
+                                { label: 'صندوق', icon: LayoutGrid, color: 'text-blue-600', bg: 'bg-blue-50', href: '/cartable' },
+                                { label: 'مکتوب جدید', icon: Edit3, color: 'text-emerald-600', bg: 'bg-emerald-50', href: '/letters/create' },
                             ].map(s => (
                                 <Link key={s.label} href={s.href}
                                     className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-slate-200 ${s.bg} hover:border-slate-300 hover:shadow-sm transition-all group`}>
