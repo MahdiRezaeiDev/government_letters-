@@ -7,8 +7,8 @@ import {
 } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import letters from '@/routes/letters';
-import type { Letter, Case } from '@/types';
 import routings from '@/routes/routings';
+import type { Letter, Case } from '@/types';
 
 interface Attachment {
     id: number;
@@ -53,30 +53,47 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
-const getDownloadUrl = (id: number) => `/letters/attachments/${id}/download`;
-const getPreviewUrl = (id: number) => `/letters/attachments/${id}/preview`;
+const getDownloadUrl = (id: number) => `/attachments/${id}/download`;
+const getPreviewUrl = (id: number) => `/attachments/${id}/preview`;
 
 const isImage = (mime?: string, name?: string) => {
-    if (mime) return mime.startsWith('image/');
+    if (mime) {
+        return mime.startsWith('image/');
+    }
+
     const ext = name?.split('.').pop()?.toLowerCase();
+
     return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext || '');
 };
 
 const isPdf = (mime?: string, name?: string) => {
-    if (mime) return mime === 'application/pdf';
+    if (mime) {
+        return mime === 'application/pdf';
+    }
+
     return name?.toLowerCase().endsWith('.pdf');
 };
 
 const formatSize = (bytes: number) => {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) {
+        return '0 B';
+    }
+
     const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 };
 
 const getFileIcon = (att: Attachment) => {
-    if (isImage(att.mime_type, att.file_name)) return { icon: ImageIcon, color: 'text-violet-500', bg: 'bg-violet-50' };
-    if (isPdf(att.mime_type, att.file_name)) return { icon: FileText, color: 'text-red-500', bg: 'bg-red-50' };
+    if (isImage(att.mime_type, att.file_name)) {
+        return { icon: ImageIcon, color: 'text-violet-500', bg: 'bg-violet-50' };
+    }
+
+    if (isPdf(att.mime_type, att.file_name)) {
+        return { icon: FileText, color: 'text-red-500', bg: 'bg-red-50' };
+    }
+
     return { icon: FileIcon, color: 'text-blue-500', bg: 'bg-blue-50' };
 };
 
@@ -90,12 +107,15 @@ function AttachmentPreviewModal({ att, onClose }: { att: Attachment; onClose: ()
     const canPreview = isImage(att.mime_type, att.file_name) || isPdf(att.mime_type, att.file_name);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if (e.key === 'Escape') onClose();
+        if (e.key === 'Escape') {
+            onClose();
+        }
     }, [onClose]);
 
     useEffect(() => {
         document.addEventListener('keydown', handleKeyDown);
         document.body.style.overflow = 'hidden';
+
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
             document.body.style.overflow = '';
@@ -204,6 +224,7 @@ function ArchiveModal({ cases, loading, onClose, onConfirm }: {
     cases: Case[]; loading: boolean; onClose: () => void; onConfirm: (id: number) => void;
 }) {
     const [sel, setSel] = useState<number | null>(null);
+
     return (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
@@ -267,26 +288,39 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, av
     const handleArchive = (caseId: number) => {
         setLoading(true);
         router.post(letters.show({ letter: letter.id }), { case_id: caseId }, {
-            onSuccess: () => { setShowArchiveModal(false); setLoading(false); router.reload(); },
+            onSuccess: () => {
+                setShowArchiveModal(false); setLoading(false); router.reload();
+            },
             onError: () => setLoading(false),
         });
     };
 
     const handleApprove = () => {
-        if (!confirm('آیا از تأیید این نامه اطمینان دارید؟')) return;
+        if (!confirm('آیا از تأیید این نامه اطمینان دارید؟')) {
+            return;
+        }
+
         setLoading(true);
         router.post(letters.show({ letter: letter.id }), {}, {
-            onSuccess: () => { setLoading(false); router.reload(); },
+            onSuccess: () => {
+                setLoading(false); router.reload();
+            },
             onError: () => setLoading(false),
         });
     };
 
     const handleReject = () => {
         const reason = prompt('لطفاً دلیل رد را وارد کنید:');
-        if (!reason) return;
+
+        if (!reason) {
+            return;
+        }
+
         setLoading(true);
         router.post(letters.show({ letter: letter.id }), { reason }, {
-            onSuccess: () => { setLoading(false); router.reload(); },
+            onSuccess: () => {
+                setLoading(false); router.reload();
+            },
             onError: () => setLoading(false),
         });
     };
@@ -299,62 +333,6 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, av
     return (
         <>
             <Head title={letter.subject} />
-
-            <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
-                * { font-family: 'Vazirmatn', sans-serif; }
-                :root { direction: rtl; }
-
-                .letter-paper {
-                    background: #ffffff;
-                    box-shadow:
-                        0 1px 2px rgba(0,0,0,0.04),
-                        0 4px 24px rgba(0,0,0,0.10),
-                        0 0 0 1px rgba(0,0,0,0.04);
-                    width: 210mm;
-                    min-height: 297mm;
-                    margin: 0 auto;
-                }
-                .header-top-line { height: 6px; background: #1a1a2e; }
-                .header-divider { border: none; border-top: 1.5px solid #555; margin: 0; }
-                .footer-divider { border: none; border-top: 1.5px solid #555; margin: 0; }
-                .letter-body {
-                    font-size: 14px; line-height: 2.2; color: #111;
-                    text-align: justify; word-spacing: 0.04em;
-                }
-                .letter-body p { margin: 0 0 0.5rem 0; }
-                .meta-row {
-                    display: flex; align-items: center; gap: 4px;
-                    font-size: 12.5px; line-height: 1.8; color: #222;
-                }
-                .meta-label { font-weight: 700; color: #333; min-width: 52px; }
-                .org-center-name {
-                    font-size: 50px; font-weight: 800; color: #1a1a2e;
-                    line-height: 1.6; text-align: center;
-                }
-                .sub-dept-name { font-size: 13px; font-weight: 600; color: #333; text-align: center; line-height: 1.7; }
-                .emblem-circle {
-                    width: 80px; height: 80px; border-radius: 50%;
-                    border: 1.5px solid #aaa; display: flex;
-                    align-items: center; justify-content: center;
-                    background: #f9f9f9; overflow: hidden;
-                }
-                .sig-line { border-bottom: 1px solid #555; margin-bottom: 6px; min-height: 48px; }
-
-                /* ── Attachment card hover ── */
-                .att-card { transition: all 0.15s ease; }
-                .att-card:hover { background: #f8faff; transform: translateX(-2px); }
-                .att-card:hover .att-actions { opacity: 1; }
-                .att-actions { opacity: 0; transition: opacity 0.15s ease; }
-
-                @media print {
-                    .no-print { display: none !important; }
-                    body { background: white !important; margin: 0 !important; padding: 0 !important; }
-                    .letter-paper { box-shadow: none !important; width: 100% !important; min-height: auto !important; margin: 0 !important; }
-                    .print-area { padding: 0 !important; }
-                }
-            `}</style>
-
             <div className="min-h-screen bg-slate-200/70" dir="rtl">
 
                 {/* ── Toolbar ── */}
@@ -423,7 +401,7 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, av
 
                 {/* ── Print / View area ── */}
                 <div className="print-area py-8 px-4">
-                    <div className="letter-paper">
+                    <div className="letter-paper bg-white mx-auto rounded-2xl border border-slate-200 shadow-sm flex flex-col">
 
                         <div className="header-top-line" />
 
@@ -627,7 +605,9 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, av
                                             {/* Actions */}
                                             <div className="att-actions flex items-center gap-1 flex-shrink-0">
                                                 <button
-                                                    onClick={(e) => { e.stopPropagation(); setPreviewAtt(att); }}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation(); setPreviewAtt(att);
+                                                    }}
                                                     title="مشاهده"
                                                     className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition">
                                                     <Eye className="h-4 w-4" />
@@ -667,6 +647,7 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, av
                                     const RIcon = rCfg.icon;
                                     const isOverdue = routing.deadline && new Date(routing.deadline) < new Date() && routing.status === 'pending';
                                     const isLast = idx === letter.routings.length - 1;
+
                                     return (
                                         <div key={routing.id} className="relative flex gap-4 pb-5">
                                             {!isLast && <div className="absolute right-3 top-7 bottom-0 w-px bg-slate-200" />}

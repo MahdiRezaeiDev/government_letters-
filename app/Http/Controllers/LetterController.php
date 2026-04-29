@@ -13,6 +13,7 @@ use App\Models\LetterHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use App\Enums\PermissionEnum;
@@ -459,7 +460,7 @@ class LetterController extends Controller
 
     public function downloadAttachment(Attachment $attachment)
     {
-        // $this->authorize('view', $attachment->letter);
+        // dd($attachment->file_path);
 
         if (!Storage::disk('public')->exists($attachment->file_path)) {
             return back()->with('error', 'فایل یافت نشد.');
@@ -468,6 +469,21 @@ class LetterController extends Controller
         $attachment->incrementDownloadCount();
 
         return Storage::disk('public')->download($attachment->file_path, $attachment->file_name);
+    }
+
+    public function preview(Attachment $attachment)
+    {
+        // if (!Storage::disk($attachment->disk)->exists($attachment->file_path)) {
+        //     abort(404);
+        // }
+
+        return Storage::disk('public')->response(
+            $attachment->file_path,
+            $attachment->file_name,
+            [
+                'Content-Type' => $attachment->mime_type,
+            ]
+        );
     }
 
     // ============================================

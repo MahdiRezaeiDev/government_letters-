@@ -163,6 +163,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ═══════════════════════════════════════════════════════
     Route::get('attachments/{attachment}/download', [LetterController::class, 'downloadAttachment'])
         ->middleware('permission:view-letters')->name('attachments.download');
+    Route::get('/attachments/{attachment}/preview', [LetterController::class, 'preview'])
+        ->name('attachments.preview')
+        ->middleware(['auth']);
 
     // ═══════════════════════════════════════════════════════
     // کارتابل و ارجاعات

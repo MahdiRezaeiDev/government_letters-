@@ -34,7 +34,7 @@ interface Props {
 export default function LettersIndex({ letters, categories, filters, can, types, statuses, priorities }: Props) {
 
     console.log(can);
-    
+
 
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [selectedType, setSelectedType] = useState(filters.letter_type || '');
@@ -189,8 +189,8 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                         handleSearch();
                                     }}
                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${!selectedType
-                                            ? 'bg-blue-600 text-white shadow-sm'
-                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                        ? 'bg-blue-600 text-white shadow-sm'
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                         }`}
                                 >
                                     همه
@@ -206,8 +206,8 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                                 handleSearch();
                                             }}
                                             className={`px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap inline-flex items-center gap-2 ${selectedType === key
-                                                    ? 'bg-blue-600 text-white shadow-sm'
-                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                ? 'bg-blue-600 text-white shadow-sm'
+                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                                 }`}
                                         >
                                             <Icon className="h-4 w-4" />
@@ -239,8 +239,8 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                         <button
                                             onClick={() => setShowFilters(!showFilters)}
                                             className={`inline-flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${showFilters || hasActiveFilters
-                                                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                                                    : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
+                                                ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                                : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
                                                 }`}
                                         >
                                             <Filter className="ml-2 h-4 w-4" />
@@ -383,7 +383,7 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="flex items-center gap-1 text-sm text-gray-500">
                                                                 <Calendar className="h-3 w-3" />
-                                                                {new Date(letter.date).toLocaleDateString('fa-IR')}
+                                                                {letter.date}
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-left">
@@ -395,7 +395,7 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                                                 >
                                                                     <Eye className="h-4 w-4" />
                                                                 </Link>
-                                                                {can.edit && (
+                                                                {can.edit && letter.is_draft && (
                                                                     <Link
                                                                         href={lettersRoute.edit({ letter: letter.id })}
                                                                         className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
@@ -435,8 +435,8 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                         <Link
                                             href={letters.current_page > 1 ? lettersRoute.index({ query: { page: letters.current_page - 1, ...filters } }) : '#'}
                                             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${letters.current_page > 1
-                                                    ? 'text-gray-700 hover:bg-white hover:text-blue-600'
-                                                    : 'text-gray-300 cursor-not-allowed'
+                                                ? 'text-gray-700 hover:bg-white hover:text-blue-600'
+                                                : 'text-gray-300 cursor-not-allowed'
                                                 }`}
                                         >
                                             <ChevronRight className="h-4 w-4" />
@@ -473,8 +473,8 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                                         key={i}
                                                         href={lettersRoute.index({ query: { page: i, ...filters } })}
                                                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${letters.current_page === i
-                                                                ? 'bg-blue-600 text-white shadow-sm'
-                                                                : 'text-gray-700 hover:bg-white hover:text-blue-600'
+                                                            ? 'bg-blue-600 text-white shadow-sm'
+                                                            : 'text-gray-700 hover:bg-white hover:text-blue-600'
                                                             }`}
                                                     >
                                                         {i}
@@ -501,10 +501,10 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                             return pages;
                                         })()}
                                         <Link
-                                            href={letters.current_page < letters.last_page ? lettersRoute.index({query: { page: letters.current_page + 1, ...filters }}) : '#'}
+                                            href={letters.current_page < letters.last_page ? lettersRoute.index({ query: { page: letters.current_page + 1, ...filters } }) : '#'}
                                             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${letters.current_page < letters.last_page
-                                                    ? 'text-gray-700 hover:bg-white hover:text-blue-600'
-                                                    : 'text-gray-300 cursor-not-allowed'
+                                                ? 'text-gray-700 hover:bg-white hover:text-blue-600'
+                                                : 'text-gray-300 cursor-not-allowed'
                                                 }`}
                                         >
                                             <ChevronLeft className="h-4 w-4" />
