@@ -94,71 +94,17 @@ export default function OrganizationsShow({ organization, stats, can }: Props) {
     const isActive = organization.status === 'active';
 
     const statsCards = [
-        { label: 'کل دپارتمان‌ها', value: stats.total_departments, icon: Layers, color: '#3b82f6' },
-        { label: 'دپارتمان‌های فعال', value: stats.active_departments, icon: Briefcase, color: '#10b981' },
-        { label: 'کل کاربران', value: stats.total_users, icon: Users, color: '#8b5cf6' },
-        { label: 'کل پرونده‌ها', value: stats.total_cases ?? 0, icon: Database, color: '#f59e0b' },
+        { label: 'ریاست ها', value: stats.total_departments, icon: Layers, color: '#3b82f6' },
+        { label: 'ریاست های فعال', value: stats.active_departments, icon: Briefcase, color: '#10b981' },
+        { label: 'کارمندان', value: stats.total_users, icon: Users, color: '#8b5cf6' },
+        { label: 'کتگوری ها', value: stats.total_cases ?? 0, icon: Database, color: '#f59e0b' },
     ];
 
     return (
         <>
             <Head title={organization.name} />
 
-            <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
-                * { font-family: 'Vazirmatn', sans-serif; }
-                :root { direction: rtl; }
-            `}</style>
-
-            <div className="min-h-screen bg-slate-50/70" dir="rtl">
-
-                {/* ── Sticky Top Bar ── */}
-                <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
-                    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center justify-between h-16 gap-4">
-                            {/* Breadcrumb */}
-                            <div className="flex items-center gap-2 min-w-0">
-                                <Link href={organizations.index()}
-                                    className="text-xs font-bold text-slate-500 hover:text-slate-700 px-2 py-1 rounded-lg hover:bg-slate-100 transition">
-                                    سازمان‌ها
-                                </Link>
-                                <ChevronRight className="h-3.5 w-3.5 text-slate-300 shrink-0" />
-                                <span className="text-xs font-bold text-slate-800 truncate max-w-xs">{organization.name}</span>
-                            </div>
-
-                            {/* Status + Actions */}
-                            <div className="flex items-center gap-2.5 shrink-0">
-                                <span
-                                    className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full"
-                                    style={{
-                                        backgroundColor: isActive ? '#dcfce7' : '#f1f5f9',
-                                        color: isActive ? '#15803d' : '#64748b',
-                                    }}
-                                >
-                                    {isActive
-                                        ? <><CheckCircle className="h-3 w-3" />فعال</>
-                                        : <><AlertCircle className="h-3 w-3" />غیرفعال</>
-                                    }
-                                </span>
-                                {can.edit && (
-                                    <Link href={organizations.edit({ organization: organization.id })}
-                                        className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all">
-                                        <Pencil className="h-4 w-4" />
-                                        <span className="hidden sm:inline">ویرایش</span>
-                                    </Link>
-                                )}
-                                {can.delete && (
-                                    <button onClick={() => setShowDeleteModal(true)}
-                                        className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-all">
-                                        <Trash2 className="h-4 w-4" />
-                                        <span className="hidden sm:inline">حذف</span>
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+            <div className="min-h-screen">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="space-y-5">
 
@@ -182,7 +128,7 @@ export default function OrganizationsShow({ organization, stats, can }: Props) {
                                     <div className="flex flex-wrap gap-2 mt-3">
                                         <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full">
                                             <Calendar className="h-3 w-3 text-slate-400" />
-                                            {new Date(organization.created_at).toLocaleDateString('fa-IR', {
+                                            {new Date(organization.created_at).toLocaleDateString('fa-AF', {
                                                 year: 'numeric', month: 'long', day: 'numeric'
                                             })}
                                         </span>
@@ -220,7 +166,7 @@ export default function OrganizationsShow({ organization, stats, can }: Props) {
 
                         {/* ── Contact Info ── */}
                         {(organization.email || organization.phone || organization.address || organization.website) ? (
-                            <SectionCard icon={Mail} iconColor="#0ea5e9" title="اطلاعات تماس" subtitle="راه‌های ارتباطی سازمان">
+                            <SectionCard icon={Mail} iconColor="#0ea5e9" title="اطلاعات تماس" subtitle="راه‌های ارتباطی ریاست">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {organization.email && (
                                         <ContactItem icon={Mail} iconColor="#0ea5e9" label="ایمیل">
@@ -263,8 +209,8 @@ export default function OrganizationsShow({ organization, stats, can }: Props) {
                         {/* ── Departments ── */}
                         <SectionCard
                             icon={Layers} iconColor="#3b82f6"
-                            title="دپارتمان‌ها"
-                            subtitle={`${organization.departments?.length ?? 0} دپارتمان زیرمجموعه`}
+                            title="ریاست‌ها"
+                            subtitle={`${organization.departments?.length ?? 0} ریاست زیرمجموعه`}
                             action={
                                 <Link
                                     href={departments.create({ query: { organization_id: organization.id } })}
@@ -282,7 +228,7 @@ export default function OrganizationsShow({ organization, stats, can }: Props) {
                                         <Layers className="h-7 w-7 text-slate-300" />
                                     </div>
                                     <p className="text-sm font-semibold text-slate-500">هیچ دپارتمانی ثبت نشده</p>
-                                    <p className="text-xs text-slate-400 mt-1 mb-4">اولین دپارتمان این سازمان را ایجاد کنید</p>
+                                    <p className="text-xs text-slate-400 mt-1 mb-4">اولین دپارتمان این ریاست را ایجاد کنید</p>
                                     <Link
                                         href={departments.create({ query: { organization_id: organization.id } })}
                                         className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-white
@@ -358,10 +304,9 @@ export default function OrganizationsShow({ organization, stats, can }: Props) {
                     isOpen={showDeleteModal}
                     onClose={() => setShowDeleteModal(false)}
                     onConfirm={handleDelete}
-                    title="حذف سازمان"
-                    message="آیا از حذف این سازمان اطمینان دارید؟"
+                    title="حذف ریاست"
+                    message="آیا از حذف این ریاست اطمینان دارید؟"
                     itemName={organization.name}
-                    type="organization"
                     isLoading={deleting}
                 />
             )}

@@ -1,5 +1,3 @@
-// resources/js/pages/departments/index.tsx
-
 import { Head, Link, router } from '@inertiajs/react';
 import {
     Plus, Pencil, Trash2, Search, Building2, ChevronLeft, ChevronRight,
@@ -106,7 +104,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
     const hasActiveFilters = filters.search || filters.status || filters.organization_id;
 
     const stats = [
-        { label: 'کل ریاست ها', value: departments.total, icon: Layers, color: 'indigo', gradient: 'from-indigo-500 to-purple-600', change: '+12%' },
+        { label: ' ریاست ها', value: departments.total, icon: Layers, color: 'indigo', gradient: 'from-indigo-500 to-purple-600', change: '+12%' },
         { label: 'ریاست های فعال', value: departments.data.filter(d => d.status === 'active').length, icon: CheckCircle, color: 'emerald', gradient: 'from-emerald-500 to-teal-600', change: '+8%' },
         { label: 'وزارت ها', value: organizations.length, icon: Building2, color: 'blue', gradient: 'from-blue-500 to-cyan-600', change: '+5%' },
         { label: 'سطوح', value: Math.max(...departments.data.map(d => d.level), 0), icon: GitBranch, color: 'purple', gradient: 'from-purple-500 to-pink-600', change: '-' },
@@ -132,11 +130,11 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
         <>
             <Head title="مدیریت ریاست ها" />
 
-            <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-slate-100">
-                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="min-h-screen">
+                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 ">
                     <div className="space-y-6">
                         {/* Header Section */}
-                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 animate-fade-in">
+                        <div className="flex flex-col bg-white p-5 rounded-lg border border-slate-200 shadow-sm lg:flex-row lg:items-center lg:justify-between gap-4">
                             <div>
                                 <div className="flex items-center gap-3">
                                     <div className="relative">
@@ -149,7 +147,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                         <h1 className="text-2xl font-bold text-gray-900">مدیریت ریاست ها</h1>
                                         <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
                                             <Sparkles className="h-3 w-3 text-indigo-500" />
-                                            مدیریت واحدهای سازمانی و ساختار سازمانی
+                                            مدیریت واحدهای ریاستی و ساختار ریاستی
                                         </p>
                                     </div>
                                 </div>
@@ -182,7 +180,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                         className="group relative inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl text-sm font-medium text-white hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                                     >
                                         <Plus className="ml-2 h-4 w-4 transition-transform group-hover:rotate-90 duration-200" />
-                                        ریاست جدید
+                                        ثبت ریاست
                                         <span className="absolute inset-0 rounded-xl bg-white opacity-0 group-hover:opacity-10 transition-opacity"></span>
                                     </Link>
                                 )}
@@ -190,7 +188,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                         </div>
 
                         {/* Stats Cards */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 animate-slide-up">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                             {stats.map((stat, index) => (
                                 <div key={stat.label} className="group relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                                     <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${stat.gradient} opacity-10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500`} />
@@ -212,7 +210,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                         </div>
 
                         {/* Search and Filters Bar */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 animate-slide-up">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
                             <div className="p-5">
                                 <div className="flex flex-col lg:flex-row gap-4">
                                     <div className="flex-1">
@@ -223,7 +221,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                                                placeholder="جستجو بر اساس نام، کد، سازمان..."
+                                                placeholder="جستجو بر اساس نام، کد، ریاست..."
                                                 className="w-full pr-10 pl-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                             />
                                         </div>
@@ -271,7 +269,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                                     </div>
                                                     {organizations.length > 0 && (
                                                         <div>
-                                                            <label className="block text-sm font-medium text-gray-700 mb-2">سازمان</label>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-2">ریاست</label>
                                                             <select
                                                                 value={selectedOrganization}
                                                                 onChange={(e) => setSelectedOrganization(e.target.value)}
@@ -304,14 +302,14 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                         {/* View Mode: Table or Cards */}
                         {viewMode === 'table' ? (
                             // Table View
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in">
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                                 <div className="overflow-x-auto">
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gradient-to-r from-gray-50 to-white">
                                             <tr>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">ریاست</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">کد</th>
-                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سازمان</th>
+                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">وزارت</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">والد</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">وضعیت</th>
                                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">عملیات</th>
@@ -345,7 +343,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                                     const hasParent = dept.level > 0;
 
                                                     return (
-                                                        <tr key={dept.id} className="hover:bg-gray-50 transition-colors group animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
+                                                        <tr key={dept.id} className="hover:bg-gray-50 transition-colors group" style={{ animationDelay: `${index * 50}ms` }}>
                                                             <td className="px-6 py-4">
                                                                 <div className="flex items-center">
                                                                     <div className={`shrink-0 h-11 w-11 rounded-xl bg-gradient-to-br ${getRandomGradient(dept.id)} flex items-center justify-center text-white font-bold shadow-md`}>
@@ -541,7 +539,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                             </div>
                         ) : (
                             // Cards View
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-fade-in">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                                 {departments.data.length === 0 ? (
                                     <div className="col-span-full bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center">
                                         <div className="flex flex-col items-center justify-center">
@@ -558,7 +556,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                         const StatusIcon = status.icon;
 
                                         return (
-                                            <div key={dept.id} className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
+                                            <div key={dept.id} className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1" style={{ animationDelay: `${index * 50}ms` }}>
                                                 {/* Header Bar */}
                                                 <div className={`h-1.5 bg-gradient-to-r ${getRandomGradient(dept.id)}`} />
 
@@ -592,7 +590,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
 
                                                     <div className="space-y-2.5">
                                                         <div className="flex items-center justify-between text-sm">
-                                                            <span className="text-gray-500">سازمان:</span>
+                                                            <span className="text-gray-500">ریاست:</span>
                                                             {dept.organization ? (
                                                                 <Link
                                                                     href={`/organizations/${dept.organization.id}`}
@@ -660,7 +658,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
 
                         {/* Pagination for Cards View */}
                         {viewMode === 'cards' && departments.last_page > 1 && (
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in">
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                                 <div className="text-sm text-gray-600">
                                     نمایش <span className="font-medium text-gray-900">{departments.from}</span> تا{' '}
                                     <span className="font-medium text-gray-900">{departments.to}</span> از{' '}
@@ -718,30 +716,6 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                 </div>
             </div>
 
-            {/* CSS Animations */}
-            <style>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                @keyframes slideUp {
-                    from {
-                        opacity: 0;
-                        transform: translateY(20px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-                .animate-fade-in {
-                    animation: fadeIn 0.5s ease-out;
-                }
-                .animate-slide-up {
-                    animation: slideUp 0.5s ease-out;
-                }
-            `}</style>
-
             {/* Delete Confirmation Modal */}
             {showDeleteModal && selectedDepartment && (
                 <DeleteConfirmationModal
@@ -754,7 +728,6 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                     title="حذف ریاست"
                     message="آیا از حذف این ریاست اطمینان دارید؟"
                     itemName={selectedDepartment.name}
-                    type="department"
                     isLoading={deleting}
                 />
             )}
