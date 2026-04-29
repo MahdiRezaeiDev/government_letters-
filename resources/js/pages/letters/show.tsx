@@ -103,7 +103,6 @@ function AttachmentPreviewModal({ att, onClose }: { att: Attachment; onClose: ()
     const [rotate, setRotate] = useState(0);
     const previewUrl = getPreviewUrl(att.id);
     const downloadUrl = getDownloadUrl(att.id);
-
     const canPreview = isImage(att.mime_type, att.file_name) || isPdf(att.mime_type, att.file_name);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -124,10 +123,8 @@ function AttachmentPreviewModal({ att, onClose }: { att: Attachment; onClose: ()
 
     return (
         <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'rgba(0,0,0,0.85)' }} onClick={onClose}>
-            {/* Toolbar */}
             <div className="flex-shrink-0 flex items-center justify-between px-5 py-3 border-b border-white/10"
-                style={{ background: 'rgba(15,15,20,0.95)' }}
-                onClick={e => e.stopPropagation()}>
+                style={{ background: 'rgba(15,15,20,0.95)' }} onClick={e => e.stopPropagation()}>
                 <div className="flex items-center gap-3 min-w-0">
                     <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 ${getFileIcon(att).bg}`}>
                         {React.createElement(getFileIcon(att).icon, { className: `h-4 w-4 ${getFileIcon(att).color}` })}
@@ -137,7 +134,6 @@ function AttachmentPreviewModal({ att, onClose }: { att: Attachment; onClose: ()
                         <p className="text-xs text-white/40">{formatSize(att.file_size)}</p>
                     </div>
                 </div>
-
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                     {isImage(att.mime_type, att.file_name) && (
                         <>
@@ -163,40 +159,25 @@ function AttachmentPreviewModal({ att, onClose }: { att: Attachment; onClose: ()
                     </a>
                     <a href={downloadUrl} download
                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition">
-                        <Download className="h-3.5 w-3.5" />
-                        دانلود
+                        <Download className="h-3.5 w-3.5" /> دانلود
                     </a>
-                    <button onClick={onClose}
-                        className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition mr-1">
+                    <button onClick={onClose} className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition mr-1">
                         <X className="h-4 w-4" />
                     </button>
                 </div>
             </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-auto flex items-center justify-center p-6"
-                onClick={e => e.stopPropagation()}>
+            <div className="flex-1 overflow-auto flex items-center justify-center p-6" onClick={e => e.stopPropagation()}>
                 {isImage(att.mime_type, att.file_name) ? (
-                    <img
-                        src={previewUrl}
-                        alt={att.file_name}
+                    <img src={previewUrl} alt={att.file_name}
                         style={{
-                            maxWidth: '100%',
-                            transform: `scale(${zoom / 100}) rotate(${rotate}deg)`,
-                            transition: 'transform 0.2s ease',
-                            transformOrigin: 'center',
-                            borderRadius: '4px',
-                            boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
-                        }}
-                    />
+                            maxWidth: '100%', transform: `scale(${zoom / 100}) rotate(${rotate}deg)`,
+                            transition: 'transform 0.2s ease', transformOrigin: 'center',
+                            borderRadius: '4px', boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+                        }} />
                 ) : isPdf(att.mime_type, att.file_name) ? (
                     <div className="w-full h-full min-h-[70vh]" style={{ maxWidth: '900px' }}>
-                        <iframe
-                            src={`${previewUrl}#toolbar=1&navpanes=0`}
-                            title={att.file_name}
-                            className="w-full h-full rounded-xl"
-                            style={{ minHeight: '70vh', border: 'none' }}
-                        />
+                        <iframe src={`${previewUrl}#toolbar=1&navpanes=0`} title={att.file_name}
+                            className="w-full h-full rounded-xl" style={{ minHeight: '70vh', border: 'none' }} />
                     </div>
                 ) : (
                     <div className="flex flex-col items-center gap-6 text-center p-12">
@@ -209,8 +190,7 @@ function AttachmentPreviewModal({ att, onClose }: { att: Attachment; onClose: ()
                         </div>
                         <a href={downloadUrl} download
                             className="flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition shadow-lg">
-                            <Download className="h-4 w-4" />
-                            دانلود فایل
+                            <Download className="h-4 w-4" /> دانلود فایل
                         </a>
                     </div>
                 )}
@@ -256,8 +236,7 @@ function ArchiveModal({ cases, loading, onClose, onConfirm }: {
                         </button>
                         <button onClick={() => sel && onConfirm(sel)} disabled={loading || !sel}
                             className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-xl shadow-md disabled:opacity-50 transition-all">
-                            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                            بایگانی
+                            {loading && <Loader2 className="h-4 w-4 animate-spin" />} بایگانی
                         </button>
                     </div>
                 </div>
@@ -266,7 +245,7 @@ function ArchiveModal({ cases, loading, onClose, onConfirm }: {
     );
 }
 
-// ─── Main ────────────────────────────────────────────────────────────────────
+// ─── Main Component ──────────────────────────────────────────────────────────
 export default function LettersShow({ letter, securityLevels, priorityLevels, availableCases = [], can }: Props) {
     const [showArchiveModal, setShowArchiveModal] = useState(false);
     const [previewAtt, setPreviewAtt] = useState<Attachment | null>(null);
@@ -333,64 +312,334 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, av
     return (
         <>
             <Head title={letter.subject} />
-            <div className="min-h-screen bg-slate-200/70" dir="rtl">
+
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap');
+
+                .a4-page {
+                    width: 210mm;
+                    min-height: 297mm;
+                    background: #ffffff;
+                    margin: 0 auto;
+                    position: relative;
+                    font-family: 'Noto Nastaliq Urdu', 'Traditional Arabic', 'Tahoma', serif;
+                }
+
+                /* Header Area */
+                .header-emblem {
+                    width: 70px;
+                    height: 82px;
+                    border: 1.5px solid #1a1a1a;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #fff;
+                    padding: 4px;
+                }
+
+                .header-emblem img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: contain;
+                }
+
+                /* Bismillah */
+                .bismillah-text {
+                    font-family: 'Noto Nastaliq Urdu', serif;
+                    font-size: 28px;
+                    text-align: center;
+                    color: #000;
+                    margin: 8px 0 4px;
+                    letter-spacing: 2px;
+                    line-height: 2.5;
+                }
+
+                /* Org Name */
+                .org-full-name {
+                    font-family: 'Noto Nastaliq Urdu', serif;
+                    font-size: 18px;
+                    font-weight: 700;
+                    text-align: center;
+                    color: #000;
+                    margin: 0;
+                    line-height: 2;
+                }
+
+                .org-dept-name {
+                    font-family: 'Noto Nastaliq Urdu', serif;
+                    font-size: 15px;
+                    font-weight: 600;
+                    text-align: center;
+                    color: #1a1a1a;
+                    margin: 2px 0 0;
+                    line-height: 1.8;
+                }
+
+                .recipient-dept-name {
+                    font-family: 'Noto Nastaliq Urdu', serif;
+                    font-size: 14px;
+                    font-weight: 600;
+                    text-align: center;
+                    color: #1a1a1a;
+                    margin: 6px 0 0;
+                    line-height: 1.8;
+                }
+
+                /* Separators */
+                .thick-black-line {
+                    height: 2.5px;
+                    background: #000;
+                    margin: 12px 35px 0;
+                }
+
+                .thin-black-line {
+                    height: 1px;
+                    background: #000;
+                    margin: 6px 35px;
+                }
+
+                /* Reference Row */
+                .ref-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin: 0 35px;
+                    padding: 8px 10px;
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: #000;
+                    font-family: 'Courier New', 'Tahoma', monospace;
+                }
+
+                .ref-row-left {
+                    text-align: right;
+                }
+
+                .ref-row-right {
+                    text-align: left;
+                }
+
+                /* Recipient */
+                .to-section {
+                    margin: 12px 35px 0;
+                    text-align: right;
+                    font-size: 15px;
+                    line-height: 2.2;
+                    color: #000;
+                }
+
+                .to-name {
+                    font-weight: 700;
+                    font-size: 15px;
+                }
+
+                .to-title {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #333;
+                }
+
+                .salam-text {
+                    font-size: 14px;
+                    font-weight: 600;
+                    margin-top: 4px;
+                }
+
+                /* Subject */
+                .subject-row {
+                    margin: 10px 35px;
+                    text-align: right;
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: #000;
+                    border-bottom: 1px solid #000;
+                    padding-bottom: 6px;
+                }
+
+                .subject-label {
+                    margin-left: 8px;
+                }
+
+                /* Body Content */
+                .letter-body-content {
+                    margin: 18px 35px;
+                    text-align: justify;
+                    font-size: 14px;
+                    line-height: 2.4;
+                    color: #000;
+                }
+
+                /* Summary Box */
+                .summary-box {
+                    margin: 10px 35px;
+                    padding: 10px 14px;
+                    background: #f9f9f9;
+                    border: 1px solid #ddd;
+                    font-size: 13px;
+                    line-height: 2;
+                    color: #444;
+                }
+
+                /* Signature */
+                .sign-area {
+                    margin: 35px 35px 0;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                }
+
+                .stamp-placeholder {
+                    width: 65px;
+                    height: 65px;
+                    border: 2px dashed #aaa;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 9px;
+                    color: #999;
+                    transform: rotate(-15deg);
+                    text-align: center;
+                    line-height: 1.3;
+                }
+
+                .sign-block {
+                    text-align: center;
+                    min-width: 180px;
+                }
+
+                .sign-name {
+                    font-size: 15px;
+                    font-weight: 700;
+                    color: #000;
+                    margin-bottom: 2px;
+                }
+
+                .sign-position {
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #333;
+                    margin-bottom: 2px;
+                }
+
+                .sign-dept {
+                    font-size: 12px;
+                    color: #555;
+                }
+
+                /* Footer */
+                .footer-row {
+                    margin: 25px 35px 20px;
+                    border-top: 2px solid #000;
+                    padding-top: 10px;
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 11px;
+                    color: #444;
+                    line-height: 1.8;
+                }
+
+                .footer-right {
+                    text-align: right;
+                }
+
+                .footer-left {
+                    text-align: left;
+                }
+
+                .security-badge {
+                    color: #c00;
+                    font-weight: 700;
+                }
+
+                /* Print Styles */
+                @media print {
+                    body {
+                        background: white !important;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .no-print {
+                        display: none !important;
+                    }
+                    .a4-page {
+                        box-shadow: none !important;
+                        border: none !important;
+                        width: 100%;
+                        margin: 0;
+                        page-break-after: always;
+                    }
+                    @page {
+                        size: A4;
+                        margin: 0;
+                    }
+                }
+
+                /* Screen only */
+                @media screen {
+                    .a4-page {
+                        box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+                        border: 1px solid #ccc;
+                        margin: 0 auto 20px;
+                    }
+                }
+            `}</style>
+
+            <div className="min-h-screen bg-gray-300 py-5" dir="rtl">
 
                 {/* ── Toolbar ── */}
-                <div className="no-print sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+                <div className="no-print sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-300 shadow-md mb-5">
                     <div className="max-w-[220mm] mx-auto px-4">
                         <div className="flex items-center justify-between h-14 gap-3">
                             <div className="flex items-center gap-1.5 min-w-0">
                                 <Link href={letters.index()}
-                                    className="text-xs font-bold text-slate-500 hover:text-slate-700 px-2 py-1 rounded-lg hover:bg-slate-100 transition">
+                                    className="text-xs font-bold text-gray-600 hover:text-gray-800 px-2 py-1 rounded hover:bg-gray-100 transition">
                                     نامه‌ها
                                 </Link>
-                                <ChevronRight className="h-3 w-3 text-slate-300 flex-shrink-0" />
-                                <span className="text-xs font-bold text-slate-700 truncate max-w-[200px] sm:max-w-sm">{letter.subject}</span>
+                                <ChevronRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                                <span className="text-xs font-bold text-gray-800 truncate max-w-[200px] sm:max-w-sm">
+                                    {letter.subject}
+                                </span>
                             </div>
 
                             <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full flex-shrink-0"
                                 style={{ backgroundColor: statusCfg.bg, color: statusCfg.color }}>
-                                <StatusIcon className="h-3 w-3" />
-                                {statusCfg.label}
+                                <StatusIcon className="h-3 w-3" /> {statusCfg.label}
                             </span>
 
                             <div className="flex items-center gap-1.5 flex-shrink-0">
                                 <button onClick={() => window.print()}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
-                                    <Printer className="h-3.5 w-3.5" />
-                                    <span className="hidden sm:inline">چاپ</span>
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded transition">
+                                    <Printer className="h-3.5 w-3.5" /> <span className="hidden sm:inline">چاپ</span>
                                 </button>
                                 {can.edit && letter.final_status === 'draft' && (
                                     <Link href={letters.edit({ letter: letter.id })}
-                                        className="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+                                        className="px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded transition">
                                         ویرایش
                                     </Link>
                                 )}
                                 {can.archive && letter.final_status === 'approved' && (
                                     <button onClick={() => setShowArchiveModal(true)} disabled={loading}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-lg transition shadow-sm disabled:opacity-50">
-                                        <Archive className="h-3.5 w-3.5" />
-                                        <span className="hidden sm:inline">بایگانی</span>
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded transition shadow-sm disabled:opacity-50">
+                                        <Archive className="h-3.5 w-3.5" /> <span className="hidden sm:inline">بایگانی</span>
                                     </button>
                                 )}
                                 {can.route && letter.final_status === 'pending' && (
                                     <Link href={routings.create({ letter: letter.id })}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition shadow-sm">
-                                        <Send className="h-3.5 w-3.5" />
-                                        <span className="hidden sm:inline">ارجاع</span>
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-blue-700 hover:bg-blue-800 rounded transition shadow-sm">
+                                        <Send className="h-3.5 w-3.5" /> <span className="hidden sm:inline">ارجاع</span>
                                     </Link>
                                 )}
                                 {can.approve && letter.final_status === 'pending' && (
                                     <>
                                         <button onClick={handleApprove} disabled={loading}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition shadow-sm disabled:opacity-50">
+                                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded transition shadow-sm disabled:opacity-50">
                                             {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
                                             <span className="hidden sm:inline">تأیید</span>
                                         </button>
                                         <button onClick={handleReject} disabled={loading}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-lg transition shadow-sm disabled:opacity-50">
-                                            <XCircle className="h-3.5 w-3.5" />
-                                            <span className="hidden sm:inline">رد</span>
+                                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-red-700 hover:bg-red-800 rounded transition shadow-sm disabled:opacity-50">
+                                            <XCircle className="h-3.5 w-3.5" /> <span className="hidden sm:inline">رد</span>
                                         </button>
                                     </>
                                 )}
@@ -399,313 +648,295 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, av
                     </div>
                 </div>
 
-                {/* ── Print / View area ── */}
-                <div className="print-area py-8 px-4">
-                    <div className="letter-paper bg-white mx-auto rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+                {/* ── A4 Letter ── */}
+                <div className="a4-page">
 
-                        <div className="header-top-line" />
+                    {/* Header with Emblems and Org Name */}
+                    <div style={{ padding: '25px 35px 0' }}>
 
-                        {/* ══ LETTERHEAD ══ */}
-                        <div className="px-10 pt-5 pb-0">
-                            <div className="flex items-center justify-between gap-4">
-                                <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
-                                    <div className="emblem-circle">
-                                        {letter.sender_department?.organization?.logo ? (
-                                            <img src={letter.sender_department.organization.logo} alt="آرم" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <Building2 className="h-8 w-8 text-slate-400" />
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="flex-1 text-center px-2">
-                                    <p className="org-center-name nastaliq text-9xl">
-                                        {letter.sender_department?.organization?.name || 'امارت اسلامی افغانستان'}
-                                    </p>
-                                    <p className="sub-dept-name">
-                                        {letter.sender_department?.name || 'وزارت / معاونت'}
-                                    </p>
-                                </div>
-                                <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
-                                    <div className="emblem-circle">
-                                        <Building2 className="h-8 w-8 text-slate-400" />
-                                    </div>
-                                </div>
+                        {/* Row: Right Emblem | Org Name | Left Emblem */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+
+                            {/* Right Emblem */}
+                            <div className="header-emblem">
+                                <img src="/img/gov.png" alt="نشان رسمی" />
                             </div>
 
-                            {letter.recipient_department && (
-                                <div className="text-center mt-3 mb-1">
-                                    <p className="sub-dept-name">{letter.recipient_department.name}</p>
+                            {/* Center: Organization Name */}
+                            <div style={{ flex: 1, padding: '0 15px' }}>
+                                <div className="org-full-name">
+                                    {letter.sender_department?.organization?.name || 'امارت اسلامی افغانستان'}
                                 </div>
-                            )}
-
-                            <div className="flex justify-between items-start mt-4 mb-3 gap-6">
-                                <div className="space-y-0.5">
-                                    <div className="meta-row">
-                                        <span className="meta-label">شماره :</span>
-                                        <span className="font-bold tracking-wide">{letter.letter_number || '—'}</span>
-                                    </div>
-                                    <div className="meta-row">
-                                        <span className="meta-label">شماره رسیدات:</span>
-                                        <span>{letter.tracking_number || '—'}</span>
-                                    </div>
+                                <div className="org-dept-name">
+                                    {letter.sender_department?.name || 'وزارت / ریاست'}
                                 </div>
-                                <div className="space-y-0.5 text-left">
-                                    <div className="meta-row flex-row-reverse">
-                                        <span className="meta-label text-right">نیته :</span>
-                                        <span>{letterDate}</span>
+                                {letter.recipient_department && (
+                                    <div className="recipient-dept-name">
+                                        به ریاست / آمریت محترم {letter.recipient_department.name}
                                     </div>
-                                    <div className="meta-row flex-row-reverse">
-                                        <span className="meta-label text-right">تاریخ ثبت :</span>
-                                        <span>{createdDate}</span>
-                                    </div>
-                                    <div className="meta-row flex-row-reverse">
-                                        <span className="meta-label text-right">ضمایم :</span>
-                                        <span>{letter.attachments?.length ? `${letter.attachments.length} فایل` : 'ندارد'}</span>
-                                    </div>
-                                </div>
+                                )}
                             </div>
 
-                            <div className="header-divider" />
-                        </div>
-
-                        {/* ══ BODY ══ */}
-                        <div className="px-10 pt-5 pb-4">
-                            <div className="text-center mb-4 space-y-0.5">
-                                <p style={{ fontSize: '14px', fontWeight: 700, color: '#111', lineHeight: 1.8 }}>
-                                    {letter.recipient_name || '—'}
-                                    {letter.recipient_position_name && (
-                                        <span style={{ fontWeight: 600, color: '#333' }}> {letter.recipient_position_name}</span>
-                                    )}
-                                    {' '}!
-                                </p>
-                            </div>
-
-                            <div className="flex gap-2 mb-3" style={{ fontSize: '13.5px' }}>
-                                <span style={{ fontWeight: 800, minWidth: '56px', color: '#1a1a2e' }}>موضوع :</span>
-                                <span style={{ fontWeight: 700, color: '#111' }}>{letter.subject}</span>
-                            </div>
-
-                            <p style={{ fontSize: '14px', fontWeight: 600, color: '#111', marginBottom: '8px', lineHeight: 2 }}>
-                                السلام عليكم ورحمة الله وبركاته
-                            </p>
-
-                            <div className="letter-body mb-6"
-                                dangerouslySetInnerHTML={{
-                                    __html: letter.content || '<p style="color:#94a3b8;font-style:italic">متن نامه وارد نشده است.</p>'
-                                }}
-                            />
-
-                            {letter.summary && (
-                                <div className="mb-5 pr-3 border-r-2 border-slate-400">
-                                    <p style={{ fontSize: '13px', color: '#444', lineHeight: 1.9 }}>{letter.summary}</p>
-                                </div>
-                            )}
-
-                            <p style={{ fontSize: '14px', fontWeight: 600, color: '#111', textAlign: 'center', margin: '12px 0 32px 0' }}>
-                                والسلام
-                            </p>
-
-                            <div className="flex justify-start pr-8 mb-10">
-                                <div style={{ minWidth: '200px', maxWidth: '240px', textAlign: 'center' }}>
-                                    <div className="sig-line" />
-                                    <p style={{ fontSize: '13.5px', fontWeight: 800, color: '#111', lineHeight: 1.7 }}>
-                                        {letter.sender_name || '—'}
-                                    </p>
-                                    <p style={{ fontSize: '12.5px', fontWeight: 600, color: '#333', lineHeight: 1.7 }}>
-                                        {letter.sender_position_name || '—'}
-                                    </p>
-                                    {letter.sender_department && (
-                                        <p style={{ fontSize: '12px', color: '#555', lineHeight: 1.7 }}>
-                                            {letter.sender_department.name}
-                                        </p>
-                                    )}
-                                </div>
+                            {/* Left Emblem */}
+                            <div className="header-emblem">
+                                <img src="/img/gov.png" alt="نشان رسمی" />
                             </div>
                         </div>
 
-                        {/* ══ FOOTER ══ */}
-                        <div className="px-10 pb-5 mt-auto">
-                            <div className="footer-divider mb-3" />
-                            <div className="flex justify-between items-start" style={{ fontSize: '11.5px', color: '#444' }}>
-                                <div className="space-y-0.5 text-right">
-                                    {letter.sender_department?.organization?.address && (
-                                        <p>ادرس: {letter.sender_department.organization.address}</p>
-                                    )}
-                                    {letter.sender_department?.organization?.phone && (
-                                        <p>تلیفون: {letter.sender_department.organization.phone}</p>
-                                    )}
-                                    {letter.sender_department?.organization?.email && (
-                                        <p>ایمیل: {letter.sender_department.organization.email}</p>
-                                    )}
-                                    {!letter.sender_department?.organization?.address && (
-                                        <p style={{ color: '#aaa' }}>آدرس سازمان</p>
-                                    )}
-                                </div>
-                                <div className="text-left space-y-1">
-                                    {letter.security_level && letter.security_level !== 'public' && (
-                                        <p style={{ fontWeight: 700 }}>
-                                            سطح: {securityLevels[letter.security_level] || letter.security_level}
-                                        </p>
-                                    )}
-                                    <p>اولویت: {priorityLevels[letter.priority] || letter.priority}</p>
-                                    <p style={{ color: '#888' }}>صفحات: {letter.sheet_count || 1}</p>
-                                </div>
-                            </div>
+                        {/* Bismillah */}
+                        <div className="bismillah-text">
+                            بسم الله الرحمن الرحیم
                         </div>
                     </div>
 
-                    {/* ══ ATTACHMENTS PANEL ══ */}
-                    {letter.attachments && letter.attachments.length > 0 && (
-                        <div className="no-print mt-6 overflow-hidden rounded-2xl border border-slate-200/80 shadow-sm"
-                            style={{ maxWidth: '210mm', margin: '24px auto 0', background: '#fff' }}>
+                    {/* Thick Line */}
+                    <div className="thick-black-line" />
 
-                            {/* Header */}
-                            <div className="px-6 py-4 flex items-center gap-3"
-                                style={{ background: 'linear-gradient(135deg, #f8faff 0%, #f1f5ff 100%)', borderBottom: '1px solid #e2e8f4' }}>
-                                <div className="h-9 w-9 rounded-xl bg-indigo-100 flex items-center justify-center shadow-sm">
-                                    <Paperclip className="h-4 w-4 text-indigo-600" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-sm font-bold text-slate-800">پیوست‌ها</h3>
-                                    <p className="text-xs text-slate-400 mt-0.5">برای مشاهده یا دانلود کلیک کنید</p>
-                                </div>
-                                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 shadow-sm">
-                                    {letter.attachments.length} فایل
-                                </span>
+                    {/* Reference Numbers */}
+                    <div className="ref-row">
+                        <span className="ref-row-left">شماره: {letter.letter_number || '__________'}</span>
+                        <span className="ref-row-right">تاریخ: {letterDate}</span>
+                    </div>
+
+                    {/* Thin Line */}
+                    <div className="thin-black-line" />
+
+                    {/* Recipient */}
+                    <div className="to-section">
+                        <p>
+                            <span className="to-name">
+                                محترم {letter.recipient_name || '_____________________'}
+                            </span>
+                            {letter.recipient_position_name && (
+                                <span className="to-title"> صاحب / صاحبه</span>
+                            )}
+                        </p>
+                        {letter.recipient_position_name && (
+                            <p className="to-title">
+                                {letter.recipient_position_name}
+                            </p>
+                        )}
+                        <p className="salam-text">
+                            السلام علیکم و رحمة الله و برکاته!
+                        </p>
+                        <p style={{ fontSize: '13px', marginTop: '4px', color: '#333' }}>
+                            امید است مزاج تان سلامت و با کمال صحت و عافیت مصروف اجراآت امور خویش باشید.
+                        </p>
+                    </div>
+
+                    {/* Subject */}
+                    <div className="subject-row">
+                        <span className="subject-label">موضوع:</span>
+                        {letter.subject}
+                    </div>
+
+                    {/* Body */}
+                    <div className="letter-body-content"
+                        dangerouslySetInnerHTML={{
+                            __html: letter.content || '<p style="color:#999;text-align:center;">[ متن نامه درج نشده است ]</p>'
+                        }}
+                    />
+
+                    {/* Summary if exists */}
+                    {letter.summary && (
+                        <div className="summary-box">
+                            <strong>خلاصه:</strong> {letter.summary}
+                        </div>
+                    )}
+
+                    {/* Closing */}
+                    <p style={{ textAlign: 'center', margin: '20px 35px', fontSize: '15px', fontWeight: 600 }}>
+                        با احترام
+                    </p>
+
+                    {/* Signature */}
+                    <div className="sign-area">
+                        {/* Left: Stamp */}
+                        <div>
+                            <div className="stamp-placeholder">
+                                محل مهر<br />رسمی
                             </div>
+                        </div>
 
-                            {/* Grid of attachment cards */}
-                            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {letter.attachments.map((att: Attachment) => {
-                                    const { icon: FileIconComp, color, bg } = getFileIcon(att);
-                                    const canView = isImage(att.mime_type, att.file_name) || isPdf(att.mime_type, att.file_name);
+                        {/* Right: Signer Info */}
+                        <div className="sign-block">
+                            <p className="sign-name">
+                                {letter.sender_name || '_________________'}
+                            </p>
+                            <p className="sign-position">
+                                {letter.sender_position_name || ''}
+                            </p>
+                            {letter.sender_department && (
+                                <p className="sign-dept">
+                                    {letter.sender_department.name}
+                                </p>
+                            )}
+                        </div>
+                    </div>
 
-                                    return (
-                                        <div key={att.id}
-                                            className="att-card flex items-center gap-3 p-3 rounded-xl border border-slate-200 cursor-pointer"
-                                            onClick={() => setPreviewAtt(att)}>
-                                            {/* Icon */}
-                                            <div className={`h-11 w-11 rounded-xl ${bg} flex items-center justify-center flex-shrink-0 shadow-sm`}>
-                                                <FileIconComp className={`h-5 w-5 ${color}`} />
+                    {/* Footer */}
+                    <div className="footer-row">
+                        <div className="footer-right">
+                            {letter.sender_department?.organization?.address && (
+                                <p>آدرس: {letter.sender_department.organization.address}</p>
+                            )}
+                            {letter.sender_department?.organization?.phone && (
+                                <p>تلفن: {letter.sender_department.organization.phone}</p>
+                            )}
+                            {letter.sender_department?.organization?.email && (
+                                <p>ایمیل: {letter.sender_department.organization.email}</p>
+                            )}
+                        </div>
+                        <div className="footer-left">
+                            {letter.security_level && letter.security_level !== 'public' && (
+                                <p className="security-badge">
+                                    {securityLevels[letter.security_level] || letter.security_level}
+                                </p>
+                            )}
+                            <p>اولویت: {priorityLevels[letter.priority] || letter.priority}</p>
+                            <p>ضمایم: {letter.attachments?.length ? `${letter.attachments.length} برگ` : 'ندارد'}</p>
+                            {letter.sheet_count && (
+                                <p>تعداد صفحات: {letter.sheet_count}</p>
+                            )}
+                        </div>
+                    </div>
+
+                </div> {/* End A4 Page */}
+
+                {/* ── ATTACHMENTS ── */}
+                {letter.attachments && letter.attachments.length > 0 && (
+                    <div className="no-print mt-6 mx-auto overflow-hidden rounded-2xl border border-gray-200 shadow-sm"
+                        style={{ maxWidth: '210mm', background: '#fff' }}>
+                        <div className="px-6 py-4 flex items-center gap-3 bg-gradient-to-l from-gray-50 to-indigo-50 border-b">
+                            <div className="h-8 w-8 rounded-lg bg-indigo-100 flex items-center justify-center">
+                                <Paperclip className="h-4 w-4 text-indigo-600" />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-sm font-bold text-gray-800">پیوست‌ها</h3>
+                                <p className="text-xs text-gray-400">برای مشاهده یا دانلود کلیک کنید</p>
+                            </div>
+                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-600">
+                                {letter.attachments.length} فایل
+                            </span>
+                        </div>
+                        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {letter.attachments.map((att: Attachment) => {
+                                const { icon: FileIconComp, color, bg } = getFileIcon(att);
+                                const canView = isImage(att.mime_type, att.file_name) || isPdf(att.mime_type, att.file_name);
+
+                                return (
+                                    <div key={att.id}
+                                        className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all"
+                                        onClick={() => setPreviewAtt(att)}>
+                                        <div className={`h-10 w-10 rounded-lg ${bg} flex items-center justify-center flex-shrink-0`}>
+                                            <FileIconComp className={`h-5 w-5 ${color}`} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-semibold text-gray-700 truncate">{att.file_name}</p>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                <span className="text-xs text-gray-400">{formatSize(att.file_size)}</span>
+                                                {canView && (
+                                                    <span className="text-[10px] font-medium text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-full">
+                                                        قابل نمایش
+                                                    </span>
+                                                )}
                                             </div>
+                                        </div>
+                                        <div className="flex items-center gap-1 flex-shrink-0">
+                                            <button onClick={(e) => {
+                                                e.stopPropagation(); setPreviewAtt(att);
+                                            }}
+                                                className="p-1.5 rounded text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition">
+                                                <Eye className="h-4 w-4" />
+                                            </button>
+                                            <a href={getDownloadUrl(att.id)} download onClick={(e) => e.stopPropagation()}
+                                                className="p-1.5 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition">
+                                                <Download className="h-4 w-4" />
+                                            </a>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
 
-                                            {/* Info */}
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-semibold text-slate-700 truncate">{att.file_name}</p>
-                                                <div className="flex items-center gap-2 mt-0.5">
-                                                    <span className="text-xs text-slate-400">{formatSize(att.file_size)}</span>
-                                                    {canView && (
-                                                        <span className="text-[10px] font-medium text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-full">
-                                                            قابل نمایش
+                {/* ── ROUTING HISTORY ── */}
+                {letter.routings && letter.routings.length > 0 && (
+                    <div className="no-print mt-5 mx-auto bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
+                        style={{ maxWidth: '210mm' }}>
+                        <div className="px-6 py-4 border-b flex items-center gap-3 bg-gradient-to-l from-white to-violet-50">
+                            <div className="h-8 w-8 rounded-lg bg-violet-100 flex items-center justify-center">
+                                <Clock className="h-4 w-4 text-violet-600" />
+                            </div>
+                            <h3 className="text-sm font-bold text-gray-800 flex-1">تاریخچه ارجاعات</h3>
+                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-600">
+                                {letter.routings.length}
+                            </span>
+                        </div>
+                        <div className="px-6 py-5">
+                            {letter.routings.map((routing, idx) => {
+                                const rCfg = ROUTING_STATUS[routing.status] ?? ROUTING_STATUS.pending;
+                                const RIcon = rCfg.icon;
+                                const isOverdue = routing.deadline && new Date(routing.deadline) < new Date() && routing.status === 'pending';
+                                const isLast = idx === letter.routings.length - 1;
+
+                                return (
+                                    <div key={routing.id} className="relative flex gap-4 pb-5">
+                                        {!isLast && <div className="absolute right-3 top-7 bottom-0 w-px bg-gray-200" />}
+                                        <div className="flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center z-10 mt-0.5"
+                                            style={{ backgroundColor: rCfg.bg }}>
+                                            <RIcon className="h-3.5 w-3.5" style={{ color: rCfg.color }} />
+                                        </div>
+                                        <div className="flex-1 min-w-0 pt-0.5">
+                                            <div className="flex items-start justify-between gap-2 flex-wrap">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="text-sm font-bold text-gray-800">
+                                                        {ACTION_LABELS[routing.action_type] || routing.action_type}
+                                                    </span>
+                                                    <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                                                        style={{ backgroundColor: rCfg.bg, color: rCfg.color }}>
+                                                        {rCfg.label}
+                                                    </span>
+                                                    {isOverdue && (
+                                                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+                                                            <AlertCircle className="h-3 w-3" /> تأخیردار
                                                         </span>
                                                     )}
                                                 </div>
+                                                <span className="text-xs text-gray-400 flex-shrink-0">
+                                                    {new Date(routing.created_at).toLocaleDateString('fa-IR')}
+                                                </span>
                                             </div>
-
-                                            {/* Actions */}
-                                            <div className="att-actions flex items-center gap-1 flex-shrink-0">
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation(); setPreviewAtt(att);
-                                                    }}
-                                                    title="مشاهده"
-                                                    className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition">
-                                                    <Eye className="h-4 w-4" />
-                                                </button>
-                                                <a
-                                                    href={getDownloadUrl(att.id)}
-                                                    download
-                                                    onClick={(e) => e.stopPropagation()}
-                                                    title="دانلود"
-                                                    className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition">
-                                                    <Download className="h-4 w-4" />
-                                                </a>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* ══ ROUTING HISTORY ══ */}
-                    {letter.routings && letter.routings.length > 0 && (
-                        <div className="no-print mt-5 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
-                            style={{ maxWidth: '210mm', margin: '20px auto 0' }}>
-                            <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3 bg-gradient-to-l from-white to-slate-50/60">
-                                <div className="h-8 w-8 rounded-xl bg-violet-50 flex items-center justify-center">
-                                    <Clock className="h-4 w-4 text-violet-500" />
-                                </div>
-                                <h3 className="text-sm font-bold text-slate-800 flex-1">تاریخچه ارجاعات</h3>
-                                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-violet-50 text-violet-600">
-                                    {letter.routings.length}
-                                </span>
-                            </div>
-                            <div className="px-6 py-5">
-                                {letter.routings.map((routing, idx) => {
-                                    const rCfg = ROUTING_STATUS[routing.status] ?? ROUTING_STATUS.pending;
-                                    const RIcon = rCfg.icon;
-                                    const isOverdue = routing.deadline && new Date(routing.deadline) < new Date() && routing.status === 'pending';
-                                    const isLast = idx === letter.routings.length - 1;
-
-                                    return (
-                                        <div key={routing.id} className="relative flex gap-4 pb-5">
-                                            {!isLast && <div className="absolute right-3 top-7 bottom-0 w-px bg-slate-200" />}
-                                            <div className="flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center z-10 mt-0.5"
-                                                style={{ backgroundColor: rCfg.bg }}>
-                                                <RIcon className="h-3.5 w-3.5" style={{ color: rCfg.color }} />
-                                            </div>
-                                            <div className="flex-1 min-w-0 pt-0.5">
-                                                <div className="flex items-start justify-between gap-2 flex-wrap">
-                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                        <span className="text-sm font-bold text-slate-800">
-                                                            {ACTION_LABELS[routing.action_type] || routing.action_type}
-                                                        </span>
-                                                        <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-                                                            style={{ backgroundColor: rCfg.bg, color: rCfg.color }}>
-                                                            {rCfg.label}
-                                                        </span>
-                                                        {isOverdue && (
-                                                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">
-                                                                <AlertCircle className="h-3 w-3" />تأخیردار
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <span className="text-xs text-slate-400 flex-shrink-0">
-                                                        {new Date(routing.created_at).toLocaleDateString('fa-IR')}
-                                                    </span>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                از <span className="font-semibold text-gray-700">{routing.from_user?.full_name || 'سیستم'}</span>
+                                                {' '}←{' '}
+                                                به <span className="font-semibold text-gray-700">{routing.to_user?.full_name || 'نامشخص'}</span>
+                                            </p>
+                                            {routing.instruction && (
+                                                <div className="mt-2 bg-violet-50 border border-violet-100 rounded-lg px-3 py-2">
+                                                    <p className="text-xs text-violet-700 leading-relaxed">{routing.instruction}</p>
                                                 </div>
-                                                <p className="text-xs text-slate-500 mt-1">
-                                                    از <span className="font-semibold text-slate-700">{routing.from_user?.full_name || 'سیستم'}</span>
-                                                    {' '}←{' '}
-                                                    به <span className="font-semibold text-slate-700">{routing.to_user?.full_name || 'نامشخص'}</span>
+                                            )}
+                                            {routing.completed_note && (
+                                                <p className="text-xs text-gray-500 mt-1.5 bg-gray-50 px-3 py-1.5 rounded-lg">
+                                                    یادداشت: {routing.completed_note}
                                                 </p>
-                                                {routing.instruction && (
-                                                    <div className="mt-2 bg-violet-50 border border-violet-100 rounded-xl px-3 py-2">
-                                                        <p className="text-xs text-violet-700 leading-relaxed">{routing.instruction}</p>
-                                                    </div>
-                                                )}
-                                                {routing.completed_note && (
-                                                    <p className="text-xs text-slate-500 mt-1.5 bg-slate-50 px-3 py-1.5 rounded-lg">
-                                                        یادداشت: {routing.completed_note}
-                                                    </p>
-                                                )}
-                                            </div>
+                                            )}
                                         </div>
-                                    );
-                                })}
-                            </div>
+                                    </div>
+                                );
+                            })}
                         </div>
-                    )}
+                    </div>
+                )}
 
-                </div>
             </div>
 
             {/* Modals */}
             {showArchiveModal && (
                 <ArchiveModal cases={cases} loading={loading}
-                    onClose={() => setShowArchiveModal(false)}
-                    onConfirm={handleArchive} />
+                    onClose={() => setShowArchiveModal(false)} onConfirm={handleArchive} />
             )}
             {previewAtt && (
                 <AttachmentPreviewModal att={previewAtt} onClose={() => setPreviewAtt(null)} />
