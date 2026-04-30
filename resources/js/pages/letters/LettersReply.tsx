@@ -1,0 +1,483 @@
+import { Head, usePage } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
+import axios from 'axios';
+import {
+    Save, Paperclip, Send, Trash2, FileText, Shield,
+    UserCheck, Info, Loader2, PenLine, Tag, CornerUpLeft
+} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import PersianDatePicker from '@/components/PersianDatePicker';
+import TextEditor from '@/components/TextEditor';
+import LetterRoute from '@/routes/letters';
+import type { LetterCategory, Organization, Letter } from '@/types';
+
+const inputClass = "w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white";
+
+interface Props {
+    categories: LetterCategory[];
+    departments: { id: number; name: string }[];
+    positions: {
+        id: number;
+        name: string;
+        department_id: number;
+        user_id?: number;
+        user_name?: string;
+    }[];
+    externalOrganizations?: Organization[];
+    securityLevels: Record<string, string>;
+    priorityLevels: Record<string, string>;
+    originalLetter: Letter; // نامه اصلی که به آن پاسخ داده می‌شود
+}
+
+export default function LettersReply({
+    categories,
+    departments,
+    positions,
+    externalOrganizations = [],
+    securityLevels,
+    priorityLevels,
+    originalLetter,
+}: Props) {
+    const { auth } = usePage().props as any;
+    const currentUser = auth.user;
+
+    // تعیین گیرنده بر اساس نامه اصلی
+    // اگر نامه اصلی داخلی بوده، گیرنده = فرستنده نامه اصلی
+    // اگر نامه اصلی خارجی بوده، گیرنده = سازمان خارجی
+    const isOriginalInternal = originalLetter.recipient_type === 'internal' ||
+        originalLetter.letter_type === 'internal';
+
+    const defaultRecipientType = isOriginalInternal ? 'internal' : 'external';
+
+    // اطلاعات گیرنده پیش‌فرض
+    const defaultRecipient = {
+        type: defaultRecipientType,
+        organization_id: !isOriginalInternal ? originalLetter.sender_organization_id || originalLetter.organization_id : null,
+        department_id: isOriginalInternal ? originalLetter.sender_department_id : null,
+        position_id: isOriginalInternal ? originalLetter.sender_position_id : null,
+        user_id: isOriginalInternal ? originalLetter.sender_user_id : null,
+        name: isOriginalInternal ? originalLetter.sender_name : originalLetter.sender_organization?.name,
+        position_name: isOriginalInternal ? originalLetter.sender_position_name : originalLetter.sender_position_name,
+    };
+
+    const { data, setData, post, processing, errors, reset } = useForm({
+        category_id: originalLetter.category_id || null,
+        subject: `پاسخ به: ${originalLetter.subject}`,
+        content: `\n\n\n\n---\n**نامه اصلی:**\n${originalLetter.content || ''}`,
+        security_level: originalLetter.security_level || 'internal',
+        priority: originalLetter.priority || 'normal',
+        date: new Date().toLocaleDateString('fa-IR', { calendar: 'persian', year: 'numeric', month: '2-digit', day: '2-digit' }),
+        attachments: [],
+        is_draft: false,
+        recipient_type: defaultRecipient.type,
+        recipient_organization_id: defaultRecipient.organization_id,
+        recipient_department_id: defaultRecipient.department_id,
+        recipient_position_id: defaultRecipient.position_id,
+        recipient_user_id: defaultRecipient.user_id,
+        recipient_name: defaultRecipient.name || '',
+        recipient_position_name: defaultRecipient.position_name || '',
+        // فیلدهای مربوط به پاسخ
+        reply_to_letter_id: originalLetter.id,
+        parent_letter_id: originalLetter.parent_letter_id || originalLetter.id,
+    });
+
+    const [availablePositions, setAvailablePositions] = useState<{
+        id: number;
+        name: string;
+        user_id?: number;
+        user_name?: string;
+    }[]>([]);
+    const [extDepartments, setExtDepartments] = useState<{ id: number; name: string }[]>([]);
+    const [extPositions, setExtPositions] = useState<{ id: number; name: string }[]>([]);
+    const [loadingPositions, setLoadingPositions] = useState(false);
+    const [loadingExtDepts, setLoadingExtDepts] = useState(false);
+    const [loadingExtPositions, setLoadingExtPositions] = useState(false);
+
+    // بارگذاری اطلاعات گیرنده خارجی اگر لازم باشد
+    useEffect(() => {
+        if (data.recipient_type === 'external' && data.recipient_organization_id) {
+            // اگر سازمان خارجی انتخاب شده، دپارتمان‌های آن را دریافت کن
+            if (data.recipient_organization_id && !extDepartments.length) {
+                setLoadingExtDepts(true);
+                axios.get('/organizations/departments', { params: { organization_id: data.recipient_organization_id } })
+                    .then(res => {
+                        setExtDepartments(res.data.departments || []);
+                        setLoadingExtDepts(false);
+                    })
+                    .catch(() => {
+                        setExtDepartments([]);
+                        setLoadingExtDepts(false);
+                    });
+            }
+        }
+    }, [data.recipient_type, data.recipient_organization_id]);
+
+    // فیلتر پست‌های داخلی بر اساس دپارتمان انتخابی
+    useEffect(() => {
+        if (data.recipient_department_id && data.recipient_type === 'internal') {
+            setLoadingPositions(true);
+            setAvailablePositions(positions.filter(p => p.department_id === data.recipient_department_id));
+            setLoadingPositions(false);
+        } else {
+            setAvailablePositions([]);
+        }
+    }, [data.recipient_department_id, data.recipient_type, positions]);
+
+    // دریافت پست‌های دپارتمان خارجی
+    useEffect(() => {
+        if (data.recipient_department_id && data.recipient_type === 'external') {
+            setLoadingExtPositions(true);
+            axios.get('/departments/positions', { params: { department_id: data.recipient_department_id } })
+                .then(res => {
+                    setExtPositions(res.data.positions || []);
+                    setLoadingExtPositions(false);
+                })
+                .catch(() => {
+                    setExtPositions([]);
+                    setLoadingExtPositions(false);
+                });
+        } else {
+            setExtPositions([]);
+        }
+    }, [data.recipient_department_id, data.recipient_type]);
+
+    const handleSubmit = (e: React.FormEvent, isDraft: boolean) => {
+        e.preventDefault();
+
+        const submittedData = {
+            ...data,
+            is_draft: isDraft,
+            // اطمینان از وجود فیلدهای پاسخ
+            reply_to_letter_id: originalLetter.id,
+        };
+
+        post(LetterRoute.replyStore({ letter: originalLetter.id }).url, {
+            data: submittedData,
+            preserveScroll: true,
+            onSuccess: () => {
+                if (!isDraft) {
+                    reset();
+                }
+            },
+        });
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setData('attachments', [...data.attachments, ...Array.from(e.target.files)]);
+        }
+    };
+
+    const removeAttachment = (index: number) =>
+        setData('attachments', data.attachments.filter((_, i) => i !== index));
+
+    const formatFileSize = (bytes: number): string => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
+    const getPriorityColor = (key: string) => ({
+        low: 'bg-slate-100 text-slate-700',
+        normal: 'bg-blue-100 text-blue-700',
+        high: 'bg-yellow-100 text-yellow-700',
+        urgent: 'bg-orange-100 text-orange-700',
+        very_urgent: 'bg-red-100 text-red-700',
+    }[key] ?? 'bg-blue-100 text-blue-700');
+
+    const getPriorityLabel = (key: string) => ({
+        low: 'عادی',
+        normal: 'معمولی',
+        high: 'مهم',
+        urgent: 'فوری',
+        very_urgent: 'فوق فوری',
+    }[key] ?? 'معمولی');
+
+    const getSecurityColor = (key: string) => ({
+        public: 'bg-slate-100 text-slate-700',
+        internal: 'bg-blue-100 text-blue-700',
+        confidential: 'bg-yellow-100 text-yellow-700',
+        secret: 'bg-purple-100 text-purple-700',
+        top_secret: 'bg-red-100 text-red-700',
+    }[key] ?? 'bg-blue-100 text-blue-700');
+
+    const getSecurityLabel = (key: string) => ({
+        public: 'عمومی',
+        internal: 'داخلی',
+        confidential: 'محرمانه',
+        secret: 'سری',
+        top_secret: 'بسیار سری',
+    }[key] ?? 'داخلی');
+
+    return (
+        <>
+            <Head title={`پاسخ به: ${originalLetter.subject}`} />
+
+            <div className="min-h-screen bg-gray-50">
+
+                {/* Header with original letter info */}
+                <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+                    <div className="max-w-7xl mx-auto px-4 py-3">
+                        <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                                <CornerUpLeft className="h-4 w-4 text-emerald-600" />
+                            </div>
+                            <div>
+                                <h1 className="text-sm font-bold text-gray-800">پاسخ به مکتوب</h1>
+                                <p className="text-xs text-gray-500">
+                                    شماره: {originalLetter.letter_number} | تاریخ: {new Date(originalLetter.date).toLocaleDateString('fa-IR')}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="max-w-7xl mx-auto px-3 lg:px-6 py-6">
+                    <form id="reply-form" onSubmit={(e) => handleSubmit(e, false)}>
+                        <div className="grid grid-cols-12 gap-5">
+
+                            {/* ستون اصلی */}
+                            <div className="col-span-12 lg:col-span-8 space-y-5">
+
+                                {/* Original Letter Summary */}
+                                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                                    <div className="flex items-start gap-3">
+                                        <FileText className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                                        <div className="flex-1 text-sm text-emerald-800">
+                                            <p className="font-semibold mb-1">مکتوب اصلی:</p>
+                                            <p className="text-xs mb-2">{originalLetter.subject}</p>
+                                            <div className="text-xs text-emerald-600">
+                                                فرستنده: {originalLetter.sender_name} ({originalLetter.sender_position_name})
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* اطلاعات مکتوب پاسخ */}
+                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                                    <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
+                                        <PenLine className="h-4 w-4 text-slate-500" />
+                                        <h3 className="text-sm font-bold text-slate-700">متن پاسخ</h3>
+                                    </div>
+                                    <div className="p-5 space-y-4">
+
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="md:col-span-2">
+                                                <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                                                    موضوع <span className="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={data.subject}
+                                                    onChange={(e) => setData('subject', e.target.value)}
+                                                    className={`${inputClass} py-3`}
+                                                />
+                                                {errors.subject && <p className="text-red-500 text-xs mt-1">{errors.subject}</p>}
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                                                    تاریخ <span className="text-red-500">*</span>
+                                                </label>
+                                                <PersianDatePicker
+                                                    value={data.date}
+                                                    onChange={(date) => setData('date', date as string)}
+                                                />
+                                                {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date}</p>}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <TextEditor
+                                                content={data.content}
+                                                onChange={(content) => setData('content', content)}
+                                                placeholder="متن پاسخ را بنویسید..."
+                                                label="متن پاسخ"
+                                                required={true}
+                                                error={errors.content}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* پیوست‌ها */}
+                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                                    <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
+                                        <Paperclip className="h-4 w-4 text-slate-500" />
+                                        <h3 className="text-sm font-bold text-slate-700">پیوست‌ها</h3>
+                                    </div>
+                                    <div className="p-5">
+                                        <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/30 transition-all">
+                                            <Paperclip className="h-5 w-5 text-slate-400 mb-1" />
+                                            <p className="text-xs text-slate-500">کلیک کنید یا فایل را بکشید و رها کنید</p>
+                                            <input type="file" multiple onChange={handleFileChange}
+                                                className="hidden" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" />
+                                        </label>
+
+                                        {data.attachments.length > 0 && (
+                                            <div className="mt-3 space-y-1.5">
+                                                {data.attachments.map((file, i) => (
+                                                    <div key={i} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-md">
+                                                        <div className="flex items-center gap-2 truncate">
+                                                            <FileText className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                                                            <span className="text-xs text-slate-700 truncate">{file.name}</span>
+                                                            <span className="text-[10px] text-slate-400">({formatFileSize(file.size)})</span>
+                                                        </div>
+                                                        <button type="button" onClick={() => removeAttachment(i)}
+                                                            className="text-slate-400 hover:text-red-500 transition p-1">
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="hidden md:flex gap-5 bg-white rounded-lg shadow-sm border border-slate-200 p-5">
+                                    <button type="submit" disabled={processing}
+                                        className="cursor-pointer px-5 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition shadow-sm flex items-center gap-2 disabled:opacity-50">
+                                        {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                                        {processing ? 'در حال ارسال...' : 'ارسال پاسخ'}
+                                    </button>
+                                    <button type="button" onClick={(e) => handleSubmit(e, true)} disabled={processing}
+                                        className="cursor-pointer px-5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition shadow-sm flex items-center gap-2 disabled:opacity-50">
+                                        <Save className="h-4 w-4" /> پیش‌نویس
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* ستون کناری */}
+                            <div className="col-span-12 lg:col-span-4 space-y-5">
+
+                                {/* گیرنده (غیرقابل تغییر) */}
+                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                                    <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
+                                        <UserCheck className="h-4 w-4 text-slate-500" />
+                                        <h3 className="text-sm font-bold text-slate-700">گیرنده</h3>
+                                    </div>
+                                    <div className="p-5">
+                                        <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">نام:</span>
+                                                <span className="font-medium text-gray-800">{data.recipient_name || '—'}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">سمت:</span>
+                                                <span className="font-medium text-gray-800">{data.recipient_position_name || '—'}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">نوع:</span>
+                                                <span className="font-medium text-gray-800">
+                                                    {data.recipient_type === 'internal' ? 'داخلی' : 'خارج سازمانی'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-gray-400 mt-3 text-center">
+                                            گیرنده بر اساس مکتوب اصلی تعیین شده است
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* تنظیمات امنیتی */}
+                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                                    <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
+                                        <Shield className="h-4 w-4 text-slate-500" />
+                                        <h3 className="text-sm font-bold text-slate-700">تنظیمات امنیتی</h3>
+                                    </div>
+                                    <div className="p-5 space-y-4">
+
+                                        <div>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <label className="text-xs font-medium text-slate-600">اولویت</label>
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getPriorityColor(data.priority)}`}>
+                                                    {getPriorityLabel(data.priority)}
+                                                </span>
+                                            </div>
+                                            <div className="grid grid-cols-5 gap-1.5">
+                                                {([
+                                                    { key: 'low', label: 'عادی' },
+                                                    { key: 'normal', label: 'معمولی' },
+                                                    { key: 'high', label: 'مهم' },
+                                                    { key: 'urgent', label: 'فوری' },
+                                                    { key: 'very_urgent', label: 'فوق' },
+                                                ] as const).map(item => (
+                                                    <button key={item.key} type="button"
+                                                        onClick={() => setData('priority', item.key)}
+                                                        className={`py-2 rounded-md text-[11px] font-medium border transition-all
+                                                            ${data.priority === item.key
+                                                                ? 'bg-emerald-600 text-white border-emerald-600'
+                                                                : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}>
+                                                        {item.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <label className="text-xs font-medium text-slate-600">سطح امنیتی</label>
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getSecurityColor(data.security_level)}`}>
+                                                    {getSecurityLabel(data.security_level)}
+                                                </span>
+                                            </div>
+                                            <select value={data.security_level}
+                                                onChange={(e) => setData('security_level', e.target.value)}
+                                                className={inputClass}>
+                                                <option value="public">عمومی</option>
+                                                <option value="internal">داخلی</option>
+                                                <option value="confidential">محرمانه</option>
+                                                <option value="secret">سری</option>
+                                                <option value="top_secret">بسیار سری</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* اطلاعات مکتوب اصلی */}
+                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                                    <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
+                                        <Info className="h-4 w-4 text-slate-500" />
+                                        <h3 className="text-sm font-bold text-slate-700">اطلاعات مکتوب اصلی</h3>
+                                    </div>
+                                    <div className="p-5 space-y-2 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">شماره:</span>
+                                            <span className="font-mono text-gray-800">{originalLetter.letter_number}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">تاریخ:</span>
+                                            <span className="text-gray-800">{new Date(originalLetter.date).toLocaleDateString('fa-IR')}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">فرستنده:</span>
+                                            <span className="text-gray-800">{originalLetter.sender_name}</span>
+                                        </div>
+                                        <div className="border-t pt-2 mt-2">
+                                            <p className="text-gray-500 text-xs mb-1">موضوع:</p>
+                                            <p className="text-xs text-gray-700">{originalLetter.subject}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            {/* دکمه‌های موبایل */}
+                            <div className="md:hidden col-span-12 bg-white rounded-lg shadow-sm border border-slate-200 flex justify-between p-5">
+                                <button type="submit" disabled={processing}
+                                    className="px-5 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition flex items-center gap-2 disabled:opacity-50">
+                                    {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                                    ارسال
+                                </button>
+                                <button type="button" onClick={(e) => handleSubmit(e, true)} disabled={processing}
+                                    className="px-5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition flex items-center gap-2 disabled:opacity-50">
+                                    <Save className="h-4 w-4" /> پیش‌نویس
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </>
+    );
+}

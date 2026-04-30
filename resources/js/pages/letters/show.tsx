@@ -3,7 +3,8 @@ import {
     Archive, Send, Printer, Clock, AlertCircle,
     Building2, FileText, CheckCircle, XCircle,
     Paperclip, Loader2, ChevronRight, FolderOpen, Download,
-    Eye, X, ZoomIn, ZoomOut, RotateCw, ExternalLink, ImageIcon, FileIcon
+    Eye, X, ZoomIn, ZoomOut, RotateCw, ExternalLink, ImageIcon, FileIcon,
+    CornerUpLeft, Bell, Calendar, Check, AlertTriangle
 } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 import letters from '@/routes/letters';
@@ -30,6 +31,7 @@ interface Props {
         route: boolean;
         approve: boolean;
         reject: boolean;
+        reply: boolean;
     };
 }
 
@@ -245,15 +247,277 @@ function ArchiveModal({ cases, loading, onClose, onConfirm }: {
     );
 }
 
+// ─── Reply Modal ───────────────────────────────────────────────────────────
+function ReplyModal({ letter, onClose, onSuccess }: {
+    letter: Letter;
+    onClose: () => void;
+    onSuccess: () => void;
+}) {
+    const [content, setContent] = useState('');
+    const [subject, setSubject] = useState(`پاسخ به: ${letter.subject}`);
+    const [isFollowUp, setIsFollowUp] = useState(false);
+    const [nextFollowUpDate, setNextFollowUpDate] = useState('');
+    const [followUpNotes, setFollowUpNotes] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleSubmit = async (e: React.FormEvent, isDraft: boolean = false) => {
+        e.preventDefault();
+
+        if (!content.trim()) {
+            setError('متن پاسخ الزامی است');
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+
+        router.post(letters.reply.store({ letter: letter.id }), {
+            subject,
+            content,
+            is_draft: isDraft,
+            is_follow_up: isFollowUp,
+            next_follow_up_date: nextFollowUpDate || null,
+            follow_up_notes: followUpNotes || null,
+        }, {
+            onSuccess: () => {
+                onSuccess();
+                onClose();
+            },
+            onError: (errors) => {
+                setError(Object.values(errors).flat().join(', '));
+                setLoading(false);
+            },
+        });
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
+                <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+                        <CornerUpLeft className="h-4 w-4 text-emerald-600" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-slate-800">پاسخ به نامه</h3>
+                        <p className="text-xs text-slate-400 mt-0.5">پاسخ خود را بنویسید</p>
+                    </div>
+                </div>
+
+                <form onSubmit={(e) => handleSubmit(e, false)} className="p-6 space-y-4">
+                    <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                            موضوع <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={subject}
+                            onChange={(e) => setSubject(e.target.value)}
+                            className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                            متن پاسخ <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                            rows={6}
+                            className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                            placeholder="متن پاسخ خود را بنویسید..."
+                        />
+                    </div>
+
+                    {/* Follow-up Option */}
+                    <div className="border-t border-slate-100 pt-4">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={isFollowUp}
+                                onChange={(e) => setIsFollowUp(e.target.checked)}
+                                className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                            />
+                            <span className="text-sm font-medium text-slate-700">این پاسخ نیاز به تعقیب دارد</span>
+                        </label>
+
+                        {isFollowUp && (
+                            <div className="mt-3 mr-6 space-y-3">
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-600 mb-1">
+                                        تاریخ یادآوری بعدی
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={nextFollowUpDate}
+                                        onChange={(e) => setNextFollowUpDate(e.target.value)}
+                                        className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-600 mb-1">
+                                        توضیحات تعقیب
+                                    </label>
+                                    <textarea
+                                        value={followUpNotes}
+                                        onChange={(e) => setFollowUpNotes(e.target.value)}
+                                        rows={2}
+                                        className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"
+                                        placeholder="توضیحات مربوط به نحوه تعقیب..."
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-600">
+                            {error}
+                        </div>
+                    )}
+
+                    <div className="flex gap-3 pt-2">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            disabled={loading}
+                            className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+                        >
+                            انصراف
+                        </button>
+                        <button
+                            type="button"
+                            onClick={(e) => handleSubmit(e, true)}
+                            disabled={loading}
+                            className="px-4 py-2.5 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 transition-all disabled:opacity-50"
+                        >
+                            {loading ? <Loader2 className="h-4 w-4 animate-spin inline" /> : <FileText className="h-4 w-4 inline ml-1" />}
+                            پیش‌نویس
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md disabled:opacity-50 transition-all"
+                        >
+                            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                            ارسال پاسخ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+// ─── FollowUp Modal ───────────────────────────────────────────────────────────
+function FollowUpModal({ letter, onClose, onSuccess }: {
+    letter: Letter;
+    onClose: () => void;
+    onSuccess: () => void;
+}) {
+    const [status, setStatus] = useState(letter.follow_up_status || 'pending');
+    const [notes, setNotes] = useState(letter.follow_up_notes || '');
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = () => {
+        setLoading(true);
+        router.patch(letters.followUp.update({ letter: letter.id }), {
+            status,
+            follow_up_notes: notes,
+        }, {
+            onSuccess: () => {
+                onSuccess();
+                onClose();
+            },
+            onError: () => setLoading(false),
+        });
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-amber-50 flex items-center justify-center">
+                        <Bell className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-slate-800">بروزرسانی وضعیت تعقیب</h3>
+                        <p className="text-xs text-slate-400 mt-0.5">وضعیت پیگیری نامه را مشخص کنید</p>
+                    </div>
+                </div>
+
+                <div className="p-6 space-y-4">
+                    <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                            وضعیت
+                        </label>
+                        <select
+                            value={status}
+                            onChange={(e) => setStatus(e.target.value)}
+                            className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"
+                        >
+                            <option value="pending">در انتظار</option>
+                            <option value="in_progress">در حال پیگیری</option>
+                            <option value="completed">تکمیل شده</option>
+                            <option value="overdue">تأخیر خورده</option>
+                            <option value="cancelled">لغو شده</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                            یادداشت‌ها
+                        </label>
+                        <textarea
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            rows={3}
+                            className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"
+                            placeholder="توضیحات مربوط به پیگیری..."
+                        />
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                        <button
+                            onClick={onClose}
+                            disabled={loading}
+                            className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+                        >
+                            انصراف
+                        </button>
+                        <button
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md disabled:opacity-50 transition-all"
+                        >
+                            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                            ذخیره تغییرات
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function LettersShow({ letter, securityLevels, priorityLevels, availableCases = [], can }: Props) {
     const [showArchiveModal, setShowArchiveModal] = useState(false);
+    const [showReplyModal, setShowReplyModal] = useState(false);
+    const [showFollowUpModal, setShowFollowUpModal] = useState(false);
     const [previewAtt, setPreviewAtt] = useState<Attachment | null>(null);
     const [loading, setLoading] = useState(false);
     const [cases, setCases] = useState<Case[]>(availableCases);
 
     const statusCfg = STATUS_CONFIG[letter.final_status] ?? STATUS_CONFIG.pending;
     const StatusIcon = statusCfg.icon;
+
+    // آیا این نامه نیاز به تعقیب دارد؟
+    const needsFollowUp = letter.is_follow_up &&
+        letter.follow_up_status === 'pending' &&
+        letter.next_follow_up_date &&
+        new Date(letter.next_follow_up_date) <= new Date();
 
     useEffect(() => {
         if (showArchiveModal && cases.length === 0) {
@@ -280,7 +544,7 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, av
         }
 
         setLoading(true);
-        router.post(letters.show({ letter: letter.id }), {}, {
+        router.post(letters.approve({ letter: letter.id }), {}, {
             onSuccess: () => {
                 setLoading(false); router.reload();
             },
@@ -296,7 +560,7 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, av
         }
 
         setLoading(true);
-        router.post(letters.show({ letter: letter.id }), { reason }, {
+        router.post(letters.reject({ letter: letter.id }), { reason }, {
             onSuccess: () => {
                 setLoading(false); router.reload();
             },
@@ -612,6 +876,31 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, av
                                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded transition">
                                     <Printer className="h-3.5 w-3.5" /> <span className="hidden sm:inline">چاپ</span>
                                 </button>
+
+                                {/* دکمه پاسخ دادن */}
+                                { letter.final_status !== 'draft' && (
+                                    <Link href={letters.reply.form({ letter: letter.id })}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded transition shadow-sm">
+                                        <CornerUpLeft className="h-3.5 w-3.5" />
+                                        <span className="hidden sm:inline">پاسخ</span>
+                                    </Link>
+                                )}
+
+                                {/* دکمه بروزرسانی تعقیب */}
+                                {letter.is_follow_up && (
+                                    <button onClick={() => setShowFollowUpModal(true)}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded transition shadow-sm relative ${needsFollowUp
+                                            ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
+                                            : 'bg-amber-600 hover:bg-amber-700 text-white'
+                                            }`}>
+                                        <Bell className="h-3.5 w-3.5" />
+                                        <span className="hidden sm:inline">تعقیب</span>
+                                        {needsFollowUp && (
+                                            <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-ping" />
+                                        )}
+                                    </button>
+                                )}
+
                                 {can.edit && letter.final_status === 'draft' && (
                                     <Link href={letters.edit({ letter: letter.id })}
                                         className="px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded transition">
@@ -647,6 +936,81 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, av
                         </div>
                     </div>
                 </div>
+
+                {/* ── Follow-up Warning Banner ── */}
+                {needsFollowUp && (
+                    <div className="no-print max-w-[210mm] mx-auto mb-4">
+                        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+                            <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0" />
+                            <div className="flex-1">
+                                <p className="text-sm font-semibold text-red-800">
+                                    این نامه نیاز به تعقیب دارد!
+                                </p>
+                                <p className="text-xs text-red-600 mt-0.5">
+                                    تاریخ یادآوری: {new Date(letter.next_follow_up_date).toLocaleDateString('fa-IR')}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowFollowUpModal(true)}
+                                className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition"
+                            >
+                                بروزرسانی وضعیت
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Thread/Conversation History ── */}
+                {letter.replies && letter.replies.length > 0 && (
+                    <div className="no-print mt-5 mx-auto bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
+                        style={{ maxWidth: '210mm' }}>
+                        <div className="px-6 py-4 border-b flex items-center gap-3 bg-gradient-to-l from-white to-emerald-50">
+                            <div className="h-8 w-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                                <CornerUpLeft className="h-4 w-4 text-emerald-600" />
+                            </div>
+                            <h3 className="text-sm font-bold text-gray-800 flex-1">تاریخچه پاسخ‌ها</h3>
+                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600">
+                                {letter.replies.length} پاسخ
+                            </span>
+                        </div>
+                        <div className="px-6 py-5 space-y-4">
+                            {letter.replies.map((reply: any) => (
+                                <div key={reply.id} className="border-r-2 border-emerald-200 pr-4 py-2">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-bold text-gray-800">
+                                                {reply.sender_name}
+                                            </span>
+                                            <span className="text-xs text-gray-500">
+                                                ({reply.sender_position_name})
+                                            </span>
+                                        </div>
+                                        <span className="text-xs text-gray-400">
+                                            {new Date(reply.created_at).toLocaleDateString('fa-IR')}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-gray-700 leading-relaxed">
+                                        {reply.content}
+                                    </p>
+                                    {reply.is_follow_up && (
+                                        <div className="mt-2 flex items-center gap-2">
+                                            <Bell className="h-3 w-3 text-amber-500" />
+                                            <span className="text-xs text-amber-600">
+                                                نیاز به تعقیب دارد
+                                            </span>
+                                        </div>
+                                    )}
+                                    <Link
+                                        href={letters.show({ letter: reply.id })}
+                                        className="inline-block mt-2 text-xs text-emerald-600 hover:text-emerald-700"
+                                    >
+                                        مشاهده کامل پاسخ →
+                                    </Link>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* ── A4 Letter ── */}
                 <div className="a4-page">
@@ -803,6 +1167,60 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, av
 
                 </div> {/* End A4 Page */}
 
+                {/* ── Follow-up Info Card ── */}
+                {letter.is_follow_up && (
+                    <div className="no-print mt-5 mx-auto bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden"
+                        style={{ maxWidth: '210mm' }}>
+                        <div className="px-6 py-4 border-b flex items-center gap-3 bg-gradient-to-l from-white to-amber-50">
+                            <div className="h-8 w-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                                <Bell className="h-4 w-4 text-amber-600" />
+                            </div>
+                            <h3 className="text-sm font-bold text-gray-800 flex-1">اطلاعات تعقیب نامه</h3>
+                        </div>
+                        <div className="px-6 py-5 grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-xs text-gray-500">وضعیت تعقیب</p>
+                                <p className={`text-sm font-semibold mt-1 ${letter.follow_up_status === 'completed' ? 'text-green-600' :
+                                    letter.follow_up_status === 'overdue' ? 'text-red-600' :
+                                        'text-amber-600'
+                                    }`}>
+                                    {letter.follow_up_status_label || 'در انتظار'}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500">تعداد تعقیب‌ها</p>
+                                <p className="text-sm font-semibold text-gray-800 mt-1">
+                                    {letter.follow_up_count || 0} بار
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500">تاریخ یادآوری بعدی</p>
+                                <p className="text-sm font-semibold text-gray-800 mt-1">
+                                    {letter.next_follow_up_date
+                                        ? new Date(letter.next_follow_up_date).toLocaleDateString('fa-IR')
+                                        : '—'}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500">آخرین بروزرسانی</p>
+                                <p className="text-sm font-semibold text-gray-800 mt-1">
+                                    {letter.last_follow_up_at
+                                        ? new Date(letter.last_follow_up_at).toLocaleDateString('fa-IR')
+                                        : '—'}
+                                </p>
+                            </div>
+                            {letter.follow_up_notes && (
+                                <div className="col-span-2">
+                                    <p className="text-xs text-gray-500">یادداشت‌ها</p>
+                                    <p className="text-sm text-gray-700 mt-1 bg-gray-50 p-3 rounded-lg">
+                                        {letter.follow_up_notes}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 {/* ── ATTACHMENTS ── */}
                 {letter.attachments && letter.attachments.length > 0 && (
                     <div className="no-print mt-6 mx-auto overflow-hidden rounded-2xl border border-gray-200 shadow-sm"
@@ -875,7 +1293,7 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, av
                             </span>
                         </div>
                         <div className="px-6 py-5">
-                            {letter.routings.map((routing, idx) => {
+                            {letter.routings.map((routing: any, idx: number) => {
                                 const rCfg = ROUTING_STATUS[routing.status] ?? ROUTING_STATUS.pending;
                                 const RIcon = rCfg.icon;
                                 const isOverdue = routing.deadline && new Date(routing.deadline) < new Date() && routing.status === 'pending';
@@ -937,6 +1355,20 @@ export default function LettersShow({ letter, securityLevels, priorityLevels, av
             {showArchiveModal && (
                 <ArchiveModal cases={cases} loading={loading}
                     onClose={() => setShowArchiveModal(false)} onConfirm={handleArchive} />
+            )}
+            {showReplyModal && (
+                <ReplyModal
+                    letter={letter}
+                    onClose={() => setShowReplyModal(false)}
+                    onSuccess={() => router.reload()}
+                />
+            )}
+            {showFollowUpModal && (
+                <FollowUpModal
+                    letter={letter}
+                    onClose={() => setShowFollowUpModal(false)}
+                    onSuccess={() => router.reload()}
+                />
             )}
             {previewAtt && (
                 <AttachmentPreviewModal att={previewAtt} onClose={() => setPreviewAtt(null)} />

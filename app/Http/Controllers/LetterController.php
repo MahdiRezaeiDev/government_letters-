@@ -486,45 +486,51 @@ class LetterController extends Controller
         );
     }
 
-    // app/Http/Controllers/LetterController.php
+    // LetterController.php
 
     /**
      * نمایش فرم پاسخ به نامه
      */
     public function replyForm(Letter $letter)
     {
-        // بررسی مجوز پاسخ دادن
-        if (!$letter->canBeRepliedBy(auth()->user())) {
-            return back()->with('error', 'شما مجوز پاسخ به این نامه را ندارید.');
+        $current_user = auth()->user();
+        if ($letter->receipent_user_id !== $current_user->id && !$current_user->can(PermissionEnum::APPROVE_LETTER->value)) {
+            abort(403);
         }
 
-        return inertia('Letters/Reply', [
-            'originalLetter' => $letter->load(['senderUser', 'recipientUser']),
+        return inertia('letters/LettersReply', [
+            'originalLetter' => $letter->load(['organization', 'attachments']),
+            'categories' => LetterCategory::all(),
+            'departments' => Department::all(),
+            'positions' => Position::with(['department', 'users'])->get(),
+            'externalOrganizations' => Organization::where('id', '!=', $current_user->organization_id)->get(),
+            'securityLevels' => $this->getSecurityLevels(),
+            'priorityLevels' => $this->getPriorityLevels(),
         ]);
     }
 
     /**
      * ذخیره پاسخ نامه
      */
-    public function storeReply(ReplyLetterRequest $request, Letter $letter)
+    public function storeReply(LetterRequest $request, Letter $letter)
     {
         DB::beginTransaction();
 
         try {
-            $replyData = $request->validated();
-            $currentUser = auth()->user();
+            $currentUser = Auth::user();
 
             // ایجاد نامه پاسخ
             $reply = new Letter();
             $reply->organization_id = $currentUser->organization_id;
-            $reply->letter_type = 'internal';
-            $reply->letter_number = $this->generateReplyNumber($letter);
+            $reply->letter_type = $request->recipient_type === 'internal' ? 'internal' : 'external';
+            $reply->letter_number = $this->generateLetterNumber($reply->letter_type);
             $reply->tracking_number = Letter::generateTrackingNumber();
-            $reply->security_level = $replyData['security_level'] ?? $letter->security_level;
-            $reply->priority = $replyData['priority'] ?? $letter->priority;
-            $reply->subject = $replyData['subject'] ?? 'پاسخ به: ' . $letter->subject;
-            $reply->content = $replyData['content'];
-            $reply->date = now();
+            $reply->security_level = $request->security_level;
+            $reply->priority = $request->priority;
+            $reply->category_id = $request->category_id;
+            $reply->subject = $request->subject;
+            $reply->content = $request->content;
+            $reply->date = $request->date;
 
             // فرستنده (کاربر جاری)
             $reply->sender_user_id = $currentUser->id;
@@ -533,73 +539,54 @@ class LetterController extends Controller
             $reply->sender_position_name = $currentUser->primaryPosition?->name;
             $reply->sender_department_id = $currentUser->department?->id;
 
-            // گیرنده (فرستنده نامه اصلی)
-            $reply->recipient_user_id = $letter->sender_user_id;
-            $reply->recipient_name = $letter->sender_name;
-            $reply->recipient_department_id = $letter->sender_department_id;
-            $reply->recipient_position_id = $letter->sender_position_id;
-            $reply->recipient_position_name = $letter->sender_position_name;
+            // گیرنده (از نامه اصلی)
+            $reply->recipient_type = $request->recipient_type;
+            $reply->recipient_organization_id = $request->recipient_organization_id;
+            $reply->recipient_department_id = $request->recipient_department_id;
+            $reply->recipient_position_id = $request->recipient_position_id;
+            $reply->recipient_user_id = $request->recipient_user_id;
+            $reply->recipient_name = $request->recipient_name;
+            $reply->recipient_position_name = $request->recipient_position_name;
 
             // ارتباط با نامه اصلی
             $reply->reply_to_letter_id = $letter->id;
+            $reply->parent_letter_id = $letter->parent_letter_id ?? $letter->id;
             $reply->thread_id = $letter->thread_id;
 
-            $reply->is_draft = $replyData['is_draft'] ?? false;
-            $reply->final_status = ($replyData['is_draft'] ?? false) ? 'draft' : 'pending';
+            $reply->is_draft = $request->is_draft;
+            $reply->final_status = $request->is_draft ? 'draft' : 'pending';
             $reply->created_by = $currentUser->id;
 
             $reply->save();
 
-            // اگر نیاز به تعقیب دارد
-            if (!empty($replyData['is_follow_up'])) {
-                $reply->createFollowUp([
-                    'next_follow_up_date' => $replyData['next_follow_up_date'] ?? null,
-                    'follow_up_notes' => $replyData['follow_up_notes'] ?? null,
-                ]);
+            // آپلود پیوست‌ها
+            if ($request->has('attachments')) {
+                foreach ($request->file('attachments', []) as $file) {
+                    $path = $file->store("attachments/{$reply->id}", 'public');
+                    Attachment::create([
+                        'letter_id' => $reply->id,
+                        'user_id' => $currentUser->id,
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => $path,
+                        'file_size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType(),
+                    ]);
+                }
             }
 
             DB::commit();
 
-            $message = $reply->is_draft ? 'پاسخ به عنوان پیش‌نویس ذخیره شد.' : 'پاسخ با موفقیت ارسال شد.';
+            $message = $reply->is_draft
+                ? 'پاسخ به عنوان پیش‌نویس ذخیره شد.'
+                : 'پاسخ با موفقیت ارسال شد.';
 
-            return redirect()->route('letters.show', $reply->id)
-                ->with('success', $message);
+            return redirect()->route('letters.show', $reply->id)->with('success', $message);
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Reply creation failed:', ['error' => $e->getMessage()]);
 
-            return back()->with('error', 'خطا در ثبت پاسخ: ' . $e->getMessage())
-                ->withInput();
+            return back()->with('error', 'خطا در ثبت پاسخ: ' . $e->getMessage())->withInput();
         }
-    }
-
-    /**
-     * بروزرسانی وضعیت تعقیب نامه
-     */
-    public function updateFollowUp(UpdateFollowUpRequest $request, Letter $letter)
-    {
-        try {
-            $letter->updateFollowUpStatus(
-                $request->status,
-                $request->follow_up_notes
-            );
-
-            return back()->with('success', 'وضعیت تعقیب نامه بروزرسانی شد.');
-        } catch (\Exception $e) {
-            return back()->with('error', 'خطا در بروزرسانی وضعیت تعقیب.');
-        }
-    }
-
-    /**
-     * تولید شماره برای پاسخ
-     */
-    private function generateReplyNumber(Letter $original): string
-    {
-        $prefix = 'REP';
-        $year = date('Y');
-        $count = Letter::where('reply_to_letter_id', $original->id)->count();
-
-        return sprintf('%s-%s-%s-%04d', $prefix, $original->letter_number, $year, $count + 1);
     }
 
     // ============================================
