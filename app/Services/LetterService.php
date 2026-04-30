@@ -29,6 +29,8 @@ class LetterService
             $trackingNumber = $this->generateTrackingNumber();
             $letterNumber   = $this->generateLetterNumber($data);
 
+
+
             // ایجاد نامه
             $letter = $this->storeLetter(
                 $data,
@@ -101,45 +103,61 @@ class LetterService
         string $trackingNumber,
         string $letterNumber
     ): Letter {
-        return Letter::create([
-            'organization_id'   => $creator->organization_id,
-            'letter_type'       => $data['recipient_type'] ?? 'internal',
-            'letter_number'     => $letterNumber,
-            'tracking_number'   => $trackingNumber,
-            'security_level'    => $data['security_level'],
-            'priority'          => $data['priority'],
-            'category_id'       => $data['category_id'] ?? null,
-            'subject'           => $data['subject'],
-            'summary'           => $data['summary'] ?? null,
-            'content'           => $data['content'] ?? null,
-            'is_public'         => ($data['security_level'] ?? '') === 'public',
 
-            // فرستنده
-            'sender_name'           => $senderData['name'],
-            'sender_position_name'  => $senderData['position_name'],
-            'sender_department_id'  => $senderData['department_id'],
-            'sender_user_id'        => $senderData['user_id'],
-            'sender_position_id'    => $senderData['position_id'],
-            'sender_organization_id' => $senderData['organization_id'],
-
-            // گیرنده - فیلدهای یکپارچه
-            'recipient_type'            => $recipientData['type'],
-            'recipient_organization_id' => $recipientData['organization_id'],
-            'recipient_name'            => $recipientData['name'],
-            'recipient_position_name'   => $recipientData['position_name'],
-            'recipient_department_id'   => $recipientData['department_id'],
-            'recipient_user_id'         => $recipientData['user_id'],
-            'recipient_position_id'     => $recipientData['position_id'],
-
-            'cc_recipients'     => $data['cc_recipients'] ?? [],
-            'date'              => $data['date'] ?? now(),
-            'due_date'          => $data['due_date'] ?? null,
-            'response_deadline' => $data['response_deadline'] ?? null,
-            'sheet_count'       => $data['sheet_count'] ?? 1,
-            'is_draft'          => $data['is_draft'] ?? false,
-            'final_status'      => ($data['is_draft'] ?? false) ? 'draft' : 'pending',
-            'created_by'        => $creator->id,
+        \Log::info('Attempting to create letter with data:', [
+            'organization_id' => $creator->organization_id,
+            'letter_type' => $data['recipient_type'] ?? 'external',
+            'recipient_data' => $recipientData,
+            'is_draft' => $data['is_draft'] ?? false,
         ]);
+
+        try {
+            return Letter::create([
+                'organization_id'   => $creator->organization_id,
+                'letter_type'       => $data['recipient_type'] ?? 'internal',
+                'letter_number'     => $letterNumber,
+                'tracking_number'   => $trackingNumber,
+                'security_level'    => $data['security_level'],
+                'priority'          => $data['priority'],
+                'category_id'       => $data['category_id'] ?? null,
+                'subject'           => $data['subject'],
+                'summary'           => $data['summary'] ?? null,
+                'content'           => $data['content'] ?? null,
+                'is_public'         => ($data['security_level'] ?? '') === 'public',
+
+                // فرستنده
+                'sender_name'           => $senderData['name'],
+                'sender_position_name'  => $senderData['position_name'],
+                'sender_department_id'  => $senderData['department_id'],
+                'sender_user_id'        => $senderData['user_id'],
+                'sender_position_id'    => $senderData['position_id'],
+                'sender_organization_id' => $senderData['organization_id'],
+
+                // گیرنده - فیلدهای یکپارچه
+                'recipient_type'            => $recipientData['type'],
+                'recipient_organization_id' => $recipientData['organization_id'],
+                'recipient_name'            => $recipientData['name'],
+                'recipient_position_name'   => $recipientData['position_name'],
+                'recipient_department_id'   => $recipientData['department_id'],
+                'recipient_user_id'         => $recipientData['user_id'],
+                'recipient_position_id'     => $recipientData['position_id'],
+
+                'cc_recipients'     => $data['cc_recipients'] ?? [],
+                'date'              => $data['date'] ?? now(),
+                'due_date'          => $data['due_date'] ?? null,
+                'response_deadline' => $data['response_deadline'] ?? null,
+                'sheet_count'       => $data['sheet_count'] ?? 1,
+                'is_draft'          => $data['is_draft'] ?? false,
+                'final_status'      => ($data['is_draft'] ?? false) ? 'draft' : 'pending',
+                'created_by'        => $creator->id,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Letter creation failed in storeLetter:', [
+                'error' => $e->getMessage(),
+                'sql' => $e->getPrevious()?->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 
     /**

@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('letters', function (Blueprint $table) {
             $table->id();
             $table->foreignId('organization_id')->constrained()->onDelete('cascade');
-            $table->enum('letter_type', ['incoming', 'outgoing', 'internal']);
+            $table->enum('letter_type', ['external', 'internal']);
             $table->string('letter_number', 100)->unique();
             $table->string('tracking_number', 100)->unique();
             $table->enum('security_level', ['public', 'internal', 'confidential', 'secret', 'top_secret'])->default('internal');
