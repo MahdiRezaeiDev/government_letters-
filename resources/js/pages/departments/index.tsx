@@ -189,7 +189,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
 
                         {/* Stats Cards */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                            {stats.map((stat, index) => (
+                            {stats.map((stat) => (
                                 <div key={stat.label} className="group relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                                     <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${stat.gradient} opacity-10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500`} />
                                     <div className="relative p-5">
@@ -340,7 +340,6 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                                 departments.data.map((dept, index) => {
                                                     const status = statusConfig[dept.status];
                                                     const StatusIcon = status.icon;
-                                                    const hasParent = dept.level > 0;
 
                                                     return (
                                                         <tr key={dept.id} className="hover:bg-gray-50 transition-colors group" style={{ animationDelay: `${index * 50}ms` }}>

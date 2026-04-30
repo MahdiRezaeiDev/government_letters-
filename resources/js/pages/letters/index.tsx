@@ -62,7 +62,7 @@ export default function LettersIndex({ letters, categories, filters, can, types,
     };
 
     const handleDelete = (id: number, subject: string) => {
-        if (confirm(`آیا از حذف نامه "${subject}" اطمینان دارید؟`)) {
+        if (confirm(`آیا از حذف مکتوب "${subject}" اطمینان دارید؟`)) {
             router.delete(lettersRoute.destroy({ letter: id }));
         }
     };
@@ -101,7 +101,7 @@ export default function LettersIndex({ letters, categories, filters, can, types,
 
     return (
         <>
-            <Head title="مدیریت نامه‌ها" />
+            <Head title="مدیریت مکتوب‌ها" />
 
             <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -114,9 +114,9 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                         <FileText className="h-6 w-6 text-white" />
                                     </div>
                                     <div>
-                                        <h1 className="text-2xl font-bold text-gray-900">مدیریت نامه‌ها</h1>
+                                        <h1 className="text-2xl font-bold text-gray-900">مدیریت مکتوب‌ها</h1>
                                         <p className="text-sm text-gray-500 mt-0.5">
-                                            مدیریت و پیگیری نامه‌های اداری
+                                            مدیریت و پیگیری مکتوب‌های اداری
                                         </p>
                                     </div>
                                 </div>
@@ -127,7 +127,7 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                     className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 border border-transparent rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                                 >
                                     <Plus className="ml-2 h-4 w-4" />
-                                    نامه جدید
+                                    مکتوب جدید
                                 </Link>
                             )}
                         </div>
@@ -137,7 +137,7 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm text-gray-500 mb-1">کل نامه‌ها</p>
+                                        <p className="text-sm text-gray-500 mb-1">کل مکتوب‌ها</p>
                                         <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
                                     </div>
                                     <div className="p-3 bg-blue-50 rounded-lg">
@@ -170,7 +170,7 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm text-gray-500 mb-1">نامه‌های فوری</p>
+                                        <p className="text-sm text-gray-500 mb-1">مکتوب‌های فوری</p>
                                         <p className="text-2xl font-bold text-orange-600">{stats.urgent}</p>
                                     </div>
                                     <div className="p-3 bg-orange-50 rounded-lg">
@@ -324,7 +324,7 @@ export default function LettersIndex({ letters, categories, filters, can, types,
                                                 <td colSpan={7} className="px-6 py-16 text-center">
                                                     <div className="flex flex-col items-center justify-center">
                                                         <FileText className="h-12 w-12 text-gray-300 mb-3" />
-                                                        <p className="text-gray-500 font-medium">هیچ نامه‌ای یافت نشد</p>
+                                                        <p className="text-gray-500 font-medium">هیچ مکتوب‌ای یافت نشد</p>
                                                         <p className="text-sm text-gray-400 mt-1">سعی کنید معیارهای جستجوی خود را تغییر دهید</p>
                                                         {hasActiveFilters && (
                                                             <button
