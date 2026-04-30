@@ -407,6 +407,7 @@ export default function LettersCreate({
                                                             <option key={d.id} value={d.id}>{d.name}</option>
                                                         ))}
                                                     </select>
+                                                    {/* ✅ نمایش خطای recipient_department_id */}
                                                     {errors.recipient_department_id && (
                                                         <p className="text-red-500 text-xs mt-1">{errors.recipient_department_id}</p>
                                                     )}
@@ -441,6 +442,7 @@ export default function LettersCreate({
                                                             </div>
                                                         )}
                                                     </div>
+                                                    {/* ✅ نمایش خطای recipient_position_id */}
                                                     {errors.recipient_position_id && (
                                                         <p className="text-red-500 text-xs mt-1">{errors.recipient_position_id}</p>
                                                     )}
@@ -501,6 +503,10 @@ export default function LettersCreate({
                                                             <option key={o.id} value={o.id}>{o.name}</option>
                                                         ))}
                                                     </select>
+                                                    {/* ✅ نمایش خطای recipient_name برای گیرنده خارجی */}
+                                                    {errors.recipient_name && (
+                                                        <p className="text-red-500 text-xs mt-1">{errors.recipient_name}</p>
+                                                    )}
                                                 </div>
 
                                                 <div>
@@ -560,6 +566,10 @@ export default function LettersCreate({
                                                             </div>
                                                         )}
                                                     </div>
+                                                    {/* ✅ نمایش خطای recipient_position_name برای گیرنده خارجی */}
+                                                    {errors.recipient_position_name && (
+                                                        <p className="text-red-500 text-xs mt-1">{errors.recipient_position_name}</p>
+                                                    )}
                                                 </div>
 
                                                 {/* نمایش خلاصه گیرنده خارجی */}

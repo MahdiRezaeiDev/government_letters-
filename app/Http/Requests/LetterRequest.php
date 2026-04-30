@@ -35,16 +35,11 @@ class LetterRequest extends FormRequest
             'recipient_type'    => 'nullable|in:internal,external',
 
             // فیلدهای گیرنده داخلی
-            'recipient_name'            => 'nullable|string|max:255',
-            'recipient_position_name'   => 'nullable|string|max:255',
-            'recipient_user_id'         => 'nullable|exists:users,id',
-            'recipient_department_id'   => 'nullable|exists:departments,id',
-            'recipient_position_id'     => 'nullable|exists:positions,id',
-
-            // فیلدهای گیرنده خارجی (بدون exists چون جداول داخلی نیستند)
-            'external_organization_id'  => 'nullable|integer',
-            'external_department_id'    => 'nullable|integer',
-            'external_position_id'      => 'nullable|integer',
+            'recipient_name'            => 'required|string|max:255',
+            'recipient_position_name'   => 'required|string|max:255',
+            'recipient_user_id'         => 'required|exists:users,id',
+            'recipient_department_id'   => 'required|exists:departments,id',
+            'recipient_position_id'     => 'required|exists:positions,id',
 
             // فیلدهای فرستنده
             'sender_name'               => 'nullable|string|max:255',
@@ -84,6 +79,14 @@ class LetterRequest extends FormRequest
             'sheet_count.min'               => 'تعداد صفحات باید حداقل ۱ باشد.',
             'is_draft.boolean'              => 'وضعیت مسوده معتبر نیست.',
             'recipient_type.in'             => 'نوع گیرنده معتبر نیست.',
+
+            // Required messages
+            'recipient_name.required'               => 'نام گیرنده الزامی است.',
+            'recipient_position_name.required'      => 'عنوان بست گیرنده الزامی است.',
+            'recipient_user_id.required'            => 'کاربر گیرنده الزامی است.',
+            'recipient_department_id.required'      => 'دیپارتمنت گیرنده الزامی است.',
+            'recipient_position_id.required'        => 'بست گیرنده الزامی است.',
+
             'recipient_name.string'             => 'نام گیرنده باید متن باشد.',
             'recipient_name.max'                => 'نام گیرنده نمی‌تواند بیشتر از ۲۵۵ حرف باشد.',
             'recipient_position_name.string'    => 'عنوان بست گیرنده باید متن باشد.',
@@ -126,10 +129,6 @@ class LetterRequest extends FormRequest
             'recipient_position_name'   => 'عنوان بست گیرنده',
             'recipient_user_id'         => 'کاربر گیرنده',
             'recipient_department_id'   => 'دیپارتمنت گیرنده',
-            'recipient_position_id'     => 'بست گیرنده',
-            'external_organization_id'  => 'سازمان خارجی',
-            'external_department_id'    => 'دیپارتمنت خارجی',
-            'external_position_id'      => 'بست خارجی',
             'sender_name'               => 'نام فرستنده',
             'sender_position_name'      => 'عنوان بست فرستنده',
             'sender_user_id'            => 'کاربر فرستنده',
@@ -144,7 +143,7 @@ class LetterRequest extends FormRequest
     /**
      * تبدیل تاریخ‌های شمسی به میلادی قبل از اعتبارسنجی
      */
-protected function prepareForValidation()
+    protected function prepareForValidation()
     {
         $dateFields = ['date', 'due_date', 'response_deadline'];
 
@@ -162,7 +161,8 @@ protected function prepareForValidation()
                     $this->merge([
                         $field => $normalized,
                     ]);
-                } catch (\Exception $e) {}
+                } catch (\Exception $e) {
+                }
             }
         }
     }

@@ -191,8 +191,8 @@ class LetterController extends Controller
 
         $positions = Position::whereHas('department', function ($q) use ($currentUser) {
             $q->where('organization_id', $currentUser->organization_id)
-                ->where('status', 'active');
-
+                ->where('status', 'active')
+                ->where('id', '!=', $currentUser->department_id);
         })
             ->with(['users:id,first_name,last_name'])
             ->get(['id', 'name', 'department_id'])
