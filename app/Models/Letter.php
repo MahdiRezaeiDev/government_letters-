@@ -51,6 +51,15 @@ class Letter extends Model
         'final_status',
         'created_by',
         'updated_by',
+
+        // ✅ اضافه کردن فیلدهای جدید برای Reply و Follow-up
+        'reply_to_letter_id',
+        'replied_at',
+        'replied_by',
+        'next_follow_up_date',
+        'last_follow_up_at',
+        'follow_up_status',
+        'follow_up_notes',
     ];
 
     protected $casts = [
@@ -58,14 +67,19 @@ class Letter extends Model
         'date' => JalaliDateCast::class,
         'due_date' => JalaliDateCast::class,
         'response_deadline' => JalaliDateCast::class,
+        'replied_at' => 'datetime',
+        'last_follow_up_at' => 'datetime',
+        'next_follow_up_date' => 'date',
         'is_draft' => 'boolean',
         'is_public' => 'boolean',
+        'is_follow_up' => 'boolean',
         'follow_up_count' => 'integer',
         'sheet_count' => 'integer',
         'letter_type' => 'string',
         'security_level' => 'string',
         'priority' => 'string',
         'final_status' => 'string',
+        'follow_up_status' => 'string',
     ];
 
     // ─── Accessors ─────────────────────────────────────────────
@@ -106,6 +120,52 @@ class Letter extends Model
         return $labels[$this->security_level] ?? $this->security_level;
     }
 
+    // ✅ اضافه کردن Accessor برای وضعیت تعقیب
+    public function getFollowUpStatusLabelAttribute(): string
+    {
+        $labels = [
+            'pending' => 'در انتظار',
+            'in_progress' => 'در حال پیگیری',
+            'completed' => 'تکمیل شده',
+            'overdue' => 'تأخیر خورده',
+            'cancelled' => 'لغو شده',
+        ];
+        return $labels[$this->follow_up_status] ?? 'در انتظار';
+    }
+
+    public function getFollowUpStatusColorAttribute(): string
+    {
+        $colors = [
+            'pending' => 'yellow',
+            'in_progress' => 'blue',
+            'completed' => 'green',
+            'overdue' => 'red',
+            'cancelled' => 'gray',
+        ];
+        return $colors[$this->follow_up_status] ?? 'gray';
+    }
+
+    // ✅ بررسی می‌کند آیا این نامه جواب دارد؟
+    public function getHasRepliesAttribute(): bool
+    {
+        return $this->replies()->exists();
+    }
+
+    // ✅ تعداد جواب‌ها
+    public function getRepliesCountAttribute(): int
+    {
+        return $this->replies()->count();
+    }
+
+    // ✅ آیا این نامه نیاز به تعقیب دارد؟
+    public function getNeedsFollowUpAttribute(): bool
+    {
+        return $this->is_follow_up &&
+            $this->follow_up_status === 'pending' &&
+            $this->next_follow_up_date &&
+            $this->next_follow_up_date <= now();
+    }
+
     // ─── Relationships ─────────────────────────────────────────
 
     public function organization(): BelongsTo
@@ -113,7 +173,8 @@ class Letter extends Model
         return $this->belongsTo(Organization::class);
     }
 
-    public function attachments(): HasMany {
+    public function attachments(): HasMany
+    {
         return $this->hasMany(Attachment::class);
     }
 
@@ -162,9 +223,34 @@ class Letter extends Model
         return $this->hasMany(Letter::class, 'parent_letter_id');
     }
 
-    public function followUp(): BelongsTo
+    // ✅ رابطه برای نامه‌ای که به آن جواب داده شده
+    public function replyTo(): BelongsTo
+    {
+        return $this->belongsTo(Letter::class, 'reply_to_letter_id');
+    }
+
+    // ✅ رابطه برای جواب‌های این نامه
+    public function replies(): HasMany
+    {
+        return $this->hasMany(Letter::class, 'reply_to_letter_id');
+    }
+
+    // ✅ رابطه برای کاربری که جواب داده
+    public function repliedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'replied_by');
+    }
+
+    // ✅ رابطه برای نامه اصلی که این نامه تعقیب می‌کند
+    public function originalFollowUpLetter(): BelongsTo
     {
         return $this->belongsTo(Letter::class, 'is_follow_up');
+    }
+
+    // ✅ رابطه برای نامه‌های تعقیبی این نامه
+    public function followUpLetters(): HasMany
+    {
+        return $this->hasMany(Letter::class, 'is_follow_up');
     }
 
     public function createdBy(): BelongsTo
@@ -241,6 +327,11 @@ class Letter extends Model
         return $query->where('letter_type', 'internal');
     }
 
+    public function scopeExternal($query)
+    {
+        return $query->where('letter_type', 'external');
+    }
+
     public function scopeDraft($query)
     {
         return $query->where('is_draft', true);
@@ -249,6 +340,27 @@ class Letter extends Model
     public function scopePublished($query)
     {
         return $query->where('is_draft', false);
+    }
+
+    // ✅ Scope برای نامه‌های نیازمند تعقیب
+    public function scopeNeedsFollowUp($query)
+    {
+        return $query->where('is_follow_up', true)
+            ->where('follow_up_status', 'pending')
+            ->whereDate('next_follow_up_date', '<=', now());
+    }
+
+    // ✅ Scope برای نامه‌های در حال تعقیب
+    public function scopeFollowUpPending($query)
+    {
+        return $query->where('is_follow_up', true)
+            ->whereIn('follow_up_status', ['pending', 'in_progress']);
+    }
+
+    // ✅ Scope برای نامه‌های یک thread (گفتگو)
+    public function scopeSameThread($query, $threadId)
+    {
+        return $query->where('thread_id', $threadId);
     }
 
     public function scopeByDepartment($query, $departmentId)
@@ -279,11 +391,33 @@ class Letter extends Model
                 $letter->tracking_number = static::generateTrackingNumber();
             }
 
-            if (!$letter->thread_id && $letter->parent_letter_id) {
+            // تنظیم thread_id برای پاسخ‌ها
+            if (!$letter->thread_id && $letter->reply_to_letter_id) {
+                $parent = static::find($letter->reply_to_letter_id);
+                $letter->thread_id = $parent?->thread_id ?? Str::uuid();
+            } elseif (!$letter->thread_id && $letter->parent_letter_id) {
                 $parent = static::find($letter->parent_letter_id);
                 $letter->thread_id = $parent?->thread_id ?? Str::uuid();
             } elseif (!$letter->thread_id) {
                 $letter->thread_id = Str::uuid();
+            }
+
+            // تنظیم follow_up_status پیش‌فرض
+            if ($letter->is_follow_up && !$letter->follow_up_status) {
+                $letter->follow_up_status = 'pending';
+            }
+        });
+
+        // ✅ وقتی نامه جواب داده می‌شود
+        static::created(function ($letter) {
+            if ($letter->reply_to_letter_id) {
+                $original = static::find($letter->reply_to_letter_id);
+                if ($original && !$original->replied_at) {
+                    $original->update([
+                        'replied_at' => now(),
+                        'replied_by' => $letter->created_by,
+                    ]);
+                }
             }
         });
     }
@@ -310,8 +444,76 @@ class Letter extends Model
         return $this->final_status === 'approved';
     }
 
+    public function isDraft(): bool
+    {
+        return $this->is_draft;
+    }
+
     public function canBeEditedBy(User $user): bool
     {
         return $this->is_draft && $this->created_by === $user->id;
+    }
+
+    // ✅ آیا کاربر می‌تواند به این نامه جواب دهد؟
+    public function canBeRepliedBy(User $user): bool
+    {
+        // فقط نامه‌های غیر پیش‌نویس و منتشر شده
+        if ($this->is_draft) {
+            return false;
+        }
+
+        // کاربر باید گیرنده یا فرستنده یا creator باشد
+        return in_array($user->id, [
+            $this->recipient_user_id,
+            $this->sender_user_id,
+            $this->created_by,
+        ]);
+    }
+
+    // ✅ دریافت کل thread (گفتگو)
+    public function getThreadLetters()
+    {
+        return static::where('thread_id', $this->thread_id)
+            ->orderBy('created_at', 'asc')
+            ->get();
+    }
+
+    // ✅ دریافت آخرین جواب در thread
+    public function getLastReply()
+    {
+        return static::where('reply_to_letter_id', $this->id)
+            ->orWhere('thread_id', $this->thread_id)
+            ->latest()
+            ->first();
+    }
+
+    // ✅ بروزرسانی وضعیت تعقیب
+    public function updateFollowUpStatus(string $status, ?string $notes = null): bool
+    {
+        $this->follow_up_status = $status;
+
+        if ($notes) {
+            $this->follow_up_notes = $notes;
+        }
+
+        if ($status === 'completed') {
+            $this->is_follow_up = false;
+            $this->last_follow_up_at = now();
+        }
+
+        return $this->save();
+    }
+
+    // ✅ ایجاد تعقیب جدید برای نامه
+    public function createFollowUp(array $data): self
+    {
+        $this->is_follow_up = true;
+        $this->follow_up_count = ($this->follow_up_count ?? 0) + 1;
+        $this->next_follow_up_date = $data['next_follow_up_date'] ?? now()->addDays(7);
+        $this->follow_up_status = $data['follow_up_status'] ?? 'pending';
+        $this->follow_up_notes = $data['follow_up_notes'] ?? null;
+        $this->save();
+
+        return $this;
     }
 }

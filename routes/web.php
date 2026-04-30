@@ -167,6 +167,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('letters/{letter}/routing', [RoutingController::class, 'store'])
         ->middleware('permission:route-letter')->name('routings.store');
 
+    Route::get('letters/{letter}/reply', [LetterController::class, 'replyForm'])->name('letters.reply.form');
+    Route::post('letters/{letter}/reply', [LetterController::class, 'storeReply'])->name('letters.reply.store');
+
+    // تعقیب نامه
+    Route::patch('letters/{letter}/follow-up', [LetterController::class, 'updateFollowUp'])->name('letters.follow-up.update');
+
     // ═══════════════════════════════════════════════════════
     // پیوست‌ها
     // ═══════════════════════════════════════════════════════
