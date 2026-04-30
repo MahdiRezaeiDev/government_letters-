@@ -74,17 +74,6 @@ class LetterService
         ];
     }
 
-    /**
-     * آماده‌سازی اطلاعات گیرنده
-     * داده‌ها از فرانت‌اند به صورت یکپارچه می‌آیند:
-     * - recipient_type: internal | external
-     * - recipient_organization_id: برای داخلی organization_id کاربر، برای خارجی id سازمان خارجی
-     * - recipient_department_id: id دپارتمان
-     * - recipient_position_id: id سمت
-     * - recipient_user_id: فقط برای داخلی (اختیاری)
-     * - recipient_name: نام شخص یا سازمان
-     * - recipient_position_name: عنوان سمت
-     */
     protected function prepareRecipientData(array $data): array
     {
         $recipientType = $data['recipient_type'] ?? 'internal';
@@ -95,7 +84,7 @@ class LetterService
             'organization_id'       => $data['recipient_organization_id'] ?? null,
             'department_id'         => $data['recipient_department_id'] ?? null,
             'position_id'           => $data['recipient_position_id'] ?? null,
-            'user_id'               => $recipientType === 'internal' ? ($data['recipient_user_id'] ?? null) : null,
+            'user_id'               => ($data['recipient_user_id'] ?? null),
             'name'                  => $data['recipient_name'] ?? null,
             'position_name'         => $data['recipient_position_name'] ?? null,
         ];
@@ -211,11 +200,17 @@ class LetterService
     protected function shouldCreateRouting(array $data, array $recipientData): bool
     {
         $isExternal = ($data['recipient_type'] ?? 'internal') === 'external';
+        $isDraft = $data['is_draft'] ?? false;
+        $hasRecipientUser = !empty($recipientData['user_id']);
+        $isIncoming = ($data['letter_type'] ?? '') === 'incoming';
 
-        return !($data['is_draft'] ?? false)
-            && !$isExternal
-            && !empty($recipientData['user_id'])
-            && ($data['letter_type'] ?? '') !== 'incoming';
+        // برای پیش‌نویس یا گیرنده خارجی یا نامه‌های ورودی، ارجاع ایجاد نکن
+        if ($isDraft || $isExternal || $isIncoming) {
+            return false;
+        }
+
+        // فقط برای گیرنده داخلی با user_id معتبر
+        return $hasRecipientUser;
     }
 
     /**

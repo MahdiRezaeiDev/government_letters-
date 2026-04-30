@@ -54,7 +54,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/departments/positions', function (Request $request) {
         $positions = Position::where('department_id', $request->department_id)
-            ->get(['id', 'name']);
+            ->with(['users:id,first_name,last_name'])
+            ->get(['id', 'name', 'department_id'])
+            ->map(fn($p) => [
+                'id'            => $p->id,
+                'name'          => $p->name,
+                'department_id' => $p->department_id,
+                'user_id'       => $p->users->first()?->id,
+                'user_name'     => $p->users->first()?->full_name,
+            ]);
+
         return response()->json(['positions' => $positions]);
     })->name('departments.positions');
 

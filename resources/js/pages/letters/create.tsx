@@ -561,6 +561,7 @@ return '0 Bytes';
                                                                 const position = extPositions.find(p => p.id === id);
 
                                                                 setData('recipient_position_id', id);
+                                                                setData('recipient_user_id', position.user_id || null);
                                                                 setData('recipient_position_name', position?.name || '');
                                                             }}
                                                             disabled={!data.recipient_department_id || loadingExtPositions}
