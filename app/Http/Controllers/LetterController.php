@@ -13,10 +13,11 @@ use App\Models\LetterHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use App\Enums\PermissionEnum;
+use App\Enums\PriorityLevelEnum;
+use App\Enums\SecurityLevelEnum;
 use App\Http\Requests\LetterRequest;
 use App\Models\Organization;
 use App\Services\LetterService;
@@ -187,11 +188,11 @@ class LetterController extends Controller
             ->where('status', 'active')
             ->get(['id', 'name']);
 
-        // پست‌ها
-        // LetterController.php - متد create()
 
         $positions = Position::whereHas('department', function ($q) use ($currentUser) {
-            $q->where('organization_id', $currentUser->organization_id);
+            $q->where('organization_id', $currentUser->organization_id)
+                ->where('status', 'active');
+
         })
             ->with(['users:id,first_name,last_name'])
             ->get(['id', 'name', 'department_id'])
@@ -220,8 +221,8 @@ class LetterController extends Controller
                 'delete' => $currentUser->can('delete-letter-in-org'),
             ],
             'externalOrganizations' => $externalOrganizations,
-            'securityLevels' => config('correspondence.security_levels'),
-            'priorityLevels' => config('correspondence.priority_levels'),
+            'securityLevels' => $this->getSecurityLevels(),
+            'priorityLevels' => $this->getPriorityLevels(),
         ]);
     }
 
@@ -593,6 +594,28 @@ class LetterController extends Controller
     // متدهای کمکی (Helpers)
     // ============================================
 
+    // در کنترلر
+    private function getPriorityLevels()
+    {
+        return collect(PriorityLevelEnum::cases())->mapWithKeys(fn($priority) => [
+            $priority->value => [
+                'label' => $priority->label(),
+                'activeColor' => $priority->activeColor(),
+                'inactiveColor' => $priority->inactiveColor(),
+            ]
+        ]);
+    }
+
+    private function getSecurityLevels()
+    {
+        return collect(SecurityLevelEnum::cases())->mapWithKeys(fn($level) => [
+            $level->value => [
+                'label' => $level->label(),
+                'activeColor' => $level->activeColor(),
+                'inactiveColor' => $level->inactiveColor(),
+            ]
+        ]);
+    }
     private function generateLetterNumber($type): string
     {
         $year = now()->format('Y');

@@ -8,10 +8,23 @@ import {
 import { useState, useEffect } from 'react';
 import PersianDatePicker from '@/components/PersianDatePicker';
 import TextEditor from '@/components/TextEditor';
-import LetterRoute  from '@/routes/letters';
+import LetterRoute from '@/routes/letters';
 import type { LetterCategory, Organization } from '@/types';
 
 const inputClass = "w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white";
+
+interface PriorityLevel {
+    label: string;
+    activeColor: string;
+    inactiveColor: string;
+}
+
+interface SecurityLevel {
+    label: string;
+    color: string;
+    activeColor: string;
+    inactiveColor: string;
+}
 
 interface Props {
     categories: LetterCategory[];
@@ -24,8 +37,8 @@ interface Props {
         user_name?: string;
     }[];
     externalOrganizations?: Organization[];
-    securityLevels: Record<string, string>;
-    priorityLevels: Record<string, string>;
+    securityLevels: Record<string, SecurityLevel>;
+    priorityLevels: Record<string, PriorityLevel>;
 }
 
 export default function LettersCreate({
@@ -33,6 +46,8 @@ export default function LettersCreate({
     departments,
     positions,
     externalOrganizations = [],
+    securityLevels,
+    priorityLevels,
 }: Props) {
     const { auth } = usePage().props as any;
     const currentUser = auth.user;
@@ -141,46 +156,14 @@ export default function LettersCreate({
 
     const formatFileSize = (bytes: number): string => {
         if (bytes === 0) {
-return '0 Bytes';
-}
+            return '0 Bytes';
+        }
 
         const k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
 
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
-
-    const getPriorityColor = (key: string) => ({
-        low: 'bg-slate-100 text-slate-700',
-        normal: 'bg-blue-100 text-blue-700',
-        high: 'bg-yellow-100 text-yellow-700',
-        urgent: 'bg-orange-100 text-orange-700',
-        very_urgent: 'bg-red-100 text-red-700',
-    }[key] ?? 'bg-blue-100 text-blue-700');
-
-    const getPriorityLabel = (key: string) => ({
-        low: 'عادی',
-        normal: 'معمولی',
-        high: 'مهم',
-        urgent: 'فوری',
-        very_urgent: 'فوق فوری',
-    }[key] ?? 'معمولی');
-
-    const getSecurityColor = (key: string) => ({
-        public: 'bg-slate-100 text-slate-700',
-        internal: 'bg-blue-100 text-blue-700',
-        confidential: 'bg-yellow-100 text-yellow-700',
-        secret: 'bg-purple-100 text-purple-700',
-        top_secret: 'bg-red-100 text-red-700',
-    }[key] ?? 'bg-blue-100 text-blue-700');
-
-    const getSecurityLabel = (key: string) => ({
-        public: 'عمومی',
-        internal: 'داخلی',
-        confidential: 'محرمانه',
-        secret: 'سری',
-        top_secret: 'بسیار سری',
-    }[key] ?? 'داخلی');
 
     return (
         <>
@@ -317,23 +300,21 @@ return '0 Bytes';
                                         <div>
                                             <div className="flex items-center justify-between mb-2">
                                                 <label className="text-xs font-medium text-slate-600">اولویت</label>
-                                                <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getPriorityColor(data.priority)}`}>
-                                                    {getPriorityLabel(data.priority)}
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${priorityLevels[data.priority]?.activeColor.split(' ').slice(0, 2).join(' ')
+                                                    }`}>
+                                                    {priorityLevels[data.priority]?.label ?? 'معمولی'}
                                                 </span>
                                             </div>
                                             <div className="grid grid-cols-5 gap-1.5">
-                                                {([
-                                                    { key: 'low', label: 'عادی', active: 'border-slate-500 bg-slate-100 text-slate-800', inactive: 'border-slate-300 text-slate-600 hover:bg-slate-50' },
-                                                    { key: 'normal', label: 'معمولی', active: 'border-blue-500 bg-blue-100 text-blue-800', inactive: 'border-blue-300 text-blue-600 hover:bg-blue-50' },
-                                                    { key: 'high', label: 'مهم', active: 'border-yellow-500 bg-yellow-100 text-yellow-800', inactive: 'border-yellow-300 text-yellow-600 hover:bg-yellow-50' },
-                                                    { key: 'urgent', label: 'فوری', active: 'border-orange-500 bg-orange-100 text-orange-800', inactive: 'border-orange-300 text-orange-600 hover:bg-orange-50' },
-                                                    { key: 'very_urgent', label: 'فوق', active: 'border-red-500 bg-red-100 text-red-800', inactive: 'border-red-300 text-red-600 hover:bg-red-50' },
-                                                ] as const).map(item => (
-                                                    <button key={item.key} type="button"
-                                                        onClick={() => setData('priority', item.key)}
+                                                {Object.entries(priorityLevels).map(([key, value]) => (
+                                                    <button
+                                                        key={key}
+                                                        type="button"
+                                                        onClick={() => setData('priority', key)}
                                                         className={`py-2 rounded-md text-[11px] font-medium border transition-all
-                                                            ${data.priority === item.key ? item.active : item.inactive}`}>
-                                                        {item.label}
+                                                            ${data.priority === key ? value.activeColor : value.inactiveColor}`}
+                                                    >
+                                                        {value.label}
                                                     </button>
                                                 ))}
                                             </div>
@@ -343,18 +324,21 @@ return '0 Bytes';
                                         <div>
                                             <div className="flex items-center justify-between mb-2">
                                                 <label className="text-xs font-medium text-slate-600">سطح امنیتی</label>
-                                                <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getSecurityColor(data.security_level)}`}>
-                                                    {getSecurityLabel(data.security_level)}
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${securityLevels[data.security_level]?.color ?? 'bg-blue-100 text-blue-700'
+                                                    }`}>
+                                                    {securityLevels[data.security_level]?.label ?? 'داخلی'}
                                                 </span>
                                             </div>
-                                            <select value={data.security_level}
+                                            <select
+                                                value={data.security_level}
                                                 onChange={(e) => setData('security_level', e.target.value)}
-                                                className={inputClass}>
-                                                <option value="public">عمومی</option>
-                                                <option value="internal">داخلی</option>
-                                                <option value="confidential">محرمانه</option>
-                                                <option value="secret">سری</option>
-                                                <option value="top_secret">بسیار سری</option>
+                                                className={inputClass}
+                                            >
+                                                {Object.entries(securityLevels).map(([key, value]) => (
+                                                    <option key={key} value={key}>
+                                                        {value.label}
+                                                    </option>
+                                                ))}
                                             </select>
                                         </div>
                                     </div>
@@ -441,7 +425,6 @@ return '0 Bytes';
 
                                                                 setData('recipient_position_id', id);
                                                                 setData('recipient_position_name', position?.name || '');
-                                                                // ✅ پر کردن user_id و نام کاربر از طریق user_positions
                                                                 setData('recipient_user_id', position?.user_id || null);
                                                                 setData('recipient_name', position?.user_name || '');
                                                             }}
@@ -561,7 +544,7 @@ return '0 Bytes';
                                                                 const position = extPositions.find(p => p.id === id);
 
                                                                 setData('recipient_position_id', id);
-                                                                setData('recipient_user_id', position.user_id || null);
+                                                                setData('recipient_user_id', position?.user_id || null);
                                                                 setData('recipient_position_name', position?.name || '');
                                                             }}
                                                             disabled={!data.recipient_department_id || loadingExtPositions}
@@ -604,29 +587,30 @@ return '0 Bytes';
                                         <h3 className="text-sm font-bold text-slate-700">خلاصه وضعیت</h3>
                                     </div>
                                     <div className="p-5 space-y-3">
-                                        {[
-                                            {
-                                                label: 'اولویت',
-                                                value: <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getPriorityColor(data.priority)}`}>{getPriorityLabel(data.priority)}</span>
-                                            },
-                                            {
-                                                label: 'سطح امنیتی',
-                                                value: <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${getSecurityColor(data.security_level)}`}>{getSecurityLabel(data.security_level)}</span>
-                                            },
-                                            {
-                                                label: 'تاریخ',
-                                                value: <span className="text-xs font-medium text-slate-700">{data.date}</span>
-                                            },
-                                            {
-                                                label: 'گیرنده',
-                                                value: <span className="text-xs font-medium text-slate-700">{data.recipient_type === 'internal' ? 'داخلی' : 'خارج سازمانی'}</span>
-                                            },
-                                        ].map(({ label, value }) => (
-                                            <div key={label} className="flex items-center justify-between">
-                                                <span className="text-xs text-slate-500">{label}:</span>
-                                                {value}
-                                            </div>
-                                        ))}
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-slate-500">اولویت:</span>
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${priorityLevels[data.priority]?.activeColor.split(' ').slice(0, 2).join(' ')
+                                                }`}>
+                                                {priorityLevels[data.priority]?.label ?? 'معمولی'}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-slate-500">سطح امنیتی:</span>
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${securityLevels[data.security_level]?.activeColor ?? 'bg-blue-100 text-blue-700'
+                                                }`}>
+                                                {securityLevels[data.security_level]?.label ?? 'داخلی'}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-slate-500">تاریخ:</span>
+                                            <span className="text-xs font-medium text-slate-700">{data.date}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-slate-500">گیرنده:</span>
+                                            <span className="text-xs font-medium text-slate-700">
+                                                {data.recipient_type === 'internal' ? 'داخلی' : 'خارج سازمانی'}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
 
