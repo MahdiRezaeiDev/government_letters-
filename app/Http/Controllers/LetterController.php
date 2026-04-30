@@ -56,7 +56,7 @@ class LetterController extends Controller
 
         if ($currentUser->isSuperAdmin()) {
             // ادمین کل: همه نامه‌ها
-            if ($request->has('organization_id') && $request->organization_id) {
+            if ($request->filled('organization_id')) {
                 $query->where('organization_id', $request->organization_id);
             }
         } elseif ($currentUser->isOrgAdmin()) {
@@ -85,22 +85,22 @@ class LetterController extends Controller
         // ============================================
 
         // فیلتر نوع نامه
-        if ($request->has('letter_type') && in_array($request->letter_type, ['incoming', 'outgoing', 'internal'])) {
+        if ($request->filled('letter_type')) {
             $query->where('letter_type', $request->letter_type);
         }
 
         // فیلتر وضعیت
-        if ($request->has('status') && in_array($request->status, ['draft', 'pending', 'approved', 'rejected', 'archived'])) {
+        if ($request->filled('status')) {
             $query->where('final_status', $request->status);
         }
 
         // فیلتر اولویت
-        if ($request->has('priority')) {
+        if ($request->filled('priority')) {
             $query->where('priority', $request->priority);
         }
 
         // فیلتر جستجو
-        if ($request->has('search') && $request->search) {
+        if ($request->filled('search')) {
             $query->where(function ($query) use ($request) {
                 $query->where('subject', 'like', "%{$request->search}%")
                     ->orWhere('letter_number', 'like', "%{$request->search}%")
@@ -110,10 +110,10 @@ class LetterController extends Controller
         }
 
         // فیلتر تاریخ
-        if ($request->has('date_from') && $request->date_from) {
+        if ($request->filled('date_from')) {
             $query->whereDate('date', '>=', $request->date_from);
         }
-        if ($request->has('date_to') && $request->date_to) {
+        if ($request->filled('date_to')) {
             $query->whereDate('date', '<=', $request->date_to);
         }
 
@@ -134,9 +134,8 @@ class LetterController extends Controller
                 'delete' => $currentUser->can('delete-letter'),
             ],
             'types' => [
-                'incoming' => 'نامه وارده',
-                'outgoing' => 'نامه صادره',
                 'internal' => 'نامه داخلی',
+                'external' => 'نامه خارجی',
             ],
             'statuses' => [
                 'draft' => 'پیش‌نویس',
@@ -154,7 +153,6 @@ class LetterController extends Controller
             ],
         ]);
     }
-
     /**
      * نمایش فرم ایجاد نامه جدید
      */
