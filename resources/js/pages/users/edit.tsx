@@ -98,9 +98,7 @@ export default function UsersEdit({ user, organizations, departments: initialDep
         <>
             <Head title={`ویرایش کاربر - ${user.first_name} ${user.last_name}`} />
 
-            <div className="min-h-screen">
-
-                <div>
+            <div className="min-h-screen max-w-6xl mx-auto px-4 sm:px-6">
                     <form id="user-form" onSubmit={handleSubmit}>
                         <div className="space-y-5">
                             {/* 1. Personal Info */}
@@ -379,7 +377,6 @@ export default function UsersEdit({ user, organizations, departments: initialDep
                             </SectionCard>
                         </div>
                     </form>
-                </div>
             </div>
         </>
     );

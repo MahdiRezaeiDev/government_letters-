@@ -102,7 +102,7 @@ export default function UsersCreate({ organizations, departments: initialDepartm
         <>
             <Head title="ایجاد کاربر جدید" />
 
-            <div className="min-h-screen bg-slate-50/70">
+            <div className="min-h-screen">
 
                 <div className="max-w-6xl mx-auto px-4 sm:px-6">
                     <form id="user-form" onSubmit={handleSubmit}>
