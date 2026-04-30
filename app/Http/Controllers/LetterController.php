@@ -340,20 +340,8 @@ class LetterController extends Controller
             'letter' => $letter,
             'categories' => $categories,
             'users' => $users,
-            'securityLevels' => [
-                'public' => 'عمومی',
-                'internal' => 'داخلی',
-                'confidential' => 'محرمانه',
-                'secret' => 'سری',
-                'top_secret' => 'بسیار سری',
-            ],
-            'priorityLevels' => [
-                'low' => 'کم',
-                'normal' => 'عادی',
-                'high' => 'مهم',
-                'urgent' => 'فوری',
-                'very_urgent' => 'خیلی فوری',
-            ],
+            'securityLevels' => $this->getSecurityLevels(),
+            'priorityLevels' => $this->getPriorityLevels(),
         ]);
     }
 

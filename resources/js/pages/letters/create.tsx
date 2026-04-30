@@ -33,7 +33,7 @@ interface Props {
         id: number;
         name: string;
         department_id: number;
-        user_id?: number;
+        user_id: number;
         user_name?: string;
     }[];
     externalOrganizations?: Organization[];
@@ -93,7 +93,7 @@ export default function LettersCreate({
         }
     }, [data.recipient_department_id, data.recipient_type, positions]);
 
-    // دریافت دپارتمان‌های سازمان خارجی
+    // دریافت دپارتمان‌های وزارت خارجی
     useEffect(() => {
         if (data.recipient_organization_id && data.recipient_type === 'external') {
             setLoadingExtDepts(true);
@@ -379,7 +379,7 @@ export default function LettersCreate({
                                                         ${data.recipient_type === type
                                                             ? 'bg-blue-600 text-white border-blue-600'
                                                             : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}>
-                                                    {type === 'internal' ? 'داخلی' : 'خارج سازمانی'}
+                                                    {type === 'internal' ? 'داخلی' : 'خارج وزارت'}
                                                 </button>
                                             ))}
                                         </div>
@@ -389,7 +389,7 @@ export default function LettersCreate({
                                             <div className="space-y-3">
                                                 <div>
                                                     <label className="block text-xs font-medium text-slate-600 mb-1">
-                                                        دپارتمان / ریاست <span className="text-red-500">*</span>
+                                                        ریاست <span className="text-red-500">*</span>
                                                     </label>
                                                     <select
                                                         value={data.recipient_department_id || ''}
@@ -481,7 +481,7 @@ export default function LettersCreate({
                                             <div className="space-y-3">
                                                 <div>
                                                     <label className="block text-xs font-medium text-slate-600 mb-1">
-                                                        سازمان <span className="text-red-500">*</span>
+                                                        وزارت <span className="text-red-500">*</span>
                                                     </label>
                                                     <select
                                                         value={data.recipient_organization_id || ''}
@@ -498,7 +498,7 @@ export default function LettersCreate({
                                                             setExtPositions([]);
                                                         }}
                                                         className={inputClass}>
-                                                        <option value="">انتخاب سازمان...</option>
+                                                        <option value="">انتخاب وزارت...</option>
                                                         {externalOrganizations.map(o => (
                                                             <option key={o.id} value={o.id}>{o.name}</option>
                                                         ))}
@@ -511,7 +511,7 @@ export default function LettersCreate({
 
                                                 <div>
                                                     <label className="block text-xs font-medium text-slate-600 mb-1">
-                                                        دپارتمان / واحد
+                                                        ریاست
                                                     </label>
                                                     <div className="relative">
                                                         <select
@@ -576,7 +576,7 @@ export default function LettersCreate({
                                                 {data.recipient_organization_id && (
                                                     <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800 space-y-1">
                                                         <p className="font-medium">گیرنده انتخاب شده:</p>
-                                                        <p>سازمان: {data.recipient_name}</p>
+                                                        <p>وزارت: {data.recipient_name}</p>
                                                         {data.recipient_department_id && (
                                                             <p>دپارتمان: {extDepartments.find(d => d.id === data.recipient_department_id)?.name}</p>
                                                         )}
@@ -618,7 +618,7 @@ export default function LettersCreate({
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs text-slate-500">گیرنده:</span>
                                             <span className="text-xs font-medium text-slate-700">
-                                                {data.recipient_type === 'internal' ? 'داخلی' : 'خارج سازمانی'}
+                                                {data.recipient_type === 'internal' ? 'داخلی' : 'خارج وزارت'}
                                             </span>
                                         </div>
                                     </div>
