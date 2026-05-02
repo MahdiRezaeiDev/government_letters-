@@ -36,6 +36,7 @@ class LetterRequest extends FormRequest
 
             // فیلدهای گیرنده داخلی
             'recipient_name'            => 'required|string|max:255',
+            'recipient_organization_id' => 'required|numeric|exists:organizations,id',
             'recipient_position_name'   => 'required|string|max:255',
             'recipient_user_id'         => 'required|exists:users,id',
             'recipient_department_id'   => 'required|exists:departments,id',
@@ -81,6 +82,9 @@ class LetterRequest extends FormRequest
             'recipient_type.in'             => 'نوع گیرنده معتبر نیست.',
 
             // Required messages
+            'recipient_organization_id.required' => 'سازمان گیرنده الزامی است.',
+            'recipient_organization_id.numeric'  => 'سازمان گیرنده باید عدد باشد.',
+            'recipient_organization_id.exists'   => 'سازمان گیرنده انتخاب شده وجود ندارد.',
             'recipient_name.required'               => 'نام گیرنده الزامی است.',
             'recipient_position_name.required'      => 'عنوان بست گیرنده الزامی است.',
             'recipient_user_id.required'            => 'کاربر گیرنده الزامی است.',
