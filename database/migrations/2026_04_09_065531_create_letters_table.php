@@ -16,20 +16,21 @@ return new class extends Migration
             $table->string('tracking_number', 100)->unique();
             $table->enum('security_level', ['public', 'internal', 'confidential', 'secret', 'top_secret'])->default('internal');
             $table->enum('priority', ['low', 'normal', 'high', 'urgent', 'very_urgent'])->default('normal');
+
             $table->foreignId('category_id')->nullable()->constrained('letter_categories');
             $table->string('subject', 500);
             $table->text('summary')->nullable();
             $table->longText('content')->nullable();
             $table->boolean('is_public')->default(false);
 
-            // فیلدهای فرستنده)
+            // Sender Fields
             $table->foreignId('sender_user_id')->nullable()->constrained('users');
             $table->foreignId('sender_position_id')->nullable()->constrained('positions');
             $table->foreignId('sender_department_id')->nullable()->constrained('departments');
             $table->string('sender_name', 255)->nullable();
             $table->string('sender_position_name', 255)->nullable();
 
-            //  فیلدهای گیرنده
+            // Recipient Fields
             $table->foreignId('recipient_user_id')->nullable()->constrained('users');
             $table->foreignId('recipient_position_id')->nullable()->constrained('positions');
             $table->foreignId('recipient_department_id')->nullable()->constrained('departments');
@@ -43,13 +44,19 @@ return new class extends Migration
             $table->date('due_date')->nullable();
             $table->date('response_deadline')->nullable();
 
+            // Relationship Fields
             $table->foreignId('parent_letter_id')->nullable()->constrained('letters');
             $table->uuid('thread_id')->nullable();
 
-            $table->foreignId('is_follow_up')->nullable()->constrained('letters');
+            // Follow-up Fields (Defined once here)
+            $table->boolean('is_follow_up')->default(false);
             $table->integer('follow_up_count')->default(0);
-            $table->integer('sheet_count')->default(1);
+            $table->date('next_follow_up_date')->nullable();
+            $table->timestamp('last_follow_up_at')->nullable();
+            $table->enum('follow_up_status', ['pending', 'in_progress', 'completed', 'overdue', 'cancelled'])->default('pending');
+            $table->text('follow_up_notes')->nullable();
 
+            $table->integer('sheet_count')->default(1);
             $table->boolean('is_draft')->default(false);
             $table->enum('final_status', ['draft', 'pending', 'approved', 'rejected', 'archived'])->default('draft');
 
@@ -58,6 +65,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
+            // Indexes
             $table->index(['letter_type', 'date']);
             $table->index('security_level');
             $table->index('final_status');
@@ -66,6 +74,9 @@ return new class extends Migration
             $table->index(['sender_department_id', 'created_at']);
             $table->index(['recipient_department_id', 'created_at']);
             $table->index('recipient_organization_id');
+            $table->index('is_follow_up');
+            $table->index('follow_up_status');
+            $table->index('next_follow_up_date');
         });
     }
 

@@ -1,5 +1,4 @@
 <?php
-// PermissionEnum.php - ثابت و مرجع اصلی
 
 namespace App\Enums;
 
@@ -41,6 +40,7 @@ enum PermissionEnum: string
     case ROUTE_LETTER    = 'route-letter';
     case APPROVE_LETTER  = 'approve-letter';
     case SIGN_LETTER     = 'sign-letter';
+    case REPLY_LETTER    = 'reply-letter';
 
         // ============================================
         // مجوزهای بایگانی
@@ -91,23 +91,19 @@ enum PermissionEnum: string
 
     /**
      * ادمین سازمان — همه چیز مربوط به سازمان خودش
-     * (بدون دسترسی به مدیریت سازمان‌ها که فقط برای ادمین کل است)
      */
     public static function orgAdminPermissions(): array
     {
         return [
-            // دپارتمان
             self::VIEW_DEPARTMENTS->value,
             self::CREATE_DEPARTMENT->value,
             self::EDIT_DEPARTMENT->value,
             self::DELETE_DEPARTMENT->value,
-            // کاربران
             self::VIEW_USERS->value,
             self::CREATE_USER->value,
             self::EDIT_USER->value,
             self::DELETE_USER->value,
             self::ASSIGN_ROLE->value,
-            // نامه
             self::VIEW_LETTERS->value,
             self::CREATE_LETTER->value,
             self::EDIT_LETTER->value,
@@ -116,19 +112,17 @@ enum PermissionEnum: string
             self::ROUTE_LETTER->value,
             self::APPROVE_LETTER->value,
             self::SIGN_LETTER->value,
-            // بایگانی
+            self::REPLY_LETTER->value,
             self::VIEW_CASES->value,
             self::CREATE_CASE->value,
             self::EDIT_CASE->value,
             self::DELETE_CASE->value,
-            // گزارشات
             self::VIEW_REPORTS->value,
             self::EXPORT_REPORTS->value,
             self::VIEW_POSITIONS->value,
             self::CREATE_POSITION->value,
             self::EDIT_POSITION->value,
             self::DELETE_POSITION->value,
-
             self::VIEW_CATEGORIES->value,
             self::CREATE_CATEGORY->value,
             self::EDIT_CATEGORY->value,
@@ -137,7 +131,7 @@ enum PermissionEnum: string
     }
 
     /**
-     * مدیر دپارتمان — فقط مشاهده، بدون ایجاد/ویرایش/حذف
+     * مدیر دپارتمان
      */
     public static function deptManagerPermissions(): array
     {
@@ -145,6 +139,8 @@ enum PermissionEnum: string
             self::VIEW_DEPARTMENTS->value,
             self::VIEW_USERS->value,
             self::VIEW_LETTERS->value,
+            self::CREATE_LETTER->value,
+            self::REPLY_LETTER->value,
             self::VIEW_CASES->value,
             self::VIEW_REPORTS->value,
             self::VIEW_POSITIONS->value,
@@ -153,12 +149,18 @@ enum PermissionEnum: string
     }
 
     /**
-     * کاربر عادی — فقط مشاهده نامه‌ها
+     * کاربر عادی
      */
     public static function userPermissions(): array
     {
         return [
             self::VIEW_LETTERS->value,
+            self::CREATE_LETTER->value,
+            self::REPLY_LETTER->value,
+            self::VIEW_CASES->value,
+            self::VIEW_DEPARTMENTS->value,
+            self::VIEW_POSITIONS->value,
+            self::VIEW_CATEGORIES->value,
         ];
     }
 
@@ -189,6 +191,7 @@ enum PermissionEnum: string
             self::ROUTE_LETTER    => 'ارجاع نامه',
             self::APPROVE_LETTER  => 'تأیید نامه',
             self::SIGN_LETTER     => 'امضای نامه',
+            self::REPLY_LETTER    => 'پاسخ به نامه',
 
             self::VIEW_CASES  => 'مشاهده پرونده‌ها',
             self::CREATE_CASE => 'ایجاد پرونده',

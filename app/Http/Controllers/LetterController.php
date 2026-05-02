@@ -4,173 +4,196 @@ namespace App\Http\Controllers;
 
 use App\Models\Letter;
 use App\Models\LetterCategory;
-use App\Models\User;
 use App\Models\Position;
 use App\Models\Department;
 use App\Models\Attachment;
 use App\Models\Routing;
 use App\Models\LetterHistory;
+use App\Models\ArchiveCase;
+use App\Models\Organization;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
-use App\Enums\PermissionEnum;
 use App\Enums\PriorityLevelEnum;
 use App\Enums\SecurityLevelEnum;
 use App\Http\Requests\LetterRequest;
-use App\Models\Organization;
 use App\Services\LetterService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
 
 class LetterController extends Controller
 {
-    protected LetterService $letterService;
+    use AuthorizesRequests;
+    public function __construct(protected LetterService $letterService) {}
 
-    public function __construct(LetterService $letterService)
-    {
-        $this->letterService = $letterService;
-    }
+    // =========================================================
+    // INDEX
+    // =========================================================
 
-    /**
-     * نمایش لیست نامه‌ها (بر اساس سطح دسترسی)
-     */
     public function index(Request $request)
     {
-        $currentUser = auth()->user();
-        $query = Letter::query()
-            ->with([
-                'category',
-                'createdBy',
-                'senderDepartment',
-                'recipientDepartment',
-                'routings' => function ($query) {
-                    $query->where('to_user_id', auth()->id())
-                        ->orWhere('to_user_id', null);
-                }
-            ]);
+        $this->authorize('viewAny', Letter::class);
 
-        // ============================================
-        // فیلتر بر اساس سطح دسترسی (مهم)
-        // ============================================
+        $user = auth()->user();
+        $query = Letter::query()->with([
+            'category',
+            'createdBy',
+            'senderDepartment',
+            'recipientDepartment',
+            'senderUser',
+            'recipientUser',
+        ]);
 
-        if ($currentUser->isSuperAdmin()) {
-            // ادمین کل: همه نامه‌ها
+        // ── فیلتر بر اساس دسترسی کاربر ───────────────────────────────
+        if ($user->isSuperAdmin()) {
+            // سوپر ادمین: همه نامه‌ها را می‌بیند
             if ($request->filled('organization_id')) {
                 $query->where('organization_id', $request->organization_id);
             }
-        } elseif ($currentUser->isOrgAdmin()) {
-            // ادمین سازمان: نامه‌های سازمان خودش
-            $query->where('organization_id', $currentUser->organization_id);
-        } elseif ($currentUser->isDeptManager()) {
-            // مدیر دپارتمان: نامه‌های دپارتمان خودش
-            $query->where(function ($query) use ($currentUser) {
-                $query->where('sender_department_id', $currentUser->department_id)
-                    ->orWhere('recipient_department_id', $currentUser->department_id);
+        } elseif ($user->isOrgAdmin()) {
+            // ادمین سازمان: فقط نامه‌های سازمان خودش
+            $query->where('organization_id', $user->organization_id);
+        } elseif ($user->isDeptManager()) {
+            // مدیر دپارتمان: نامه‌هایی که دپارتمانش فرستنده یا گیرنده است
+            $query->where(function ($q) use ($user) {
+                $q->where('sender_department_id', $user->department_id)
+                    ->orWhere('recipient_department_id', $user->department_id);
             });
         } else {
-            // کاربر عادی: نامه‌هایی که خودش ایجاد کرده یا به او ارجاع شده
-            $query->where(function ($q) use ($currentUser) {
-                $q->where('created_by', $currentUser->id)
-                    ->orWhere('sender_user_id', $currentUser->id)
-                    ->orWhere('recipient_user_id', $currentUser->id)
-                    ->orWhereHas('routings', function ($r) use ($currentUser) {
-                        $r->where('to_user_id', $currentUser->id);
+            // کاربر عادی: نامه‌هایی که مرتبط با اوست
+            $query->where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                    ->orWhere('sender_user_id', $user->id)
+                    ->orWhere('recipient_user_id', $user->id)
+                    ->orWhereHas('routings', function ($r) use ($user) {
+                        $r->where('to_user_id', $user->id);
+                    })
+                    // برای نامه‌های خارجی که نام کاربری ندارد
+                    ->orWhere(function ($sub) use ($user) {
+                        $sub->where('letter_type', 'external')
+                            ->where('recipient_name', 'like', "%{$user->full_name}%");
                     });
             });
         }
 
-        // ============================================
-        // فیلترهای مختلف
-        // ============================================
-
-        // فیلتر نوع نامه
-        if ($request->filled('letter_type')) {
-            $query->where('letter_type', $request->letter_type);
-        }
-
-        // فیلتر وضعیت
-        if ($request->filled('status')) {
-            $query->where('final_status', $request->status);
-        }
-
-        // فیلتر اولویت
-        if ($request->filled('priority')) {
-            $query->where('priority', $request->priority);
-        }
-
-        // فیلتر جستجو
-        if ($request->filled('search')) {
-            $query->where(function ($query) use ($request) {
-                $query->where('subject', 'like', "%{$request->search}%")
-                    ->orWhere('letter_number', 'like', "%{$request->search}%")
-                    ->orWhere('tracking_number', 'like', "%{$request->search}%")
-                    ->orWhere('content', 'like', "%{$request->search}%");
+        // ── فیلترهای جستجو ──────────────────────────────────
+        $query->when($request->filled('letter_type'), function ($q) use ($request) {
+            return $q->where('letter_type', $request->letter_type);
+        })
+            ->when($request->filled('status'), function ($q) use ($request) {
+                return $q->where('final_status', $request->status);
+            })
+            ->when($request->filled('priority'), function ($q) use ($request) {
+                return $q->where('priority', $request->priority);
+            })
+            ->when($request->filled('date_from'), function ($q) use ($request) {
+                return $q->whereDate('date', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_to'), function ($q) use ($request) {
+                return $q->whereDate('date', '<=', $request->date_to);
+            })
+            ->when($request->filled('direction'), function ($q) use ($request) {
+                // فیلتر جهت نامه (ورودی/خروجی)
+                if ($request->direction === 'incoming') {
+                    return $q->where(function ($sub) use ($request) {
+                        $sub->where(function ($inner) {
+                            // نامه‌های داخلی: گیرنده کاربر فعلی
+                            $inner->where('letter_type', 'internal')
+                                ->where('recipient_user_id', auth()->id());
+                        })->orWhere(function ($inner) {
+                            // نامه‌های خارجی: گیرنده سازمان فعلی
+                            $inner->where('letter_type', 'external')
+                                ->whereNull('recipient_user_id');
+                        });
+                    });
+                } elseif ($request->direction === 'outgoing') {
+                    return $q->where(function ($sub) use ($request) {
+                        $sub->where(function ($inner) {
+                            // نامه‌های داخلی: فرستنده کاربر فعلی
+                            $inner->where('letter_type', 'internal')
+                                ->where('sender_user_id', auth()->id());
+                        })->orWhere(function ($inner) {
+                            // نامه‌های خارجی: فرستنده کاربر فعلی
+                            $inner->where('letter_type', 'external')
+                                ->where('sender_user_id', auth()->id());
+                        });
+                    });
+                }
+                return $q;
+            })
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->search;
+                return $q->where(function ($s) use ($search) {
+                    $s->where('subject', 'like', "%{$search}%")
+                        ->orWhere('letter_number', 'like', "%{$search}%")
+                        ->orWhere('tracking_number', 'like', "%{$search}%")
+                        ->orWhere('content', 'like', "%{$search}%")
+                        ->orWhere('sender_name', 'like', "%{$search}%")
+                        ->orWhere('recipient_name', 'like', "%{$search}%");
+                });
             });
-        }
 
-        // فیلتر تاریخ
-        if ($request->filled('date_from')) {
-            $query->whereDate('date', '>=', $request->date_from);
-        }
-        if ($request->filled('date_to')) {
-            $query->whereDate('date', '<=', $request->date_to);
-        }
+        // ── مرتب‌سازی ──────────────────────────────────────────
+        $query->orderByDesc('created_at');
 
-        $letters = $query->orderBy('created_at', 'desc')->paginate(15);
+        // ── پاجینیشن ───────────────────────────────────────────
+        $letters = $query->paginate(15);
 
-        // لیست دسته‌بندی‌ها برای فیلتر
-        $categories = LetterCategory::where('organization_id', $currentUser->organization_id)
-            ->where('status', true)
-            ->get();
+        // اضافه کردن قابلیت direction به فیلترها
+        $filters = $request->only(['search', 'letter_type', 'status', 'priority', 'date_from', 'date_to', 'direction']);
 
         return Inertia::render('letters/index', [
-            'letters' => $letters,
-            'categories' => $categories,
-            'filters' => $request->only(['search', 'letter_type', 'status', 'priority', 'date_from', 'date_to']),
-            'can' => [
-                'create' => $currentUser->can('create-letter'),
-                'edit' => $currentUser->can('edit-letter'),
-                'delete' => $currentUser->can('delete-letter'),
+            'letters'    => $letters,
+            'categories' => LetterCategory::where('organization_id', $user->organization_id)
+                ->where('status', true)
+                ->get(),
+            'filters'    => $filters,
+            'can'        => [
+                'create' => $user->can('create', Letter::class),
             ],
-            'types' => [
+            'types'      => [
                 'internal' => 'نامه داخلی',
-                'external' => 'نامه خارجی',
+                'external' => 'نامه خارجی'
             ],
-            'statuses' => [
-                'draft' => 'پیش‌نویس',
-                'pending' => 'در انتظار',
+            'directions' => [
+                'all'      => 'همه',
+                'incoming' => 'نامه‌های دریافتی',
+                'outgoing' => 'نامه‌های ارسالی'
+            ],
+            'statuses'   => [
+                'draft'    => 'پیش‌نویس',
+                'pending'  => 'در انتظار',
                 'approved' => 'تایید شده',
                 'rejected' => 'رد شده',
-                'archived' => 'بایگانی شده',
+                'archived' => 'بایگانی شده'
             ],
             'priorities' => [
-                'low' => 'کم',
-                'normal' => 'عادی',
-                'high' => 'مهم',
-                'urgent' => 'فوری',
-                'very_urgent' => 'خیلی فوری',
+                'low'         => 'کم',
+                'normal'      => 'عادی',
+                'high'        => 'مهم',
+                'urgent'      => 'فوری',
+                'very_urgent' => 'خیلی فوری'
             ],
         ]);
     }
-    /**
-     * نمایش فرم ایجاد نامه جدید
-     */
-    public function create(Request $request)
+    // =========================================================
+    // CREATE / STORE
+    // =========================================================
+
+    public function create()
     {
-        $currentUser = auth()->user();
+        $this->authorize('create', Letter::class);
 
-        // دپارتمان‌ها
-        $departments = Department::where('organization_id', $currentUser->organization_id)
-            ->where('status', 'active')
-            ->get(['id', 'name']);
+        $user = auth()->user();
 
-
-        $positions = Position::whereHas('department', function ($q) use ($currentUser) {
-            $q->where('organization_id', $currentUser->organization_id)
+        $positions = Position::whereHas(
+            'department',
+            fn($q) =>
+            $q->where('organization_id', $user->organization_id)
                 ->where('status', 'active')
-                ->where('id', '!=', $currentUser->department_id);
-        })
+                ->where('id', '!=', $user->department_id)
+        )
             ->with(['users:id,first_name,last_name'])
             ->get(['id', 'name', 'department_id'])
             ->map(fn($p) => [
@@ -181,237 +204,183 @@ class LetterController extends Controller
                 'user_name'     => $p->users->first()?->full_name,
             ]);
 
-        // دریافت سازمان‌های خارجی (به جز سازمان خود کاربر)
-        $externalOrganizations = Organization::where('id', '!=', $currentUser->organization_id)
-            ->where('status', 'active')
-            ->get(['id', 'name', 'code']);
-
         return Inertia::render('letters/create', [
-            'departments' => $departments,
-            'positions' => $positions,
-            'externalOrganizations' => $externalOrganizations,
-            'securityLevels' => $this->getSecurityLevels(),
-            'priorityLevels' => $this->getPriorityLevels(),
+            'departments'          => Department::where('organization_id', $user->organization_id)
+                ->where('status', 'active')->get(['id', 'name']),
+            'positions'            => $positions,
+            'externalOrganizations' => Organization::where('id', '!=', $user->organization_id)
+                ->where('status', 'active')->get(['id', 'name', 'code']),
+            'securityLevels'       => $this->getSecurityLevels(),
+            'priorityLevels'       => $this->getPriorityLevels(),
         ]);
     }
 
-    /**
-     * ذخیره نامه جدید
-     */
     public function store(LetterRequest $request)
     {
+        $this->authorize('create', Letter::class);
 
         try {
-            $currentUser = Auth::user()->load(['primaryPosition', 'department']);
-
-            $letter = $this->letterService->createLetter(
-                $request->validated(),
-                $currentUser
-            );
-
-            $message = $letter->is_draft
-                ? 'پیش‌نویس مکتوب با موفقیت ذخیره شد.'
-                : 'مکتوب با موفقیت ثبت گردید.';
+            $user   = Auth::user()->load(['primaryPosition', 'department']);
+            $letter = $this->letterService->createLetter($request->validated(), $user);
 
             return redirect()
                 ->route('letters.show', $letter->id)
-                ->with('success', $message);
+                ->with('success', $letter->is_draft ? 'پیش‌نویس ذخیره شد.' : 'مکتوب ثبت گردید.');
         } catch (\Exception $e) {
-            return back()
-                ->with('error', 'خطا در ثبت مکتوب: ' . $e->getMessage())
-                ->withInput();
+            return back()->with('error', 'خطا: ' . $e->getMessage())->withInput();
         }
     }
-    /**
-     * نمایش جزئیات نامه
-     */
+
+    // =========================================================
+    // SHOW
+    // =========================================================
+
     public function show(Letter $letter)
     {
-        $currentUser = auth()->user();
+        $this->authorize('view', $letter);  // ✅ جایگزین canViewLetter
 
-        // بررسی دسترسی
-        if (!$this->canViewLetter($currentUser, $letter)) {
-            abort(403);
-        }
+        $user = auth()->user();
 
         $letter->load([
             'category',
             'createdBy',
             'senderUser',
+            'senderDepartment.organization',  // برای footer آدرس/تلفن
             'recipientUser',
-            'senderDepartment',
             'recipientDepartment',
-            'routings' => function ($q) {
-                $q->with(['fromUser', 'toUser', 'fromPosition', 'toPosition']);
-            },
-            'histories' => function ($q) {
-                $q->with('user')->latest()->limit(20);
-            },
+            'routings.fromUser',
+            'routings.toUser',
+            'histories' => fn($q) => $q->with('user')->latest()->limit(20),
             'attachments',
             'cases',
+            'replies.senderUser',
         ]);
 
-        // ثبت مشاهده
         $letter->views()->create([
-            'user_id' => $currentUser->id,
-            'viewed_at' => now(),
+            'user_id'    => $user->id,
+            'viewed_at'  => now(),
             'ip_address' => request()->ip(),
         ]);
 
         return Inertia::render('letters/show', [
-            'letter' => $letter,
+            'letter'         => $letter,
             'securityLevels' => $this->getSecurityLevels(),
             'priorityLevels' => $this->getPriorityLevels(),
             'can' => [
-                'edit' => $currentUser->can(PermissionEnum::EDIT_LETTER->value),
-                'delete' => $currentUser->can(PermissionEnum::DELETE_LETTER->value),
-                'archive' => $currentUser->can(PermissionEnum::ARCHIVE_LETTER->value),
-                'route' => $currentUser->can(PermissionEnum::ROUTE_LETTER->value),
-                'approve' => $currentUser->can(PermissionEnum::APPROVE_LETTER->value),
+                'edit'    => $user->can('update', $letter),
+                'delete'  => $user->can('delete', $letter),
+                'archive' => $user->can('archive', $letter),
+                'route'   => $user->can('route', $letter),
+                'approve' => $user->can('approve', $letter),
+                'sign'    => $user->can('sign', $letter),
+                'reply'   => $user->can('reply', $letter)
             ],
         ]);
     }
 
-    /**
-     * نمایش فرم ویرایش نامه
-     */
+    // =========================================================
+    // EDIT / UPDATE
+    // =========================================================
+
     public function edit(Letter $letter)
     {
-        $currentUser = auth()->user();
+        $this->authorize('update', $letter);
 
-        // فقط پیش‌نویس و ایجادکننده می‌تواند ویرایش کند
-        if (!$letter->is_draft || $letter->created_by != $currentUser->id) {
-            abort(403);
-        }
+        $user = auth()->user();
 
-        $categories = LetterCategory::where('organization_id', $currentUser->organization_id)
-            ->where('status', true)
-            ->orderBy('sort_order')
-            ->get();
-
-        $users = User::where('organization_id', $currentUser->organization_id)
-            ->where('status', 'active')
-            ->with(['primaryPosition', 'department'])
-            ->get();
+        $positions = Position::whereHas(
+            'department',
+            fn($q) =>
+            $q->where('organization_id', $user->organization_id)
+                ->where('status', 'active')
+        )
+            ->with(['users:id,first_name,last_name'])
+            ->get(['id', 'name', 'department_id'])
+            ->map(fn($p) => [
+                'id'            => $p->id,
+                'name'          => $p->name,
+                'department_id' => $p->department_id,
+                'user_id'       => $p->users->first()?->id,
+                'user_name'     => $p->users->first()?->full_name,
+            ]);
 
         return Inertia::render('letters/edit', [
-            'letter' => $letter,
-            'categories' => $categories,
-            'users' => $users,
-            'securityLevels' => $this->getSecurityLevels(),
-            'priorityLevels' => $this->getPriorityLevels(),
+            'letter'               => $letter->load('attachments'),
+            'departments'          => Department::where('organization_id', $user->organization_id)
+                ->where('status', 'active')->get(['id', 'name']),
+            'positions'            => $positions,
+            'externalOrganizations' => Organization::where('id', '!=', $user->organization_id)
+                ->where('status', 'active')->get(['id', 'name', 'code']),
+            'securityLevels'       => $this->getSecurityLevels(),
+            'priorityLevels'       => $this->getPriorityLevels(),
         ]);
     }
 
-    /**
-     * به‌روزرسانی نامه
-     */
-    public function update(Request $request, Letter $letter)
+    public function update(LetterRequest $request, Letter $letter)
     {
-        $currentUser = auth()->user();
+        $this->authorize('update', $letter);
 
-        if (!$letter->is_draft || $letter->created_by !== $currentUser->id) {
-            abort(403);
-        }
+        $letter->update($request->validated());
 
-        $validator = Validator::make($request->all(), [
-            'category_id' => 'nullable|exists:letter_categories,id',
-            'subject' => 'required|string|max:500',
-            'summary' => 'nullable|string',
-            'content' => 'nullable|string',
-            'security_level' => 'required|in:public,internal,confidential,secret,top_secret',
-            'priority' => 'required|in:low,normal,high,urgent,very_urgent',
-            'date' => 'nullable|date',
-            'due_date' => 'nullable|date|after_or_equal:date',
-            'sheet_count' => 'nullable|integer|min:1',
-        ]);
-
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
-        }
-
-        $letter->update([
-            'category_id' => $request->category_id,
-            'subject' => $request->subject,
-            'summary' => $request->summary,
-            'content' => $request->content,
-            'security_level' => $request->security_level,
-            'priority' => $request->priority,
-            'date' => $request->date,
-            'due_date' => $request->due_date,
-            'sheet_count' => $request->sheet_count,
-        ]);
-
-        return redirect()->route('letters.show', $letter->id)
-            ->with('success', 'نامه با موفقیت به‌روزرسانی شد.');
+        return redirect()
+            ->route('letters.show', $letter->id)
+            ->with('success', 'نامه به‌روزرسانی شد.');
     }
 
-    /**
-     * حذف نامه
-     */
+    // =========================================================
+    // DELETE / PUBLISH
+    // =========================================================
+
     public function destroy(Letter $letter)
     {
-        $currentUser = auth()->user();
-
-        if (!$currentUser->can(PermissionEnum::DELETE_LETTER->value)) {
-            abort(403);
-        }
+        $this->authorize('delete', $letter);
 
         $letter->delete();
 
-        return redirect()->route('letters.index')
-            ->with('success', 'نامه با موفقیت حذف شد.');
+        return redirect()->route('letters.index')->with('success', 'نامه حذف شد.');
     }
 
-    /**
-     * انتشار پیش‌نویس (تبدیل به نامه واقعی)
-     */
     public function publish(Letter $letter)
     {
-        $currentUser = auth()->user();
-
-        if (!$letter->is_draft || $letter->created_by !== $currentUser->id) {
-            abort(403);
-        }
+        $this->authorize('update', $letter);
 
         DB::beginTransaction();
-
         try {
             $letter->update([
-                'is_draft' => false,
+                'is_draft'      => false,
                 'letter_number' => $this->generateLetterNumber($letter->letter_type),
-                'final_status' => 'pending',
+                'final_status'  => 'pending',
             ]);
 
-            // ایجاد ارجاع
             if ($letter->recipient_user_id) {
                 $this->createRouting($letter, $letter->recipient_user_id);
             }
 
             LetterHistory::create([
-                'letter_id' => $letter->id,
+                'letter_id'   => $letter->id,
                 'action_type' => 'published',
-                'user_id' => $currentUser->id,
-                'ip_address' => request()->ip(),
+                'user_id'     => auth()->id(),
+                'ip_address'  => request()->ip(),
             ]);
 
             DB::commit();
 
-            return redirect()->route('letters.show', $letter->id)
-                ->with('success', 'نامه با موفقیت منتشر شد.');
+            return redirect()->route('letters.show', $letter->id)->with('success', 'نامه منتشر شد.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'خطا در انتشار نامه: ' . $e->getMessage());
+            return back()->with('error', 'خطا: ' . $e->getMessage());
         }
     }
 
+    // =========================================================
+    // ATTACHMENTS
+    // =========================================================
+
     public function downloadAttachment(Attachment $attachment)
     {
-        // dd($attachment->file_path);
+        $this->authorize('view', $attachment->letter);
 
-        if (!Storage::disk('public')->exists($attachment->file_path)) {
-            return back()->with('error', 'فایل یافت نشد.');
-        }
+        abort_unless(Storage::disk('public')->exists($attachment->file_path), 404);
 
         $attachment->incrementDownloadCount();
 
@@ -420,126 +389,76 @@ class LetterController extends Controller
 
     public function preview(Attachment $attachment)
     {
-        // if (!Storage::disk($attachment->disk)->exists($attachment->file_path)) {
-        //     abort(404);
-        // }
+        $this->authorize('view', $attachment->letter);
 
         return Storage::disk('public')->response(
             $attachment->file_path,
             $attachment->file_name,
-            [
-                'Content-Type' => $attachment->mime_type,
-            ]
+            ['Content-Type' => $attachment->mime_type]
         );
     }
 
-    // LetterController.php
+    // =========================================================
+    // REPLY
+    // =========================================================
 
-    /**
-     * نمایش فرم پاسخ به نامه
-     */
     public function replyForm(Letter $letter)
     {
-        $current_user = auth()->user();
-        if ($letter->receipent_user_id !== $current_user->id && !$current_user->can(PermissionEnum::APPROVE_LETTER->value)) {
-            abort(403);
-        }
+        $this->authorize('view', $letter);
 
-        return inertia('letters/LettersReply', [
-            'originalLetter' => $letter->load(['organization', 'attachments']),
-            'categories' => LetterCategory::all(),
-            'departments' => Department::all(),
-            'positions' => Position::with(['department', 'users'])->get(),
-            'externalOrganizations' => Organization::where('id', '!=', $current_user->organization_id)->get(),
-            'securityLevels' => $this->getSecurityLevels(),
-            'priorityLevels' => $this->getPriorityLevels(),
+        $user = auth()->user();
+
+        $positions = Position::whereHas(
+            'department',
+            fn($q) =>
+            $q->where('organization_id', $user->organization_id)->where('status', 'active')
+        )
+            ->with(['users:id,first_name,last_name'])
+            ->get(['id', 'name', 'department_id'])
+            ->map(fn($p) => [
+                'id'            => $p->id,
+                'name'          => $p->name,
+                'department_id' => $p->department_id,
+                'user_id'       => $p->users->first()?->id,
+                'user_name'     => $p->users->first()?->full_name,
+            ]);
+
+        return Inertia::render('letters/LettersReply', [
+            'originalLetter'       => $letter->load(['attachments', 'senderDepartment']),
+            'departments'          => Department::where('organization_id', $user->organization_id)
+                ->where('status', 'active')->get(['id', 'name']),
+            'positions'            => $positions,
+            'externalOrganizations' => Organization::where('id', '!=', $user->organization_id)
+                ->where('status', 'active')->get(['id', 'name', 'code']),
+            'securityLevels'       => $this->getSecurityLevels(),
+            'priorityLevels'       => $this->getPriorityLevels(),
         ]);
     }
 
-    /**
-     * ذخیره پاسخ نامه
-     */
     public function storeReply(LetterRequest $request, Letter $letter)
     {
+        $this->authorize('view', $letter);
+
         DB::beginTransaction();
-
         try {
-            $currentUser = Auth::user();
-
-            // ایجاد نامه پاسخ
-            $reply = new Letter();
-            $reply->organization_id = $currentUser->organization_id;
-            $reply->letter_type = $request->recipient_type === 'internal' ? 'internal' : 'external';
-            $reply->letter_number = $this->generateLetterNumber($reply->letter_type);
-            $reply->tracking_number = Letter::generateTrackingNumber();
-            $reply->security_level = $request->security_level;
-            $reply->priority = $request->priority;
-            $reply->category_id = $request->category_id;
-            $reply->subject = $request->subject;
-            $reply->content = $request->content;
-            $reply->date = $request->date;
-
-            // فرستنده (کاربر جاری)
-            $reply->sender_user_id = $currentUser->id;
-            $reply->sender_name = $currentUser->full_name;
-            $reply->sender_position_id = $currentUser->primaryPosition?->id;
-            $reply->sender_position_name = $currentUser->primaryPosition?->name;
-            $reply->sender_department_id = $currentUser->department?->id;
-
-            // گیرنده (از نامه اصلی)
-            $reply->recipient_organization_id = $request->recipient_organization_id;
-            $reply->recipient_department_id = $request->recipient_department_id;
-            $reply->recipient_position_id = $request->recipient_position_id;
-            $reply->recipient_user_id = $request->recipient_user_id;
-            $reply->recipient_name = $request->recipient_name;
-            $reply->recipient_position_name = $request->recipient_position_name;
-
-            // ارتباط با نامه اصلی
-            $reply->reply_to_letter_id = $letter->id;
-            $reply->parent_letter_id = $letter->parent_letter_id ?? $letter->id;
-            $reply->thread_id = $letter->thread_id;
-
-            $reply->is_draft = $request->is_draft;
-            $reply->final_status = $request->is_draft ? 'draft' : 'pending';
-            $reply->created_by = $currentUser->id;
-
-            $reply->save();
-
-            // آپلود پیوست‌ها
-            if ($request->has('attachments')) {
-                foreach ($request->file('attachments', []) as $file) {
-                    $path = $file->store("attachments/{$reply->id}", 'public');
-                    Attachment::create([
-                        'letter_id' => $reply->id,
-                        'user_id' => $currentUser->id,
-                        'file_name' => $file->getClientOriginalName(),
-                        'file_path' => $path,
-                        'file_size' => $file->getSize(),
-                        'mime_type' => $file->getMimeType(),
-                    ]);
-                }
-            }
+            $user  = Auth::user();
+            $reply = $this->letterService->createReply($request->validated(), $letter, $user);
 
             DB::commit();
 
-            $message = $reply->is_draft
-                ? 'پاسخ به عنوان پیش‌نویس ذخیره شد.'
-                : 'پاسخ با موفقیت ارسال شد.';
-
-            return redirect()->route('letters.show', $reply->id)->with('success', $message);
+            return redirect()
+                ->route('letters.show', $reply->id)
+                ->with('success', $reply->is_draft ? 'پیش‌نویس پاسخ ذخیره شد.' : 'پاسخ ارسال شد.');
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Reply creation failed:', ['error' => $e->getMessage()]);
-
-            return back()->with('error', 'خطا در ثبت پاسخ: ' . $e->getMessage())->withInput();
+            return back()->with('error', 'خطا: ' . $e->getMessage())->withInput();
         }
     }
 
-    // ============================================
-    // متدهای کمکی (Helpers)
-    // ============================================
+    // =========================================================
+    // HELPERS (private)
+    // =========================================================
 
-    // در کنترلر
     private function getPriorityLevels()
     {
         return collect(PriorityLevelEnum::cases())->mapWithKeys(fn($priority) => [
@@ -561,56 +480,31 @@ class LetterController extends Controller
             ]
         ]);
     }
-    private function generateLetterNumber($type): string
+
+    private function generateLetterNumber(string $type): string
     {
-        $year = now()->format('Y');
+        $codes = ['incoming' => 'IN', 'outgoing' => 'OUT', 'internal' => 'INT'];
+        $code  = $codes[$type] ?? strtoupper(substr($type, 0, 3));
+        $year  = now()->format('Y');
         $month = now()->format('m');
 
-        $typeCodes = [
-            'incoming' => 'IN',
-            'outgoing' => 'OUT',
-            'internal' => 'INT',
-        ];
+        $last = Letter::where('letter_type', $type)->whereYear('created_at', $year)->orderByDesc('id')->first();
+        $seq  = $last ? intval(substr($last->letter_number, -5)) + 1 : 1;
 
-        $code = $typeCodes[$type] ?? strtoupper(substr($type, 0, 3));
-
-        $lastLetter = Letter::where('letter_type', $type)
-            ->whereYear('created_at', $year)
-            ->orderBy('id', 'desc')
-            ->first();
-
-        $sequence = $lastLetter ? intval(substr($lastLetter->letter_number, -5)) + 1 : 1;
-
-        return sprintf("%s/%s/%s/%05d", $code, $year, $month, $sequence);
+        return sprintf('%s/%s/%s/%05d', $code, $year, $month, $seq);
     }
 
     private function createRouting(Letter $letter, int $toUserId, ?string $instruction = null): void
     {
         Routing::create([
-            'letter_id' => $letter->id,
+            'letter_id'   => $letter->id,
             'from_user_id' => auth()->id(),
-            'to_user_id' => $toUserId,
+            'to_user_id'  => $toUserId,
             'action_type' => $letter->letter_type === 'incoming' ? 'action' : 'approval',
             'instruction' => $instruction ?? 'لطفاً بررسی و اقدام لازم انجام شود.',
-            'deadline' => now()->addDays(7),
-            'status' => 'pending',
-            'step_order' => 1,
+            'deadline'    => now()->addDays(7),
+            'status'      => 'pending',
+            'step_order'  => 1,
         ]);
-    }
-
-    private function canViewLetter($user, Letter $letter): bool
-    {
-        if ($user->isSuperAdmin()) return true;
-        if ($user->isOrgAdmin()) {
-            return $user->organization_id === $letter->organization_id;
-        }
-        if ($user->isDeptManager()) {
-            return $user->department_id === $letter->sender_department_id ||
-                $user->department_id === $letter->recipient_department_id;
-        }
-        return $user->id === $letter->created_by ||
-            $user->id === $letter->sender_user_id ||
-            $user->id === $letter->recipient_user_id ||
-            $letter->routings()->where('to_user_id', $user->id)->exists();
     }
 }
