@@ -33,6 +33,7 @@ class Letter extends Model
         'sender_department_id',
         'sender_name',
         'sender_position_name',
+        'recipient_organization_id',
         'recipient_user_id',
         'recipient_position_id',
         'recipient_department_id',

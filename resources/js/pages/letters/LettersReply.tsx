@@ -52,14 +52,13 @@ export default function LettersReply({
     const { auth } = usePage().props as any;
     const currentUser = auth.user;
 
-    const isOriginalInternal = originalLetter.recipient_type === 'internal' ||
-        originalLetter.letter_type === 'internal';
+    const isOriginalInternal = originalLetter.letter_type === 'internal';
 
     const defaultRecipientType = isOriginalInternal ? 'internal' : 'external';
 
     const defaultRecipient = {
         type: defaultRecipientType,
-        organization_id: !isOriginalInternal ? originalLetter.sender_organization_id || originalLetter.organization_id : null,
+        organization_id: isOriginalInternal ? originalLetter.organization_id || originalLetter.recipient_organization_id : null,
         department_id: isOriginalInternal ? originalLetter.sender_department_id : null,
         position_id: isOriginalInternal ? originalLetter.sender_position_id : null,
         user_id: isOriginalInternal ? originalLetter.sender_user_id : null,
