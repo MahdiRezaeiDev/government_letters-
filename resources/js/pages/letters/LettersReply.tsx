@@ -172,7 +172,7 @@ export default function LettersReply({
                                         <p className="text-xs text-slate-400 mt-0.5">
                                             شماره: <span className="font-medium text-slate-500">{originalLetter.letter_number}</span>
                                             <span className="mx-1.5 text-slate-300">|</span>
-                                            تاریخ: {new Date(originalLetter.date).toLocaleDateString('fa-IR')}
+                                            تاریخ: <span dir='ltr'> {originalLetter.date}</span>
                                         </p>
                                     </div>
                                 </div>
@@ -383,7 +383,7 @@ export default function LettersReply({
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs text-slate-500">تاریخ:</span>
                                             <span className="text-xs font-medium text-slate-700">
-                                                {new Date(originalLetter.date).toLocaleDateString('fa-IR')}
+                                                {originalLetter.date}
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between">

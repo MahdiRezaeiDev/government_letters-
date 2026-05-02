@@ -527,7 +527,6 @@ class LetterController extends Controller
             $reply->sender_department_id = $currentUser->department?->id;
 
             // گیرنده (از نامه اصلی)
-            $reply->recipient_type = $request->recipient_type;
             $reply->recipient_organization_id = $request->recipient_organization_id;
             $reply->recipient_department_id = $request->recipient_department_id;
             $reply->recipient_position_id = $request->recipient_position_id;
