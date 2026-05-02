@@ -160,27 +160,6 @@ class LetterController extends Controller
     {
         $currentUser = auth()->user();
 
-        $type = $request->query('type', 'incoming');
-
-        // دسته‌بندی‌ها
-        $categories = LetterCategory::where('organization_id', $currentUser->organization_id)
-            ->where('status', true)
-            ->orderBy('sort_order')
-            ->get();
-
-        // کاربران سازمان (برای انتخاب فرستنده/گیرنده)
-        $users = User::where('organization_id', $currentUser->organization_id)
-            ->where('status', 'active')
-            ->where('id', '!=', $currentUser->id)
-            ->with(['primaryPosition', 'department'])
-            ->get()
-            ->map(fn($user) => [
-                'id' => $user->id,
-                'name' => $user->full_name,
-                'position' => $user->primaryPosition?->name,
-                'department' => $user->department?->name,
-            ]);
-
         // دپارتمان‌ها
         $departments = Department::where('organization_id', $currentUser->organization_id)
             ->where('status', 'active')
@@ -208,16 +187,8 @@ class LetterController extends Controller
             ->get(['id', 'name', 'code']);
 
         return Inertia::render('letters/create', [
-            'type' => $type,
-            'categories' => $categories,
-            'users' => $users,
             'departments' => $departments,
             'positions' => $positions,
-            'can' => [
-                'create' => $currentUser->can('create-letter-in-org'),
-                'edit' => $currentUser->can('edit-letter-in-org'),
-                'delete' => $currentUser->can('delete-letter-in-org'),
-            ],
             'externalOrganizations' => $externalOrganizations,
             'securityLevels' => $this->getSecurityLevels(),
             'priorityLevels' => $this->getPriorityLevels(),
@@ -289,20 +260,8 @@ class LetterController extends Controller
 
         return Inertia::render('letters/show', [
             'letter' => $letter,
-            'securityLevels' => [
-                'public' => 'عمومی',
-                'internal' => 'داخلی',
-                'confidential' => 'محرمانه',
-                'secret' => 'سری',
-                'top_secret' => 'بسیار سری',
-            ],
-            'priorityLevels' => [
-                'low' => 'کم',
-                'normal' => 'عادی',
-                'high' => 'مهم',
-                'urgent' => 'فوری',
-                'very_urgent' => 'خیلی فوری',
-            ],
+            'securityLevels' => $this->getSecurityLevels(),
+            'priorityLevels' => $this->getPriorityLevels(),
             'can' => [
                 'edit' => $currentUser->can(PermissionEnum::EDIT_LETTER->value),
                 'delete' => $currentUser->can(PermissionEnum::DELETE_LETTER->value),

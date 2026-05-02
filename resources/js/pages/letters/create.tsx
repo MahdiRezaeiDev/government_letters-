@@ -42,7 +42,6 @@ interface Props {
 }
 
 export default function LettersCreate({
-    categories,
     departments,
     positions,
     externalOrganizations = [],
