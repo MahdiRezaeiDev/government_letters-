@@ -381,6 +381,11 @@ class Letter extends Model
         });
     }
 
+    public function parent()
+    {
+        return $this->belongsTo(Letter::class, 'parent_letter_id');
+    }
+
     // ─── Boot ──────────────────────────────────────────────────
 
     protected static function boot()

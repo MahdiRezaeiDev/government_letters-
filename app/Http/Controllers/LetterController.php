@@ -18,6 +18,7 @@ use Inertia\Inertia;
 use App\Enums\PriorityLevelEnum;
 use App\Enums\SecurityLevelEnum;
 use App\Http\Requests\LetterRequest;
+use App\Models\User;
 use App\Services\LetterService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
@@ -43,25 +44,26 @@ class LetterController extends Controller
             'recipientDepartment',
             'senderUser',
             'recipientUser',
-        ]);
+            'views',
+            'replies' => function ($q) {
+                $q->select('id', 'parent_letter_id');
+            },
+        ])->withCount('replies'); // تعداد پاسخ‌ها
 
         // ── فیلتر بر اساس دسترسی کاربر ───────────────────────────────
         if ($user->isSuperAdmin()) {
-            // سوپر ادمین: همه نامه‌ها را می‌بیند
             if ($request->filled('organization_id')) {
                 $query->where('organization_id', $request->organization_id);
             }
         } elseif ($user->isOrgAdmin()) {
-            // ادمین سازمان: فقط نامه‌های سازمان خودش
             $query->where('organization_id', $user->organization_id);
         } elseif ($user->isDeptManager()) {
-            // مدیر دپارتمان: نامه‌هایی که دپارتمانش فرستنده یا گیرنده است
             $query->where(function ($q) use ($user) {
                 $q->where('sender_department_id', $user->department_id)
                     ->orWhere('recipient_department_id', $user->department_id);
             });
         } else {
-            // کاربر عادی: نامه‌هایی که مرتبط با اوست
+            // کاربر عادی: مکتوب‌هایی که مرتبط با اوست
             $query->where(function ($q) use ($user) {
                 $q->where('created_by', $user->id)
                     ->orWhere('sender_user_id', $user->id)
@@ -69,7 +71,6 @@ class LetterController extends Controller
                     ->orWhereHas('routings', function ($r) use ($user) {
                         $r->where('to_user_id', $user->id);
                     })
-                    // برای نامه‌های خارجی که نام کاربری ندارد
                     ->orWhere(function ($sub) use ($user) {
                         $sub->where('letter_type', 'external')
                             ->where('recipient_name', 'like', "%{$user->full_name}%");
@@ -94,27 +95,22 @@ class LetterController extends Controller
                 return $q->whereDate('date', '<=', $request->date_to);
             })
             ->when($request->filled('direction'), function ($q) use ($request) {
-                // فیلتر جهت نامه (ورودی/خروجی)
                 if ($request->direction === 'incoming') {
-                    return $q->where(function ($sub) use ($request) {
+                    return $q->where(function ($sub) {
                         $sub->where(function ($inner) {
-                            // نامه‌های داخلی: گیرنده کاربر فعلی
                             $inner->where('letter_type', 'internal')
                                 ->where('recipient_user_id', auth()->id());
                         })->orWhere(function ($inner) {
-                            // نامه‌های خارجی: گیرنده سازمان فعلی
                             $inner->where('letter_type', 'external')
                                 ->whereNull('recipient_user_id');
                         });
                     });
                 } elseif ($request->direction === 'outgoing') {
-                    return $q->where(function ($sub) use ($request) {
+                    return $q->where(function ($sub) {
                         $sub->where(function ($inner) {
-                            // نامه‌های داخلی: فرستنده کاربر فعلی
                             $inner->where('letter_type', 'internal')
                                 ->where('sender_user_id', auth()->id());
                         })->orWhere(function ($inner) {
-                            // نامه‌های خارجی: فرستنده کاربر فعلی
                             $inner->where('letter_type', 'external')
                                 ->where('sender_user_id', auth()->id());
                         });
@@ -140,42 +136,74 @@ class LetterController extends Controller
         // ── پاجینیشن ───────────────────────────────────────────
         $letters = $query->paginate(15);
 
-        // اضافه کردن قابلیت direction به فیلترها
+        // اضافه کردن اطلاعات نقش به هر مکتوب (اختیاری)
+        $letters->getCollection()->transform(function ($letter) use ($user) {
+            $letter->user_role = $this->getUserLetterRole($letter, $user);
+            return $letter;
+        });
+
         $filters = $request->only(['search', 'letter_type', 'status', 'priority', 'date_from', 'date_to', 'direction']);
 
         return Inertia::render('letters/index', [
-            'letters'    => $letters,
-            'categories' => LetterCategory::where('organization_id', $user->organization_id)
+            'letters'        => $letters,
+            'categories'     => LetterCategory::where('organization_id', $user->organization_id)
                 ->where('status', true)
                 ->get(),
-            'filters'    => $filters,
-            'can'        => [
-                'create' => $user->can('create', Letter::class),
+            'filters'        => $filters,
+            'can'            => [
+                'create' => $user->can('create'),
+                'edit'   => $user->can('edit', $user),
+                'delete' => $user->can('delete', $user),
             ],
-            'types'      => [
-                'internal' => 'نامه داخلی',
-                'external' => 'نامه خارجی'
+            'types'          => [
+                'internal' => 'مکتوب داخلی',
+                'external' => 'مکتوب خارجی'
             ],
-            'directions' => [
+            'directions'     => [
                 'all'      => 'همه',
-                'incoming' => 'نامه‌های دریافتی',
-                'outgoing' => 'نامه‌های ارسالی'
+                'incoming' => 'مکتوب‌های دریافتی',
+                'outgoing' => 'مکتوب‌های ارسالی'
             ],
-            'statuses'   => [
+            'statuses'       => [
                 'draft'    => 'پیش‌نویس',
                 'pending'  => 'در انتظار',
                 'approved' => 'تایید شده',
                 'rejected' => 'رد شده',
                 'archived' => 'بایگانی شده'
             ],
-            'priorities' => [
+            'priorities'     => [
                 'low'         => 'کم',
                 'normal'      => 'عادی',
                 'high'        => 'مهم',
                 'urgent'      => 'فوری',
                 'very_urgent' => 'خیلی فوری'
             ],
+            'currentUserId'  => $user->id, // مهم: برای تشخیص نقش در فرانت‌اند
+            'currentUserFullName' => $user->full_name, // برای جستجوی مکتوب‌های خارجی
         ]);
+    }
+
+    /**
+     * تعیین نقش مکتوب برای کاربر
+     */
+    private function getUserLetterRole(Letter $letter, User $user): string
+    {
+        if ($letter->sender_user_id === $user->id) {
+            return 'sent';
+        }
+        if ($letter->recipient_user_id === $user->id) {
+            return 'received';
+        }
+        if ($letter->created_by === $user->id && $letter->final_status === 'draft') {
+            return 'draft';
+        }
+        if ($letter->replied_by === $user->id) {
+            return 'replied';
+        }
+        if ($letter->parent_letter_id !== null) {
+            return 'reply';
+        }
+        return 'other';
     }
     // =========================================================
     // CREATE / STORE
@@ -324,7 +352,7 @@ class LetterController extends Controller
 
         return redirect()
             ->route('letters.show', $letter->id)
-            ->with('success', 'نامه به‌روزرسانی شد.');
+            ->with('success', 'مکتوب به‌روزرسانی شد.');
     }
 
     // =========================================================
@@ -337,7 +365,7 @@ class LetterController extends Controller
 
         $letter->delete();
 
-        return redirect()->route('letters.index')->with('success', 'نامه حذف شد.');
+        return redirect()->route('letters.index')->with('success', 'مکتوب حذف شد.');
     }
 
     public function publish(Letter $letter)
@@ -365,7 +393,7 @@ class LetterController extends Controller
 
             DB::commit();
 
-            return redirect()->route('letters.show', $letter->id)->with('success', 'نامه منتشر شد.');
+            return redirect()->route('letters.show', $letter->id)->with('success', 'مکتوب منتشر شد.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'خطا: ' . $e->getMessage());
