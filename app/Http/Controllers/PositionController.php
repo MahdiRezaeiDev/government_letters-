@@ -61,7 +61,7 @@ class PositionController extends Controller
 
         // لیست دپارتمان‌ها
         $query = Organization::where('status', 'active');
-        
+
         if ($user->isOrgAdmin()) {
             $query->where('id', $user->organization_id);
         }
@@ -158,17 +158,17 @@ class PositionController extends Controller
         }
 
         // لیست دپارتمان‌ها
-        $query = Department::with('organization')->where('status', 'active');
+        $query = Organization::where('status', 'active');
 
         if ($user->isOrgAdmin()) {
-            $query->where('organization_id', $user->organization_id);
+            $query->where('id', $user->organization_id);
         }
 
-        $departments = $query->get();
+        $organizations = $query->get();
 
         return Inertia::render('positions/edit', [
             'position'                  => $position->load('department'),
-            'departments'               => $departments,
+            'organizations'             => $organizations,
         ]);
     }
 

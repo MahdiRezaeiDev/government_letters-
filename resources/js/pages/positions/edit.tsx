@@ -1,36 +1,41 @@
 import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
-import {
-    Save, X, Briefcase, FileText,
-    CheckCircle, Crown, Users, Building2
-} from 'lucide-react';
-import { useMemo } from 'react';
+import axios from 'axios';
+import { Save, X, Briefcase, FileText, CheckCircle, Crown, Users, Building2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import FieldLabel from '@/components/ui/FieldLabel';
 import InputField from '@/components/ui/InputField';
 import SelectField from '@/components/ui/SelectField';
 import positions from '@/routes/positions';
-import type { Position, Department } from '@/types';
+import type { Position, Department, Organization } from '@/types';
 
 interface Props {
     position: Position;
-    departments: Department[];
+    organizations: Organization[];
 }
 
-// ─── Main Component ────────────────────────────────────────────────────────
-
-export default function PositionsEdit({ position, departments }: Props) {
+export default function PositionsEdit({ position, organizations }: Props) {
     const { data, setData, put, processing, errors } = useForm({
+        organization_id: position.organization_id || '',
         department_id: position.department_id,
         name: position.name,
         is_management: position.is_management,
         description: position.description || '',
     });
 
-    const selectedDeptName = useMemo(() => {
-        const dept = departments.find(d => d.id === Number(data.department_id));
+    const [departments, setDepartments] = useState<Department[]>([]);
 
-        return dept?.name || '';
-    }, [data.department_id, departments]);
+    useEffect(() => {
+        if (data.organization_id) {
+            axios.get('/organizations/departments', { params: { organization_id: data.organization_id } })
+                .then(res => {
+                    setDepartments(res.data.departments || []);
+                })
+                .catch(() => {
+                    setDepartments([]);
+                });
+        }
+    }, [data.organization_id]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -45,7 +50,7 @@ export default function PositionsEdit({ position, departments }: Props) {
 
             <div className="min-h-screen bg-slate-50/50" dir="rtl">
                 {/* Form Content */}
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6">
                     <form id="pos-form" onSubmit={handleSubmit}>
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -61,15 +66,20 @@ export default function PositionsEdit({ position, departments }: Props) {
                                         {/* Name & Department */}
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <FieldLabel required>نام وظیفه</FieldLabel>
-                                                <InputField
-                                                    icon={Briefcase}
-                                                    value={data.name}
-                                                    onChange={v => setData('name', v)}
-                                                    error={errors.name}
-                                                    placeholder="نام وظیفه را وارد کنید"
-                                                />
+                                                <FieldLabel required>وزارت مربوطه</FieldLabel>
+                                                <SelectField
+                                                    icon={Building2}
+                                                    value={data.organization_id}
+                                                    onChange={v => setData('organization_id', v)}
+                                                    error={errors.organization_id}
+                                                >
+                                                    <option value="">انتخاب کنید</option>
+                                                    {organizations.map(org => (
+                                                        <option key={org.id} value={org.id}>{org.name}</option>
+                                                    ))}
+                                                </SelectField>
                                             </div>
+
                                             <div>
                                                 <FieldLabel required>ریاست مربوطه</FieldLabel>
                                                 <SelectField
@@ -78,11 +88,23 @@ export default function PositionsEdit({ position, departments }: Props) {
                                                     onChange={v => setData('department_id', v)}
                                                     error={errors.department_id}
                                                 >
+                                                    <option value="">انتخاب کنید</option>
                                                     {departments.map(dept => (
                                                         <option key={dept.id} value={dept.id}>{dept.name}</option>
                                                     ))}
                                                 </SelectField>
                                             </div>
+                                        </div>
+
+                                        <div>
+                                            <FieldLabel required>نام وظیفه</FieldLabel>
+                                            <InputField
+                                                icon={Briefcase}
+                                                value={data.name}
+                                                onChange={v => setData('name', v)}
+                                                error={errors.name}
+                                                placeholder="نام وظیفه را وارد کنید"
+                                            />
                                         </div>
 
                                         {/* Type Selection */}
@@ -174,54 +196,6 @@ export default function PositionsEdit({ position, departments }: Props) {
 
                             {/* Sidebar */}
                             <div className="space-y-6">
-
-                                {/* Preview Card */}
-                                <div className="bg-white rounded-xl border border-slate-200 shadow-sm sticky top-24">
-                                    <div className="px-6 py-4 border-b border-slate-100">
-                                        <h3 className="font-semibold text-slate-900">پیش‌نمایش</h3>
-                                    </div>
-                                    <div className="p-6">
-                                        <div className="space-y-4">
-                                            <div className="p-4 bg-violet-50 rounded-lg border border-violet-100">
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <Briefcase className="h-4 w-4 text-violet-500" />
-                                                    <span className="text-sm font-medium text-violet-700">
-                                                        {data.name || position.name}
-                                                    </span>
-                                                </div>
-                                                <div className="space-y-2 text-xs">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-slate-500">ریاست:</span>
-                                                        <span className="text-slate-700">{selectedDeptName}</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between pt-2 border-t border-violet-100">
-                                                        <span className="text-slate-500">نوع:</span>
-                                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${data.is_management
-                                                            ? 'bg-amber-100 text-amber-700'
-                                                            : 'bg-slate-100 text-slate-600'
-                                                            }`}>
-                                                            {data.is_management ? (
-                                                                <Crown className="h-3 w-3" />
-                                                            ) : (
-                                                                <Users className="h-3 w-3" />
-                                                            )}
-                                                            {data.is_management ? 'مدیریتی' : 'عملیاتی'}
-                                                        </span>
-                                                    </div>
-                                                    {data.description && (
-                                                        <div className="pt-2 border-t border-violet-100">
-                                                            <span className="text-slate-500 block mb-1">توضیحات:</span>
-                                                            <p className="text-slate-600 leading-relaxed line-clamp-3">
-                                                                {data.description}
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
                                 {/* Tips Card */}
                                 <div className="bg-violet-50/50 rounded-xl border border-violet-100 p-5">
                                     <h4 className="text-sm font-semibold text-violet-900 mb-3">نکات مهم</h4>
@@ -244,23 +218,23 @@ export default function PositionsEdit({ position, departments }: Props) {
                         </div>
 
                         {/* Mobile Actions */}
-                        <div className="bg-white p-4">
+                        <div className="bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 z-20">
                             <div className="flex gap-3 max-w-5xl mx-auto">
                                 <button
                                     type="submit"
                                     disabled={processing}
                                     className="cursor-pointer flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 rounded-lg transition-colors disabled:opacity-50 shadow-sm"
                                 >
-                                    <Save className="h-4 w-4" />
                                     {processing ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
+                                    <Save className="h-4 w-4" />
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => router.get(positions.index())}
                                     className="cursor-pointer flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-slate-700 bg-slate-200 hover:bg-slate-200 rounded-lg transition-colors"
                                 >
-                                    <X className="h-4 w-4" />
                                     انصراف
+                                    <X className="h-4 w-4" />
                                 </button>
                             </div>
                         </div>
