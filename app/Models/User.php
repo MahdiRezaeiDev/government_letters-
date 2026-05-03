@@ -213,7 +213,7 @@ class User extends Authenticatable
     }
     public function isDeptManager(): bool
     {
-        return $this->hasRole('dep-admin');
+        return $this->hasRole('dept-manager');
     }
 
     // بررسی دسترسی به یک سازمان خاص

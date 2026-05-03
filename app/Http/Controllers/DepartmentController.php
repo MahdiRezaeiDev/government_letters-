@@ -24,8 +24,7 @@ class DepartmentController extends Controller
         // فیلتر بر اساس سازمان (برای ادمین سازمان)
         if ($user->isOrgAdmin() || $user->isDeptManager()) {
             $query->where('organization_id', $user->organization_id);
-        }
-         elseif ($request->has('organization_id') && $user->isSuperAdmin()) {
+        } elseif ($request->has('organization_id') && $user->isSuperAdmin()) {
             $query->where('organization_id', $request->organization_id);
         }
 
@@ -172,8 +171,8 @@ class DepartmentController extends Controller
             'department' => $department,
             'stats' => $stats,
             'can' => [
-                'edit' => true,
-                'delete' => true
+                'edit' => $user->can(PermissionEnum::EDIT_DEPARTMENT),
+                'delete' => $user->can(PermissionEnum::DELETE_DEPARTMENT)
             ],
         ]);
     }
