@@ -93,125 +93,12 @@ const formatSize = (bytes: number): string => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 };
 
-const isImage = (mime?: string, name?: string): boolean => {
-    if (mime?.startsWith('image/')) {
-        return true;
-    }
 
-    const ext = name?.split('.').pop()?.toLowerCase();
 
-    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext || '');
-};
 
-const isPdf = (mime?: string, name?: string): boolean => {
-    if (mime === 'application/pdf') {
-        return true;
-    }
-
-    return name?.toLowerCase().endsWith('.pdf') || false;
-};
-
-const getDownloadUrl = (id: number) => `/attachments/${id}/download`;
 
 // ─── Attachment Preview Modal (Compact) ─────────────────────────────────────
-function AttachmentPreviewModal({ att, onClose }: { att: Attachment; onClose: () => void }) {
-    const previewUrl = `/attachments/${att.id}/preview`;
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                onClose();
-            }
-        };
-        document.addEventListener('keydown', handleKeyDown);
-        document.body.style.overflow = 'hidden';
-
-        return () => {
-            document.removeEventListener('keydown', handleKeyDown);
-            document.body.style.overflow = '';
-        };
-    }, [onClose]);
-
-    const renderContent = () => {
-        if (isImage(att.mime_type, att.file_name)) {
-            return (
-                <img
-                    src={previewUrl}
-                    alt={att.file_name}
-                    className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
-                />
-            );
-        }
-
-        if (isPdf(att.mime_type, att.file_name)) {
-            return (
-                <iframe
-                    src={`${previewUrl}#toolbar=1`}
-                    title={att.file_name}
-                    className="w-full h-[80vh] rounded-lg shadow-2xl"
-                />
-            );
-        }
-
-        return (
-            <div className="text-center p-12">
-                <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">پیش‌نمایش این فایل ممکن نیست</p>
-                <a
-                    href={getDownloadUrl(att.id)}
-                    download
-                    className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
-                >
-                    <Download className="h-4 w-4" /> دانلود فایل
-                </a>
-            </div>
-        );
-    };
-
-    return (
-        <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-            onClick={onClose}
-        >
-            <div
-                className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-            >
-                {/* Header */}
-                <div className="flex items-center justify-between px-5 py-3 border-b bg-gray-50">
-                    <div className="flex items-center gap-3 min-w-0">
-                        <FileText className="h-5 w-5 text-gray-400 flex-shrink-0" />
-                        <div className="min-w-0">
-                            <p className="text-sm font-semibold text-gray-800 truncate">{att.file_name}</p>
-                            <p className="text-xs text-gray-400">{formatSize(att.file_size)}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <a
-                            href={getDownloadUrl(att.id)}
-                            download
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                            title="دانلود"
-                        >
-                            <Download className="h-4 w-4" />
-                        </a>
-                        <button
-                            onClick={onClose}
-                            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
-                        >
-                            <X className="h-4 w-4" />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-4 bg-gray-100 flex items-center justify-center min-h-[300px]">
-                    {renderContent()}
-                </div>
-            </div>
-        </div>
-    );
-}
 
 // ─── Attachment List Component ───────────────────────────────────────────────
 function AttachmentList({ attachments, onPreview }: {

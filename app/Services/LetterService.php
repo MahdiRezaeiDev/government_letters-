@@ -269,10 +269,8 @@ class LetterService
             'parent_letter_id'   => $original->id, // نامه والد
             'reply_to_letter_id' => $original->id, // نامه‌ای که مستقیماً به آن پاسخ داده شده
             'thread_id'          => $threadId,      // شناسه زنجیره گفتگو
-
-            'is_draft'           => $data['is_draft'] ?? false,
-            'final_status'       => ($data['is_draft'] ?? false) ? 'draft' : 'pending',
-            'created_by'         => $creator->id,
+            'reply_at'           => $data['date'] ?? now(),
+            'replied_by'         => $creator->id,
         ]);
     }
 
