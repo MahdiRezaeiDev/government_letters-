@@ -22,9 +22,10 @@ class DepartmentController extends Controller
         $query = Department::with(['organization', 'parent', 'managerPosition']);
 
         // فیلتر بر اساس سازمان (برای ادمین سازمان)
-        if ($user->isOrgAdmin()) {
+        if ($user->isOrgAdmin() || $user->isDeptManager()) {
             $query->where('organization_id', $user->organization_id);
-        } elseif ($request->has('organization_id') && $user->isSuperAdmin()) {
+        }
+         elseif ($request->has('organization_id') && $user->isSuperAdmin()) {
             $query->where('organization_id', $request->organization_id);
         }
 

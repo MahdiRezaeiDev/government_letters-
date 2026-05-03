@@ -1,26 +1,40 @@
 import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
+import axios from 'axios';
 import { Save, X, Briefcase, FileText, CheckCircle, Crown, Users, Building2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import FieldLabel from '@/components/ui/FieldLabel';
 import InputField from '@/components/ui/InputField';
 import SelectField from '@/components/ui/SelectField';
 import positions from '@/routes/positions';
-import type { Department } from '@/types';
+import type { Department, Organization } from '@/types';
 
 interface Props {
-    departments: Department[];
+    organizations: Organization[];
     selectedDepartment?: number;
 }
 
 // ─── Main Component ────────────────────────────────────────────────────────
 
-export default function PositionsCreate({ departments, selectedDepartment }: Props) {
+export default function PositionsCreate({ organizations, selectedDepartment }: Props) {
     const { data, setData, post, processing, errors, reset } = useForm({
-        department_id: selectedDepartment || departments[0]?.id || '',
+        organization_id: '',
+        department_id: '',
         name: '',
         is_management: false,
         description: '',
     });
+
+    const [departments, setDepartments] = useState([]);
+    useEffect(() => {
+        axios.get('/organizations/departments', { params: { organization_id: data.organization_id } })
+            .then(res => {
+                setDepartments(res.data.departments || []);
+            })
+            .catch(() => {
+                setDepartments([]);
+            });
+    }, [data.organization_id]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -65,10 +79,26 @@ export default function PositionsCreate({ departments, selectedDepartment }: Pro
                                                 <FieldLabel required>ریاست مربوطه</FieldLabel>
                                                 <SelectField
                                                     icon={Building2}
+                                                    value={data.organization_id}
+                                                    onChange={v => setData('organization_id', v)}
+                                                    error={errors.organization_id}
+                                                >
+                                                    <option>انتخاب کنید</option>
+                                                    {organizations.map(dept => (
+                                                        <option key={dept.id} value={dept.id}>{dept.name}</option>
+                                                    ))}
+                                                </SelectField>
+                                            </div>
+
+                                            <div>
+                                                <FieldLabel required>ریاست مربوطه</FieldLabel>
+                                                <SelectField
+                                                    icon={Building2}
                                                     value={data.department_id}
                                                     onChange={v => setData('department_id', v)}
                                                     error={errors.department_id}
                                                 >
+                                                    <option>انتخاب کنید</option>
                                                     {departments.map(dept => (
                                                         <option key={dept.id} value={dept.id}>{dept.name}</option>
                                                     ))}
