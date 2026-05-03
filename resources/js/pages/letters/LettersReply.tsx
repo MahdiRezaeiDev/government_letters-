@@ -43,14 +43,12 @@ interface Props {
 }
 
 export default function LettersReply({
-    departments,
     positions,
     securityLevels,
     priorityLevels,
     originalLetter,
 }: Props) {
     const { auth } = usePage().props as any;
-    const currentUser = auth.user;
 
     const isOriginalInternal = originalLetter.letter_type === 'internal';
 
@@ -85,36 +83,6 @@ export default function LettersReply({
         reply_to_letter_id: originalLetter.id,
         parent_letter_id: originalLetter.parent_letter_id || originalLetter.id,
     });
-
-    const [availablePositions, setAvailablePositions] = useState<{
-        id: number; name: string; user_id?: number; user_name?: string;
-    }[]>([]);
-    const [extDepartments, setExtDepartments] = useState<{ id: number; name: string }[]>([]);
-    const [loadingPositions, setLoadingPositions] = useState(false);
-    const [loadingExtDepts, setLoadingExtDepts] = useState(false);
-
-    useEffect(() => {
-        if (data.recipient_type === 'external' && data.recipient_organization_id && !extDepartments.length) {
-            setLoadingExtDepts(true);
-            axios.get('/organizations/departments', { params: { organization_id: data.recipient_organization_id } })
-                .then(res => {
-                    setExtDepartments(res.data.departments || []); setLoadingExtDepts(false);
-                })
-                .catch(() => {
-                    setExtDepartments([]); setLoadingExtDepts(false);
-                });
-        }
-    }, [data.recipient_type, data.recipient_organization_id]);
-
-    useEffect(() => {
-        if (data.recipient_department_id && data.recipient_type === 'internal') {
-            setLoadingPositions(true);
-            setAvailablePositions(positions.filter(p => p.department_id === data.recipient_department_id));
-            setLoadingPositions(false);
-        } else {
-            setAvailablePositions([]);
-        }
-    }, [data.recipient_department_id, data.recipient_type, positions]);
 
     const handleSubmit = (e: React.FormEvent, isDraft: boolean) => {
         e.preventDefault();

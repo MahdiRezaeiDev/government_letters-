@@ -37,7 +37,7 @@ class LetterPolicy
 
         // ادمین سازمان می‌تواند نامه‌های سازمان خود را ببیند
         if ($user->isOrgAdmin()) {
-            return $letter->organization_id === $user->organization_id;
+            return $letter->organization_id === $user->organization_id || $letter->recipient_organization_id  === $user->organization_id;
         }
 
         // مدیر دپارتمان می‌تواند نامه‌های دپارتمان خود را ببیند
@@ -137,7 +137,7 @@ class LetterPolicy
 
         if ($letter->letter_type === 'external') {
             // نامه خارجی: فرستنده می‌تواند پاسخ دهد
-            return $letter->sender_user_id === $user->id;
+            return $letter->recipient_user_id === $user->id;
         }
 
         return false;

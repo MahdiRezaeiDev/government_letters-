@@ -56,7 +56,8 @@ class LetterController extends Controller
                 $query->where('organization_id', $request->organization_id);
             }
         } elseif ($user->isOrgAdmin()) {
-            $query->where('organization_id', $user->organization_id);
+            $query->where('organization_id', $user->organization_id)
+            ->orWhere('recipient_organization_id', $user->organization_id);
         } elseif ($user->isDeptManager()) {
             $query->where(function ($q) use ($user) {
                 $q->where('sender_department_id', $user->department_id)

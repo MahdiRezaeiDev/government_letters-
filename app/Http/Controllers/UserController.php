@@ -166,7 +166,7 @@ class UserController extends Controller
             $currentUserRoleLevel = $roleHierarchy[$currentUser->roles->first()->name] ?? 0;
             $targetRoleLevel = $roleHierarchy[$request->role] ?? 0;
 
-            if ($targetRoleLevel > $currentUserRoleLevel) {
+            if ($targetRoleLevel >= $currentUserRoleLevel) {
                 return back()->withErrors(['role' => 'شما نمی‌توانید نقشی بالاتر از نقش خود تخصیص دهید.'])->withInput();
             }
         }
