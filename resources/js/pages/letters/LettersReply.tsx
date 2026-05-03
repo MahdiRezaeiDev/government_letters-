@@ -1,11 +1,9 @@
 import { Head, usePage } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
-import axios from 'axios';
 import {
     Save, Paperclip, Send, Trash2, FileText, Shield,
     UserCheck, Info, Loader2, PenLine, CornerUpLeft
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
 import PersianDatePicker from '@/components/PersianDatePicker';
 import TextEditor from '@/components/TextEditor';
 import LetterRoute from '@/routes/letters';
@@ -50,7 +48,7 @@ export default function LettersReply({
 }: Props) {
     const { auth } = usePage().props as any;
 
-    const isOriginalInternal = originalLetter.letter_type === 'internal';
+    const isOriginalInternal = true;
 
     const defaultRecipientType = isOriginalInternal ? 'internal' : 'external';
 
@@ -83,6 +81,9 @@ export default function LettersReply({
         reply_to_letter_id: originalLetter.id,
         parent_letter_id: originalLetter.parent_letter_id || originalLetter.id,
     });
+
+    console.log(defaultRecipient);
+    
 
     const handleSubmit = (e: React.FormEvent, isDraft: boolean) => {
         e.preventDefault();

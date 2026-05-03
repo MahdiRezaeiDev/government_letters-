@@ -9,7 +9,6 @@ use App\Models\Department;
 use App\Models\Attachment;
 use App\Models\Routing;
 use App\Models\LetterHistory;
-use App\Models\ArchiveCase;
 use App\Models\Organization;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
