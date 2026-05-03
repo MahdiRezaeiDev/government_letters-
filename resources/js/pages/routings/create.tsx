@@ -78,7 +78,7 @@ export default function RoutingsCreate({ letter, departments, positions, users =
     const handleSubmit = (e: React.FormEvent, isDraft: boolean = false) => {
         e.preventDefault();
 
-        post(route('routings.store'), {
+        post(router('routings.store'), {
             preserveScroll: true,
             onSuccess: () => {
                 // نمایش پیام موفقیت
@@ -100,7 +100,7 @@ export default function RoutingsCreate({ letter, departments, positions, users =
                         <div className="flex items-center justify-between h-16">
                             <div className="flex items-center gap-4">
                                 <button
-                                    onClick={() => router.get(route('letters.show', letter.id))}
+                                    onClick={() => router.get(router('letters.show', letter.id))}
                                     className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                                 >
                                     <ChevronLeft className="h-5 w-5" />
