@@ -66,17 +66,7 @@ export default function PositionsCreate({ organizations, selectedDepartment }: P
                                         {/* Name & Department */}
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <FieldLabel required>نام وظیفه</FieldLabel>
-                                                <InputField
-                                                    icon={Briefcase}
-                                                    value={data.name}
-                                                    onChange={v => setData('name', v)}
-                                                    error={errors.name}
-                                                    placeholder="نام وظیفه را وارد کنید"
-                                                />
-                                            </div>
-                                            <div>
-                                                <FieldLabel required>ریاست مربوطه</FieldLabel>
+                                                <FieldLabel required>وزارت مربوطه</FieldLabel>
                                                 <SelectField
                                                     icon={Building2}
                                                     value={data.organization_id}
@@ -103,6 +93,16 @@ export default function PositionsCreate({ organizations, selectedDepartment }: P
                                                         <option key={dept.id} value={dept.id}>{dept.name}</option>
                                                     ))}
                                                 </SelectField>
+                                            </div>
+                                            <div>
+                                                <FieldLabel required>نام وظیفه</FieldLabel>
+                                                <InputField
+                                                    icon={Briefcase}
+                                                    value={data.name}
+                                                    onChange={v => setData('name', v)}
+                                                    error={errors.name}
+                                                    placeholder="نام وظیفه را وارد کنید"
+                                                />
                                             </div>
                                         </div>
 

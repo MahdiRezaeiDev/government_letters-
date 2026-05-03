@@ -9,7 +9,7 @@ import { useState, useMemo } from 'react';
 
 // مسیرها
 import { dashboard } from '@/routes';
-import { index as archivesIndex, permissions } from '@/routes/archives';
+import { index as archivesIndex } from '@/routes/archives';
 import { index as cartableIndex } from '@/routes/cartable';
 import { index as categoriesIndex } from '@/routes/categories';
 import { index as departmentsIndex } from '@/routes/departments';
@@ -51,8 +51,8 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             children: [
                 { title: 'وزارت‌خانه‌ها', href: organizationsIndex(), icon: Building2, permission: 'super-admin' },
                 { title: 'ریاست‌ها', href: departmentsIndex(), icon: Sitemap, permission: 'org-admin' },
-                { title: 'بست‌های شغلی', href: positions.index(), icon: Briefcase },
-                { title: 'مدیریت کاربران', href: usersIndex(), icon: Users },
+                { title: 'بست‌های شغلی', href: positions.index(), icon: Briefcase, permission: 'dept-manager' },
+                { title: 'مدیریت کاربران', href: usersIndex(), icon: Users, permission: 'dept-manager' },
                 { title: 'طبقه‌بندی مکاتیب', href: categoriesIndex(), icon: FolderTree },
             ],
         },

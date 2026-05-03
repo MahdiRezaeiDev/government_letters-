@@ -61,9 +61,9 @@ class PositionController extends Controller
 
         // لیست دپارتمان‌ها
         $query = Organization::where('status', 'active');
-
+        
         if ($user->isOrgAdmin()) {
-            $query->where('organization_id', $user->organization_id);
+            $query->where('id', $user->organization_id);
         }
 
         $organizations = $query->get();
