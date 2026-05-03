@@ -144,6 +144,8 @@ enum PermissionEnum: string
             self::VIEW_CASES->value,
             self::VIEW_REPORTS->value,
             self::VIEW_POSITIONS->value,
+            self::CREATE_POSITION,
+            self::EDIT_POSITION,
             self::VIEW_CATEGORIES->value,
         ];
     }

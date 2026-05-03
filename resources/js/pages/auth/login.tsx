@@ -1,11 +1,10 @@
 // resources/js/pages/auth/login.tsx
 
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import { Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
 import type { FormEventHandler } from 'react';
 import { useState } from 'react';
 import { login } from '@/routes';
-import password from '@/routes/password';
 
 export default function Login() {
     const [showPassword, setShowPassword] = useState(false);
@@ -18,7 +17,7 @@ export default function Login() {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(login());
+        post(login().url);
     };
 
     return (
