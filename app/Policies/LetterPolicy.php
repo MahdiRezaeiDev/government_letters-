@@ -142,4 +142,34 @@ class LetterPolicy
 
         return false;
     }
+
+    public function delegate(User $user, Letter $letter): bool
+    {
+        // 1. فقط گیرنده اصلی می‌تواند ارجاع دهد
+        if ($user->id !== $letter->recipient_user_id) {
+            return false;
+        }
+
+        // 2. مکتوب نباید قبلاً ارجاع شده باشد
+        if ($letter->delegated_to_user_id !== null) {
+            return false;
+        }
+
+        // 3. مکتوب نباید در وضعیت پیش‌نویس باشد
+        if ($letter->final_status === 'draft') {
+            return false;
+        }
+
+        // 4. مکتوب نباید بایگانی شده باشد
+        if ($letter->final_status === 'archived') {
+            return false;
+        }
+
+        // 7. (اختیاری) بررسی کنید که آیا ارجاع فعال قبلی وجود دارد
+        if ($letter->delegations()->whereIn('status', ['pending', 'accepted'])->exists()) {
+            return false;
+        }
+
+        return true;
+    }
 }

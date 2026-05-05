@@ -267,15 +267,21 @@ class LetterController extends Controller
             'ip_address' => request()->ip(),
         ]);
 
-        // دریافت لیست کاربران برای ارجاع (به جز خود کاربر)
-        $users = \App\Models\User::where('id', '!=', $user->id)
-            ->with(['position', 'department'])
-            ->get(['id', 'first_name', 'last_name', 'position_id', 'department_id'])
+        $users = User::where('id', '!=', $user->id)
+            ->with(['positions' => function ($q) {
+                $q->wherePivot('is_primary', 1)  // فقط پوزیشن اصلی
+                    ->with('department');         // بارگذاری دپارتمان پوزیشن
+            }])
+            ->get(['id', 'first_name', 'last_name'])
             ->map(fn($u) => [
                 'id' => $u->id,
                 'full_name' => $u->full_name,
-                'position' => $u->position ? ['name' => $u->position->name] : null,
-                'department' => $u->department ? ['name' => $u->department->name] : null,
+                'position' => $u->positions->first() ? [
+                    'name' => $u->positions->first()->name,
+                    'department' => $u->positions->first()->department ? [
+                        'name' => $u->positions->first()->department->name
+                    ] : null
+                ] : null,
             ]);
 
         return Inertia::render('letters/show', [

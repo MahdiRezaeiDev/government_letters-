@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
-    Archive, Send, Clock, CheckCircle, XCircle, CornerUpLeft,
+    Send, Clock, CheckCircle, XCircle, CornerUpLeft,
     CornerUpRight, UserCheck
 } from 'lucide-react';
 import { useState } from 'react';
@@ -143,10 +143,7 @@ export default function LettersShow({
             },
             onError: () => setLoading(false),
         });
-    };
-
-    console.log(can);
-    
+    };    
 
     return (
         <>

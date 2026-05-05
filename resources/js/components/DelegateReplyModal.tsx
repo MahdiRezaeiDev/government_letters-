@@ -1,8 +1,7 @@
-// resources/js/components/DelegateReplyModal.tsx
-
-import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import { X, Send, UserPlus, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import letters from '@/routes/letters';
 
 interface User {
     id: number;
@@ -37,21 +36,23 @@ export function DelegateReplyModal({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    if (!isOpen) return null;
+    if (!isOpen) {
+        return null;
+    }
 
-    // فیلتر کردن کاربر فعلی از لیست (نمی‌تواند به خودش ارجاع دهد)
     const availableUsers = users.filter(user => user.id !== currentUserId);
 
     const handleDelegate = () => {
         if (!selectedUserId) {
             setError('لطفاً شخص مورد نظر را انتخاب کنید');
+
             return;
         }
 
         setError(null);
         setIsSubmitting(true);
 
-        router.post(route('letters.delegate', { letter: letterId }), {
+        router.post(letters.delegate({ letter: letterId }), {
             delegated_to_user_id: selectedUserId,
             delegated_note: delegatedNote
         }, {
@@ -63,6 +64,7 @@ export function DelegateReplyModal({
             },
             onError: (errors) => {
                 setIsSubmitting(false);
+
                 if (errors.delegated_to_user_id) {
                     setError(errors.delegated_to_user_id);
                 } else {
