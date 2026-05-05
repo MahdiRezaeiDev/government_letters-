@@ -1,6 +1,6 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
-    Archive, Send, Printer, Clock, CheckCircle, XCircle, CornerUpLeft,
+    Archive, Send, Clock, CheckCircle, XCircle, CornerUpLeft,
     CornerUpRight, UserCheck
 } from 'lucide-react';
 import { useState } from 'react';
@@ -70,7 +70,10 @@ const ACTION_LABELS: Record<string, string> = {
 
 // ─── Helper Functions ────────────────────────────────────────────────────────
 const formatDate = (dateString: string | undefined): string => {
-    if (!dateString) return '—';
+    if (!dateString) {
+        return '—';
+    }
+
     return new Date(dateString).toLocaleDateString('fa-Af', {
         year: 'numeric',
         month: 'long',
@@ -101,35 +104,49 @@ export default function LettersShow({
     const [showDelegateModal, setShowDelegateModal] = useState(false);
 
     const status = STATUS_CONFIG[letter.final_status] || STATUS_CONFIG.pending;
+    const currentUser = usePage().props.auth.user;
 
     // بررسی ارجاع فعال به کاربر فعلی
     const activeDelegation = letter.delegations?.find(
-        (d: any) => d.delegated_to_user_id === (window as any).__page?.props?.auth?.user?.id
+        (d: any) => d.delegated_to_user_id === currentUser.id
             && d.status === 'pending'
     );
-    const isDelegatedToMe = !!activeDelegation;
 
-    // بررسی اینکه کاربر فعلی ارجاع دهنده است
-    const isDelegatedByMe = letter.delegated_by_user_id === (window as any).__page?.props?.auth?.user?.id;
+    const isDelegatedToMe = !!activeDelegation;
+    const isDelegatedByMe = letter.delegated_by_user_id === currentUser.id;
 
     const handleApprove = () => {
-        if (!confirm('آیا از تایید این نامه اطمینان دارید؟')) return;
+        if (!confirm('آیا از تایید این نامه اطمینان دارید؟')) {
+            return;
+        }
+
         setLoading(true);
         router.post(letters.approve({ letter: letter.id }), {}, {
-            onSuccess: () => { setLoading(false); router.reload(); },
+            onSuccess: () => {
+                setLoading(false); router.reload();
+            },
             onError: () => setLoading(false),
         });
     };
 
     const handleReject = () => {
         const reason = prompt('لطفاً دلیل رد را وارد کنید:');
-        if (!reason) return;
+
+        if (!reason) {
+            return;
+        }
+
         setLoading(true);
         router.post(letters.reject({ letter: letter.id }), { reason }, {
-            onSuccess: () => { setLoading(false); router.reload(); },
+            onSuccess: () => {
+                setLoading(false); router.reload();
+            },
             onError: () => setLoading(false),
         });
     };
+
+    console.log(can);
+    
 
     return (
         <>
@@ -164,7 +181,7 @@ export default function LettersShow({
                     )}
 
                     {/* بنر ارجاع داده شده توسط من */}
-                    {isDelegatedByMe && !isDelegatedToMe && (
+                    {isDelegatedByMe && (
                         <div className="mb-4 bg-blue-50 border-r-4 border-r-blue-400 rounded-xl p-4">
                             <div className="flex items-center gap-2">
                                 <CornerUpRight className="h-5 w-5 text-blue-600" />
@@ -199,7 +216,7 @@ export default function LettersShow({
                             {/* Action Buttons */}
                             <div className="flex items-center gap-1.5 flex-wrap">
                                 {/* دکمه ارجاع برای پاسخ - فقط برای گیرنده اصلی */}
-                                {can.delegate && letter.recipient_user_id === (window as any).__page?.props?.auth?.user?.id && !isDelegatedByMe && (
+                                {can.delegate && !isDelegatedByMe && (
                                     <button
                                         onClick={() => setShowDelegateModal(true)}
                                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
@@ -226,7 +243,7 @@ export default function LettersShow({
                                     </Link>
                                 )}
 
-                                {can.archive && letter.final_status === 'approved' && (
+                                {/* {can.archive && letter.final_status === 'approved' && (
                                     <button
                                         onClick={() => {
                                             router.post(letters.show({ letter: letter.id }), {
@@ -237,7 +254,7 @@ export default function LettersShow({
                                     >
                                         <Archive className="h-3.5 w-3.5" /> بایگانی
                                     </button>
-                                )}
+                                )} */}
 
                                 {can.route && letter.final_status === 'pending' && (
                                     <Link
@@ -459,8 +476,8 @@ export default function LettersShow({
                                                 )}
                                             </div>
                                             <span className={`text-xs px-2 py-1 rounded-full ${delegation.status === 'replied' ? 'bg-emerald-100 text-emerald-700' :
-                                                    delegation.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                                                        'bg-gray-100 text-gray-600'
+                                                delegation.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                                    'bg-gray-100 text-gray-600'
                                                 }`}>
                                                 {delegation.status === 'replied' ? 'پاسخ داده شد' :
                                                     delegation.status === 'pending' ? 'در انتظار' : delegation.status}

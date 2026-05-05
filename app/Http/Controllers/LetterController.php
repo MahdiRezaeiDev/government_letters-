@@ -255,18 +255,34 @@ class LetterController extends Controller
             'attachments',
             'cases',
             'replies.senderUser',
+            'delegations.delegatedBy',      // اضافه شد - ارجاع‌دهنده
+            'delegations.delegatedTo',      // اضافه شد - ارجاع‌گیرنده
+            'activeDelegation',             // اضافه شد - آخرین ارجاع فعال
         ]);
 
+        // ثبت بازدید
         $letter->views()->create([
             'user_id'    => $user->id,
             'viewed_at'  => now(),
             'ip_address' => request()->ip(),
         ]);
 
+        // دریافت لیست کاربران برای ارجاع (به جز خود کاربر)
+        $users = \App\Models\User::where('id', '!=', $user->id)
+            ->with(['position', 'department'])
+            ->get(['id', 'first_name', 'last_name', 'position_id', 'department_id'])
+            ->map(fn($u) => [
+                'id' => $u->id,
+                'full_name' => $u->full_name,
+                'position' => $u->position ? ['name' => $u->position->name] : null,
+                'department' => $u->department ? ['name' => $u->department->name] : null,
+            ]);
+
         return Inertia::render('letters/show', [
             'letter'         => $letter,
             'securityLevels' => $this->getSecurityLevels(),
             'priorityLevels' => $this->getPriorityLevels(),
+            'users'          => $users,  // اضافه شد
             'can' => [
                 'edit'    => $user->can('update', $letter),
                 'delete'  => $user->can('delete', $letter),
@@ -274,7 +290,8 @@ class LetterController extends Controller
                 'route'   => $user->can('route', $letter),
                 'approve' => $user->can('approve', $letter),
                 'sign'    => $user->can('sign', $letter),
-                'reply'   => $user->can('reply', $letter)
+                'reply'   => $user->can('reply', $letter),
+                'delegate' => $user->can('delegate', $letter) ?? true, // اضافه شد - مجوز ارجاع
             ],
         ]);
     }
