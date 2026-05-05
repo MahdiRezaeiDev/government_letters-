@@ -13,8 +13,8 @@ enum RoleEnum: string
     {
         return match($this) {
             self::SUPER_ADMIN => 'ادمین کل',
-            self::ORG_ADMIN => 'ادمین سازمان',
-            self::DEPT_MANAGER => 'مدیر دپارتمان',
+            self::ORG_ADMIN => 'ادمین وزارت',
+            self::DEPT_MANAGER => 'ادمین ریاست',
             self::USER => 'کاربر عادی',
         };
     }

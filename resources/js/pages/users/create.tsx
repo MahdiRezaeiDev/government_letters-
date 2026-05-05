@@ -1,5 +1,3 @@
-// resources/js/pages/users/create.tsx
-
 import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import {
@@ -48,7 +46,7 @@ export default function UsersCreate({ organizations, departments: initialDepartm
         organization_id: myOrganizationId || organizations[0]?.id || 0,
         department_id: null,
         primary_position_id: null,
-        email: 'mahdi@gmail.com',
+        email: 'example@gmail.com',
         password: '123321123',
         password_confirmation: '123321123',
         first_name: 'mahdi',
@@ -141,7 +139,7 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                             placeholder="1234567890" />
                                         <p className="text-xs text-slate-400 mt-1.5">نمبر تذکره منحصر به فرد</p>
                                     </div>
-                                    <div>
+                                    {/* <div>
                                         <PersianDatePicker
                                             label="تاریخ تولد"
                                             value={data.birth_date}
@@ -167,7 +165,7 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                             onChange={v => setData('address', v)}
                                             error={errors.address}
                                             placeholder="آدرس کامل" />
-                                    </div>
+                                    </div> */}
                                 </div>
                             </SectionCard>
 
@@ -280,7 +278,7 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                 description="تعیین می‌کند کاربر چه دسترسی‌هایی در سیستم دارد.">
                                 <div className="space-y-6">
                                     {/* Status */}
-                                    <div>
+                                    {/* <div>
                                         <FieldLabel>وضعیت کاربر</FieldLabel>
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                             {STATUS_OPTIONS.map(opt => {
@@ -309,10 +307,10 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                                 );
                                             })}
                                         </div>
-                                    </div>
+                                    </div> */}
 
                                     {/* Security Clearance */}
-                                    <div>
+                                    {/* <div>
                                         <FieldLabel>سطح امنیتی</FieldLabel>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                             {SECURITY_LEVELS.map(lvl => {
@@ -332,7 +330,7 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                             })}
                                         </div>
                                         <p className="text-xs text-slate-400 mt-1.5">سطح دسترسی به اطلاعات محرمانه را تعیین می‌کند</p>
-                                    </div>
+                                    </div> */}
                                     {/* Summary */}
                                     <div className="flex flex-wrap items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
                                         <span className="text-xs font-semibold text-slate-500">خلاصه وضعیت:</span>

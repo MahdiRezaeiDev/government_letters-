@@ -224,8 +224,9 @@ class User extends Authenticatable
 
     public static function generateCode(): string
     {
-        $lastUser = self::latest()->first();
+        $lastUser = self::latest()->withTrashed()->first();
         $lastCode = $lastUser ? (int) $lastUser->employment_code : 0;
-        return str_pad($lastCode + 1, 6, '0', STR_PAD_LEFT);
+        $numericPart = str_pad($lastCode + 1, 6, '0', STR_PAD_LEFT);
+        return 'EMP' . $numericPart;
     }
 }
