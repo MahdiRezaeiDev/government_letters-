@@ -6,30 +6,81 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::create('delegations', function (Blueprint $table) {
+        Schema::create('letter_delegations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('from_user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('to_user_id')->constrained('users')->onDelete('cascade');
-            $table->enum('delegation_type', ['all', 'specific_letters', 'specific_actions']);
-            $table->json('letter_ids')->nullable();
-            $table->json('action_types')->nullable();
-            $table->date('start_date');
-            $table->date('end_date');
-            $table->enum('status', ['active', 'expired', 'cancelled'])->default('active');
-            $table->text('reason')->nullable();
-            $table->foreignId('created_by')->constrained('users');
+            
+            // مکتوب مورد نظر
+            $table->foreignId('letter_id')
+                ->constrained('letters')
+                ->onDelete('cascade')
+                ->comment('مکتوبی که ارجاع می‌شود');
+            
+            // شخص ارجاع دهنده (گیرنده اصلی)
+            $table->foreignId('delegated_by_user_id')
+                ->constrained('users')
+                ->onDelete('cascade')
+                ->comment('شخصی که ارجاع می‌دهد (گیرنده اصلی)');
+            
+            // شخص ارجاع گیرنده (همکار)
+            $table->foreignId('delegated_to_user_id')
+                ->constrained('users')
+                ->onDelete('cascade')
+                ->comment('شخصی که به او ارجاع می‌شود');
+            
+            // دستورالعمل
+            $table->text('delegated_note')
+                ->nullable()
+                ->comment('دستورالعمل برای شخص ارجاع شده');
+            
+            // وضعیت ارجاع
+            $table->enum('status', [
+                'pending',      // در انتظار - هنوز واکنشی نشان نداده
+                'accepted',     // پذیرفته شده - قبول کرده که پاسخ دهد
+                'replied',      // پاسخ داده شده - پاسخ خود را ارسال کرده
+                'rejected',     // رد شده - نمی‌خواهد پاسخ دهد
+                'expired'       // منقضی شده - مهلت تمام شده
+            ])->default('pending')->comment('وضعیت ارجاع');
+            
+            // زمان‌ها
+            $table->timestamp('delegated_at')
+                ->nullable()
+                ->comment('زمان ارجاع');
+            
+            $table->timestamp('accepted_at')
+                ->nullable()
+                ->comment('زمان پذیرش توسط شخص ارجاع شده');
+            
+            $table->timestamp('replied_at')
+                ->nullable()
+                ->comment('زمان پاسخ دادن');
+            
+            // ثبت کننده
+            $table->foreignId('created_by')
+                ->constrained('users')
+                ->onDelete('cascade')
+                ->comment('ثبت‌کننده ارجاع');
+            
             $table->timestamps();
             
-            $table->index(['from_user_id', 'status']);
-            $table->index(['to_user_id', 'status']);
-            $table->index(['start_date', 'end_date']);
+            // ایندکس‌ها برای جستجوی بهتر
+            $table->index('delegated_by_user_id');
+            $table->index('delegated_to_user_id');
+            $table->index('letter_id');
+            $table->index('status');
+            $table->index('delegated_at');
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::dropIfExists('delegations');
+        Schema::dropIfExists('letter_delegations');
     }
 };

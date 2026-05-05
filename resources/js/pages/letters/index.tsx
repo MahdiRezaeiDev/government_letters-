@@ -230,9 +230,10 @@ export default function LettersIndex({
                 '-',
             position: letter?.sender_position_name ||
                 letter?.sender_user?.primary_position?.name ||
-                '-'
+                '-',
+            person : letter?.sender_name
         };
-    };
+    };    
 
     const getRecipientOrganizationInfo = (letter: Letter) => {
         return {
@@ -243,7 +244,8 @@ export default function LettersIndex({
             department: letter?.recipient_department?.name || '-',
             position: letter?.recipient_position_name ||
                 letter?.recipient_user?.primary_position?.name ||
-                '-'
+                '-',
+            person : letter?.recipient_name
         };
     };
 
@@ -363,7 +365,7 @@ export default function LettersIndex({
                         </div>
                         <div className="flex items-center gap-1.5 text-[11px] min-w-0">
                             <UsersIcon className="h-3 w-3 text-gray-400 flex-shrink-0" />
-                            <span className="text-gray-500 flex-shrink-0">پوزیشن:</span>
+                            <span className="text-gray-500 flex-shrink-0">وظیفه:</span>
                             <span
                                 className="text-gray-700 font-medium truncate"
                                 title={orgInfo.position}
@@ -440,7 +442,7 @@ export default function LettersIndex({
                     ${depth > 0 ? 'bg-gray-50/30' : ''}
                 `}>
                     {/* ستون وضعیت خوانده و ترد */}
-                    {/* <td className="px-3 sm:px-4 py-3 whitespace-nowrap w-16">
+                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap w-16">
                         <div className="flex items-center gap-1 sm:gap-2" style={{ paddingRight: `${depth * 16}px` }}>
                             {hasChildren && (
                                 <button
@@ -461,12 +463,12 @@ export default function LettersIndex({
                                 }
                             </span>
                         </div>
-                    </td> */}
+                    </td>
 
                     {/* ستون شماره و نوع */}
-                    {/* <td className="px-3 sm:px-4 py-3 whitespace-nowrap w-28">
+                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap w-36">
                         <div className="flex flex-col gap-0.5">
-                            <code className={`px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-mono truncate max-w-[80px] sm:max-w-[100px] ${unread ? 'bg-blue-100 text-blue-700 font-bold' : 'bg-gray-100 text-gray-600'
+                            <code className={`px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-mono truncate max-w-[100px] sm:max-w-[100px] ${unread ? 'bg-blue-100 text-blue-700 font-bold' : 'bg-gray-100 text-gray-600'
                                 }`}
                                 title={letter.letter_number || 'بدون شماره'}>
                                 {letter.letter_number || 'بدون شماره'}
@@ -477,7 +479,7 @@ export default function LettersIndex({
                                 {types[letter.letter_type]}
                             </span>
                         </div>
-                    </td> */}
+                    </td>
 
                     {/* ستون موضوع */}
                     <td className="px-3 sm:px-4 py-3 min-w-[180px] max-w-[250px]">
@@ -504,7 +506,7 @@ export default function LettersIndex({
                         </div>
                     </td>
 
-                    {/* ستون اطلاعات سازمانی (وزارت، ریاست، پوزیشن) */}
+                    {/* ستون اطلاعات سازمانی (وزارت، ریاست، وظیفه) */}
                     <td className="px-3 sm:px-4 py-3 min-w-[160px] max-w-[200px]">
                         <div className="flex flex-col gap-0.5">
                             <div className="flex items-center gap-1 text-[10px] sm:text-xs min-w-0">
@@ -534,22 +536,15 @@ export default function LettersIndex({
                                     {orgInfo.position}
                                 </span>
                             </div>
-                        </div>
-                    </td>
-
-                    {/* ستون فرستنده/گیرنده */}
-                    <td className="px-3 sm:px-4 py-3 hidden xl:table-cell w-36">
-                        <div className="flex flex-col">
-                            <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-medium">
-                                <span className={`w-2 h-2 rounded-full ${role === 'sent' ? 'bg-green-500' : 'bg-blue-500'}`}></span>
-                                {role === 'sent' ? 'به:' : 'از:'}
-                            </span>
-                            <span
-                                className="text-xs sm:text-sm text-gray-700 truncate max-w-[120px] mt-0.5"
-                                title={relationText}
-                            >
-                                {relationText}
-                            </span>
+                            <div className="flex items-center gap-1 text-[10px] sm:text-xs min-w-0">
+                                <UsersIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-400 flex-shrink-0" />
+                                <span
+                                    className="text-gray-500 truncate"
+                                    title={orgInfo.person}
+                                >
+                                    {orgInfo.person}
+                                </span>
+                            </div>
                         </div>
                     </td>
 
@@ -1017,11 +1012,11 @@ export default function LettersIndex({
                                         <table className="min-w-[1000px] lg:min-w-full w-full divide-y divide-gray-200">
                                             <thead className="bg-gray-50">
                                                 <tr>
-                                                    {/* <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 w-16">وضعیت</th> */}
-                                                    {/* <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 w-28">شماره / نوع</th> */}
+                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 w-16">وضعیت</th>
+                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 w-32">شماره / نوع</th>
                                                     <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 min-w-[200px]">موضوع</th>
-                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 min-w-[180px]">وزارت / ریاست / پوزیشن</th>
-                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden xl:table-cell w-36">فرستنده/گیرنده</th>
+                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 min-w-[180px]">وزارت / ریاست / وظیفه</th>
+                                                    {/* <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden xl:table-cell w-36">فرستنده/گیرنده</th> */}
                                                     <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden lg:table-cell w-24">وضعیت</th>
                                                     <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden sm:table-cell w-28">تاریخ</th>
                                                     <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 w-20">عملیات</th>
