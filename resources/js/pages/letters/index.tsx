@@ -13,11 +13,11 @@ import {
 } from 'lucide-react';
 import React, { useState, useMemo } from 'react';
 import lettersRoute from '@/routes/letters';
-import type { Letter, PaginatedResponse, LetterCategory } from '@/types';
+import type { Letter, PaginatedResponse } from '@/types';
 
 interface Props {
     letters: PaginatedResponse<Letter>;
-    categories: LetterCategory[];
+    categories: any[];
     filters: {
         search?: string;
         letter_type?: string;
@@ -116,14 +116,9 @@ export default function LettersIndex({
     };
 
     const getLetterRole = (letter: Letter) => {
-        if (letter.letter_type === 'external') {
-            if (letter.sender_user_id === currentUserId) return 'sent';
-            if (letter.recipient_user_id === currentUserId) return 'received';
-        }
         if (letter.sender_user_id === currentUserId) return 'sent';
         if (letter.recipient_user_id === currentUserId) return 'received';
-        if (letter.created_by === currentUserId) return 'draft';
-        if (letter.replied_by === currentUserId) return 'replied';
+        if (letter.created_by === currentUserId && letter.final_status === 'draft') return 'draft';
         return 'other';
     };
 
@@ -181,10 +176,9 @@ export default function LettersIndex({
     };
 
     const roleConfig: Record<string, { label: string; icon: any; color: string; bg: string }> = {
-        sent: { label: 'ارسال شده', icon: CornerUpLeft, color: 'text-green-600', bg: 'bg-green-50' },
-        received: { label: 'دریافتی', icon: CornerUpRight, color: 'text-blue-600', bg: 'bg-blue-50' },
+        sent: { label: 'صادره', icon: CornerUpLeft, color: 'text-green-600', bg: 'bg-green-50' },
+        received: { label: 'وارده', icon: CornerUpRight, color: 'text-blue-600', bg: 'bg-blue-50' },
         draft: { label: 'پیش‌نویس', icon: FileText, color: 'text-gray-600', bg: 'bg-gray-50' },
-        replied: { label: 'پاسخ داده شده', icon: Reply, color: 'text-purple-600', bg: 'bg-purple-50' },
         other: { label: 'سایر', icon: User, color: 'text-gray-400', bg: 'bg-gray-50' },
     };
 
@@ -211,7 +205,7 @@ export default function LettersIndex({
     // رندر یک نامه در حالت موبایل (کارت)
     const renderMobileCard = (letter: Letter) => {
         const role = getLetterRole(letter);
-        const roleConfigItem = roleConfig[role];
+        const roleConfigItem = roleConfig[role] || roleConfig.other;
         const RoleIcon = roleConfigItem.icon;
         const priority = priorityConfig[letter.priority] || priorityConfig.normal;
         const PriorityIcon = priority.icon;
@@ -225,15 +219,15 @@ export default function LettersIndex({
             <div
                 key={letter.id}
                 className={`bg-white rounded-xl border transition-all duration-200 ${unread
-                    ? 'border-r-4 border-r-blue-400 shadow-md'
-                    : 'border-gray-100 shadow-sm'
+                    ? 'border-r-4 border-r-blue-400 bg-gradient-to-r from-blue-50 via-blue-50/50 to-white shadow-md'
+                    : 'border-gray-100 shadow-sm hover:shadow-md'
                     }`}
             >
                 <div className="p-4">
                     {/* هدر کارت */}
                     <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <div className={`p-1.5 rounded-lg ${typeConfig[letter.letter_type]?.color === 'purple' ? 'bg-purple-50' : 'bg-blue-50'}`}>
+                            <div className={`p-1.5 rounded-lg ${letter.letter_type === 'internal' ? 'bg-purple-50' : 'bg-blue-50'}`}>
                                 <TypeIcon className="h-4 w-4 text-gray-600" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -256,7 +250,7 @@ export default function LettersIndex({
                             >
                                 <Eye className="h-3.5 w-3.5" />
                             </Link>
-                            {can.edit && letter.is_draft && letter.created_by === currentUserId && (
+                            {can.edit && letter.final_status === 'draft' && letter.created_by === currentUserId && (
                                 <Link
                                     href={lettersRoute.edit({ letter: letter.id })}
                                     className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
@@ -319,7 +313,7 @@ export default function LettersIndex({
     // رندر یک نامه در حالت دسکتاپ (جدول)
     const renderDesktopRow = (letter: ThreadedLetter, depth: number = 0) => {
         const role = getLetterRole(letter);
-        const roleConfigItem = roleConfig[role];
+        const roleConfigItem = roleConfig[role] || roleConfig.other;
         const RoleIcon = roleConfigItem.icon;
         const priority = priorityConfig[letter.priority] || priorityConfig.normal;
         const PriorityIcon = priority.icon;
@@ -336,10 +330,10 @@ export default function LettersIndex({
                 <tr className={`
                     transition-all duration-200 group
                     ${unread
-                        ? 'bg-gradient-to-r from-blue-50 via-blue-50/50 to-white border-r-4 border-r-blue-400'
+                        ? 'bg-gradient-to-r from-blue-50 via-blue-50/30 to-white border-r-4 border-r-blue-500'
                         : 'hover:bg-gray-50 border-r-4 border-r-transparent'
                     }
-                    ${depth > 0 ? 'bg-gray-50/50' : ''}
+                    ${depth > 0 ? 'bg-gray-50/30' : ''}
                 `}>
                     {/* ستون وضعیت خوانده و ترد */}
                     <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
@@ -356,7 +350,7 @@ export default function LettersIndex({
                                 </button>
                             )}
                             {!hasChildren && depth > 0 && <span className="w-4 sm:w-6"></span>}
-                            <span className={`flex items-center ${unread ? 'text-blue-500' : 'text-gray-300'}`}>
+                            <span className={`flex items-center ${unread ? 'text-blue-500 animate-pulse' : 'text-gray-300'}`}>
                                 {unread ?
                                     <CircleDot className="h-4 w-4 sm:h-5 sm:w-5" /> :
                                     <Circle className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -394,7 +388,7 @@ export default function LettersIndex({
                                     </span>
                                 )}
                                 {unread && (
-                                    <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[10px] text-blue-600 bg-blue-100 px-1 py-0.5 rounded-full">
+                                    <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[10px] text-blue-600 bg-blue-100 px-1 py-0.5 rounded-full font-medium">
                                         جدید
                                     </span>
                                 )}
@@ -405,14 +399,13 @@ export default function LettersIndex({
                     {/* ستون فرستنده/گیرنده - مخفی در موبایل */}
                     <td className="px-3 sm:px-4 py-3 hidden md:table-cell">
                         <div className="flex flex-col">
-                            <span className="text-xs sm:text-sm text-gray-600 truncate max-w-[120px] lg:max-w-[180px]">
+                            <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-medium">
+                                <span className={`w-2 h-2 rounded-full ${role === 'sent' ? 'bg-green-500' : 'bg-blue-500'}`}></span>
+                                {role === 'sent' ? 'به:' : 'از:'}
+                            </span>
+                            <span className="text-xs sm:text-sm text-gray-700 truncate max-w-[120px] lg:max-w-[180px] mt-0.5">
                                 {relationText}
                             </span>
-                            {letter.recipient_department && (
-                                <span className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5 truncate">
-                                    {letter.recipient_department.name}
-                                </span>
-                            )}
                         </div>
                     </td>
 
@@ -449,7 +442,7 @@ export default function LettersIndex({
                             >
                                 <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </Link>
-                            {can.edit && letter.is_draft && letter.created_by === currentUserId && (
+                            {can.edit && letter.final_status === 'draft' && letter.created_by === currentUserId && (
                                 <Link
                                     href={lettersRoute.edit({ letter: letter.id })}
                                     className="p-1 sm:p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
@@ -485,7 +478,7 @@ export default function LettersIndex({
                 <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
                     <div className="space-y-4 sm:space-y-5 lg:space-y-6">
                         {/* Header Section */}
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-fade-in">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div>
                                 <div className="flex items-center gap-2 sm:gap-3">
                                     <div className="p-1.5 sm:p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
@@ -500,7 +493,6 @@ export default function LettersIndex({
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 sm:gap-3">
-                                {/* Mobile: دکمه فیلتر */}
                                 <button
                                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                                     className="lg:hidden inline-flex items-center px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-600"
@@ -508,7 +500,6 @@ export default function LettersIndex({
                                     <Menu className="h-4 w-4" />
                                 </button>
 
-                                {/* Desktop: دکمه‌های ترد */}
                                 {threadView && (
                                     <div className="hidden lg:flex items-center gap-1 bg-white rounded-lg border border-gray-200 p-1">
                                         <button
@@ -540,8 +531,7 @@ export default function LettersIndex({
 
                         {/* Mobile Menu Panel */}
                         {mobileMenuOpen && (
-                            <div className="lg:hidden bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-3 animate-fade-in">
-                                {/* Thread/List Toggle */}
+                            <div className="lg:hidden bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-3">
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs text-gray-500">نمایش:</span>
                                     <div className="flex bg-gray-100 rounded-lg p-0.5">
@@ -562,19 +552,18 @@ export default function LettersIndex({
                                     </div>
                                 </div>
 
-                                {/* Type Filters */}
-                                <div className="flex gap-1.5 flex-wrap">
+                                <div className="flex flex-wrap gap-1.5">
                                     <button
-                                        onClick={() => { setSelectedType(''); handleSearch(); setMobileMenuOpen(false); }}
-                                        className={`px-2 py-1 rounded-lg text-xs font-medium ${!selectedType ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
+                                        onClick={() => { setSelectedDirection(''); handleSearch(); setMobileMenuOpen(false); }}
+                                        className={`px-2 py-1 rounded-lg text-xs font-medium ${!selectedDirection ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
                                     >
                                         همه
                                     </button>
-                                    {Object.entries(types).map(([key, label]) => (
+                                    {Object.entries(directions).map(([key, label]) => (
                                         <button
                                             key={key}
-                                            onClick={() => { setSelectedType(key); handleSearch(); setMobileMenuOpen(false); }}
-                                            className={`px-2 py-1 rounded-lg text-xs font-medium ${selectedType === key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
+                                            onClick={() => { setSelectedDirection(key); handleSearch(); setMobileMenuOpen(false); }}
+                                            className={`px-2 py-1 rounded-lg text-xs font-medium ${selectedDirection === key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
                                         >
                                             {label}
                                         </button>
@@ -610,7 +599,7 @@ export default function LettersIndex({
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2.5 sm:p-3 lg:p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">دریافتی</p>
+                                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">وارده</p>
                                         <p className="text-base sm:text-lg lg:text-xl font-bold text-cyan-600">{stats.received}</p>
                                     </div>
                                     <div className="p-1.5 sm:p-2 bg-cyan-50 rounded-lg">
@@ -621,7 +610,7 @@ export default function LettersIndex({
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2.5 sm:p-3 lg:p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">ارسال شده</p>
+                                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">صادره</p>
                                         <p className="text-base sm:text-lg lg:text-xl font-bold text-green-600">{stats.sent}</p>
                                     </div>
                                     <div className="p-1.5 sm:p-2 bg-green-50 rounded-lg">
@@ -678,16 +667,22 @@ export default function LettersIndex({
 
                                 <div className="flex gap-1.5 flex-wrap">
                                     <button
-                                        onClick={() => { setSelectedType(''); handleSearch(); }}
-                                        className={`px-3 py-1.5 rounded-lg text-xs font-medium ${!selectedType ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
+                                        onClick={() => { setSelectedDirection(''); handleSearch(); }}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-medium ${!selectedDirection ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
                                     >
                                         همه
                                     </button>
-                                    {Object.entries(types).map(([key, label]) => (
+                                    {Object.entries(directions).map(([key, label]) => (
                                         <button
                                             key={key}
-                                            onClick={() => { setSelectedType(key); handleSearch(); }}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-medium ${selectedType === key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
+                                            onClick={() => {
+                                                router.get(lettersRoute.index(), {
+                                                    ...filters,
+                                                    direction: key,
+                                                    page: 1
+                                                }, { preserveState: true, replace: true });
+                                            }}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-medium ${selectedDirection === key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
                                         >
                                             {label}
                                         </button>
@@ -740,7 +735,7 @@ export default function LettersIndex({
                                             <span className="hidden xs:inline">فیلترها</span>
                                             {hasActiveFilters && (
                                                 <span className="mr-1 sm:mr-2 px-1 py-0.5 bg-blue-600 text-white text-[9px] sm:text-[10px] rounded-full">
-                                                    {Object.values(filters).filter(v => v).length}
+                                                    {Object.values(filters).filter(v => v && v !== 'all').length}
                                                 </span>
                                             )}
                                         </button>
@@ -845,8 +840,8 @@ export default function LettersIndex({
                             </div>
                         ) : (
                             <>
-                                {/* Desktop Table View - Hidden on mobile */}
-                                <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in">
+                                {/* Desktop Table View */}
+                                <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                                     <div className="overflow-x-auto">
                                         <table className="min-w-full divide-y divide-gray-200">
                                             <thead className="bg-gray-50">
@@ -915,8 +910,8 @@ export default function LettersIndex({
                                     )}
                                 </div>
 
-                                {/* Mobile Cards View - Visible on mobile only */}
-                                <div className="lg:hidden space-y-3 animate-fade-in">
+                                {/* Mobile Cards View */}
+                                <div className="lg:hidden space-y-3">
                                     {letters.data.map(letter => renderMobileCard(letter))}
                                 </div>
 
@@ -947,17 +942,6 @@ export default function LettersIndex({
                     </div>
                 </div>
             </div>
-
-            {/* CSS Animations */}
-            <style>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .animate-fade-in {
-                    animation: fadeIn 0.3s ease-out;
-                }
-            `}</style>
         </>
     );
 }

@@ -57,8 +57,8 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 { title: 'طبقه‌بندی مکاتیب', href: categoriesIndex(), icon: FolderTree },
             ],
         },
-        { title: 'مکاتیب وارده', href: lettersIndex({ query: { type: 'incoming' } }), icon: Inbox },
-        { title: 'مکاتیب صادره', href: lettersIndex({ query: { type: 'outgoing' } }), icon: Send },
+        { title: 'مکاتیب وارده', href: lettersIndex({ query: { direction: 'incoming' } }), icon: Inbox },
+        { title: 'مکاتیب صادره', href: lettersIndex({ query: { direction: 'outgoing' } }), icon: Send },
         { title: 'ثبت مکتوب جدید', href: lettersCreate(), icon: Sparkles },
 
         { title: 'آرشیف مرکزی', href: archivesIndex(), icon: Archive },

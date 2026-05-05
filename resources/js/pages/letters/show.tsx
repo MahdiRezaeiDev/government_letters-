@@ -62,7 +62,7 @@ const formatDate = (dateString: string | undefined): string => {
         return '—';
     }
 
-    return new Date(dateString).toLocaleDateString('fa-IR', {
+    return new Date(dateString).toLocaleDateString('fa-Af', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
@@ -125,20 +125,8 @@ export default function LettersShow({
         <>
             <Head title={`نامه: ${letter.subject}`} />
 
-            <div className="min-h-screen bg-gray-100 py-6 px-4" dir="rtl">
+            <div className="min-h-screen ">
                 <div className="max-w-3xl mx-auto">
-
-                    {/* ── Header/Breadcrumb ── */}
-                    <div className="flex items-center gap-2 mb-6 text-sm">
-                        <Link
-                            href={letters.index()}
-                            className="text-gray-500 hover:text-gray-700 transition"
-                        >
-                            نامه‌ها
-                        </Link>
-                        <ChevronRight className="h-4 w-4 text-gray-400" />
-                        <span className="text-gray-800 font-medium truncate">{letter.subject}</span>
-                    </div>
 
                     {/* ── Main Card ── */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -157,19 +145,19 @@ export default function LettersShow({
 
                                 <span className="text-sm text-gray-600">
                                     <span className="text-gray-400">تاریخ:</span>{' '}
-                                    {formatDate(letter.date)}
+                                    {(letter.date)}
                                 </span>
                             </div>
 
                             {/* Action Buttons */}
                             <div className="flex items-center gap-1.5 flex-wrap">
-                                <button
+                                {/* <button
                                     onClick={() => window.print()}
                                     className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
                                     title="چاپ"
                                 >
                                     <Printer className="h-4 w-4" />
-                                </button>
+                                </button> */}
 
                                 {can.reply && letter.final_status !== 'draft' && (
                                     <Link
