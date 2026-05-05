@@ -221,17 +221,29 @@ export default function LettersIndex({
     // تابع کمکی برای دریافت اطلاعات سازمانی فرستنده/گیرنده
     const getSenderOrganizationInfo = (letter: Letter) => {
         return {
-            organization: letter?.organization?.name || letter.sender_organization?.name || '-',
-            department: letter?.department?.name || letter.sender_department?.name || '-',
-            position: letter?.sender_position_name || '-'
+            organization: letter?.organization?.name ||
+                letter?.sender_organization?.name ||
+                letter?.sender_department?.organization?.name ||
+                '-',
+            department: letter?.department?.name ||
+                letter?.sender_department?.name ||
+                '-',
+            position: letter?.sender_position_name ||
+                letter?.sender_user?.primary_position?.name ||
+                '-'
         };
     };
-    
+
     const getRecipientOrganizationInfo = (letter: Letter) => {
         return {
-            organization: letter?.organization?.name || letter.recipient_organization?.name || '-',
-            department: letter?.recipient_department?.name || letter.recipient_department?.name || '-',
-            position: letter?.recipient_position_name|| '-'
+            organization: letter?.organization?.name ||
+                letter?.recipient_organization?.name ||
+                letter?.recipient_department?.organization?.name ||
+                '-',
+            department: letter?.recipient_department?.name || '-',
+            position: letter?.recipient_position_name ||
+                letter?.recipient_user?.primary_position?.name ||
+                '-'
         };
     };
 
@@ -259,10 +271,8 @@ export default function LettersIndex({
 
         // دریافت اطلاعات سازمانی بر اساس نقش
         const orgInfo = role === 'sent'
-            ? 
-            getRecipientOrganizationInfo(letter)
-            : 
-            getSenderOrganizationInfo(letter);
+            ? getRecipientOrganizationInfo(letter)
+            : getSenderOrganizationInfo(letter);
 
         return (
             <div
@@ -276,7 +286,7 @@ export default function LettersIndex({
                     {/* هدر کارت */}
                     <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <div className={`p-1.5 rounded-lg ${letter.letter_type === 'internal' ? 'bg-purple-50' : 'bg-blue-50'}`}>
+                            <div className={`p-1.5 rounded-lg ${letter.letter_type === 'internal' ? 'bg-purple-50' : 'bg-blue-50'} flex-shrink-0`}>
                                 <TypeIcon className="h-4 w-4 text-gray-600" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -285,14 +295,14 @@ export default function LettersIndex({
                                         }`}>
                                         {letter.letter_number || 'بدون شماره'}
                                     </code>
-                                    <span className={`inline-flex items-center gap-0.5 text-[10px] ${roleConfigItem.bg} ${roleConfigItem.color} px-1.5 py-0.5 rounded-full`}>
+                                    <span className={`inline-flex items-center gap-0.5 text-[10px] ${roleConfigItem.bg} ${roleConfigItem.color} px-1.5 py-0.5 rounded-full flex-shrink-0`}>
                                         <RoleIcon className="h-2.5 w-2.5" />
                                         {roleConfigItem.label}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 flex-shrink-0">
                             <Link
                                 href={lettersRoute.show({ letter: letter.id })}
                                 className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -311,32 +321,55 @@ export default function LettersIndex({
                     </div>
 
                     {/* موضوع */}
-                    <h3 className={`text-sm mb-2 line-clamp-2 ${unread ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
+                    <h3
+                        className={`text-sm mb-2 line-clamp-2 ${unread ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}
+                        title={letter.subject}
+                    >
                         {letter.subject}
                     </h3>
 
                     {/* فرستنده/گیرنده */}
-                    <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-2">
-                        <User className="h-3 w-3" />
-                        <span className="truncate">{relationText}</span>
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-2 min-w-0">
+                        <User className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                        <span
+                            className="truncate"
+                            title={relationText}
+                        >
+                            {relationText}
+                        </span>
                     </div>
 
-                    {/* اطلاعات سازمانی (جدید) */}
+                    {/* اطلاعات سازمانی */}
                     <div className="bg-gray-50 rounded-lg p-2.5 mb-3 space-y-1.5">
-                        <div className="flex items-center gap-1.5 text-[11px]">
-                            <Building2 className="h-3 w-3 text-gray-400" />
-                            <span className="text-gray-500">وزارت:</span>
-                            <span className="text-gray-700 font-medium truncate">{orgInfo.organization}</span>
+                        <div className="flex items-center gap-1.5 text-[11px] min-w-0">
+                            <Building2 className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                            <span className="text-gray-500 flex-shrink-0">وزارت:</span>
+                            <span
+                                className="text-gray-700 font-medium truncate"
+                                title={orgInfo.organization}
+                            >
+                                {orgInfo.organization}
+                            </span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px]">
-                            <Briefcase className="h-3 w-3 text-gray-400" />
-                            <span className="text-gray-500">ریاست:</span>
-                            <span className="text-gray-700 font-medium truncate">{orgInfo.department}</span>
+                        <div className="flex items-center gap-1.5 text-[11px] min-w-0">
+                            <Briefcase className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                            <span className="text-gray-500 flex-shrink-0">ریاست:</span>
+                            <span
+                                className="text-gray-700 font-medium truncate"
+                                title={orgInfo.department}
+                            >
+                                {orgInfo.department}
+                            </span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px]">
-                            <UsersIcon className="h-3 w-3 text-gray-400" />
-                            <span className="text-gray-500">پوزیشن:</span>
-                            <span className="text-gray-700 font-medium truncate">{orgInfo.position}</span>
+                        <div className="flex items-center gap-1.5 text-[11px] min-w-0">
+                            <UsersIcon className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                            <span className="text-gray-500 flex-shrink-0">پوزیشن:</span>
+                            <span
+                                className="text-gray-700 font-medium truncate"
+                                title={orgInfo.position}
+                            >
+                                {orgInfo.position}
+                            </span>
                         </div>
                     </div>
 
@@ -382,9 +415,7 @@ export default function LettersIndex({
     const renderDesktopRow = (letter: ThreadedLetter, depth: number = 0) => {
         const role = getLetterRole(letter);
         const roleConfigItem = roleConfig[role] || roleConfig.other;
-        const RoleIcon = roleConfigItem.icon;
         const priority = priorityConfig[letter.priority] || priorityConfig.normal;
-        const PriorityIcon = priority.icon;
         const status = statusConfig[letter.final_status] || statusConfig.draft;
         const StatusIcon = status.icon;
         const TypeIcon = typeConfig[letter.letter_type]?.icon || File;
@@ -398,9 +429,6 @@ export default function LettersIndex({
             ? getRecipientOrganizationInfo(letter)
             : getSenderOrganizationInfo(letter);
 
-        console.log(role);
-
-
         return (
             <React.Fragment key={letter.id}>
                 <tr className={`
@@ -412,12 +440,12 @@ export default function LettersIndex({
                     ${depth > 0 ? 'bg-gray-50/30' : ''}
                 `}>
                     {/* ستون وضعیت خوانده و ترد */}
-                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                    {/* <td className="px-3 sm:px-4 py-3 whitespace-nowrap w-16">
                         <div className="flex items-center gap-1 sm:gap-2" style={{ paddingRight: `${depth * 16}px` }}>
                             {hasChildren && (
                                 <button
                                     onClick={() => toggleThread(letter.id)}
-                                    className="p-0.5 sm:p-1 hover:bg-gray-200 rounded transition-colors"
+                                    className="p-0.5 sm:p-1 hover:bg-gray-200 rounded transition-colors flex-shrink-0"
                                 >
                                     {isExpanded ?
                                         <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-600" /> :
@@ -425,21 +453,22 @@ export default function LettersIndex({
                                     }
                                 </button>
                             )}
-                            {!hasChildren && depth > 0 && <span className="w-4 sm:w-6"></span>}
-                            <span className={`flex items-center ${unread ? 'text-blue-500 animate-pulse' : 'text-gray-300'}`}>
+                            {!hasChildren && depth > 0 && <span className="w-4 sm:w-6 flex-shrink-0"></span>}
+                            <span className={`flex items-center flex-shrink-0 ${unread ? 'text-blue-500 animate-pulse' : 'text-gray-300'}`}>
                                 {unread ?
                                     <CircleDot className="h-4 w-4 sm:h-5 sm:w-5" /> :
                                     <Circle className="h-4 w-4 sm:h-5 sm:w-5" />
                                 }
                             </span>
                         </div>
-                    </td>
+                    </td> */}
 
                     {/* ستون شماره و نوع */}
-                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                    {/* <td className="px-3 sm:px-4 py-3 whitespace-nowrap w-28">
                         <div className="flex flex-col gap-0.5">
-                            <code className={`px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-mono ${unread ? 'bg-blue-100 text-blue-700 font-bold' : 'bg-gray-100 text-gray-600'
-                                }`}>
+                            <code className={`px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-mono truncate max-w-[80px] sm:max-w-[100px] ${unread ? 'bg-blue-100 text-blue-700 font-bold' : 'bg-gray-100 text-gray-600'
+                                }`}
+                                title={letter.letter_number || 'بدون شماره'}>
                                 {letter.letter_number || 'بدون شماره'}
                             </code>
                             <span className={`inline-flex items-center gap-0.5 text-[8px] sm:text-[10px] ${letter.letter_type === 'internal' ? 'text-purple-600' : 'text-blue-600'
@@ -448,12 +477,15 @@ export default function LettersIndex({
                                 {types[letter.letter_type]}
                             </span>
                         </div>
-                    </td>
+                    </td> */}
 
                     {/* ستون موضوع */}
-                    <td className="px-3 sm:px-4 py-3">
-                        <div className="flex flex-col max-w-[180px] lg:max-w-[250px]">
-                            <p className={`text-xs sm:text-sm line-clamp-2 ${unread ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
+                    <td className="px-3 sm:px-4 py-3 min-w-[180px] max-w-[250px]">
+                        <div className="flex flex-col">
+                            <p
+                                className={`text-xs sm:text-sm line-clamp-2 ${unread ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}
+                                title={letter.subject}
+                            >
                                 {letter.subject}
                             </p>
                             <div className="flex items-center gap-1 mt-1 flex-wrap">
@@ -473,23 +505,32 @@ export default function LettersIndex({
                     </td>
 
                     {/* ستون اطلاعات سازمانی (وزارت، ریاست، پوزیشن) */}
-                    <td className="px-3 sm:px-4 py-3">
-                        <div className="flex flex-col gap-0.5 min-w-[140px]">
-                            <div className="flex items-center gap-1 text-[10px] sm:text-xs">
-                                <Building2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-400" />
-                                <span className="text-gray-500 truncate max-w-[120px] lg:max-w-[150px]">
+                    <td className="px-3 sm:px-4 py-3 min-w-[160px] max-w-[200px]">
+                        <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-1 text-[10px] sm:text-xs min-w-0">
+                                <Building2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-400 flex-shrink-0" />
+                                <span
+                                    className="text-gray-500 truncate"
+                                    title={orgInfo.organization}
+                                >
                                     {orgInfo.organization}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-1 text-[10px] sm:text-xs">
-                                <Briefcase className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-400" />
-                                <span className="text-gray-500 truncate max-w-[120px] lg:max-w-[150px]">
+                            <div className="flex items-center gap-1 text-[10px] sm:text-xs min-w-0">
+                                <Briefcase className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-400 flex-shrink-0" />
+                                <span
+                                    className="text-gray-500 truncate"
+                                    title={orgInfo.department}
+                                >
                                     {orgInfo.department}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-1 text-[10px] sm:text-xs">
-                                <UsersIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-400" />
-                                <span className="text-gray-500 truncate max-w-[120px] lg:max-w-[150px]">
+                            <div className="flex items-center gap-1 text-[10px] sm:text-xs min-w-0">
+                                <UsersIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-400 flex-shrink-0" />
+                                <span
+                                    className="text-gray-500 truncate"
+                                    title={orgInfo.position}
+                                >
                                     {orgInfo.position}
                                 </span>
                             </div>
@@ -497,20 +538,23 @@ export default function LettersIndex({
                     </td>
 
                     {/* ستون فرستنده/گیرنده */}
-                    <td className="px-3 sm:px-4 py-3 hidden xl:table-cell">
+                    <td className="px-3 sm:px-4 py-3 hidden xl:table-cell w-36">
                         <div className="flex flex-col">
                             <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-medium">
                                 <span className={`w-2 h-2 rounded-full ${role === 'sent' ? 'bg-green-500' : 'bg-blue-500'}`}></span>
                                 {role === 'sent' ? 'به:' : 'از:'}
                             </span>
-                            <span className="text-xs sm:text-sm text-gray-700 truncate max-w-[120px] mt-0.5">
+                            <span
+                                className="text-xs sm:text-sm text-gray-700 truncate max-w-[120px] mt-0.5"
+                                title={relationText}
+                            >
                                 {relationText}
                             </span>
                         </div>
                     </td>
 
                     {/* ستون وضعیت */}
-                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap hidden lg:table-cell">
+                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap hidden lg:table-cell w-24">
                         <span className={`inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-xs font-medium ${status.bg} ${status.text}`}>
                             <StatusIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                             {status.label}
@@ -518,7 +562,7 @@ export default function LettersIndex({
                     </td>
 
                     {/* ستون تاریخ */}
-                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap hidden sm:table-cell">
+                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap hidden sm:table-cell w-28">
                         <div className="flex flex-col gap-0.5">
                             <div className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-gray-500">
                                 <Calendar className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
@@ -534,7 +578,7 @@ export default function LettersIndex({
                     </td>
 
                     {/* ستون عملیات */}
-                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap w-20">
                         <div className="flex items-center gap-0.5 sm:gap-1">
                             <Link
                                 href={lettersRoute.show({ letter: letter.id })}
@@ -574,11 +618,11 @@ export default function LettersIndex({
         <>
             <Head title="مدیریت مکتوب‌ها" />
 
-            <div className="min-h-screen">
+            <div className="min-h-screen bg-gray-50">
                 <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
                     <div className="space-y-4 sm:space-y-5 lg:space-y-6">
-                        {/* Header Section - same as before */}
-                        <div className="flex flex-col bg-white p-5 rounded-2xl sm:flex-row sm:items-center sm:justify-between gap-3">
+                        {/* Header Section */}
+                        <div className="flex flex-col bg-white p-4 sm:p-5 rounded-2xl shadow-sm sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div>
                                 <div className="flex items-center gap-2 sm:gap-3">
                                     <div className="p-1.5 sm:p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
@@ -616,28 +660,34 @@ export default function LettersIndex({
                                         </button>
                                     </div>
                                 )}
+                                {can.create && (
+                                    <Link
+                                        href={lettersRoute.create()}
+                                        className="inline-flex items-center px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl text-xs sm:text-sm font-medium text-white hover:from-blue-700 hover:to-blue-800 transition-all shadow-md"
+                                    >
+                                        <Plus className="ml-1 sm:ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                        <span className="hidden xs:inline">مکتوب جدید</span>
+                                        <span className="xs:hidden">جدید</span>
+                                    </Link>
+                                )}
                             </div>
                         </div>
 
-                        {/* Mobile Menu Panel - same as before */}
+                        {/* Mobile Menu Panel */}
                         {mobileMenuOpen && (
                             <div className="lg:hidden bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-3">
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs text-gray-500">نمایش:</span>
                                     <div className="flex bg-gray-100 rounded-lg p-0.5">
                                         <button
-                                            onClick={() => {
-                                                setThreadView(true); setMobileMenuOpen(false);
-                                            }}
+                                            onClick={() => { setThreadView(true); setMobileMenuOpen(false); }}
                                             className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 ${threadView ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}
                                         >
                                             <GitBranch className="h-3.5 w-3.5" />
                                             ترد شده
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                setThreadView(false); setMobileMenuOpen(false);
-                                            }}
+                                            onClick={() => { setThreadView(false); setMobileMenuOpen(false); }}
                                             className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 ${!threadView ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}
                                         >
                                             <List className="h-3.5 w-3.5" />
@@ -649,7 +699,13 @@ export default function LettersIndex({
                                 <div className="flex flex-wrap gap-1.5">
                                     <button
                                         onClick={() => {
-                                            setSelectedDirection(''); handleSearch(); setMobileMenuOpen(false);
+                                            router.get(lettersRoute.index(), {
+                                                ...filters,
+                                                direction: '',
+                                                page: 1
+                                            }, { preserveState: true, replace: true });
+                                            setSelectedDirection('');
+                                            setMobileMenuOpen(false);
                                         }}
                                         className={`px-2 py-1 cursor-pointer rounded-lg text-xs font-medium ${!selectedDirection ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
                                     >
@@ -659,7 +715,13 @@ export default function LettersIndex({
                                         <button
                                             key={key}
                                             onClick={() => {
-                                                setSelectedDirection(key); handleSearch(); setMobileMenuOpen(false);
+                                                router.get(lettersRoute.index(), {
+                                                    ...filters,
+                                                    direction: key,
+                                                    page: 1
+                                                }, { preserveState: true, replace: true });
+                                                setSelectedDirection(key);
+                                                setMobileMenuOpen(false);
                                             }}
                                             className={`px-2 py-1 cursor-pointer rounded-lg text-xs font-medium ${selectedDirection === key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
                                         >
@@ -670,7 +732,7 @@ export default function LettersIndex({
                             </div>
                         )}
 
-                        {/* Stats Cards - same as before */}
+                        {/* Stats Cards */}
                         <div className="grid grid-cols-2 xs:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 lg:gap-4">
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2.5 sm:p-3 lg:p-4">
                                 <div className="flex items-center justify-between">
@@ -740,7 +802,7 @@ export default function LettersIndex({
                             </div>
                         </div>
 
-                        {/* View Toggle & Quick Filters (Desktop) - Fixed direction buttons */}
+                        {/* View Toggle & Quick Filters (Desktop) */}
                         <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="flex items-center gap-2">
@@ -812,7 +874,7 @@ export default function LettersIndex({
                             </div>
                         </div>
 
-                        {/* Search and Filters Bar - same as before */}
+                        {/* Search and Filters Bar */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
                             <div className="p-3 sm:p-4 lg:p-5">
                                 <div className="flex flex-col lg:flex-row gap-3">
@@ -854,7 +916,7 @@ export default function LettersIndex({
                                     </div>
                                 </div>
 
-                                {/* Extended Filters - same as before */}
+                                {/* Extended Filters */}
                                 {showFilters && (
                                     <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100">
                                         <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -949,20 +1011,20 @@ export default function LettersIndex({
                             </div>
                         ) : (
                             <>
-                                {/* Desktop Table View with new columns */}
+                                {/* Desktop Table View */}
                                 <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                                     <div className="overflow-x-auto">
-                                        <table className="min-w-full divide-y divide-gray-200">
+                                        <table className="min-w-[1000px] lg:min-w-full w-full divide-y divide-gray-200">
                                             <thead className="bg-gray-50">
                                                 <tr>
-                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500">وضعیت</th>
-                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500">شماره / نوع</th>
-                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500">موضوع</th>
-                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500">وزارت / ریاست / پوزیشن</th>
-                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden xl:table-cell">فرستنده/گیرنده</th>
-                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden lg:table-cell">وضعیت</th>
-                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden sm:table-cell">تاریخ</th>
-                                                    <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500">عملیات</th>
+                                                    {/* <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 w-16">وضعیت</th> */}
+                                                    {/* <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 w-28">شماره / نوع</th> */}
+                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 min-w-[200px]">موضوع</th>
+                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 min-w-[180px]">وزارت / ریاست / پوزیشن</th>
+                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden xl:table-cell w-36">فرستنده/گیرنده</th>
+                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden lg:table-cell w-24">وضعیت</th>
+                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden sm:table-cell w-28">تاریخ</th>
+                                                    <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 w-20">عملیات</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="bg-white divide-y divide-gray-100">
@@ -1026,7 +1088,7 @@ export default function LettersIndex({
                                     )}
                                 </div>
 
-                                {/* Mobile Cards View with organization info */}
+                                {/* Mobile Cards View */}
                                 <div className="lg:hidden space-y-3">
                                     {letters.data.map(letter => renderMobileCard(letter))}
                                 </div>
