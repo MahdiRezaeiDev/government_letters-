@@ -45,6 +45,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
     // لیست کامل آیتم‌ها (همه بخش‌های قبلی بازگردانده شد)
     const navigationItems = [
         { title: 'داشبورد', href: dashboard(), icon: LayoutDashboard },
+        { title: 'کارتابل جاری', href: cartableIndex(), icon: Layout },
         {
             title: 'مدیریت تشکیلات',
             icon: Building2,
@@ -56,16 +57,10 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 { title: 'طبقه‌بندی مکاتیب', href: categoriesIndex(), icon: FolderTree },
             ],
         },
-        {
-            title: 'میز مکاتبات',
-            icon: Mail,
-            children: [
-                { title: 'مکاتیب وارده', href: lettersIndex({ query: { type: 'incoming' } }), icon: Inbox },
-                { title: 'مکاتیب صادره', href: lettersIndex({ query: { type: 'outgoing' } }), icon: Send },
-                { title: 'ثبت مکتوب جدید', href: lettersCreate(), icon: Sparkles },
-            ],
-        },
-        { title: 'کارتابل جاری', href: cartableIndex(), icon: Layout },
+        { title: 'مکاتیب وارده', href: lettersIndex({ query: { type: 'incoming' } }), icon: Inbox },
+        { title: 'مکاتیب صادره', href: lettersIndex({ query: { type: 'outgoing' } }), icon: Send },
+        { title: 'ثبت مکتوب جدید', href: lettersCreate(), icon: Sparkles },
+
         { title: 'آرشیف مرکزی', href: archivesIndex(), icon: Archive },
         { title: 'گزارشات تحلیلی', href: reportsIndex(), icon: BarChart3, permission: 'dept-manager' },
         {
