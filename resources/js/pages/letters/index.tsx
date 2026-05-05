@@ -7,9 +7,10 @@ import {
     Inbox, Send, File, Clock, AlertCircle,
     TrendingUp, Calendar, X, Mail, CheckCircle,
     AlertTriangle, Archive, Clock as ClockIcon,
-    Reply, CornerUpLeft, CornerUpRight, User,
+    CornerUpLeft, CornerUpRight, User,
     MessageCircle, ChevronDown, ChevronUp,
-    CircleDot, Circle, List, GitBranch, Menu
+    CircleDot, Circle, List, GitBranch, Menu,
+    Building2, Briefcase, Users as UsersIcon
 } from 'lucide-react';
 import React, { useState, useMemo } from 'react';
 import lettersRoute from '@/routes/letters';
@@ -65,7 +66,9 @@ export default function LettersIndex({
 
     // تبدیل آرایه تخت به ساختار درختی
     const threadedLetters = useMemo(() => {
-        if (!threadView) return null;
+        if (!threadView) {
+            return null;
+        }
 
         const letterMap = new Map<number, ThreadedLetter>();
         const rootLetters: ThreadedLetter[] = [];
@@ -76,8 +79,10 @@ export default function LettersIndex({
 
         letters.data.forEach(letter => {
             const node = letterMap.get(letter.id);
+
             if (node && letter.parent_letter_id && letterMap.has(letter.parent_letter_id)) {
                 const parent = letterMap.get(letter.parent_letter_id);
+
                 if (parent) {
                     parent.children.push(node);
                 }
@@ -93,11 +98,13 @@ export default function LettersIndex({
 
     const toggleThread = (letterId: number) => {
         const newExpanded = new Set(expandedThreads);
+
         if (newExpanded.has(letterId)) {
             newExpanded.delete(letterId);
         } else {
             newExpanded.add(letterId);
         }
+
         setExpandedThreads(newExpanded);
     };
 
@@ -116,14 +123,26 @@ export default function LettersIndex({
     };
 
     const getLetterRole = (letter: Letter) => {
-        if (letter.sender_user_id === currentUserId) return 'sent';
-        if (letter.recipient_user_id === currentUserId) return 'received';
-        if (letter.created_by === currentUserId && letter.final_status === 'draft') return 'draft';
+        if (letter.sender_user_id === currentUserId) {
+            return 'sent';
+        }
+
+        if (letter.recipient_user_id === currentUserId) {
+            return 'received';
+        }
+
+        if (letter.created_by === currentUserId && letter.final_status === 'draft') {
+            return 'draft';
+        }
+
         return 'other';
     };
 
     const isUnread = (letter: Letter) => {
-        if (!letter.views || letter.views.length === 0) return true;
+        if (!letter.views || letter.views.length === 0) {
+            return true;
+        }
+
         return !letter.views.some((v: any) => v.user_id === currentUserId);
     };
 
@@ -188,9 +207,32 @@ export default function LettersIndex({
         const senderText = letter.sender_name || letter.sender_user?.full_name || 'نامشخص';
         const recipientText = letter.recipient_name || letter.recipient_user?.full_name || 'گیرنده خارجی';
 
-        if (role === 'sent') return recipientText;
-        if (role === 'received') return senderText;
+        if (role === 'sent') {
+            return recipientText;
+        }
+
+        if (role === 'received') {
+            return senderText;
+        }
+
         return `${senderText} → ${recipientText}`;
+    };
+
+    // تابع کمکی برای دریافت اطلاعات سازمانی فرستنده/گیرنده
+    const getSenderOrganizationInfo = (letter: Letter) => {
+        return {
+            organization: letter?.organization?.name || letter.sender_organization?.name || '-',
+            department: letter?.department?.name || letter.sender_department?.name || '-',
+            position: letter?.sender_position_name || '-'
+        };
+    };
+    
+    const getRecipientOrganizationInfo = (letter: Letter) => {
+        return {
+            organization: letter?.organization?.name || letter.recipient_organization?.name || '-',
+            department: letter?.recipient_department?.name || letter.recipient_department?.name || '-',
+            position: letter?.recipient_position_name|| '-'
+        };
     };
 
     const stats = {
@@ -214,6 +256,13 @@ export default function LettersIndex({
         const TypeIcon = typeConfig[letter.letter_type]?.icon || File;
         const unread = isUnread(letter);
         const relationText = getRelationText(letter, role);
+
+        // دریافت اطلاعات سازمانی بر اساس نقش
+        const orgInfo = role === 'sent'
+            ? 
+            getRecipientOrganizationInfo(letter)
+            : 
+            getSenderOrganizationInfo(letter);
 
         return (
             <div
@@ -272,6 +321,25 @@ export default function LettersIndex({
                         <span className="truncate">{relationText}</span>
                     </div>
 
+                    {/* اطلاعات سازمانی (جدید) */}
+                    <div className="bg-gray-50 rounded-lg p-2.5 mb-3 space-y-1.5">
+                        <div className="flex items-center gap-1.5 text-[11px]">
+                            <Building2 className="h-3 w-3 text-gray-400" />
+                            <span className="text-gray-500">وزارت:</span>
+                            <span className="text-gray-700 font-medium truncate">{orgInfo.organization}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[11px]">
+                            <Briefcase className="h-3 w-3 text-gray-400" />
+                            <span className="text-gray-500">ریاست:</span>
+                            <span className="text-gray-700 font-medium truncate">{orgInfo.department}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[11px]">
+                            <UsersIcon className="h-3 w-3 text-gray-400" />
+                            <span className="text-gray-500">پوزیشن:</span>
+                            <span className="text-gray-700 font-medium truncate">{orgInfo.position}</span>
+                        </div>
+                    </div>
+
                     {/* برچسب‌ها */}
                     <div className="flex flex-wrap gap-1.5 mb-3">
                         <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${status.bg} ${status.text}`}>
@@ -325,6 +393,14 @@ export default function LettersIndex({
         const unread = isUnread(letter);
         const relationText = getRelationText(letter, role);
 
+        // دریافت اطلاعات سازمانی بر اساس نقش
+        const orgInfo = role === 'sent'
+            ? getRecipientOrganizationInfo(letter)
+            : getSenderOrganizationInfo(letter);
+
+        console.log(role);
+
+
         return (
             <React.Fragment key={letter.id}>
                 <tr className={`
@@ -376,7 +452,7 @@ export default function LettersIndex({
 
                     {/* ستون موضوع */}
                     <td className="px-3 sm:px-4 py-3">
-                        <div className="flex flex-col max-w-[200px] lg:max-w-md">
+                        <div className="flex flex-col max-w-[180px] lg:max-w-[250px]">
                             <p className={`text-xs sm:text-sm line-clamp-2 ${unread ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
                                 {letter.subject}
                             </p>
@@ -384,7 +460,7 @@ export default function LettersIndex({
                                 {hasChildren && (
                                     <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[10px] text-green-600 bg-green-50 px-1 py-0.5 rounded-full">
                                         <MessageCircle className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
-                                        {letter.children.length}
+                                        {letter.children.length} پاسخ
                                     </span>
                                 )}
                                 {unread && (
@@ -396,14 +472,38 @@ export default function LettersIndex({
                         </div>
                     </td>
 
-                    {/* ستون فرستنده/گیرنده - مخفی در موبایل */}
-                    <td className="px-3 sm:px-4 py-3 hidden md:table-cell">
+                    {/* ستون اطلاعات سازمانی (وزارت، ریاست، پوزیشن) */}
+                    <td className="px-3 sm:px-4 py-3">
+                        <div className="flex flex-col gap-0.5 min-w-[140px]">
+                            <div className="flex items-center gap-1 text-[10px] sm:text-xs">
+                                <Building2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-400" />
+                                <span className="text-gray-500 truncate max-w-[120px] lg:max-w-[150px]">
+                                    {orgInfo.organization}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1 text-[10px] sm:text-xs">
+                                <Briefcase className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-400" />
+                                <span className="text-gray-500 truncate max-w-[120px] lg:max-w-[150px]">
+                                    {orgInfo.department}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1 text-[10px] sm:text-xs">
+                                <UsersIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-400" />
+                                <span className="text-gray-500 truncate max-w-[120px] lg:max-w-[150px]">
+                                    {orgInfo.position}
+                                </span>
+                            </div>
+                        </div>
+                    </td>
+
+                    {/* ستون فرستنده/گیرنده */}
+                    <td className="px-3 sm:px-4 py-3 hidden xl:table-cell">
                         <div className="flex flex-col">
                             <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-medium">
                                 <span className={`w-2 h-2 rounded-full ${role === 'sent' ? 'bg-green-500' : 'bg-blue-500'}`}></span>
                                 {role === 'sent' ? 'به:' : 'از:'}
                             </span>
-                            <span className="text-xs sm:text-sm text-gray-700 truncate max-w-[120px] lg:max-w-[180px] mt-0.5">
+                            <span className="text-xs sm:text-sm text-gray-700 truncate max-w-[120px] mt-0.5">
                                 {relationText}
                             </span>
                         </div>
@@ -417,7 +517,7 @@ export default function LettersIndex({
                         </span>
                     </td>
 
-                    {/* ستون تاریخ - مخفی در موبایل */}
+                    {/* ستون تاریخ */}
                     <td className="px-3 sm:px-4 py-3 whitespace-nowrap hidden sm:table-cell">
                         <div className="flex flex-col gap-0.5">
                             <div className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-gray-500">
@@ -474,11 +574,11 @@ export default function LettersIndex({
         <>
             <Head title="مدیریت مکتوب‌ها" />
 
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+            <div className="min-h-screen">
                 <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
                     <div className="space-y-4 sm:space-y-5 lg:space-y-6">
-                        {/* Header Section */}
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        {/* Header Section - same as before */}
+                        <div className="flex flex-col bg-white p-5 rounded-2xl sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div>
                                 <div className="flex items-center gap-2 sm:gap-3">
                                     <div className="p-1.5 sm:p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
@@ -516,34 +616,28 @@ export default function LettersIndex({
                                         </button>
                                     </div>
                                 )}
-                                {can.create && (
-                                    <Link
-                                        href={lettersRoute.create()}
-                                        className="inline-flex items-center px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl text-xs sm:text-sm font-medium text-white hover:from-blue-700 hover:to-blue-800 transition-all shadow-md"
-                                    >
-                                        <Plus className="ml-1 sm:ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                        <span className="hidden xs:inline">مکتوب جدید</span>
-                                        <span className="xs:hidden">جدید</span>
-                                    </Link>
-                                )}
                             </div>
                         </div>
 
-                        {/* Mobile Menu Panel */}
+                        {/* Mobile Menu Panel - same as before */}
                         {mobileMenuOpen && (
                             <div className="lg:hidden bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-3">
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs text-gray-500">نمایش:</span>
                                     <div className="flex bg-gray-100 rounded-lg p-0.5">
                                         <button
-                                            onClick={() => { setThreadView(true); setMobileMenuOpen(false); }}
+                                            onClick={() => {
+                                                setThreadView(true); setMobileMenuOpen(false);
+                                            }}
                                             className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 ${threadView ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}
                                         >
                                             <GitBranch className="h-3.5 w-3.5" />
                                             ترد شده
                                         </button>
                                         <button
-                                            onClick={() => { setThreadView(false); setMobileMenuOpen(false); }}
+                                            onClick={() => {
+                                                setThreadView(false); setMobileMenuOpen(false);
+                                            }}
                                             className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 ${!threadView ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}
                                         >
                                             <List className="h-3.5 w-3.5" />
@@ -554,16 +648,20 @@ export default function LettersIndex({
 
                                 <div className="flex flex-wrap gap-1.5">
                                     <button
-                                        onClick={() => { setSelectedDirection(''); handleSearch(); setMobileMenuOpen(false); }}
-                                        className={`px-2 py-1 rounded-lg text-xs font-medium ${!selectedDirection ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
+                                        onClick={() => {
+                                            setSelectedDirection(''); handleSearch(); setMobileMenuOpen(false);
+                                        }}
+                                        className={`px-2 py-1 cursor-pointer rounded-lg text-xs font-medium ${!selectedDirection ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
                                     >
                                         همه
                                     </button>
                                     {Object.entries(directions).map(([key, label]) => (
                                         <button
                                             key={key}
-                                            onClick={() => { setSelectedDirection(key); handleSearch(); setMobileMenuOpen(false); }}
-                                            className={`px-2 py-1 rounded-lg text-xs font-medium ${selectedDirection === key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
+                                            onClick={() => {
+                                                setSelectedDirection(key); handleSearch(); setMobileMenuOpen(false);
+                                            }}
+                                            className={`px-2 py-1 cursor-pointer rounded-lg text-xs font-medium ${selectedDirection === key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
                                         >
                                             {label}
                                         </button>
@@ -572,7 +670,7 @@ export default function LettersIndex({
                             </div>
                         )}
 
-                        {/* Stats Cards */}
+                        {/* Stats Cards - same as before */}
                         <div className="grid grid-cols-2 xs:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 lg:gap-4">
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2.5 sm:p-3 lg:p-4">
                                 <div className="flex items-center justify-between">
@@ -642,7 +740,7 @@ export default function LettersIndex({
                             </div>
                         </div>
 
-                        {/* View Toggle & Quick Filters (Desktop) */}
+                        {/* View Toggle & Quick Filters (Desktop) - Fixed direction buttons */}
                         <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="flex items-center gap-2">
@@ -667,8 +765,15 @@ export default function LettersIndex({
 
                                 <div className="flex gap-1.5 flex-wrap">
                                     <button
-                                        onClick={() => { setSelectedDirection(''); handleSearch(); }}
-                                        className={`px-3 py-1.5 rounded-lg text-xs font-medium ${!selectedDirection ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
+                                        onClick={() => {
+                                            router.get(lettersRoute.index(), {
+                                                ...filters,
+                                                direction: '',
+                                                page: 1
+                                            }, { preserveState: true, replace: true });
+                                            setSelectedDirection('');
+                                        }}
+                                        className={`px-3 py-1.5 rounded-lg cursor-pointer text-xs font-medium ${!selectedDirection ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                                     >
                                         همه
                                     </button>
@@ -681,8 +786,9 @@ export default function LettersIndex({
                                                     direction: key,
                                                     page: 1
                                                 }, { preserveState: true, replace: true });
+                                                setSelectedDirection(key);
                                             }}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-medium ${selectedDirection === key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
+                                            className={`px-3 py-1.5 rounded-lg cursor-pointer text-xs font-medium ${selectedDirection === key ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                                         >
                                             {label}
                                         </button>
@@ -706,7 +812,7 @@ export default function LettersIndex({
                             </div>
                         </div>
 
-                        {/* Search and Filters Bar */}
+                        {/* Search and Filters Bar - same as before */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
                             <div className="p-3 sm:p-4 lg:p-5">
                                 <div className="flex flex-col lg:flex-row gap-3">
@@ -748,7 +854,7 @@ export default function LettersIndex({
                                     </div>
                                 </div>
 
-                                {/* Extended Filters */}
+                                {/* Extended Filters - same as before */}
                                 {showFilters && (
                                     <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100">
                                         <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -769,7 +875,10 @@ export default function LettersIndex({
                                                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">جهت</label>
                                                 <select
                                                     value={selectedDirection}
-                                                    onChange={(e) => setSelectedDirection(e.target.value)}
+                                                    onChange={(e) => {
+                                                        setSelectedDirection(e.target.value);
+                                                        handleSearch();
+                                                    }}
                                                     className="w-full border border-gray-200 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 >
                                                     <option value="">همه</option>
@@ -840,7 +949,7 @@ export default function LettersIndex({
                             </div>
                         ) : (
                             <>
-                                {/* Desktop Table View */}
+                                {/* Desktop Table View with new columns */}
                                 <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                                     <div className="overflow-x-auto">
                                         <table className="min-w-full divide-y divide-gray-200">
@@ -849,9 +958,10 @@ export default function LettersIndex({
                                                     <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500">وضعیت</th>
                                                     <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500">شماره / نوع</th>
                                                     <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500">موضوع</th>
-                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500">فرستنده/گیرنده</th>
-                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500">وضعیت</th>
-                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500">تاریخ</th>
+                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500">وزارت / ریاست / پوزیشن</th>
+                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden xl:table-cell">فرستنده/گیرنده</th>
+                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden lg:table-cell">وضعیت</th>
+                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden sm:table-cell">تاریخ</th>
                                                     <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500">عملیات</th>
                                                 </tr>
                                             </thead>
@@ -881,10 +991,16 @@ export default function LettersIndex({
                                                 <div className="hidden sm:flex gap-1">
                                                     {[...Array(Math.min(5, letters.last_page))].map((_, i) => {
                                                         let pageNum;
-                                                        if (letters.last_page <= 5) pageNum = i + 1;
-                                                        else if (letters.current_page <= 3) pageNum = i + 1;
-                                                        else if (letters.current_page >= letters.last_page - 2) pageNum = letters.last_page - 4 + i;
-                                                        else pageNum = letters.current_page - 2 + i;
+
+                                                        if (letters.last_page <= 5) {
+                                                            pageNum = i + 1;
+                                                        } else if (letters.current_page <= 3) {
+                                                            pageNum = i + 1;
+                                                        } else if (letters.current_page >= letters.last_page - 2) {
+                                                            pageNum = letters.last_page - 4 + i;
+                                                        } else {
+                                                            pageNum = letters.current_page - 2 + i;
+                                                        }
 
                                                         return (
                                                             <button
@@ -910,7 +1026,7 @@ export default function LettersIndex({
                                     )}
                                 </div>
 
-                                {/* Mobile Cards View */}
+                                {/* Mobile Cards View with organization info */}
                                 <div className="lg:hidden space-y-3">
                                     {letters.data.map(letter => renderMobileCard(letter))}
                                 </div>

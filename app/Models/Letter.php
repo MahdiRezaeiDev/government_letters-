@@ -199,6 +199,16 @@ class Letter extends Model
         return $this->belongsTo(Department::class, 'sender_department_id');
     }
 
+    public function senderOrganization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class, 'organization_id');
+    }
+
+    public function recipientOrganization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class, 'recipient_organization_id');
+    }
+
     public function recipientUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recipient_user_id');
