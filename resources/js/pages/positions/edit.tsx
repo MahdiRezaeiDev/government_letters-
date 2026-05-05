@@ -48,7 +48,7 @@ export default function PositionsEdit({ position, organizations }: Props) {
         <>
             <Head title={`ویرایش ${position.name}`} />
 
-            <div className="min-h-screen bg-slate-50/50" dir="rtl">
+            <div className="min-h-screen">
                 {/* Form Content */}
                 <div className="max-w-5xl mx-auto px-4 sm:px-6">
                     <form id="pos-form" onSubmit={handleSubmit}>
@@ -218,7 +218,7 @@ export default function PositionsEdit({ position, organizations }: Props) {
                         </div>
 
                         {/* Mobile Actions */}
-                        <div className="bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 z-20">
+                        <div className=" bg-white mt-5 rounded-2xl border-slate-200 p-4 z-20">
                             <div className="flex gap-3 max-w-5xl mx-auto">
                                 <button
                                     type="submit"

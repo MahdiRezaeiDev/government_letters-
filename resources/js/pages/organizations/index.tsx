@@ -169,7 +169,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                         className="group relative inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                                     >
                                         <Plus className="ml-2 h-4 w-4 transition-transform group-hover:rotate-90 duration-200" />
-                                         ثبت وزارت
+                                        ثبت وزارت
                                         <span className="absolute inset-0 rounded-xl bg-white opacity-0 group-hover:opacity-10 transition-opacity"></span>
                                     </Link>
                                 )}
@@ -199,11 +199,13 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                         </div>
 
                         {/* Search and Filters Bar */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-                            <div className="p-5">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div className="p-4 md:p-5">
                                 <div className="flex flex-col lg:flex-row gap-4">
+                                    {/* سمت راست: فیلد جستجو */}
                                     <div className="flex-1">
                                         <div className="relative group">
+                                            {/* آیکون سمت راست برای RTL */}
                                             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                                             <input
                                                 type="text"
@@ -211,64 +213,76 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                                                 placeholder="جستجو بر اساس نام، کد، ایمیل یا تلفن..."
-                                                className="w-full pr-10 pl-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                                className="w-full pr-10 pl-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                                                dir="rtl"
                                             />
                                         </div>
                                     </div>
+
+                                    {/* دکمه‌ها */}
                                     <div className="flex gap-3">
                                         <button
                                             onClick={() => setShowFilters(!showFilters)}
-                                            className={`inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${showFilters || hasActiveFilters
-                                                ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
-                                                : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
+                                            className={`inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${showFilters || hasActiveFilters
+                                                    ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                                                    : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 hover:border-gray-300'
                                                 }`}
                                         >
                                             <Filter className="ml-2 h-4 w-4" />
                                             فیلترها
                                             {hasActiveFilters && (
-                                                <span className="mr-2 w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
+                                                <span className="mr-2 relative flex h-2 w-2">
+                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+                                                </span>
                                             )}
                                         </button>
                                         <button
                                             onClick={handleSearch}
-                                            className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-sm"
+                                            className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-medium hover:from-blue-700 hover:to-indigo-700 hover:shadow-md transition-all duration-200 shadow-sm active:scale-[0.98]"
                                         >
                                             جستجو
                                         </button>
                                     </div>
                                 </div>
 
-                                {/* Extended Filters */}
-                                <div className={`transition-all duration-300 overflow-hidden ${showFilters ? 'max-h-96 opacity-100 mt-4 pt-4' : 'max-h-0 opacity-0'}`}>
-                                    {showFilters && (
-                                        <>
-                                            <div className="border-t border-gray-100 pt-4">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-2">وضعیت</label>
-                                                        <select
-                                                            value={selectedStatus}
-                                                            onChange={(e) => setSelectedStatus(e.target.value)}
-                                                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                        >
-                                                            <option value="">همه وضعیت‌ها</option>
-                                                            <option value="active">فعال</option>
-                                                            <option value="inactive">غیرفعال</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div className="flex justify-end mt-4">
-                                                    <button
-                                                        onClick={handleReset}
-                                                        className="inline-flex items-center px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
-                                                    >
-                                                        <X className="ml-1 h-4 w-4" />
-                                                        پاک کردن همه فیلترها
-                                                    </button>
-                                                </div>
+                                {/* پنل فیلترهای پیشرفته */}
+                                <div
+                                    className={`transition-all duration-300 ease-in-out overflow-hidden ${showFilters ? 'max-h-[500px] opacity-100 mt-5' : 'max-h-0 opacity-0'
+                                        }`}
+                                >
+                                    <div className="border-t border-gray-100 pt-5">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {/* فیلتر وضعیت */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    وضعیت
+                                                </label>
+                                                <select
+                                                    value={selectedStatus}
+                                                    onChange={(e) => setSelectedStatus(e.target.value)}
+                                                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
+                                                >
+                                                    <option value="">همه وضعیت‌ها</option>
+                                                    <option value="active">فعال</option>
+                                                    <option value="inactive">غیرفعال</option>
+                                                </select>
                                             </div>
-                                        </>
-                                    )}
+
+                                            {/* در آینده می‌توانی فیلترهای بیشتری اضافه کنی */}
+                                        </div>
+
+                                        {/* دکمه ریست */}
+                                        <div className="flex justify-end mt-5 pt-2 border-t border-gray-50">
+                                            <button
+                                                onClick={handleReset}
+                                                className="inline-flex items-center px-4 py-2 text-sm text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-xl transition-colors duration-200"
+                                            >
+                                                <X className="ml-1.5 h-4 w-4" />
+                                                پاک کردن همه فیلترها
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
