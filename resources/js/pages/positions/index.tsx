@@ -124,11 +124,11 @@ export default function PositionsIndex({ positions, departments, filters, can }:
         <>
             <Head title="مدیریت وظایف" />
 
-            <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-slate-100">
+            <div className="min-h-screen">
                 <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="space-y-6">
                         {/* Header Section */}
-                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 animate-fade-in">
+                        <div className="flex flex-col bg-white p-5 rounded-2xl lg:flex-row lg:items-center lg:justify-between gap-4 animate-fade-in">
                             <div>
                                 <div className="flex items-center gap-3">
                                     <div className="relative">
