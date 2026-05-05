@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\LetterCategoryController;
 use App\Http\Controllers\LetterController;
+use App\Http\Controllers\LetterDelegationController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\ReportController;
@@ -191,6 +192,44 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:view-letters')->name('cartable.complete');
     Route::post('routings/{routing}/reject', [CartableController::class, 'reject'])
         ->middleware('permission:view-letters')->name('cartable.reject');
+
+    // ==================== ارجاع مکتوب برای پاسخ (Delegation) ====================
+    Route::prefix('delegations')->middleware(['auth', 'verified'])->group(function () {
+        // ارجاع مکتوب به شخص دیگر
+        Route::post('/letters/{letter}/delegate', [LetterDelegationController::class, 'store'])
+            ->middleware('permission:view-letters')
+            ->name('letters.delegate');
+
+        // پذیرش ارجاع
+        Route::post('/{delegation}/accept', [LetterDelegationController::class, 'accept'])
+            ->middleware('permission:view-letters')
+            ->name('delegations.accept');
+
+        // رد ارجاع
+        Route::post('/{delegation}/reject', [LetterDelegationController::class, 'reject'])
+            ->middleware('permission:view-letters')
+            ->name('delegations.reject');
+
+        // لغو ارجاع (توسط ارجاع دهنده)
+        Route::post('/{delegation}/cancel', [LetterDelegationController::class, 'cancel'])
+            ->middleware('permission:view-letters')
+            ->name('delegations.cancel');
+
+        // ثبت پاسخ توسط شخص ارجاع شده
+        Route::post('/{delegation}/reply', [LetterDelegationController::class, 'submitReply'])
+            ->middleware('permission:view-letters')
+            ->name('delegations.submit-reply');
+
+        // لیست مکتوب‌های ارجاع شده به من (برای کارتابل)
+        Route::get('/incoming', [LetterDelegationController::class, 'delegatedToMe'])
+            ->middleware('permission:view-letters')
+            ->name('delegations.incoming');
+
+        // لیست مکتوب‌هایی که من ارجاع داده‌ام
+        Route::get('/outgoing', [LetterDelegationController::class, 'delegatedByMe'])
+            ->middleware('permission:view-letters')
+            ->name('delegations.outgoing');
+    });
 
     // ═══════════════════════════════════════════════════════
     // بایگانی و پرونده‌ها

@@ -264,6 +264,81 @@ class Letter extends Model
         return $this->hasMany(Letter::class, 'is_follow_up');
     }
 
+    /**
+     * رابطه با ارجاع‌ها
+     */
+    public function delegations()
+    {
+        return $this->hasMany(LetterDelegation::class, 'letter_id');
+    }
+
+    /**
+     * آخرین ارجاع فعال (در انتظار یا پذیرفته شده)
+     */
+    public function activeDelegation()
+    {
+        return $this->hasOne(LetterDelegation::class, 'letter_id')
+            ->whereIn('status', ['pending', 'accepted'])
+            ->latest('delegated_at');
+    }
+
+    /**
+     * آخرین ارجاع (هر وضعیتی)
+     */
+    public function latestDelegation()
+    {
+        return $this->hasOne(LetterDelegation::class, 'letter_id')
+            ->latest('delegated_at');
+    }
+
+    /**
+     * بررسی اینکه آیا این مکتوب به کاربر خاصی ارجاع شده است
+     */
+    public function isDelegatedTo(int $userId): bool
+    {
+        return $this->delegations()
+            ->where('delegated_to_user_id', $userId)
+            ->whereIn('status', ['pending', 'accepted'])
+            ->exists();
+    }
+
+    /**
+     * بررسی اینکه آیا این مکتوب ارجاع فعال دارد
+     */
+    public function hasActiveDelegation(): bool
+    {
+        return $this->delegations()
+            ->whereIn('status', ['pending', 'accepted'])
+            ->exists();
+    }
+
+    /**
+     * دریافت کاربری که مکتوب به او ارجاع شده (در صورت وجود)
+     */
+    public function getDelegatedToUserAttribute()
+    {
+        $delegation = $this->activeDelegation;
+        return $delegation ? $delegation->delegatedTo : null;
+    }
+
+    /**
+     * دریافت کاربری که ارجاع را انجام داده
+     */
+    public function getDelegatedByUserAttribute()
+    {
+        $delegation = $this->latestDelegation;
+        return $delegation ? $delegation->delegatedBy : null;
+    }
+
+    /**
+     * دریافت دستورالعمل ارجاع
+     */
+    public function getDelegationNoteAttribute()
+    {
+        $delegation = $this->latestDelegation;
+        return $delegation ? $delegation->delegated_note : null;
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

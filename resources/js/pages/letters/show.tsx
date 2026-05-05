@@ -1,9 +1,12 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    Archive, Send, Printer, Clock, CheckCircle, XCircle, ChevronRight, CornerUpLeft} from 'lucide-react';
+    Archive, Send, Printer, Clock, CheckCircle, XCircle, CornerUpLeft,
+    CornerUpRight, UserCheck
+} from 'lucide-react';
 import { useState } from 'react';
 import AttachmentList from '@/components/AttachmentList';
 import AttachmentPreviewModal from '@/components/AttachmentPreviewModal';
+import { DelegateReplyModal } from '@/components/DelegateReplyModal';
 import letters from '@/routes/letters';
 import routings from '@/routes/routings';
 import type { Letter, Case } from '@/types';
@@ -14,7 +17,13 @@ interface Attachment {
     file_size: number;
     mime_type?: string;
     file_path?: string;
-    
+}
+
+interface User {
+    id: number;
+    full_name: string;
+    position?: { name: string };
+    department?: { name: string };
 }
 
 interface Props {
@@ -22,6 +31,7 @@ interface Props {
     securityLevels: Record<string, string>;
     priorityLevels: Record<string, string>;
     availableCases?: Case[];
+    users: User[];  // اضافه شد - لیست کاربران برای ارجاع
     can: {
         edit: boolean;
         delete: boolean;
@@ -30,6 +40,7 @@ interface Props {
         approve: boolean;
         reject: boolean;
         reply: boolean;
+        delegate: boolean;  // اضافه شد - مجوز ارجاع
     };
 }
 
@@ -37,9 +48,10 @@ interface Props {
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; textColor: string }> = {
     draft: { label: 'پیش‌نویس', color: '#64748b', bg: 'bg-slate-100', textColor: 'text-slate-700' },
     pending: { label: 'در انتظار', color: '#b45309', bg: 'bg-amber-100', textColor: 'text-amber-700' },
-    approved: { label: 'تأیید شده', color: '#15803d', bg: 'bg-emerald-100', textColor: 'text-emerald-700' },
+    approved: { label: 'تایید شده', color: '#15803d', bg: 'bg-emerald-100', textColor: 'text-emerald-700' },
     rejected: { label: 'رد شده', color: '#b91c1c', bg: 'bg-red-100', textColor: 'text-red-700' },
     archived: { label: 'بایگانی', color: '#475569', bg: 'bg-gray-100', textColor: 'text-gray-700' },
+    delegated: { label: 'ارجاع شده', color: '#d97706', bg: 'bg-amber-100', textColor: 'text-amber-700' }, // اضافه شد
 };
 
 const ROUTING_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -49,7 +61,7 @@ const ROUTING_STATUS_CONFIG: Record<string, { label: string; color: string; bg: 
 };
 
 const ACTION_LABELS: Record<string, string> = {
-    approval: 'جهت تأیید',
+    approval: 'جهت تایید',
     action: 'جهت اقدام',
     information: 'جهت اطلاع',
     coordination: 'جهت هماهنگی',
@@ -58,10 +70,7 @@ const ACTION_LABELS: Record<string, string> = {
 
 // ─── Helper Functions ────────────────────────────────────────────────────────
 const formatDate = (dateString: string | undefined): string => {
-    if (!dateString) {
-        return '—';
-    }
-
+    if (!dateString) return '—';
     return new Date(dateString).toLocaleDateString('fa-Af', {
         year: 'numeric',
         month: 'long',
@@ -84,39 +93,40 @@ export default function LettersShow({
     letter,
     securityLevels,
     priorityLevels,
+    users,
     can
 }: Props) {
     const [loading, setLoading] = useState(false);
     const [previewAtt, setPreviewAtt] = useState<Attachment | null>(null);
+    const [showDelegateModal, setShowDelegateModal] = useState(false);
 
     const status = STATUS_CONFIG[letter.final_status] || STATUS_CONFIG.pending;
 
-    const handleApprove = () => {
-        if (!confirm('آیا از تأیید این نامه اطمینان دارید؟')) {
-            return;
-        }
+    // بررسی ارجاع فعال به کاربر فعلی
+    const activeDelegation = letter.delegations?.find(
+        (d: any) => d.delegated_to_user_id === (window as any).__page?.props?.auth?.user?.id
+            && d.status === 'pending'
+    );
+    const isDelegatedToMe = !!activeDelegation;
 
+    // بررسی اینکه کاربر فعلی ارجاع دهنده است
+    const isDelegatedByMe = letter.delegated_by_user_id === (window as any).__page?.props?.auth?.user?.id;
+
+    const handleApprove = () => {
+        if (!confirm('آیا از تایید این نامه اطمینان دارید؟')) return;
         setLoading(true);
         router.post(letters.approve({ letter: letter.id }), {}, {
-            onSuccess: () => {
-                setLoading(false); router.reload();
-            },
+            onSuccess: () => { setLoading(false); router.reload(); },
             onError: () => setLoading(false),
         });
     };
 
     const handleReject = () => {
         const reason = prompt('لطفاً دلیل رد را وارد کنید:');
-
-        if (!reason) {
-            return;
-        }
-
+        if (!reason) return;
         setLoading(true);
         router.post(letters.reject({ letter: letter.id }), { reason }, {
-            onSuccess: () => {
-                setLoading(false); router.reload();
-            },
+            onSuccess: () => { setLoading(false); router.reload(); },
             onError: () => setLoading(false),
         });
     };
@@ -125,8 +135,45 @@ export default function LettersShow({
         <>
             <Head title={`نامه: ${letter.subject}`} />
 
-            <div className="min-h-screen ">
+            <div className="min-h-screen">
                 <div className="max-w-3xl mx-auto">
+
+                    {/* بنر ارجاع شده به من */}
+                    {isDelegatedToMe && (
+                        <div className="mb-4 bg-amber-50 border-r-4 border-r-amber-400 rounded-xl p-4">
+                            <div className="flex items-start gap-3">
+                                <UserCheck className="h-5 w-5 text-amber-600 mt-0.5" />
+                                <div className="flex-1">
+                                    <p className="text-sm font-bold text-amber-800">
+                                        این مکتوب به شما ارجاع شده است
+                                    </p>
+                                    {activeDelegation?.delegated_note && (
+                                        <p className="text-sm text-amber-700 mt-2">
+                                            📌 {activeDelegation.delegated_note}
+                                        </p>
+                                    )}
+                                    <Link
+                                        href={letters.reply.form({ letter: letter.id })}
+                                        className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 text-xs font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
+                                    >
+                                        <CornerUpLeft className="h-3.5 w-3.5" /> پاسخ به این مکتوب
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* بنر ارجاع داده شده توسط من */}
+                    {isDelegatedByMe && !isDelegatedToMe && (
+                        <div className="mb-4 bg-blue-50 border-r-4 border-r-blue-400 rounded-xl p-4">
+                            <div className="flex items-center gap-2">
+                                <CornerUpRight className="h-5 w-5 text-blue-600" />
+                                <p className="text-sm text-blue-700">
+                                    شما این مکتوب را به شخص دیگری ارجاع داده‌اید
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                     {/* ── Main Card ── */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -151,15 +198,17 @@ export default function LettersShow({
 
                             {/* Action Buttons */}
                             <div className="flex items-center gap-1.5 flex-wrap">
-                                {/* <button
-                                    onClick={() => window.print()}
-                                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
-                                    title="چاپ"
-                                >
-                                    <Printer className="h-4 w-4" />
-                                </button> */}
+                                {/* دکمه ارجاع برای پاسخ - فقط برای گیرنده اصلی */}
+                                {can.delegate && letter.recipient_user_id === (window as any).__page?.props?.auth?.user?.id && !isDelegatedByMe && (
+                                    <button
+                                        onClick={() => setShowDelegateModal(true)}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
+                                    >
+                                        <CornerUpRight className="h-3.5 w-3.5" /> ارجاع برای پاسخ
+                                    </button>
+                                )}
 
-                                {can.reply && letter.final_status !== 'draft' && (
+                                {can.reply && letter.final_status !== 'draft' && !isDelegatedToMe && (
                                     <Link
                                         href={letters.reply.form({ letter: letter.id })}
                                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
@@ -182,9 +231,7 @@ export default function LettersShow({
                                         onClick={() => {
                                             router.post(letters.show({ letter: letter.id }), {
                                                 case_id: prompt('آیدی پرونده را وارد کنید:')
-                                            }, {
-                                                onSuccess: () => router.reload()
-                                            });
+                                            }, { onSuccess: () => router.reload() });
                                         }}
                                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
                                     >
@@ -208,7 +255,7 @@ export default function LettersShow({
                                             disabled={loading}
                                             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 transition disabled:opacity-50"
                                         >
-                                            <CheckCircle className="h-3.5 w-3.5" /> تأیید
+                                            <CheckCircle className="h-3.5 w-3.5" /> تایید
                                         </button>
                                         <button
                                             onClick={handleReject}
@@ -324,7 +371,7 @@ export default function LettersShow({
                                             disabled={loading}
                                             className="flex-1 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
                                         >
-                                            <CheckCircle className="h-4 w-4" /> تأیید نامه
+                                            <CheckCircle className="h-4 w-4" /> تایید نامه
                                         </button>
                                     )}
                                     {can.reject && (
@@ -392,6 +439,38 @@ export default function LettersShow({
                             </div>
                         </div>
                     )}
+
+                    {/* ── Delegation History ── */}
+                    {letter.delegations && letter.delegations.length > 0 && (
+                        <div className="mt-4 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                            <div className="px-6 py-4 border-b border-gray-100">
+                                <h3 className="text-sm font-bold text-gray-800">تاریخچه ارجاع برای پاسخ</h3>
+                            </div>
+                            <div className="p-6">
+                                <div className="space-y-3">
+                                    {letter.delegations.map((delegation: any) => (
+                                        <div key={delegation.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-800">
+                                                    {delegation.delegated_by?.full_name} → {delegation.delegated_to?.full_name}
+                                                </p>
+                                                {delegation.delegated_note && (
+                                                    <p className="text-xs text-gray-500 mt-1">{delegation.delegated_note}</p>
+                                                )}
+                                            </div>
+                                            <span className={`text-xs px-2 py-1 rounded-full ${delegation.status === 'replied' ? 'bg-emerald-100 text-emerald-700' :
+                                                    delegation.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                                        'bg-gray-100 text-gray-600'
+                                                }`}>
+                                                {delegation.status === 'replied' ? 'پاسخ داده شد' :
+                                                    delegation.status === 'pending' ? 'در انتظار' : delegation.status}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -402,6 +481,16 @@ export default function LettersShow({
                     onClose={() => setPreviewAtt(null)}
                 />
             )}
+
+            {/* Delegate Modal */}
+            <DelegateReplyModal
+                isOpen={showDelegateModal}
+                onClose={() => setShowDelegateModal(false)}
+                letterId={letter.id}
+                letterSubject={letter.subject}
+                users={users}
+                currentUserId={(window as any).__page?.props?.auth?.user?.id}
+            />
         </>
     );
 }
