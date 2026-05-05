@@ -52,7 +52,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 { title: 'وزارت‌خانه‌ها', href: organizationsIndex(), icon: Building2, permission: 'super-admin' },
                 { title: 'ریاست‌ها', href: departmentsIndex(), icon: Sitemap, permission: 'org-admin' },
                 { title: 'بست‌های شغلی', href: positions.index(), icon: Briefcase, permission: 'dept-manager' },
-                { title: 'مدیریت کاربران', href: usersIndex(), icon: Users, permission: 'dept-manager' },
+                { title: 'مدیریت  کارمندان', href: usersIndex(), icon: Users, permission: 'dept-manager' },
                 { title: 'طبقه‌بندی مکاتیب', href: categoriesIndex(), icon: FolderTree },
             ],
         },
@@ -62,7 +62,6 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             children: [
                 { title: 'مکاتیب وارده', href: lettersIndex({ query: { type: 'incoming' } }), icon: Inbox },
                 { title: 'مکاتیب صادره', href: lettersIndex({ query: { type: 'outgoing' } }), icon: Send },
-                { title: 'مکاتیب داخلی', href: lettersIndex({ query: { type: 'internal' } }), icon: FileText },
                 { title: 'ثبت مکتوب جدید', href: lettersCreate(), icon: Sparkles },
             ],
         },

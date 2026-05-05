@@ -2,7 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import {
     Plus, Pencil, Trash2, Search, Briefcase, ChevronLeft, ChevronRight,
     Eye, Filter, X, Users, TrendingUp,
-    Layers, Sparkles, Hash, Star, Crown, Shield, Building2,
+    Layers, Sparkles, Star, Crown, Shield, Building2,
     UserCheck
 } from 'lucide-react';
 import { useState } from 'react';
@@ -78,7 +78,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
     const hasActiveFilters = filters.search || filters.department_id;
 
     const stats = [
-        { label: 'کل وظایف', value: positions.total, icon: Briefcase, color: 'purple', gradient: 'from-purple-500 to-pink-600', change: '+12%' },
+        { label: 'مجموع وظایف', value: positions.total, icon: Briefcase, color: 'purple', gradient: 'from-purple-500 to-pink-600', change: '+12%' },
         { label: 'وظایف مدیریتی', value: positions.data.filter(p => p.is_management).length, icon: Crown, color: 'amber', gradient: 'from-amber-500 to-orange-600', change: '+5%' },
         { label: 'ریاست ها', value: new Set(positions.data.map(p => p.department_id)).size, icon: Layers, color: 'indigo', gradient: 'from-indigo-500 to-blue-600', change: '+8%' },
         { label: 'میانگین سطح', value: (positions.data.reduce((acc, p) => acc + p.level, 0) / positions.data.length || 0).toFixed(1), icon: TrendingUp, color: 'emerald', gradient: 'from-emerald-500 to-teal-600', change: '-' },
@@ -183,7 +183,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
 
                         {/* Stats Cards */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 animate-slide-up">
-                            {stats.map((stat, index) => (
+                            {stats.map((stat) => (
                                 <div key={stat.label} className="group relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                                     <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${stat.gradient} opacity-10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500`} />
                                     <div className="relative p-5">
@@ -250,7 +250,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                             <div className="border-t border-gray-100 pt-4">
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-2">دپارتمان</label>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-2">دیپارتمنت ها</label>
                                                         <select
                                                             value={selectedDepartment}
                                                             onChange={(e) => setSelectedDepartment(e.target.value)}
@@ -287,12 +287,11 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gradient-to-r from-gray-50 to-white">
                                             <tr>
-                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">وظیفه</th>
-                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">کد</th>
-                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">ریاست</th>
-                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">سطح</th>
-                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نوع</th>
-                                                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">عملیات</th>
+                                                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">وظیفه</th>
+                                                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">وزارت</th>
+                                                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">ریاست</th>
+                                                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">نوع</th>
+                                                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">عملیات</th>
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-100">
@@ -318,9 +317,6 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                                 </tr>
                                             ) : (
                                                 positions.data.map((position, index) => {
-                                                    const levelBadge = getLevelBadge(position.level);
-                                                    const LevelIcon = levelBadge.icon;
-
                                                     return (
                                                         <tr key={position.id} className="hover:bg-gray-50 transition-colors group animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
                                                             <td className="px-6 py-4">
@@ -330,28 +326,23 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                                                     </div>
                                                                     <div className="mr-3">
                                                                         <p className="text-sm font-semibold text-gray-900">{position.name}</p>
-                                                                        <div className="flex items-center gap-2 mt-0.5">
-                                                                            <Hash className="h-3 w-3 text-gray-400" />
-                                                                            <code className="text-xs text-gray-500 font-mono">کد: {position.code}</code>
-                                                                            {position.is_management && (
-                                                                                <>
-                                                                                    <span className="text-gray-300">•</span>
-                                                                                    <span className="inline-flex items-center gap-1 text-xs text-amber-600">
-                                                                                        <Crown className="h-3 w-3" />
-                                                                                        مدیریتی
-                                                                                    </span>
-                                                                                </>
-                                                                            )}
-                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-4">
-                                                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 rounded-lg">
-                                                                    <Hash className="h-3.5 w-3.5 text-gray-400" />
-                                                                    <code className="text-sm font-mono text-gray-700">{position.code}</code>
-                                                                </div>
+                                                                {position?.department?.organization ? (
+                                                                    <Link
+                                                                        href={departmentsRoute.show({ department: position?.department?.organization.id })}
+                                                                        className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-purple-600 transition-colors group"
+                                                                    >
+                                                                        <Building2 className="h-3.5 w-3.5" />
+                                                                        {position?.department?.organization.name}
+                                                                    </Link>
+                                                                ) : (
+                                                                    <span className="text-sm text-gray-400">-</span>
+                                                                )}
                                                             </td>
+
                                                             <td className="px-6 py-4">
                                                                 {position.department ? (
                                                                     <Link
@@ -365,12 +356,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                                                     <span className="text-sm text-gray-400">-</span>
                                                                 )}
                                                             </td>
-                                                            <td className="px-6 py-4">
-                                                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-50">
-                                                                    <LevelIcon className="h-3.5 w-3.5 text-gray-500" />
-                                                                    <span className="text-sm font-medium text-gray-700">{levelBadge.label}</span>
-                                                                </div>
-                                                            </td>
+
                                                             <td className="px-6 py-4">
                                                                 {position.is_management ? (
                                                                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
@@ -405,7 +391,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                                                     {can.delete && (
                                                                         <button
                                                                             onClick={() => handleDelete(position)}
-                                                                            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                                                                            className="p-2 text-gray-500 hover:text-red-600 cursor-pointer hover:bg-red-50 rounded-lg transition-all duration-200"
                                                                             title="حذف"
                                                                         >
                                                                             <Trash2 className="h-4 w-4" />
@@ -562,7 +548,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
 
                                                     <div className="space-y-2.5">
                                                         <div className="flex items-center justify-between text-sm">
-                                                            <span className="text-gray-500">دپارتمان:</span>
+                                                            <span className="text-gray-500">دیپارتمنت ها:</span>
                                                             {position.department ? (
                                                                 <Link
                                                                     href={departmentsRoute.show({ department: position.department.id })}
