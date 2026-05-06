@@ -218,6 +218,9 @@ export default function LettersIndex({
         return `${senderText} → ${recipientText}`;
     };
 
+    console.log(letters);
+    
+
     // تابع کمکی برای دریافت اطلاعات سازمانی فرستنده/گیرنده
     const getSenderOrganizationInfo = (letter: Letter) => {
         return {

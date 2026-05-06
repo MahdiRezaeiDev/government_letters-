@@ -561,6 +561,7 @@ export default function LettersCreate({
                                                                 setData('recipient_position_id', id);
                                                                 setData('recipient_user_id', position?.user_id || null);
                                                                 setData('recipient_position_name', position?.name || '');
+                                                                setData('recipient_name', position?.user_name || '');
                                                             }}
                                                             disabled={!data.recipient_department_id || loadingExtPositions}
                                                             className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}>

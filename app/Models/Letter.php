@@ -398,14 +398,18 @@ class Letter extends Model
 
     // ─── Scopes ────────────────────────────────────────────────
 
-    public function scopeIncoming($query)
+    public function scopeOutgoing($query, $user)
     {
-        return $query->where('letter_type', 'incoming');
+        return $query->where(function ($q) use ($user) {
+            $q->where('sender_user_id', $user->id);
+        });
     }
 
-    public function scopeOutgoing($query)
+    public function scopeIncoming($query, $user)
     {
-        return $query->where('letter_type', 'outgoing');
+        return $query->where(function ($q) use ($user) {
+            $q->where('recipient_user_id', $user->id);
+        });
     }
 
     public function scopeInternal($query)

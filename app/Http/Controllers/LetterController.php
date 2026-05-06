@@ -74,16 +74,13 @@ class LetterController extends Controller
         }
 
         // ── فیلتر جهت (صادره/وارده) ──────────────────────────────────
-        $query->when($request->filled('direction'), function ($q) use ($request, $user) {
+        if ($request->filled('direction')) {
             if ($request->direction === 'outgoing') {
-                // مکتوب‌های صادره: هر جایی که کاربر فرستنده است
-                return $q->where('sender_user_id', $user->id);
+                $query->outgoing($user);
             } elseif ($request->direction === 'incoming') {
-                // مکتوب‌های وارده: هر جایی که کاربر گیرنده است
-                return $q->where('recipient_user_id', $user->id);
+                $query->incoming($user);
             }
-            return $q;
-        });
+        }
 
         // ── فیلترهای جستجو ──────────────────────────────────
         $query->when($request->filled('letter_type'), function ($q) use ($request) {
@@ -164,7 +161,6 @@ class LetterController extends Controller
             'currentUserFullName' => $user->full_name,
         ]);
     }
-
     private function getUserLetterRole($letter, $user)
     {
         if ($letter->sender_user_id === $user->id) {
@@ -219,6 +215,8 @@ class LetterController extends Controller
     public function store(LetterRequest $request)
     {
         $this->authorize('create', Letter::class);
+
+        dd($request->all());
 
         try {
             $user   = Auth::user()->load(['primaryPosition', 'department']);
