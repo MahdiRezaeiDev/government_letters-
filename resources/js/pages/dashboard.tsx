@@ -35,7 +35,7 @@ interface Props {
 }
 
 const priorityConfig: Record<string, { label: string; bg: string; text: string; dot: string }> = {
-    urgent: { label: 'فوری', bg: 'bg-red-50', text: 'text-red-600', dot: 'bg-red-500' },
+    urgent: { label: 'عاجل', bg: 'bg-red-50', text: 'text-red-600', dot: 'bg-red-500' },
     high: { label: 'مهم', bg: 'bg-amber-50', text: 'text-amber-600', dot: 'bg-amber-500' },
     normal: { label: 'عادی', bg: 'bg-blue-50', text: 'text-blue-600', dot: 'bg-blue-500' },
     low: { label: 'پایین', bg: 'bg-slate-100', text: 'text-slate-500', dot: 'bg-slate-400' },
@@ -80,7 +80,7 @@ export default function Dashboard({ stats = {}, recentLetters = [], monthlyStats
     ];
 
     const infoCards = [
-        { label: 'مکاتیب', value: stats.total_letters ?? 234, icon: BookOpen, color: 'text-violet-600' },
+        { label: 'مکتوب ها', value: stats.total_letters ?? 234, icon: BookOpen, color: 'text-violet-600' },
         { label: 'کاربران سیستم', value: stats.total_users ?? 18, icon: Users, color: 'text-blue-600' },
         { label: 'ریاست ها', value: stats.total_departments ?? 7, icon: Archive, color: 'text-emerald-600' },
         { label: 'ثبت آرشیف', value: stats.archived_count ?? 89, icon: CheckCircle2, color: 'text-amber-600' },
@@ -98,13 +98,13 @@ export default function Dashboard({ stats = {}, recentLetters = [], monthlyStats
     const notifications = [
         { time: '۱۰:۴۵', msg: 'مکتوب شماره ۱۲۰ با موفقیت امضا شد', icon: CheckCircle2, color: 'text-emerald-500', dot: 'bg-emerald-500' },
         { time: '۰۹:۳۰', msg: 'ارجاع جدید از واحد فناوری اطلاعات', icon: ArrowUpRight, color: 'text-indigo-500', dot: 'bg-indigo-500' },
-        { time: '۰۸:۱۵', msg: 'یادآوری: مهلت پاسخ نامه شماره ۴۴', icon: AlertCircle, color: 'text-red-500', dot: 'bg-red-500' },
+        { time: '۰۸:۱۵', msg: 'یادآوری: مهلت پاسخ مکتوب شماره ۴۴', icon: AlertCircle, color: 'text-red-500', dot: 'bg-red-500' },
         { time: '۰۷:۵۰', msg: 'پیش‌نویس جدید ذخیره شد', icon: Edit3, color: 'text-amber-500', dot: 'bg-amber-500' },
     ];
 
     return (
         <div className="min-h-screen">
-            <Head title="داشبورد مکاتبات" />
+            <Head title="داشبورد مکتوب ها" />
             <main className="max-w-[1600px] mx-auto px-4 sm:px-6 space-y-6">
                 {/* ═══════════════ MAIN STAT CARDS ═══════════════ */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -151,8 +151,8 @@ export default function Dashboard({ stats = {}, recentLetters = [], monthlyStats
                     <div className="xl:col-span-2 rounded-xl border border-slate-200 bg-white p-6">
                         <div className="flex items-center justify-between mb-6">
                             <div>
-                                <h3 className="font-bold text-slate-900 text-base">تحلیل گردش مکاتبات</h3>
-                                <p className="text-slate-500 text-xs mt-0.5">حجم مکتوب های ورودی بر اساس ماه</p>
+                                <h3 className="font-bold text-slate-900 text-base">تحلیل گردش مکتوب ها</h3>
+                                <p className="text-slate-500 text-xs mt-0.5">حجم مکتوب ها ورودی بر اساس ماه</p>
                             </div>
                             <span className="flex items-center gap-1.5 text-emerald-600 text-xs font-medium">
                                 <Activity className="h-3.5 w-3.5" />
@@ -195,7 +195,7 @@ export default function Dashboard({ stats = {}, recentLetters = [], monthlyStats
                     {/* Donut Chart */}
                     <div className="rounded-xl border border-slate-200 bg-white p-6">
                         <h3 className="font-bold text-slate-900 text-base mb-1">تفکیک اولویت‌ها</h3>
-                        <p className="text-slate-500 text-xs mb-4">توزیع مکاتیب بر اساس اولویت</p>
+                        <p className="text-slate-500 text-xs mb-4">توزیع مکتوب ها بر اساس اولویت</p>
                         <div className="h-44 relative">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
@@ -209,7 +209,7 @@ export default function Dashboard({ stats = {}, recentLetters = [], monthlyStats
                             </ResponsiveContainer>
                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                                 <span className="text-2xl font-bold text-slate-900">{stats.total_letters ?? 88}</span>
-                                <span className="text-xs text-slate-500 font-medium">کل نامه</span>
+                                <span className="text-xs text-slate-500 font-medium">مجموع مکتوب</span>
                             </div>
                         </div>
                         <div className="space-y-2.5 mt-4">
@@ -235,7 +235,7 @@ export default function Dashboard({ stats = {}, recentLetters = [], monthlyStats
                         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-3">
                             <h3 className="font-bold text-slate-900 flex items-center gap-2">
                                 <History className="h-4 w-4 text-indigo-500" />
-                                آخرین مکاتیب
+                                آخرین مکتوب ها
                             </h3>
                             <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
                                 {(['همه', 'وارده', 'صادره', 'داخلی'] as const).map(tab => (
@@ -307,7 +307,7 @@ export default function Dashboard({ stats = {}, recentLetters = [], monthlyStats
 
                         <div className="px-6 py-3 border-t border-slate-100 text-center">
                             <Link href="/letters" className="text-xs text-indigo-600 hover:text-indigo-700 font-medium transition">
-                                مشاهده همه مکاتیب ←
+                                مشاهده همه مکتوب ها ←
                             </Link>
                         </div>
                     </div>

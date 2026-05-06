@@ -163,7 +163,7 @@ export default function DepartmentsEdit({ department, organizations, parentDepar
                                             {data.organization_id && !loadingParents && filteredParents.length === 0 && (
                                                 <p className="text-xs text-slate-400 mt-1.5 flex items-center gap-1">
                                                     <AlertCircle className="h-3 w-3" />
-                                                    هیچ ریاست والدی در این سازمان وجود ندارد
+                                                    هیچ ریاست والدی در این وزارت وجود ندارد
                                                 </p>
                                             )}
                                         </div>
@@ -313,7 +313,7 @@ export default function DepartmentsEdit({ department, organizations, parentDepar
                                     className="flex-1 cursor-pointer flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-slate-700 bg-slate-200 hover:bg-slate-200 rounded-lg transition-colors"
                                 >
                                     <X className="h-4 w-4" />
-                                    انصراف
+                                    لغوه
                                 </button>
 
                             </div>

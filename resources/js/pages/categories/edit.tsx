@@ -91,7 +91,7 @@ export default function CategoriesEdit({ category, organizations, parentCategori
                                     {/* Name + Code */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         <div>
-                                            <FieldLabel required>سازمان</FieldLabel>
+                                            <FieldLabel required>وزارت</FieldLabel>
                                             <SelectField
                                                 icon={Building2}
                                                 value={data.organization_id}

@@ -156,7 +156,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                             }`}
                                     >
-                                        جدولی
+                                        جدول
                                     </button>
                                     <button
                                         onClick={() => setViewMode('cards')}
@@ -165,7 +165,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                             }`}
                                     >
-                                        کارتی
+                                        کارت
                                     </button>
                                 </div>
                                 {can.create && (
@@ -229,7 +229,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                                 }`}
                                         >
                                             <Filter className="ml-2 h-4 w-4" />
-                                            فیلترها
+                                            فیلتر
                                             {hasActiveFilters && (
                                                 <span className="mr-2 w-2 h-2 bg-purple-600 rounded-full animate-pulse"></span>
                                             )}
@@ -269,7 +269,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                                         className="inline-flex items-center px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
                                                     >
                                                         <X className="ml-1 h-4 w-4" />
-                                                        پاک کردن همه فیلترها
+                                                        پاک کردن همه فیلتر
                                                     </button>
                                                 </div>
                                             </div>
@@ -309,7 +309,7 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                                                                     onClick={handleReset}
                                                                     className="mt-4 text-purple-600 hover:text-purple-700 text-sm font-medium"
                                                                 >
-                                                                    پاک کردن فیلترها
+                                                                    پاک کردن فیلتر
                                                                 </button>
                                                             )}
                                                         </div>
@@ -707,8 +707,8 @@ export default function PositionsIndex({ positions, departments, filters, can }:
                         setSelectedPosition(null);
                     }}
                     onConfirm={confirmDelete}
-                    title="حذف سمت"
-                    message="آیا از حذف این سمت اطمینان دارید؟"
+                    title="حذف بست"
+                    message="آیا از حذف این بست اطمینان دارید؟"
                     itemName={selectedPosition.name}
                     type="department"
                     isLoading={deleting}

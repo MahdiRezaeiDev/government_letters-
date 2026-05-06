@@ -59,7 +59,7 @@ const Divider = () => (
 export default function TextEditor({
     content,
     onChange,
-    placeholder = 'متن نامه را اینجا بنویسید...',
+    placeholder = 'متن مکتوب را اینجا بنویسید...',
     error,
     label,
     required = false
@@ -334,7 +334,7 @@ export default function TextEditor({
                             }}
                             className="px-3 py-1 text-slate-600 hover:text-slate-800 text-xs"
                         >
-                            انصراف
+                            لغوه
                         </button>
                     </div>
                 )}

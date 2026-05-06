@@ -73,8 +73,8 @@ export default function CategoriesCreate({ organizations, parentCategories }: Pr
                                         <Tag className="h-4 w-4 text-teal-600" />
                                     </div>
                                     <div>
-                                        <h2 className="text-sm font-bold text-slate-800">اطلاعات دسته‌بندی</h2>
-                                        <p className="text-xs text-slate-400 mt-0.5">مشخصات اصلی دسته‌بندی نامه</p>
+                                        <h2 className="text-sm font-bold text-slate-800">معلومات دسته‌بندی</h2>
+                                        <p className="text-xs text-slate-400 mt-0.5">مشخصات اصلی دسته‌بندی مکتوب</p>
                                     </div>
                                 </div>
 
@@ -85,7 +85,7 @@ export default function CategoriesCreate({ organizations, parentCategories }: Pr
                                     {/* Name + Code */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         <div>
-                                            <FieldLabel required>سازمان</FieldLabel>
+                                            <FieldLabel required>وزارت</FieldLabel>
                                             <SelectField
                                                 icon={Building2}
                                                 value={data.organization_id}
@@ -278,7 +278,7 @@ export default function CategoriesCreate({ organizations, parentCategories }: Pr
                                     onClick={() => router.get(categories.index())}
                                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-all"
                                 >
-                                    انصراف
+                                    لغوه
                                     <X className="h-4 w-4" />
                                 </button>
                             </div>

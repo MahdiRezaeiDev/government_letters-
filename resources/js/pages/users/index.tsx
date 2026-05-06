@@ -126,7 +126,7 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
     const hasActiveFilters = filters.search || filters.status || filters.organization_id || filters.role;
 
     const stats = [
-        { label: 'کل کارمندان', value: users.total, icon: Users, color: 'cyan', gradient: 'from-cyan-500 to-cyan-600' },
+        { label: 'مجموع کارمندان', value: users.total, icon: Users, color: 'cyan', gradient: 'from-cyan-500 to-cyan-600' },
         { label: 'کارمندان فعال', value: users.data.filter(u => u.status === 'active').length, icon: UserCheck, color: 'emerald', gradient: 'from-emerald-500 to-emerald-600' },
         { label: 'کارمندان تعلیق', value: users.data.filter(u => u.status === 'suspended').length, icon: UserCog, color: 'red', gradient: 'from-red-500 to-red-600' },
         { label: 'وزارت‌ها', value: new Set(users.data.map(u => u.organization_id)).size, icon: Building2, color: 'purple', gradient: 'from-purple-500 to-purple-600' },
@@ -184,7 +184,7 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
                                                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                             }`}
                                     >
-                                        جدولی
+                                        جدول
                                     </button>
                                     <button
                                         onClick={() => setViewMode('cards')}
@@ -193,7 +193,7 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
                                                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                             }`}
                                     >
-                                        کارتی
+                                        کارت
                                     </button>
                                 </div>
                                 {can.create && (
@@ -253,7 +253,7 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
                                                 }`}
                                         >
                                             <Filter className="ml-1 sm:ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                            <span className="hidden xs:inline">فیلترها</span>
+                                            <span className="hidden xs:inline">فیلتر</span>
                                             {hasActiveFilters && (
                                                 <span className="mr-1 sm:mr-2 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-cyan-600 rounded-full animate-pulse"></span>
                                             )}
@@ -323,7 +323,7 @@ export default function UsersIndex({ users, filters, organizations, roles, can }
                                                         className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 hover:text-gray-800 transition-colors"
                                                     >
                                                         <X className="ml-1 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                                        پاک کردن همه فیلترها
+                                                        پاک کردن همه فیلتر
                                                     </button>
                                                 </div>
                                             </div>

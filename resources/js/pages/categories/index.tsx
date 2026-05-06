@@ -113,7 +113,7 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
 
     return (
         <>
-            <Head title="مدیریت دسته‌بندی نامه‌ها" />
+            <Head title="مدیریت دسته‌بندی مکتوب ها" />
 
             <div className="min-h-screen ">
                 <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -129,10 +129,10 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
                                         </div>
                                     </div>
                                     <div>
-                                        <h1 className="text-2xl font-bold text-gray-900">مدیریت دسته‌بندی نامه‌ها</h1>
+                                        <h1 className="text-2xl font-bold text-gray-900">مدیریت دسته‌بندی مکتوب ها</h1>
                                         <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
                                             <Sparkles className="h-3 w-3 text-cyan-500" />
-                                            مدیریت دسته‌بندی‌های نامه‌های اداری
+                                            مدیریت دسته‌بندی‌های مکتوب ها اداری
                                         </p>
                                     </div>
                                 </div>
@@ -147,7 +147,7 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                             }`}
                                     >
-                                        جدولی
+                                        جدول
                                     </button>
                                     <button
                                         onClick={() => setViewMode('cards')}
@@ -156,7 +156,7 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                             }`}
                                     >
-                                        کارتی
+                                        کارت
                                     </button>
                                 </div>
                                 {can.create && (
@@ -220,7 +220,7 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
                                                 }`}
                                         >
                                             <Filter className="ml-2 h-4 w-4" />
-                                            فیلترها
+                                            فیلتر
                                             {hasActiveFilters && (
                                                 <span className="mr-2 w-2 h-2 bg-cyan-600 rounded-full animate-pulse"></span>
                                             )}
@@ -274,7 +274,7 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
                                                         className="inline-flex items-center px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
                                                     >
                                                         <X className="ml-1 h-4 w-4" />
-                                                        پاک کردن همه فیلترها
+                                                        پاک کردن همه فیلتر
                                                     </button>
                                                 </div>
                                             </div>
@@ -316,7 +316,7 @@ export default function CategoriesIndex({ categories, organizations, filters, ca
                                                                     onClick={handleReset}
                                                                     className="mt-4 text-cyan-600 hover:text-cyan-700 text-sm font-medium"
                                                                 >
-                                                                    پاک کردن فیلترها
+                                                                    پاک کردن فیلتر
                                                                 </button>
                                                             )}
                                                         </div>

@@ -50,15 +50,15 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             title: 'مدیریت تشکیلات',
             icon: Building2,
             children: [
-                { title: 'وزارت‌خانه‌ها', href: organizationsIndex(), icon: Building2, permission: 'super-admin' },
+                { title: 'وزارت‌ خانه‌ها', href: organizationsIndex(), icon: Building2, permission: 'super-admin' },
                 { title: 'ریاست‌ها', href: departmentsIndex(), icon: Sitemap, permission: 'org-admin' },
-                { title: 'بست‌های شغلی', href: positions.index(), icon: Briefcase, permission: 'dept-manager' },
+                { title: 'بست‌های کاری', href: positions.index(), icon: Briefcase, permission: 'dept-manager' },
                 { title: 'مدیریت  کارمندان', href: usersIndex(), icon: Users, permission: 'dept-manager' },
-                // { title: 'طبقه‌بندی مکاتیب', href: categoriesIndex(), icon: FolderTree },
+                { title: 'طبقه‌بندی مکتوب ها', href: categoriesIndex(), icon: FolderTree },
             ],
         },
-        { title: 'مکاتیب وارده', href: lettersIndex({ query: { direction: 'incoming' } }), icon: Inbox },
-        { title: 'مکاتیب صادره', href: lettersIndex({ query: { direction: 'outgoing' } }), icon: Send },
+        { title: 'مکتوب ها وارده', href: lettersIndex({ query: { direction: 'incoming' } }), icon: Inbox },
+        { title: 'مکتوب ها صادره', href: lettersIndex({ query: { direction: 'outgoing' } }), icon: Send },
         { title: 'ثبت مکتوب جدید', href: lettersCreate(), icon: Sparkles },
 
         { title: 'آرشیف مرکزی', href: archivesIndex(), icon: Archive },
@@ -111,7 +111,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                     </div>
                     {!collapsed && (
                         <div className="flex flex-col animate-in fade-in slide-in-from-right-4 duration-700">
-                            <span className="font-semibold text-xs text-slate-900 leading-none">سیستم مدیریت مکاتیب</span>
+                            <span className="font-semibold text-xs text-slate-900 leading-none">سیستم مدیریت مکتوب ها</span>
                             <span className="text-[10px] text-slate-500 font-medium mt-1">Correspondence System</span>
                         </div>
                     )}

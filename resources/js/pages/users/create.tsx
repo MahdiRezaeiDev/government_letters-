@@ -29,10 +29,10 @@ const STATUS_OPTIONS = [
 ] as const;
 
 const SECURITY_LEVELS = [
-    { value: 'public', label: 'عمومی', desc: 'دسترسی به اطلاعات عمومی', icon: Globe, color: '#64748b', bg: '#f8fafc' },
-    { value: 'internal', label: 'داخلی', desc: 'دسترسی به اطلاعات داخلی سازمان', icon: Shield, color: '#3b82f6', bg: '#eff6ff' },
-    { value: 'confidential', label: 'محرمانه', desc: 'دسترسی به اطلاعات محرمانه', icon: Lock, color: '#f59e0b', bg: '#fffbeb' },
-    { value: 'secret', label: 'سری', desc: 'دسترسی به اطلاعات سری و حساس', icon: Shield, color: '#ef4444', bg: '#fee2e2' },
+    { value: 'public', label: 'عمومی', desc: 'دسترسی به معلومات عمومی', icon: Globe, color: '#64748b', bg: '#f8fafc' },
+    { value: 'internal', label: 'داخلی', desc: 'دسترسی به معلومات داخلی وزارت', icon: Shield, color: '#3b82f6', bg: '#eff6ff' },
+    { value: 'confidential', label: 'محرمانه', desc: 'دسترسی به معلومات محرمانه', icon: Lock, color: '#f59e0b', bg: '#fffbeb' },
+    { value: 'secret', label: 'سری', desc: 'دسترسی به معلومات سری و حساس', icon: Shield, color: '#ef4444', bg: '#fee2e2' },
 ] as const;
 
 // ─── Main Component ────────────────────────────────────────────────────────
@@ -109,9 +109,10 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                             <SectionCard
                                 icon={User}
                                 iconColor="#0ea5e9"
-                                title="اطلاعات شخصی"
-                                subtitle="این اطلاعات پایه و اصلی کاربر است. نمبر تذکره باید دقیق و معتبر باشد.">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                title="معلومات شخصی"
+                                subtitle="مشخصات هویتی کاربر"
+                                description="این معلومات پایه و اصلی کاربر است. نمبر تذکره باید دقیق و معتبر باشد.">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
                                         <FieldLabel required>نام</FieldLabel>
                                         <InputField
@@ -121,7 +122,7 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                             placeholder="علی" />
                                     </div>
                                     <div>
-                                        <FieldLabel required>نام خانوادگی</FieldLabel>
+                                        <FieldLabel required>تخلص</FieldLabel>
                                         <InputField
                                             value={data.last_name}
                                             onChange={v => setData('last_name', v)}
@@ -171,10 +172,11 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                             <SectionCard
                                 icon={Key}
                                 iconColor="#10b981"
-                                title="اطلاعات حساب کاربری"
-                                subtitle="با این اطلاعات کاربر وارد سیستم می‌شود. ایمیل باید معتبر و یکتا باشد.">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                                    <div>
+                                title="معلومات حساب کاربری"
+                                subtitle="معلومات ورود به سیستم"
+                                description="با این معلومات کاربر وارد سیستم می‌شود. ایمیل باید معتبر و یکتا باشد.">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div className="md:col-span-2">
                                         <FieldLabel required>ایمیل</FieldLabel>
                                         <InputField
                                             icon={Mail}
@@ -213,11 +215,12 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                             <SectionCard
                                 icon={Building2}
                                 iconColor="#8b5cf6"
-                                title="اطلاعات سازمانی"
-                                subtitle="تعیین جایگاه کاربر در ساختار سازمانی. سمت اصلی در کارتابل و ارجاعات تأثیر دارد.">
+                                title="معلومات وزارت"
+                                subtitle="ساختار وزارت کاربر"
+                                description="تعیین جایگاه کاربر در ساختار وزارت. سمت اصلی در کارتابل و ارجاعات تأثیر دارد.">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
-                                        <FieldLabel required>سازمان</FieldLabel>
+                                        <FieldLabel required>وزارت</FieldLabel>
                                         <SelectField
                                             value={data.organization_id}
                                             onChange={v => setData('organization_id', parseInt(v))}
@@ -234,10 +237,10 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                             <option value="">انتخاب کنید...</option>
                                             {departments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}
                                         </SelectField>
-                                        <p className="text-xs text-slate-400 mt-1.5">دپارتمانی که کاربر در آن فعالیت می‌کند</p>
+                                        <p className="text-xs text-slate-400 mt-1.5">دیپارتمنت که کاربر در آن فعالیت می‌کند</p>
                                     </div>
                                     <div>
-                                        <FieldLabel>سمت اصلی</FieldLabel>
+                                        <FieldLabel>بست اصلی</FieldLabel>
                                         <SelectField
                                             value={data.primary_position_id || ''}
                                             onChange={v => setData('primary_position_id', parseInt(v) || null)}
@@ -248,7 +251,7 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                         </SelectField>
                                         {!data.department_id && (
                                             <p className="text-xs text-amber-600 mt-1.5 flex items-center gap-1">
-                                                <AlertCircle className="h-3 w-3" /> ابتدا دپارتمان را انتخاب کنید
+                                                <AlertCircle className="h-3 w-3" /> ابتدا دیپارتمنت را انتخاب کنید
                                             </p>
                                         )}
                                     </div>
@@ -356,7 +359,7 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                                 className="cursor-pointer flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-slate-700 bg-slate-200 hover:bg-slate-200 rounded-lg transition-colors"
                                             >
                                                 <X className="h-4 w-4" />
-                                                انصراف
+                                                لغوه
                                             </button>
                                         </div>
                                     </div>

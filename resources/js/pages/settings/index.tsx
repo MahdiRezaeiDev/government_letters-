@@ -251,7 +251,7 @@ export default function SystemSettings({ settings }: Props) {
                                                 icon={Settings}
                                                 value={data.app_name}
                                                 onChange={v => setData('app_name', v)}
-                                                placeholder="سیستم مدیریت مکاتبات"
+                                                placeholder="سیستم مدیریت مکتوب ها"
                                             />
                                         </div>
                                         <div>

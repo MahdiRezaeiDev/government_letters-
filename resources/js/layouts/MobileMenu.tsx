@@ -59,28 +59,28 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
     const navigationItems: NavItem[] = [
         { title: 'داشبورد', href: dashboard(), icon: LayoutDashboard },
         {
-            title: 'مدیریت سازمان',
+            title: 'مدیریت وزارت',
             icon: Building2,
             children: [
-                { title: 'سازمان‌ها', href: organizations.index(), icon: Building2 },
-                { title: 'دپارتمان‌ها', href: departments.index(), icon: Map },
-                { title: 'سمت‌ها', href: positions(), icon: Briefcase },
+                { title: 'وزارت ها', href: organizations.index(), icon: Building2 },
+                { title: 'دیپارتمنت ها', href: departments.index(), icon: Map },
+                { title: 'بست ها', href: positions(), icon: Briefcase },
                 { title: 'کاربران', href: users.index(), icon: Users },
-                { title: 'دسته‌بندی نامه‌ها', href: categories.index(), icon: FolderTree },
+                { title: 'دسته‌بندی مکتوب ها', href: categories.index(), icon: FolderTree },
             ],
         },
         {
-            title: 'نامه‌ها',
+            title: 'مکتوب ها',
             icon: Mail,
             children: [
-                { title: 'نامه‌های وارده', href: letters.index({ query: { type: 'incoming' } }), icon: Inbox },
-                { title: 'نامه‌های صادره', href: letters.index({ query: { type: 'outgoing' } }), icon: Send },
-                { title: 'نامه‌های داخلی', href: letters.index({ query: { type: 'internal' } }), icon: FileText },
-                { title: 'نامه جدید', href: letters.create(), icon: Mail },
+                { title: 'مکتوب ها وارده', href: letters.index({ query: { type: 'incoming' } }), icon: Inbox },
+                { title: 'مکتوب ها صادره', href: letters.index({ query: { type: 'outgoing' } }), icon: Send },
+                { title: 'مکتوب ها داخلی', href: letters.index({ query: { type: 'internal' } }), icon: FileText },
+                { title: 'مکتوب جدید', href: letters.create(), icon: Mail },
             ],
         },
         { title: 'کارتابل', href: cartable.index(), icon: Inbox },
-        { title: 'بایگانی', href: archives.index(), icon: Archive },
+        { title: 'ارشیف', href: archives.index(), icon: Archive },
         { title: 'گزارشات', href: reports.index(), icon: BarChart3 },
         {
             title: 'تنظیمات',
@@ -119,7 +119,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                             <span className="text-white font-bold text-lg">م</span>
                         </div>
                         <div>
-                            <p className="font-bold text-gray-800">سیستم مکاتبات</p>
+                            <p className="font-bold text-gray-800">سیستم مکتوب ها</p>
                             <p className="text-xs text-gray-500">{auth.user?.email}</p>
                         </div>
                     </div>
@@ -196,7 +196,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                         className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
                     >
                         <LogOut className="h-5 w-5" />
-                        خروج از حساب
+                        خروج از سیستم
                     </Link>
                 </div>
             </div>

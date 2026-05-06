@@ -65,7 +65,7 @@ export default function LettersReply({
     const { data, setData, post, processing, errors, reset } = useForm({
         category_id: originalLetter.category_id || null,
         subject: `پاسخ به: ${originalLetter.subject}`,
-        content: `\n\n\n\n---\n**نامه اصلی:**\n${originalLetter.content || ''}`,
+        content: `\n\n\n\n---\n**مکتوب اصلی:**\n${originalLetter.content || ''}`,
         security_level: originalLetter.security_level || 'internal',
         priority: originalLetter.priority || 'normal',
         date: new Date().toLocaleDateString('fa-IR', { calendar: 'persian', year: 'numeric', month: '2-digit', day: '2-digit' }),
@@ -210,7 +210,7 @@ export default function LettersReply({
                                 <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
                                         <Paperclip className="h-4 w-4 text-slate-500" />
-                                        <h3 className="text-sm font-bold text-slate-700">پیوست‌ها</h3>
+                                        <h3 className="text-sm font-bold text-slate-700">ضمایم</h3>
                                     </div>
                                     <div className="p-5">
                                         <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all">
@@ -273,9 +273,9 @@ export default function LettersReply({
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="text-sm font-bold text-slate-800 truncate">{data.recipient_name || 'نامشخص'}</p>
-                                                <p className="text-xs text-slate-500 mt-0.5">{data.recipient_position_name || 'بدون سمت'}</p>
+                                                <p className="text-xs text-slate-500 mt-0.5">{data.recipient_position_name || 'بدون بست'}</p>
                                                 <p className="text-xs text-slate-400">
-                                                    {data.recipient_type === 'internal' ? 'داخلی' : 'خارج سازمانی'}
+                                                    {data.recipient_type === 'internal' ? 'داخلی' : 'خارج از وزارت'}
                                                 </p>
                                             </div>
                                         </div>
@@ -341,7 +341,7 @@ export default function LettersReply({
                                 <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
                                         <Info className="h-4 w-4 text-slate-500" />
-                                        <h3 className="text-sm font-bold text-slate-700">اطلاعات مکتوب اصلی</h3>
+                                        <h3 className="text-sm font-bold text-slate-700">معلومات مکتوب اصلی</h3>
                                     </div>
                                     <div className="p-5 space-y-3">
                                         <div className="flex items-center justify-between">

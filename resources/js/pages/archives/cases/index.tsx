@@ -101,7 +101,7 @@ export default function CasesIndex({ archive, cases, filters }: Props) {
                             onClick={handleSearch}
                             className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
                         >
-                            اعمال فیلتر
+                             فیلتر
                         </button>
                     </div>
                 </div>

@@ -113,7 +113,7 @@ export default function ArchivesCreate({ departments, parentArchives }: Props) {
 
     return (
         <>
-            <Head title="ایجاد بایگانی جدید" />
+            <Head title="ایجاد ارشیف جدید" />
 
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
@@ -134,10 +134,10 @@ export default function ArchivesCreate({ departments, parentArchives }: Props) {
                         <div className="flex items-center justify-between h-16">
                             <div className="flex items-center gap-3">
                                 <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-teal-50 text-teal-600 tracking-wide">
-                                    بایگانی
+                                    ارشیف
                                 </span>
                                 <span className="text-slate-300 text-lg font-light">/</span>
-                                <h1 className="text-sm font-bold text-slate-800">ایجاد بایگانی جدید</h1>
+                                <h1 className="text-sm font-bold text-slate-800">ایجاد ارشیف جدید</h1>
                             </div>
                             <div className="flex items-center gap-2.5">
                                 <button
@@ -146,7 +146,7 @@ export default function ArchivesCreate({ departments, parentArchives }: Props) {
                                     className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all duration-200"
                                 >
                                     <X className="h-4 w-4" />
-                                    انصراف
+                                    لغوه
                                 </button>
                                 <button
                                     type="submit"
@@ -172,9 +172,9 @@ export default function ArchivesCreate({ departments, parentArchives }: Props) {
                                     <FolderOpen className="h-6 w-6 text-white" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-bold text-slate-800">ایجاد بایگانی جدید</p>
+                                    <p className="text-sm font-bold text-slate-800">ایجاد ارشیف جدید</p>
                                     <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                                        اطلاعات بایگانی را تکمیل کنید. فیلدهای ستاره‌دار الزامی هستند.
+                                        اطلاعات ارشیف را تکمیل کنید. فیلدهای ستاره‌دار الزامی هستند.
                                     </p>
                                 </div>
                             </div>
@@ -186,7 +186,7 @@ export default function ArchivesCreate({ departments, parentArchives }: Props) {
                                         <FolderOpen className="h-4 w-4 text-teal-600" />
                                     </div>
                                     <div>
-                                        <h2 className="text-sm font-bold text-slate-800">اطلاعات بایگانی</h2>
+                                        <h2 className="text-sm font-bold text-slate-800">معلومات ارشیف</h2>
                                         <p className="text-xs text-slate-400 mt-0.5">مشخصات و محل نگهداری</p>
                                     </div>
                                 </div>
@@ -195,7 +195,7 @@ export default function ArchivesCreate({ departments, parentArchives }: Props) {
 
                                     {/* Department */}
                                     <div>
-                                        <FieldLabel required>دپارتمان</FieldLabel>
+                                        <FieldLabel required>دیپارتمنت</FieldLabel>
                                         <SelectField
                                             icon={Building2}
                                             value={data.department_id}
@@ -213,17 +213,17 @@ export default function ArchivesCreate({ departments, parentArchives }: Props) {
                                     {/* Name + Code */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                         <div>
-                                            <FieldLabel required>نام بایگانی</FieldLabel>
+                                            <FieldLabel required>نام ارشیف</FieldLabel>
                                             <InputField
                                                 icon={FolderOpen}
                                                 value={data.name}
                                                 onChange={v => setData('name', v)}
-                                                placeholder="مثال: بایگانی اصلی"
+                                                placeholder="مثال: ارشیف اصلی"
                                                 error={getFieldError('name')}
                                             />
                                         </div>
                                         <div>
-                                            <FieldLabel required>کد بایگانی</FieldLabel>
+                                            <FieldLabel required>کد ارشیف</FieldLabel>
                                             <InputField
                                                 icon={Hash}
                                                 value={data.code}
@@ -238,7 +238,7 @@ export default function ArchivesCreate({ departments, parentArchives }: Props) {
 
                                     {/* Parent archive */}
                                     <div>
-                                        <FieldLabel>بایگانی والد</FieldLabel>
+                                        <FieldLabel>ارشیف والد</FieldLabel>
                                         <SelectField
                                             icon={Layers}
                                             value={data.parent_id}
@@ -253,7 +253,7 @@ export default function ArchivesCreate({ departments, parentArchives }: Props) {
 
                                     {/* Location */}
                                     <div>
-                                        <FieldLabel>موقعیت مکانی</FieldLabel>
+                                        <FieldLabel>موقعیت ارشیف</FieldLabel>
                                         <InputField
                                             icon={MapPin}
                                             value={data.location}
@@ -269,7 +269,7 @@ export default function ArchivesCreate({ departments, parentArchives }: Props) {
                                             icon={FileText}
                                             value={data.description}
                                             onChange={v => setData('description', v)}
-                                            placeholder="توضیحات مربوط به بایگانی..."
+                                            placeholder="توضیحات مربوط به ارشیف..."
                                             textarea
                                             rows={3}
                                         />
@@ -323,7 +323,7 @@ export default function ArchivesCreate({ departments, parentArchives }: Props) {
                                         <FolderOpen className="h-5 w-5 text-white" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-semibold text-white/70 mb-1">پیش‌نمایش بایگانی</p>
+                                        <p className="text-xs font-semibold text-white/70 mb-1">پیش‌نمایش ارشیف</p>
                                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                             <span className="text-sm font-bold text-white">{data.name}</span>
                                             <span className="text-white/40 text-xs">•</span>
@@ -368,7 +368,7 @@ export default function ArchivesCreate({ departments, parentArchives }: Props) {
                                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-white bg-teal-600 hover:bg-teal-700 transition-all shadow-md disabled:opacity-50"
                                 >
                                     <Save className="h-4 w-4" />
-                                    {processing ? 'در حال ذخیره...' : 'ایجاد بایگانی'}
+                                    {processing ? 'در حال ذخیره...' : 'ایجاد ارشیف'}
                                 </button>
                             </div>
 

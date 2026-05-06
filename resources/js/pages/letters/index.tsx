@@ -186,7 +186,7 @@ export default function LettersIndex({
         pending: { label: 'در انتظار', bg: 'bg-yellow-50', text: 'text-yellow-700', icon: ClockIcon },
         approved: { label: 'تایید شده', bg: 'bg-green-50', text: 'text-green-700', icon: CheckCircle },
         rejected: { label: 'رد شده', bg: 'bg-red-50', text: 'text-red-700', icon: AlertCircle },
-        archived: { label: 'بایگانی شده', bg: 'bg-gray-50', text: 'text-gray-500', icon: Archive },
+        archived: { label: 'ارشیف شده', bg: 'bg-gray-50', text: 'text-gray-500', icon: Archive },
     };
 
     const typeConfig: Record<string, { label: string; icon: any; color: string }> = {
@@ -217,9 +217,6 @@ export default function LettersIndex({
 
         return `${senderText} → ${recipientText}`;
     };
-
-    console.log(letters);
-    
 
     // تابع کمکی برای دریافت اطلاعات سازمانی فرستنده/گیرنده
     const getSenderOrganizationInfo = (letter: Letter) => {
@@ -368,7 +365,7 @@ export default function LettersIndex({
                         </div>
                         <div className="flex items-center gap-1.5 text-[11px] min-w-0">
                             <UsersIcon className="h-3 w-3 text-gray-400 flex-shrink-0" />
-                            <span className="text-gray-500 flex-shrink-0">وظیفه:</span>
+                            <span className="text-gray-500 flex-shrink-0">بست:</span>
                             <span
                                 className="text-gray-700 font-medium truncate"
                                 title={orgInfo.position}
@@ -735,7 +732,7 @@ export default function LettersIndex({
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2.5 sm:p-3 lg:p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">کل مکتوب‌ها</p>
+                                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">مجموع مکتوب‌ها</p>
                                         <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{stats.total}</p>
                                     </div>
                                     <div className="p-1.5 sm:p-2 bg-blue-50 rounded-lg">
@@ -790,7 +787,7 @@ export default function LettersIndex({
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2.5 sm:p-3 lg:p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">فوری</p>
+                                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">عاجل</p>
                                         <p className="text-base sm:text-lg lg:text-xl font-bold text-orange-600">{stats.urgent}</p>
                                     </div>
                                     <div className="p-1.5 sm:p-2 bg-orange-50 rounded-lg">
@@ -898,7 +895,7 @@ export default function LettersIndex({
                                                 }`}
                                         >
                                             <Filter className="ml-1 sm:ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                            <span className="hidden xs:inline">فیلترها</span>
+                                            <span className="hidden xs:inline">فیلتر</span>
                                             {hasActiveFilters && (
                                                 <span className="mr-1 sm:mr-2 px-1 py-0.5 bg-blue-600 text-white text-[9px] sm:text-[10px] rounded-full">
                                                     {Object.values(filters).filter(v => v && v !== 'all').length}
@@ -980,7 +977,7 @@ export default function LettersIndex({
                                                 className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-red-600 hover:text-red-700 transition-colors"
                                             >
                                                 <X className="ml-1 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                                پاک کردن همه فیلترها
+                                                پاک کردن همه فیلتر
                                             </button>
                                         </div>
                                     </div>
@@ -993,7 +990,7 @@ export default function LettersIndex({
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 sm:p-12 lg:p-16 text-center">
                                 <div className="flex flex-col items-center justify-center">
                                     <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-gray-300 mb-3" />
-                                    <p className="text-gray-500 font-medium">هیچ مکتوبی یافت نشد</p>
+                                    <p className="text-gray-500 font-medium">هیچ مکتوب یافت نشد</p>
                                     <p className="text-xs sm:text-sm text-gray-400 mt-1">
                                         سعی کنید معیارهای جستجوی خود را تغییر دهید
                                     </p>
@@ -1002,7 +999,7 @@ export default function LettersIndex({
                                             onClick={handleReset}
                                             className="mt-4 text-blue-600 hover:text-blue-700 text-sm font-medium"
                                         >
-                                            پاک کردن فیلترها
+                                            پاک کردن فیلتر
                                         </button>
                                     )}
                                 </div>
@@ -1018,8 +1015,8 @@ export default function LettersIndex({
                                                     <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 w-16">وضعیت</th>
                                                     <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 w-32">شماره / نوع</th>
                                                     <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 min-w-[200px]">موضوع</th>
-                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 min-w-[180px]">وزارت / ریاست / وظیفه</th>
-                                                    {/* <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden xl:table-cell w-36">فرستنده/گیرنده</th> */}
+                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 min-w-[180px]">وزارت / ریاست / بست</th>
+                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden xl:table-cell w-36">فرستنده/گیرنده</th>
                                                     <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden lg:table-cell w-24">وضعیت</th>
                                                     <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden sm:table-cell w-28">تاریخ</th>
                                                     <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 w-20">عملیات</th>

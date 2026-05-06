@@ -93,7 +93,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
     const hasActiveFilters = filters.search || filters.status;
 
     const stats = [
-        { label: 'کل وزارت ها', value: organizations.total, icon: Building2, color: 'blue', gradient: 'from-blue-500 to-indigo-600', change: '+12%' },
+        { label: 'وزارت ها', value: organizations.total, icon: Building2, color: 'blue', gradient: 'from-blue-500 to-indigo-600', change: '+12%' },
         { label: 'وزارت های فعال', value: organizations.data.filter(o => o.status === 'active').length, icon: CheckCircle, color: 'emerald', gradient: 'from-emerald-500 to-teal-600', change: '+8%' },
         { label: 'وزارت های غیرفعال', value: organizations.data.filter(o => o.status === 'inactive').length, icon: XCircle, color: 'gray', gradient: 'from-gray-500 to-slate-600', change: '-3%' },
         { label: 'ریاست ها', value: organizations.data.reduce((acc, org) => acc + (org.departments_count || 0), 0), icon: Layers, color: 'purple', gradient: 'from-purple-500 to-pink-600', change: '+5%' },
@@ -151,7 +151,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                             }`}
                                     >
-                                        جدولی
+                                        جدول
                                     </button>
                                     <button
                                         onClick={() => setViewMode('cards')}
@@ -160,7 +160,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                             }`}
                                     >
-                                        کارتی
+                                        کارت
                                     </button>
                                 </div>
                                 {can.create && (
@@ -169,7 +169,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                         className="group relative inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                                     >
                                         <Plus className="ml-2 h-4 w-4 transition-transform group-hover:rotate-90 duration-200" />
-                                        ثبت وزارت
+                                        ثبت 
                                         <span className="absolute inset-0 rounded-xl bg-white opacity-0 group-hover:opacity-10 transition-opacity"></span>
                                     </Link>
                                 )}
@@ -212,7 +212,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                                 value={searchTerm}
                                                 onChange={(e) => setSearchTerm(e.target.value)}
                                                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                                                placeholder="جستجو بر اساس نام، کد، ایمیل یا تلفن..."
+                                                placeholder="جستجو بر اساس نام، کد، ایمیل یا تلیفون..."
                                                 className="w-full pr-10 pl-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                                 dir="rtl"
                                             />
@@ -229,7 +229,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                                 }`}
                                         >
                                             <Filter className="ml-2 h-4 w-4" />
-                                            فیلترها
+                                            فیلتر
                                             {hasActiveFilters && (
                                                 <span className="mr-2 relative flex h-2 w-2">
                                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
@@ -279,7 +279,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                                 className="inline-flex items-center px-4 py-2 text-sm text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-xl transition-colors duration-200"
                                             >
                                                 <X className="ml-1.5 h-4 w-4" />
-                                                پاک کردن همه فیلترها
+                                                پاک کردن همه فیلتر
                                             </button>
                                         </div>
                                     </div>
@@ -310,14 +310,14 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                                             <div className="p-4 bg-gray-100 rounded-full mb-4">
                                                                 <Building2 className="h-12 w-12 text-gray-400" />
                                                             </div>
-                                                            <p className="text-gray-500 font-medium">هیچ وزارتی یافت نشد</p>
+                                                            <p className="text-gray-500 font-medium">هیچ وزارت دریافت نشد</p>
                                                             <p className="text-sm text-gray-400 mt-1">سعی کنید معیارهای جستجوی خود را تغییر دهید</p>
                                                             {hasActiveFilters && (
                                                                 <button
                                                                     onClick={handleReset}
                                                                     className="mt-4 text-blue-600 hover:text-blue-700 text-sm font-medium"
                                                                 >
-                                                                    پاک کردن فیلترها
+                                                                    پاک کردن فیلتر
                                                                 </button>
                                                             )}
                                                         </div>
@@ -517,7 +517,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                             <div className="p-4 bg-gray-100 rounded-full mb-4">
                                                 <Building2 className="h-12 w-12 text-gray-400" />
                                             </div>
-                                            <p className="text-gray-500 font-medium">هیچ وزارتی یافت نشد</p>
+                                            <p className="text-gray-500 font-medium">هیچ وزارت دریافت نشد</p>
                                             <p className="text-sm text-gray-400 mt-1">سعی کنید معیارهای جستجوی خود را تغییر دهید</p>
                                         </div>
                                     </div>
@@ -581,7 +581,7 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                                                             </div>
                                                         )}
                                                         {!org.email && !org.phone && !org.address && !org.website && (
-                                                            <div className="text-sm text-gray-400 text-center py-2">اطلاعات تماسی ثبت نشده است</div>
+                                                            <div className="text-sm text-gray-400 text-center py-2">معلومات تماس ثبت نشده است</div>
                                                         )}
                                                     </div>
 
@@ -693,8 +693,8 @@ export default function OrganizationsIndex({ organizations, filters, can }: Prop
                         setSelectedOrganization(null);
                     }}
                     onConfirm={confirmDelete}
-                    title="حذف سازمان"
-                    message="آیا از حذف این سازمان اطمینان دارید؟"
+                    title="حذف وزارت"
+                    message="آیا از حذف این وزارت اطمینان دارید؟"
                     itemName={selectedOrganization.name}
                     isLoading={deleting}
                 />

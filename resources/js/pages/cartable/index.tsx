@@ -235,17 +235,17 @@ export default function CartableIndex({
         low: { bg: 'bg-gray-100', text: 'text-gray-600', icon: Clock, label: 'کم' },
         normal: { bg: 'bg-blue-100', text: 'text-blue-600', icon: Flag, label: 'عادی' },
         high: { bg: 'bg-yellow-100', text: 'text-yellow-600', icon: Flag, label: 'مهم' },
-        urgent: { bg: 'bg-orange-100', text: 'text-orange-600', icon: AlertCircle, label: 'فوری' },
-        very_urgent: { bg: 'bg-red-100', text: 'text-red-600', icon: AlertCircle, label: 'خیلی فوری' },
+        urgent: { bg: 'bg-orange-100', text: 'text-orange-600', icon: AlertCircle, label: 'عاجل' },
+        very_urgent: { bg: 'bg-red-100', text: 'text-red-600', icon: AlertCircle, label: 'خیلی عاجل' },
     };
 
     const hasActiveFilters = filters.action_type || filters.priority || filters.overdue;
 
     const statsCards = [
-        { label: 'در انتظار اقدام', value: stats.total, icon: Clock, gradient: 'from-blue-500 to-blue-600' },
-        { label: 'تأخیر دار', value: stats.overdue, icon: AlertCircle, gradient: 'from-red-500 to-red-600' },
-        { label: 'مهلت امروز', value: stats.today, icon: Calendar, gradient: 'from-amber-500 to-orange-600' },
-        { label: 'ارجاع برای پاسخ', value: stats.pending_delegations + stats.accepted_delegations, icon: CornerUpRight, gradient: 'from-amber-500 to-amber-600' },
+        { label: 'در انتظار اقدام', value: stats.total, icon: Clock, color: 'blue', gradient: 'from-blue-500 to-blue-600', change: '+12%' },
+        { label: ' تأخیر شده', value: stats.overdue, icon: AlertCircle, color: 'red', gradient: 'from-red-500 to-red-600', change: '+5%' },
+        { label: 'مهلت امروز', value: stats.today, icon: Calendar, color: 'amber', gradient: 'from-amber-500 to-orange-600', change: '-3%' },
+        { label: 'تکمیل شده امروز', value: stats.completed_today, icon: CheckCircle, color: 'emerald', gradient: 'from-emerald-500 to-teal-600', change: '+8%' },
     ];
 
     return (
@@ -283,7 +283,7 @@ export default function CartableIndex({
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                             }`}
                                     >
-                                        لیستی
+                                    لیست 
                                     </button>
                                     <button
                                         onClick={() => setViewMode('grid')}
@@ -359,7 +359,7 @@ export default function CartableIndex({
                                                 }`}
                                         >
                                             <Filter className="ml-2 h-4 w-4" />
-                                            فیلترها
+                                            فیلتر
                                             {hasActiveFilters && (
                                                 <span className="mr-2 w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
                                             )}
@@ -369,7 +369,7 @@ export default function CartableIndex({
                                             disabled={loading}
                                             className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl text-sm font-medium hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 shadow-sm disabled:opacity-50"
                                         >
-                                            {loading ? <Loader2 className="h-4 w-4 animate-spin inline ml-1" /> : 'اعمال فیلتر'}
+                                            {loading ? <Loader2 className="h-4 w-4 animate-spin inline ml-1" /> : ' فیلتر'}
                                         </button>
                                     </div>
                                 </div>

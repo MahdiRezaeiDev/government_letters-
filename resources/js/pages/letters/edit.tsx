@@ -150,7 +150,7 @@ export default function LettersEdit({
             <html dir="rtl">
             <head>
                 <meta charset="utf-8">
-                <title>پیش‌نمایش نامه - ${letter.letter_number}</title>
+                <title>پیش‌نمایش مکتوب - ${letter.letter_number}</title>
                 <script src="https://cdn.tailwindcss.com"><\/script>
                 <style>
                     @page { size: A4; margin: 20mm; }
@@ -167,7 +167,7 @@ export default function LettersEdit({
                     <div style="border-bottom: 2px solid #1e293b; padding-bottom: 16px; margin-bottom: 24px;">
                         <div style="display: flex; justify-content: space-between;">
                             <div>
-                                <h1 style="font-size: 20px; font-weight: bold;">نامه رسمی</h1>
+                                <h1 style="font-size: 20px; font-weight: bold;">مکتوب رسمی</h1>
                                 <p style="font-size: 12px; color: #64748b;">شماره: ${letter.letter_number || '---'}</p>
                             </div>
                             <div style="text-align: left;">
@@ -220,7 +220,7 @@ export default function LettersEdit({
 
     return (
         <>
-            <Head title={`ویرایش نامه - ${letter.subject}`} />
+            <Head title={`ویرایش مکتوب - ${letter.subject}`} />
 
             <div className="min-h-screen">
 
@@ -239,7 +239,7 @@ export default function LettersEdit({
                                             <Tag className="h-4 w-4 text-amber-600" />
                                         </div>
                                         <div>
-                                            <h2 className="text-sm font-bold text-slate-800">ویرایش نامه</h2>
+                                            <h2 className="text-sm font-bold text-slate-800">ویرایش مکتوب</h2>
                                             <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5">
                                                 <span className="font-medium text-slate-500">{letter.letter_number}</span>
                                                 <span className="text-slate-300">|</span>
@@ -262,7 +262,7 @@ export default function LettersEdit({
                                 <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
                                         <PenLine className="h-4 w-4 text-slate-500" />
-                                        <h3 className="text-sm font-bold text-slate-700">اطلاعات نامه</h3>
+                                        <h3 className="text-sm font-bold text-slate-700">معلومات مکتوب</h3>
                                     </div>
                                     <div className="p-5 space-y-4">
 
@@ -270,20 +270,20 @@ export default function LettersEdit({
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div className="md:col-span-2">
                                                 <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                                                    موضوع نامه <span className="text-red-500">*</span>
+                                                    موضوع مکتوب <span className="text-red-500">*</span>
                                                 </label>
                                                 <input
                                                     type="text"
                                                     value={data.subject}
                                                     onChange={(e) => setData('subject', e.target.value)}
-                                                    placeholder="موضوع نامه را وارد نمایید..."
+                                                    placeholder="موضوع مکتوب را وارد نمایید..."
                                                     className={`${inputClass} py-3 placeholder:text-slate-400`}
                                                 />
                                                 {errors.subject && <p className="text-red-500 text-xs mt-1">{errors.subject}</p>}
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                                                    تاریخ نامه <span className="text-red-500">*</span>
+                                                    تاریخ مکتوب <span className="text-red-500">*</span>
                                                 </label>
                                                 <PersianDatePicker
                                                     value={data.date}
@@ -301,7 +301,7 @@ export default function LettersEdit({
                                                 value={data.summary}
                                                 onChange={(e) => setData('summary', e.target.value)}
                                                 rows={2}
-                                                placeholder="خلاصه‌ای از محتوای نامه..."
+                                                placeholder="خلاصه‌ای از محتوای مکتوب..."
                                                 className={`${inputClass} resize-none`}
                                             />
                                         </div>
@@ -311,8 +311,8 @@ export default function LettersEdit({
                                             <TextEditor
                                                 content={data.content}
                                                 onChange={(content) => setData('content', content)}
-                                                placeholder="متن نامه را اینجا بنویسید..."
-                                                label="متن نامه"
+                                                placeholder="متن مکتوب را اینجا بنویسید..."
+                                                label="متن مکتوب"
                                                 required={true}
                                                 error={errors.content}
                                             />
@@ -324,14 +324,14 @@ export default function LettersEdit({
                                 <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
                                         <Paperclip className="h-4 w-4 text-slate-500" />
-                                        <h3 className="text-sm font-bold text-slate-700">پیوست‌ها</h3>
+                                        <h3 className="text-sm font-bold text-slate-700">ضمایم</h3>
                                     </div>
                                     <div className="p-5">
 
                                         {/* پیوست‌های موجود */}
                                         {existingAttachments.length > 0 && (
                                             <div className="mb-4 space-y-1.5">
-                                                <h4 className="text-xs font-medium text-slate-600 mb-2">پیوست‌های فعلی</h4>
+                                                <h4 className="text-xs font-medium text-slate-600 mb-2">ضمایم فعلی</h4>
                                                 {existingAttachments.map((attachment) => (
                                                     <div key={attachment.id} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-md">
                                                         <div className="flex items-center gap-2 truncate">
@@ -366,7 +366,7 @@ export default function LettersEdit({
                                         {/* پیوست‌های جدید */}
                                         {attachments.length > 0 && (
                                             <div className="mt-3 space-y-1.5">
-                                                <h4 className="text-xs font-medium text-slate-600">پیوست‌های جدید</h4>
+                                                <h4 className="text-xs font-medium text-slate-600">ضمایم جدید</h4>
                                                 {attachments.map((file, i) => (
                                                     <div key={i} className="flex items-center justify-between p-2.5 bg-blue-50 border border-blue-200 rounded-md">
                                                         <div className="flex items-center gap-2 truncate">
@@ -418,7 +418,7 @@ export default function LettersEdit({
                                             <div className="min-w-0">
                                                 <p className="text-sm font-bold text-slate-800 truncate">{currentUser.full_name}</p>
                                                 <p className="text-xs text-slate-500 mt-0.5">{currentUser.primary_position?.name || 'کاربر'}</p>
-                                                <p className="text-xs text-slate-400">{currentUser.department?.name || 'سازمان'}</p>
+                                                <p className="text-xs text-slate-400">{currentUser.department?.name || 'وزارت'}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -439,9 +439,9 @@ export default function LettersEdit({
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="text-sm font-bold text-slate-800 truncate">{letter.recipient_name || 'نامشخص'}</p>
-                                                <p className="text-xs text-slate-500 mt-0.5">{letter.recipient_position_name || 'بدون سمت'}</p>
+                                                <p className="text-xs text-slate-500 mt-0.5">{letter.recipient_position_name || 'بدون بست'}</p>
                                                 <p className="text-xs text-slate-400">
-                                                    {letter.recipient_type === 'external' ? 'خارج سازمانی' : 'داخلی'}
+                                                    {letter.recipient_type === 'external' ? 'خارج از وزارت' : 'داخلی'}
                                                 </p>
                                             </div>
                                         </div>
@@ -508,7 +508,7 @@ export default function LettersEdit({
                                     </div>
                                     <div className="p-5 space-y-3">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs text-slate-500">شماره نامه:</span>
+                                            <span className="text-xs text-slate-500">شماره مکتوب :</span>
                                             <span className="text-xs font-medium text-slate-700">{letter.letter_number || 'پیش‌نویس'}</span>
                                         </div>
                                         <div className="flex items-center justify-between">
@@ -530,11 +530,11 @@ export default function LettersEdit({
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs text-slate-500">گیرنده:</span>
                                             <span className="text-xs font-medium text-slate-700">
-                                                {letter.recipient_type === 'external' ? 'خارج سازمانی' : 'داخلی'}
+                                                {letter.recipient_type === 'external' ? 'خارج از وزارت' : 'داخلی'}
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs text-slate-500">تعداد پیوست:</span>
+                                            <span className="text-xs text-slate-500">تعداد ضمایم:</span>
                                             <span className="text-xs font-medium text-slate-700">{existingAttachments.length}</span>
                                         </div>
                                     </div>
@@ -545,10 +545,10 @@ export default function LettersEdit({
                                     <div className="flex items-start gap-2">
                                         <Info className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
                                         <div className="text-xs text-amber-800">
-                                            <p className="font-medium mb-1">راهنمای ویرایش نامه</p>
+                                            <p className="font-medium mb-1">راهنمای ویرایش مکتوب</p>
                                             <ul className="space-y-1 text-amber-700">
                                                 <li>• فیلدهای ستاره‌دار الزامی هستند</li>
-                                                <li>• پیوست‌های حذف شده قابل بازیابی نیستند</li>
+                                                <li>• ضمایم حذف شده قابل بازیابی نیستند</li>
                                                 <li>• پس از ذخیره، تغییرات در تاریخچه ثبت می‌شود</li>
                                             </ul>
                                         </div>
@@ -596,7 +596,7 @@ export default function LettersEdit({
                                 <div className="border-b-2 border-slate-800 pb-4 mb-6">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <h1 className="text-xl font-bold text-slate-900">نامه رسمی</h1>
+                                            <h1 className="text-xl font-bold text-slate-900">مکتوب رسمی</h1>
                                             <p className="text-sm text-slate-600 mt-1">شماره: {letter.letter_number || 'پیش‌نویس'}</p>
                                         </div>
                                         <div className="text-left">

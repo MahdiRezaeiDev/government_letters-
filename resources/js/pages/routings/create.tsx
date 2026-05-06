@@ -91,7 +91,7 @@ export default function RoutingsCreate({ letter, departments, positions, users =
 
     return (
         <>
-            <Head title="ارجاع نامه" />
+            <Head title="ارجاع مکتوب" />
 
             <div className="min-h-screen bg-slate-50/70" dir="rtl">
                 {/* Header */}
@@ -106,7 +106,7 @@ export default function RoutingsCreate({ letter, departments, positions, users =
                                     <ChevronLeft className="h-5 w-5" />
                                 </button>
                                 <div>
-                                    <h1 className="text-sm font-bold text-slate-800">ارجاع نامه</h1>
+                                    <h1 className="text-sm font-bold text-slate-800">ارجاع مکتوب</h1>
                                     <p className="text-xs text-slate-400 mt-0.5">{letter.subject}</p>
                                 </div>
                             </div>
@@ -127,7 +127,7 @@ export default function RoutingsCreate({ letter, departments, positions, users =
                                     className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-colors"
                                 >
                                     <Send className="h-4 w-4" />
-                                    {processing ? 'در حال ارسال...' : 'ارجاع نامه'}
+                                    {processing ? 'در حال ارسال...' : 'ارجاع مکتوب'}
                                 </button>
                             </div>
                         </div>
@@ -142,7 +142,7 @@ export default function RoutingsCreate({ letter, departments, positions, users =
                             <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-l from-slate-50/50 to-white">
                                 <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                                     <FileText className="h-4 w-4 text-indigo-600" />
-                                    اطلاعات نامه
+                                    معلومات مکتوب
                                 </h2>
                             </div>
                             <div className="p-6">
@@ -168,7 +168,7 @@ export default function RoutingsCreate({ letter, departments, positions, users =
                             <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-l from-slate-50/50 to-white">
                                 <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                                     <Share2 className="h-4 w-4 text-indigo-600" />
-                                    اطلاعات ارجاع
+                                    معلومات ارجاع
                                 </h2>
                             </div>
                             <div className="p-6 space-y-5">
@@ -194,8 +194,8 @@ export default function RoutingsCreate({ letter, departments, positions, users =
                                             <div className={`flex items-center gap-3 border-2 rounded-xl px-4 py-3 transition-all ${data.recipient_type === 'internal' ? 'border-indigo-400 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
                                                 <Building2 className="h-5 w-5 text-indigo-500" />
                                                 <div>
-                                                    <p className="text-sm font-semibold">داخلی (سمت)</p>
-                                                    <p className="text-xs text-slate-400">ارجاع به یک سمت مشخص</p>
+                                                    <p className="text-sm font-semibold">داخلی (بست)</p>
+                                                    <p className="text-xs text-slate-400">ارجاع به یک بست مشخص</p>
                                                 </div>
                                             </div>
                                         </label>
@@ -228,7 +228,7 @@ export default function RoutingsCreate({ letter, departments, positions, users =
                                     <div className="space-y-4">
                                         <div>
                                             <label className="block text-xs font-semibold text-slate-500 mb-2">
-                                                دپارتمان / ریاست <span className="text-rose-400 mr-1">*</span>
+                                                دیپارتمنت / ریاست <span className="text-rose-400 mr-1">*</span>
                                             </label>
                                             <select
                                                 value={selectedDepartment || ''}
@@ -254,7 +254,7 @@ export default function RoutingsCreate({ letter, departments, positions, users =
                                         {selectedDepartment && (
                                             <div>
                                                 <label className="block text-xs font-semibold text-slate-500 mb-2">
-                                                    سمت <span className="text-rose-400 mr-1">*</span>
+                                                    بست <span className="text-rose-400 mr-1">*</span>
                                                 </label>
                                                 <select
                                                     value={data.recipient_position_id || ''}
@@ -294,7 +294,7 @@ export default function RoutingsCreate({ letter, departments, positions, users =
                                             <option value="">انتخاب کنید...</option>
                                             {users.map(user => (
                                                 <option key={user.id} value={user.id}>
-                                                    {user.name} - {user.position || 'بدون سمت'} ({user.department || 'بدون دپارتمان'})
+                                                    {user.name} - {user.position || 'بدون بست'} ({user.department || 'بدون دیپارتمنت'})
                                                 </option>
                                             ))}
                                         </select>
@@ -338,7 +338,7 @@ export default function RoutingsCreate({ letter, departments, positions, users =
                                                 onChange={() => setData('priority', 'high')}
                                                 className="text-indigo-600"
                                             />
-                                            <span className="text-sm text-slate-600">فوری</span>
+                                            <span className="text-sm text-slate-600">عاجل</span>
                                         </label>
                                     </div>
                                 </div>
@@ -346,7 +346,7 @@ export default function RoutingsCreate({ letter, departments, positions, users =
                                 {/* تاریخ سررسید */}
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-500 mb-2">
-                                        تاریخ سررسید
+                                        تاریخ رسید
                                     </label>
                                     <input
                                         type="date"

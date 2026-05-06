@@ -70,7 +70,7 @@ export default function OrganizationsCreate() {
 
     return (
         <>
-            <Head title="ایجاد وزارت جدید" />
+            <Head title=" وزارت جدید" />
 
             <div className="min-h-screen">
                 {/* Header */}
@@ -83,8 +83,8 @@ export default function OrganizationsCreate() {
                                     <Building2 className="h-5 w-5 text-blue-600" />
                                 </div>
                                 <div>
-                                    <h1 className="text-lg font-bold text-slate-900">ایجاد وزارت جدید</h1>
-                                    <p className="text-xs text-slate-500">اطلاعات وزارت را وارد کنید</p>
+                                    <h1 className="text-lg font-bold text-slate-900"> وزارت جدید</h1>
+                                    <p className="text-xs text-slate-500">معلومات وزارت را وارد کنید</p>
                                 </div>
                             </div>
 
@@ -102,7 +102,7 @@ export default function OrganizationsCreate() {
                                 {/* Basic Information Card */}
                                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
                                     <div className="px-6 py-4 border-b border-slate-100">
-                                        <h3 className="font-semibold text-slate-900">اطلاعات پایه</h3>
+                                        <h3 className="font-semibold text-slate-900">معلومات اولیه </h3>
                                     </div>
                                     <div className="p-6 space-y-5">
 
@@ -134,7 +134,7 @@ export default function OrganizationsCreate() {
                                                 />
                                             </div>
                                             <div>
-                                                <FieldLabel>تلفن</FieldLabel>
+                                                <FieldLabel>تلیفون</FieldLabel>
                                                 <InputField
                                                     icon={Phone}
                                                     value={data.phone}
@@ -147,7 +147,7 @@ export default function OrganizationsCreate() {
 
                                         {/* Website */}
                                         <div>
-                                            <FieldLabel>وبسایت</FieldLabel>
+                                            <FieldLabel>ویب سایت</FieldLabel>
                                             <InputField
                                                 icon={Globe}
                                                 type="url"
@@ -233,7 +233,7 @@ export default function OrganizationsCreate() {
                                 {/* Logo Upload Card */}
                                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm sticky top-24">
                                     <div className="px-6 py-4 border-b border-slate-100">
-                                        <h3 className="font-semibold text-slate-900">لوگوی وزارت</h3>
+                                        <h3 className="font-semibold text-slate-900">لوگو وزارت</h3>
                                     </div>
                                     <div className="p-6">
                                         {errors.logo && (
@@ -308,7 +308,7 @@ export default function OrganizationsCreate() {
                                         </li>
                                         <li className="flex items-start gap-2 text-xs text-blue-700">
                                             <CheckCircle className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
-                                            ایمیل و وبسایت معتبر وارد کنید
+                                            ایمیل و ویب سایت معتبر وارد کنید
                                         </li>
                                         <li className="flex items-start gap-2 text-xs text-blue-700">
                                             <CheckCircle className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
@@ -329,7 +329,7 @@ export default function OrganizationsCreate() {
                                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 shadow-sm"
                                 >
                                     <Save className="h-4 w-4" />
-                                    {processing ? 'در حال ثبت...' : 'ثبت وزارت'}
+                                    {processing ? 'در حال ثبت...' : 'ثبت'}
                                 </button>
                                 <button
                                     type="button"
@@ -337,7 +337,7 @@ export default function OrganizationsCreate() {
                                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-slate-700 bg-slate-200 hover:bg-slate-200 rounded-lg transition-colors"
                                 >
                                     <X className="h-4 w-4" />
-                                    انصراف
+                                    لغوه
                                 </button>
                             </div>
                         </div>

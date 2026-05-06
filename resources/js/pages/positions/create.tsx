@@ -60,7 +60,7 @@ export default function PositionsCreate({ organizations }: Props) {
                                 {/* Position Info Card */}
                                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
                                     <div className="px-6 py-4 border-b border-slate-100">
-                                        <h3 className="font-semibold text-slate-900">اطلاعات وظیفه</h3>
+                                        <h3 className="font-semibold text-slate-900">معلومات وظیفه</h3>
                                     </div>
                                     <div className="p-6 space-y-5">
                                         {/* Name & Department */}
@@ -232,7 +232,7 @@ export default function PositionsCreate({ organizations }: Props) {
                                     onClick={() => router.get(positions.index())}
                                     className="cursor-pointer flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-slate-700 bg-slate-200 hover:bg-slate-200 rounded-lg transition-colors"
                                 >
-                                    انصراف
+                                    لغوه
                                     <X className="h-4 w-4" />
                                 </button>
                             </div>

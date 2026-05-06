@@ -118,7 +118,7 @@ export default function OrganizationsEdit({ organization }: Props) {
                                 {/* Basic Information Card */}
                                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
                                     <div className="px-6 py-4 border-b border-slate-100">
-                                        <h3 className="font-semibold text-slate-900">اطلاعات پایه</h3>
+                                        <h3 className="font-semibold text-slate-900">معلومات اولیه</h3>
                                     </div>
                                     <div className="p-6 space-y-5">
 
@@ -163,7 +163,7 @@ export default function OrganizationsEdit({ organization }: Props) {
                                                 />
                                             </div>
                                             <div>
-                                                <FieldLabel>تلفن</FieldLabel>
+                                                <FieldLabel>تلیفون</FieldLabel>
                                                 <InputField
                                                     icon={Phone}
                                                     value={data.phone}
@@ -176,7 +176,7 @@ export default function OrganizationsEdit({ organization }: Props) {
 
                                         {/* Website */}
                                         <div>
-                                            <FieldLabel>وبسایت</FieldLabel>
+                                            <FieldLabel>ویب سایت</FieldLabel>
                                             <InputField
                                                 icon={Globe}
                                                 type="url"
@@ -261,7 +261,7 @@ export default function OrganizationsEdit({ organization }: Props) {
                                 {/* Logo Upload Card */}
                                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm sticky top-24">
                                     <div className="px-6 py-4 border-b border-slate-100">
-                                        <h3 className="font-semibold text-slate-900">لوگوی وزارت</h3>
+                                        <h3 className="font-semibold text-slate-900">لوگو وزارت</h3>
                                     </div>
                                     <div className="p-6">
                                         {errors.logo && (
@@ -330,7 +330,7 @@ export default function OrganizationsEdit({ organization }: Props) {
 
                                 {/* Organization Info Card */}
                                 <div className="bg-slate-50 rounded-xl border border-slate-200 p-5">
-                                    <h4 className="text-sm font-semibold text-slate-800 mb-3">اطلاعات فعلی</h4>
+                                    <h4 className="text-sm font-semibold text-slate-800 mb-3">معلومات فعلی</h4>
                                     <div className="space-y-3 text-sm">
                                         <div className="flex items-center justify-between">
                                             <span className="text-slate-500">کد:</span>
@@ -375,7 +375,7 @@ export default function OrganizationsEdit({ organization }: Props) {
                                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-slate-700 bg-slate-200 hover:bg-slate-200 rounded-lg transition-colors"
                                 >
                                     <X className="h-4 w-4" />
-                                    انصراف
+                                    لغوه
                                 </button>
                             </div>
                         </div>

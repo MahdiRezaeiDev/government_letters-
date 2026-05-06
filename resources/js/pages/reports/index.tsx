@@ -55,8 +55,8 @@ export default function ReportsIndex({ stats }: Props) {
         low: 'کم',
         normal: 'عادی',
         high: 'مهم',
-        urgent: 'فوری',
-        very_urgent: 'خیلی فوری',
+        urgent: 'عاجل',
+        very_urgent: 'خیلی عاجل',
     };
 
     const handleExport = (format: 'excel' | 'pdf') => {
@@ -69,14 +69,14 @@ export default function ReportsIndex({ stats }: Props) {
     };
 
     const summaryCards = [
-        { label: 'کل نامه‌ها', value: stats.total_letters, icon: FileText, color: 'bg-blue-500' },
-        { label: 'نامه‌های وارده', value: stats.incoming_count, icon: Mail, color: 'bg-green-500' },
-        { label: 'نامه‌های صادره', value: stats.outgoing_count, icon: Mail, color: 'bg-purple-500' },
-        { label: 'نامه‌های داخلی', value: stats.internal_count, icon: FileText, color: 'bg-indigo-500' },
+        { label: ' مجموع مکتوب ', value: stats.total_letters, icon: FileText, color: 'bg-blue-500' },
+        { label: 'مکتوب ها وارده', value: stats.incoming_count, icon: Mail, color: 'bg-green-500' },
+        { label: 'مکتوب ها صادره', value: stats.outgoing_count, icon: Mail, color: 'bg-purple-500' },
+        { label: 'مکتوب ها داخلی', value: stats.internal_count, icon: FileText, color: 'bg-indigo-500' },
         { label: 'تایید شده', value: stats.approved_count, icon: CheckCircle, color: 'bg-green-600' },
         { label: 'رد شده', value: stats.rejected_count, icon: XCircle, color: 'bg-red-500' },
         { label: 'در انتظار', value: stats.pending_count, icon: Clock, color: 'bg-yellow-500' },
-        { label: 'بایگانی شده', value: stats.archived_count, icon: Archive, color: 'bg-gray-500' },
+        { label: 'ارشیف شده', value: stats.archived_count, icon: Archive, color: 'bg-gray-500' },
     ];
 
     const pieData = [
@@ -148,14 +148,14 @@ export default function ReportsIndex({ stats }: Props) {
                             onChange={(e) => setReportType(e.target.value)}
                             className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
                         >
-                            <option value="all">همه نامه‌ها</option>
-                            <option value="incoming">نامه‌های وارده</option>
-                            <option value="outgoing">نامه‌های صادره</option>
-                            <option value="internal">نامه‌های داخلی</option>
+                            <option value="all">همه مکتوب ها</option>
+                            <option value="incoming">مکتوب ها وارده</option>
+                            <option value="outgoing">مکتوب ها صادره</option>
+                            <option value="internal">مکتوب ها داخلی</option>
                         </select>
                         <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition">
                             <Filter className="ml-2 h-4 w-4" />
-                            اعمال فیلتر
+                             فیلتر
                         </button>
                     </div>
                 </div>
@@ -179,7 +179,7 @@ export default function ReportsIndex({ stats }: Props) {
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                             <TrendingUp className="h-5 w-5 text-blue-500" />
-                            آمار ماهیانه نامه‌ها
+                            آمار ماهیانه مکتوب ها
                         </h3>
                         <ResponsiveContainer width="100%" height={300}>
                             <LineChart data={stats.monthly_stats}>
@@ -188,7 +188,7 @@ export default function ReportsIndex({ stats }: Props) {
                                 <YAxis />
                                 <Tooltip />
                                 <Legend />
-                                <Line type="monotone" dataKey="count" stroke="#3b82f6" name="تعداد نامه‌ها" />
+                                <Line type="monotone" dataKey="count" stroke="#3b82f6" name="تعداد مکتوب ها" />
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
@@ -197,7 +197,7 @@ export default function ReportsIndex({ stats }: Props) {
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                         <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                             <Users className="h-5 w-5 text-green-500" />
-                            توزیع نامه‌ها بر اساس دپارتمان
+                            توزیع مکتوب ها بر اساس دیپارتمنت
                         </h3>
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={stats.department_stats}>
@@ -206,14 +206,14 @@ export default function ReportsIndex({ stats }: Props) {
                                 <YAxis />
                                 <Tooltip />
                                 <Legend />
-                                <Bar dataKey="count" fill="#10b981" name="تعداد نامه‌ها" />
+                                <Bar dataKey="count" fill="#10b981" name="تعداد مکتوب ها" />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
 
                     {/* Type Distribution Pie */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <h3 className="font-semibold text-gray-900 mb-4">توزیع انواع نامه‌ها</h3>
+                        <h3 className="font-semibold text-gray-900 mb-4">توزیع انواع مکتوب ها</h3>
                         <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
                                 <Pie
@@ -237,7 +237,7 @@ export default function ReportsIndex({ stats }: Props) {
 
                     {/* Priority Distribution Pie */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <h3 className="font-semibold text-gray-900 mb-4">توزیع اولویت نامه‌ها</h3>
+                        <h3 className="font-semibold text-gray-900 mb-4">توزیع اولویت مکتوب ها</h3>
                         <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
                                 <Pie

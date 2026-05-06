@@ -48,14 +48,14 @@ export default function DepartmentsShow({ department, stats, can }: Props) {
 
     const getHierarchyText = () => {
         if (department.level === 0) {
-            return 'دپارتمان سطح اول (ریشه)';
+            return 'دیپارتمنت سطح اول (ریشه)';
         }
 
         if (department.level === 1) {
-            return 'دپارتمان سطح دوم';
+            return 'دیپارتمنت سطح دوم';
         }
 
-        return `دپارتمان سطح ${department.level + 1}`;
+        return `دیپارتمنت سطح ${department.level + 1}`;
     };
 
     return (
@@ -127,7 +127,7 @@ export default function DepartmentsShow({ department, stats, can }: Props) {
                                                             onClick={() => setShowDeleteConfirm(false)}
                                                             className="inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                                                         >
-                                                            انصراف
+                                                            لغوه
                                                         </button>
                                                     </div>
                                                 )}
@@ -145,7 +145,7 @@ export default function DepartmentsShow({ department, stats, can }: Props) {
                                             <Briefcase className="h-5 w-5 text-indigo-600" />
                                         </div>
                                         <div>
-                                            <p className="text-xs text-gray-500 font-medium">کل پست‌ها</p>
+                                            <p className="text-xs text-gray-500 font-medium">مجموع بست ها</p>
                                             <p className="text-2xl font-bold text-gray-900">{stats.total_positions}</p>
                                         </div>
                                     </div>
@@ -156,7 +156,7 @@ export default function DepartmentsShow({ department, stats, can }: Props) {
                                             <TrendingUp className="h-5 w-5 text-emerald-600" />
                                         </div>
                                         <div>
-                                            <p className="text-xs text-gray-500 font-medium">پست‌های فعال</p>
+                                            <p className="text-xs text-gray-500 font-medium">بست ها فعال</p>
                                             <p className="text-2xl font-bold text-emerald-600">{stats.active_positions}</p>
                                         </div>
                                     </div>
@@ -178,7 +178,7 @@ export default function DepartmentsShow({ department, stats, can }: Props) {
                                             <FolderTree className="h-5 w-5 text-amber-600" />
                                         </div>
                                         <div>
-                                            <p className="text-xs text-gray-500 font-medium">زیردپارتمان‌ها</p>
+                                            <p className="text-xs text-gray-500 font-medium">دیپارتمنت</p>
                                             <p className="text-2xl font-bold text-amber-600">{stats.child_departments}</p>
                                         </div>
                                     </div>
@@ -191,8 +191,8 @@ export default function DepartmentsShow({ department, stats, can }: Props) {
                             {/* Department Information */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                                 <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                                    <h3 className="font-semibold text-gray-900">اطلاعات دپارتمان</h3>
-                                    <p className="text-sm text-gray-500 mt-0.5">مشخصات و اطلاعات پایه</p>
+                                    <h3 className="font-semibold text-gray-900">معلومات دیپارتمنت</h3>
+                                    <p className="text-sm text-gray-500 mt-0.5">مشخصات و معلومات بست</p>
                                 </div>
                                 <div className="p-6 space-y-4">
                                     <div className="flex items-start gap-3">
@@ -200,7 +200,7 @@ export default function DepartmentsShow({ department, stats, can }: Props) {
                                             <Hash className="h-4 w-4 text-gray-500" />
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-xs text-gray-500">کد دپارتمان</p>
+                                            <p className="text-xs text-gray-500">کد دیپارتمنت</p>
                                             <p className="text-sm font-mono text-gray-900">{department.code}</p>
                                         </div>
                                     </div>
@@ -210,7 +210,7 @@ export default function DepartmentsShow({ department, stats, can }: Props) {
                                             <Building2 className="h-4 w-4 text-gray-500" />
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-xs text-gray-500">سازمان مادر</p>
+                                            <p className="text-xs text-gray-500">وزارت مادر</p>
                                             {department.organization ? (
                                                 <Link 
                                                     href={departments.show( department.organization.id )}
@@ -231,7 +231,7 @@ export default function DepartmentsShow({ department, stats, can }: Props) {
                                                 <FolderTree className="h-4 w-4 text-gray-500" />
                                             </div>
                                             <div className="flex-1">
-                                                <p className="text-xs text-gray-500">دپارتمان والد</p>
+                                                <p className="text-xs text-gray-500">دیپارتمنت والد</p>
                                                 <Link 
                                                     href={departments.show({ department: department.parent.id })}
                                                     className="text-sm text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1"
@@ -260,8 +260,8 @@ export default function DepartmentsShow({ department, stats, can }: Props) {
                             {/* Organizational Path */}
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                                 <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                                    <h3 className="font-semibold text-gray-900">مسیر سازمانی</h3>
-                                    <p className="text-sm text-gray-500 mt-0.5">موقعیت دپارتمان در ساختار سازمانی</p>
+                                    <h3 className="font-semibold text-gray-900">مسیر وزارت</h3>
+                                    <p className="text-sm text-gray-500 mt-0.5">موقعیت دیپارتمنت در ساختار وزارت</p>
                                 </div>
                                 <div className="p-6">
                                     <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-100">
@@ -301,15 +301,15 @@ export default function DepartmentsShow({ department, stats, can }: Props) {
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                                 <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                     <div>
-                                        <h3 className="font-semibold text-gray-900">پست‌های سازمانی</h3>
-                                        <p className="text-sm text-gray-500 mt-0.5">لیست پست‌های سازمانی این دپارتمان</p>
+                                        <h3 className="font-semibold text-gray-900">بست ها وزارت</h3>
+                                        <p className="text-sm text-gray-500 mt-0.5">لیست بست ها وزارت این دیپارتمنت</p>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="px-2 py-1 bg-indigo-50 rounded-lg text-xs text-indigo-600">
-                                            مجموع: {stats.total_positions} پست
+                                            مجموع: {stats.total_positions} بست
                                         </div>
                                         <div className="px-2 py-1 bg-emerald-50 rounded-lg text-xs text-emerald-600">
-                                            فعال: {stats.active_positions} پست
+                                            فعال: {stats.active_positions} بست
                                         </div>
                                     </div>
                                 </div>
@@ -332,7 +332,7 @@ export default function DepartmentsShow({ department, stats, can }: Props) {
                                                                     <span className="text-xs text-gray-300">•</span>
                                                                     <span className="text-xs text-purple-600 inline-flex items-center gap-1">
                                                                         <Award className="h-3 w-3" />
-                                                                        پست مدیریتی
+                                                                        بست مدیریتی
                                                                     </span>
                                                                 </>
                                                             )}
@@ -364,15 +364,15 @@ export default function DepartmentsShow({ department, stats, can }: Props) {
                         {(!department.positions || department.positions.length === 0) && (
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                                 <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                                    <h3 className="font-semibold text-gray-900">پست‌های سازمانی</h3>
-                                    <p className="text-sm text-gray-500 mt-0.5">لیست پست‌های سازمانی این دپارتمان</p>
+                                    <h3 className="font-semibold text-gray-900">بست ها وزارت</h3>
+                                    <p className="text-sm text-gray-500 mt-0.5">لیست بست ها وزارت این دیپارتمنت</p>
                                 </div>
                                 <div className="p-12 text-center">
                                     <div className="inline-flex p-3 bg-gray-100 rounded-full mb-4">
                                         <Briefcase className="h-6 w-6 text-gray-400" />
                                     </div>
-                                    <p className="text-gray-500 font-medium">هیچ پست سازمانی یافت نشد</p>
-                                    <p className="text-sm text-gray-400 mt-1">برای این دپارتمان پست سازمانی ثبت نشده است</p>
+                                    <p className="text-gray-500 font-medium">هیچ بست وزارت دریافت نشد</p>
+                                    <p className="text-sm text-gray-400 mt-1">برای این دیپارتمنت بست وزارت ثبت نشده است</p>
                                 </div>
                             </div>
                         )}
@@ -381,8 +381,8 @@ export default function DepartmentsShow({ department, stats, can }: Props) {
                         {stats.child_departments > 0 && department.children && department.children.length > 0 && (
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                                 <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                                    <h3 className="font-semibold text-gray-900">زیردپارتمان‌ها</h3>
-                                    <p className="text-sm text-gray-500 mt-0.5">دپارتمان‌های زیرمجموعه این دپارتمان</p>
+                                    <h3 className="font-semibold text-gray-900">دیپارتمنت</h3>
+                                    <p className="text-sm text-gray-500 mt-0.5">دیپارتمنت زیرمجموعه این دیپارتمنت</p>
                                 </div>
                                 <div className="divide-y divide-gray-100">
                                     {department.children.map((child) => (

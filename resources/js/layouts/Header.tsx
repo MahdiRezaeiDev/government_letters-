@@ -128,7 +128,7 @@ export function Header({ onMenuClick, isMobile }: HeaderProps) {
                                 <div className="h-[1px] bg-slate-100 my-1 mx-2"></div>
                                 <Link method="post" href="/logout" as="button" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-rose-500 hover:bg-rose-50 transition-all">
                                     <LogOut className="h-4 w-4" />
-                                    <span className="text-xs font-bold">خروج از سامانه</span>
+                                    <span className="text-xs font-bold">خروج از سیستم</span>
                                 </Link>
                             </div>
                         )}

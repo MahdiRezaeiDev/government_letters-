@@ -88,10 +88,10 @@ return '';
     const hasActiveFilters = filters.search || filters.department_id;
 
     const stats = [
-        { label: 'کل بایگانی‌ها', value: archives.total, icon: ArchiveIcon, color: 'blue', gradient: 'from-blue-500 to-cyan-600', change: '+8%' },
-        { label: 'بایگانی‌های فعال', value: archives.data.filter(a => a.is_active).length, icon: CheckCircle, color: 'emerald', gradient: 'from-emerald-500 to-teal-600', change: '+5%' },
-        { label: 'دپارتمان‌ها', value: departments.length, icon: Building2, color: 'purple', gradient: 'from-purple-500 to-pink-600', change: '+3%' },
-        { label: 'اسناد بایگانی', value: archives.data.reduce((acc, a) => acc + (a.cases_count || 0), 0), icon: Database, color: 'amber', gradient: 'from-amber-500 to-orange-600', change: '-' },
+        { label: 'مجموعه اسناد ارشیف', value: archives.total, icon: ArchiveIcon, color: 'blue', gradient: 'from-blue-500 to-cyan-600', change: '+8%' },
+        { label: 'ارشیف فعال', value: archives.data.filter(a => a.is_active).length, icon: CheckCircle, color: 'emerald', gradient: 'from-emerald-500 to-teal-600', change: '+5%' },
+        { label: 'دیپارتمنت ها', value: departments.length, icon: Building2, color: 'purple', gradient: 'from-purple-500 to-pink-600', change: '+3%' },
+        { label: 'اسناد ارشیف', value: archives.data.reduce((acc, a) => acc + (a.cases_count || 0), 0), icon: Database, color: 'amber', gradient: 'from-amber-500 to-orange-600', change: '-' },
     ];
 
     const getRandomGradient = (id: number) => {
@@ -112,7 +112,7 @@ return '';
 
     return (
         <>
-            <Head title="مدیریت بایگانی" />
+            <Head title="مدیریت ارشیف" />
 
             <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-slate-100">
                 <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -128,10 +128,10 @@ return '';
                                         </div>
                                     </div>
                                     <div>
-                                        <h1 className="text-2xl font-bold text-gray-900">مدیریت بایگانی</h1>
+                                        <h1 className="text-2xl font-bold text-gray-900">مدیریت ارشیف</h1>
                                         <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
                                             <Sparkles className="h-3 w-3 text-blue-500" />
-                                            مدیریت بایگانی اسناد و پرونده‌ها
+                                            مدیریت ارشی اسناد و پرونده‌ها
                                         </p>
                                     </div>
                                 </div>
@@ -146,7 +146,7 @@ return '';
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                         }`}
                                     >
-                                        جدولی
+                                        جدول
                                     </button>
                                     <button
                                         onClick={() => setViewMode('cards')}
@@ -155,7 +155,7 @@ return '';
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                         }`}
                                     >
-                                        کارتی
+                                        کارت
                                     </button>
                                 </div>
                                 {can.create && (
@@ -164,7 +164,7 @@ return '';
                                         className="group relative inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl text-sm font-medium text-white hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                                     >
                                         <Plus className="ml-2 h-4 w-4 transition-transform group-hover:rotate-90 duration-200" />
-                                        بایگانی جدید
+                                        ارشیف جدید
                                         <span className="absolute inset-0 rounded-xl bg-white opacity-0 group-hover:opacity-10 transition-opacity"></span>
                                     </Link>
                                 )}
@@ -668,8 +668,8 @@ return '';
                         setSelectedArchive(null);
                     }}
                     onConfirm={confirmDelete}
-                    title="حذف بایگانی"
-                    message="آیا از حذف این بایگانی اطمینان دارید؟"
+                    title="حذف ارشیف"
+                    message="آیا از حذف این ارشیف اطمینان دارید؟"
                     itemName={selectedArchive.name}
                     type="archive"
                     isLoading={deleting}

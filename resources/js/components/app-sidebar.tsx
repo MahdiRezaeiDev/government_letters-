@@ -77,26 +77,26 @@ const navGroups: NavGroup[] = [
         ],
     },
     {
-        title: 'نامه‌ها',
+        title: 'مکتوب ها',
         icon: Mail,
         items: [
             {
-                title: 'نامه‌های وارده',
+                title: 'مکتوب ها وارده',
                 href: LettersIndex({ query: { type: 'incoming' } }).url,
                 icon: Inbox,
             },
             {
-                title: 'نامه‌های صادره',
+                title: 'مکتوب ها صادره',
                 href: LettersIndex({ query: { type: 'outgoing' } }).url,
                 icon: Send,
             },
             {
-                title: 'نامه‌های داخلی',
+                title: 'مکتوب ها داخلی',
                 href: LettersIndex({ query: { type: 'internal' } }).url,
                 icon: FileText,
             },
             {
-                title: 'نامه جدید',
+                title: 'مکتوب جدید',
                 href: LetterCreate().url,
                 icon: Mail,
             },
@@ -112,18 +112,18 @@ const navGroups: NavGroup[] = [
                 icon: Inbox,
             },
             {
-                title: 'نامه‌های من',
+                title: 'مکتوب ها من',
                 href: LettersIndex().url,
                 icon: FileText,
             },
         ],
     },
     {
-        title: 'بایگانی',
+        title: 'ارشیف',
         icon: Archive,
         items: [
             {
-                title: 'بایگانی اسناد',
+                title: 'ارشیف اسناد',
                 href: ArchiveIndex().url,
                 icon: Archive,
             },
@@ -134,7 +134,7 @@ const navGroups: NavGroup[] = [
         icon: BarChart3,
         items: [
             {
-                title: 'گزارشات آماری',
+                title: 'گزارشات ',
                 href: LettersIndex().url,
                 icon: BarChart3,
             },
@@ -145,7 +145,7 @@ const navGroups: NavGroup[] = [
         icon: Settings,
         items: [
             {
-                title: 'پروفایل من',
+                title: 'پروفایل ',
                 href: LettersIndex().url,
                 icon: UserCog,
             },
@@ -172,21 +172,21 @@ return navGroups;
 
         if (userRole === 'org-admin') {
             return navGroups.filter(group =>
-                ['مدیریت سازمان', 'نامه‌ها', 'پیگیری', 'بایگانی', 'گزارشات', 'تنظیمات'].includes(group.title)
+                ['مدیریت وزارت', 'مکتوب ها', 'پیگیری', 'ارشیف', 'گزارشات', 'تنظیمات'].includes(group.title)
             );
         }
 
         if (userRole === 'dept-manager') {
             return navGroups
                 .filter(group =>
-                    ['نامه‌ها', 'پیگیری', 'بایگانی', 'گزارشات', 'تنظیمات'].includes(group.title)
+                    ['مکتوب ها', 'پیگیری', 'ارشیف', 'گزارشات', 'تنظیمات'].includes(group.title)
                 )
                 .map(group => {
-                    if (group.title === 'نامه‌ها') {
+                    if (group.title === 'مکتوب ها') {
                         return {
                             ...group,
                             items: group.items.filter(item =>
-                                ['نامه‌های وارده', 'نامه‌های صادره', 'نامه‌های داخلی', 'نامه جدید'].includes(item.title)
+                                ['مکتوب ها وارده', 'مکتوب ها صادره', 'مکتوب ها داخلی', 'مکتوب جدید'].includes(item.title)
                             ),
                         };
                     }
@@ -196,13 +196,13 @@ return navGroups;
         }
 
         return navGroups
-            .filter(group => ['نامه‌ها', 'پیگیری', 'تنظیمات'].includes(group.title))
+            .filter(group => ['مکتوب ها', 'پیگیری', 'تنظیمات'].includes(group.title))
             .map(group => {
-                if (group.title === 'نامه‌ها') {
+                if (group.title === 'مکتوب ها') {
                     return {
                         ...group,
                         items: group.items.filter(item =>
-                            ['نامه جدید', 'نامه‌های من'].includes(item.title)
+                            ['مکتوب جدید', 'مکتوب ها من'].includes(item.title)
                         ),
                     };
                 }
@@ -211,7 +211,7 @@ return navGroups;
                     return {
                         ...group,
                         items: group.items.filter(item =>
-                            ['کارتابل من', 'نامه‌های من'].includes(item.title)
+                            ['کارتابل من', 'مکتوب ها من'].includes(item.title)
                         ),
                     };
                 }

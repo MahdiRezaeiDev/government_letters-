@@ -37,7 +37,7 @@ export default function CasesCreate({ archive }: Props) {
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900">ایجاد پرونده جدید</h1>
                             <p className="text-sm text-gray-500 mt-1">
-                                بایگانی: {archive.name}
+                                ارشیف: {archive.name}
                             </p>
                         </div>
                         <div className="flex gap-3">
@@ -47,7 +47,7 @@ export default function CasesCreate({ archive }: Props) {
                                 className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
                             >
                                 <X className="ml-2 h-4 w-4" />
-                                انصراف
+                                لغوه
                             </button>
                             <button
                                 type="submit"

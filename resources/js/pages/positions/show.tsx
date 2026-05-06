@@ -20,7 +20,7 @@ interface Props {
 // ─── Level config ──────────────────────────────────────────────────────────
 
 const LEVELS = [
-    { min: 0, max: 0, label: 'پایه', icon: Users, color: '#94a3b8', bg: '#f1f5f9' },
+    { min: 0, max: 0, label: 'اولیه', icon: Users, color: '#94a3b8', bg: '#f1f5f9' },
     { min: 1, max: 1, label: 'کارشناس', icon: Shield, color: '#3b82f6', bg: '#eff6ff' },
     { min: 2, max: 2, label: 'کارشناس ارشد', icon: Star, color: '#10b981', bg: '#ecfdf5' },
     { min: 3, max: 3, label: 'مدیر', icon: Crown, color: '#f59e0b', bg: '#fffbeb' },
@@ -65,7 +65,7 @@ export default function PositionsShow({ position, stats }: Props) {
                             {/* Basic Info Card */}
                             <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
                                 <div className="px-6 py-4 border-b border-slate-100">
-                                    <h3 className="font-semibold text-slate-900">اطلاعات پایه</h3>
+                                    <h3 className="font-semibold text-slate-900">معلوما اولیه</h3>
                                 </div>
                                 <div className="p-6 space-y-4">
                                     {/* Organization & Department */}
@@ -229,7 +229,7 @@ export default function PositionsShow({ position, stats }: Props) {
                                     <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                                         <div className="flex items-center gap-2">
                                             <Users className="h-4 w-4 text-violet-500" />
-                                            <span className="text-xs text-slate-600">کل کاربران</span>
+                                            <span className="text-xs text-slate-600">مجموع کاربران</span>
                                         </div>
                                         <span className="text-sm font-bold text-slate-800">{stats.total_users}</span>
                                     </div>
@@ -253,11 +253,11 @@ export default function PositionsShow({ position, stats }: Props) {
                             {/* Quick Info Card */}
                             <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
                                 <div className="px-6 py-4 border-b border-slate-100">
-                                    <h3 className="font-semibold text-slate-900">اطلاعات سریع</h3>
+                                    <h3 className="font-semibold text-slate-900">معلومات سریع</h3>
                                 </div>
                                 <div className="p-6 space-y-3">
                                     <div className="text-center p-3 bg-slate-50 rounded-lg">
-                                        <p className="text-xs text-slate-500 mb-1">شناسه</p>
+                                        <p className="text-xs text-slate-500 mb-1">نمبر تشخیص</p>
                                         <p className="text-sm font-mono font-bold text-slate-800">#{position.id}</p>
                                     </div>
                                     <div className="text-center p-3 bg-slate-50 rounded-lg">

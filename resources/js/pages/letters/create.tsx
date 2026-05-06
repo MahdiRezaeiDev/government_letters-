@@ -191,7 +191,7 @@ export default function LettersCreate({
                                 <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
                                         <PenLine className="h-4 w-4 text-slate-500" />
-                                        <h3 className="text-sm font-bold text-slate-700">اطلاعات مکتوب</h3>
+                                        <h3 className="text-sm font-bold text-slate-700">معلومات مکتوب</h3>
                                     </div>
                                     <div className="p-5 space-y-4">
 
@@ -240,7 +240,7 @@ export default function LettersCreate({
                                 <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
                                         <Paperclip className="h-4 w-4 text-slate-500" />
-                                        <h3 className="text-sm font-bold text-slate-700">پیوست‌ها</h3>
+                                        <h3 className="text-sm font-bold text-slate-700">ضمایم</h3>
                                     </div>
                                     <div className="p-5">
                                         <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all">
@@ -388,7 +388,7 @@ export default function LettersCreate({
                                                         ${data.recipient_type === type
                                                             ? 'bg-blue-600 text-white border-blue-600'
                                                             : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}>
-                                                    {type === 'internal' ? 'داخلی' : 'خارج وزارت'}
+                                                    {type === 'internal' ? 'داخلی' : 'خارج از وزارت'}
                                                 </button>
                                             ))}
                                         </div>
@@ -461,9 +461,9 @@ export default function LettersCreate({
                                                 {data.recipient_position_name && (
                                                     <div className="bg-green-50 border border-green-200 rounded-md p-3 text-xs text-green-800">
                                                         <p className="font-medium mb-1">گیرنده انتخاب شده:</p>
-                                                        <p>سمت: {data.recipient_position_name}</p>
+                                                        <p>بست: {data.recipient_position_name}</p>
                                                         <p className="text-green-600 text-[10px] mt-1">
-                                                            دپارتمان: {departments.find(d => d.id === data.recipient_department_id)?.name}
+                                                            دیپارتمنت: {departments.find(d => d.id === data.recipient_department_id)?.name}
                                                         </p>
                                                         {data.recipient_name && (
                                                             <p className="text-green-700 text-[10px] font-medium">
@@ -477,7 +477,7 @@ export default function LettersCreate({
                                                         )}
                                                         {!data.recipient_user_id && (
                                                             <p className="text-yellow-600 text-[10px] mt-1">
-                                                                ⚠ کاربری به این سمت اختصاص داده نشده است
+                                                                ⚠ کاربری به این بست اختصاص داده نشده است
                                                             </p>
                                                         )}
                                                     </div>
@@ -534,7 +534,7 @@ export default function LettersCreate({
                                                             }}
                                                             disabled={!data.recipient_organization_id || loadingExtDepts}
                                                             className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}>
-                                                            <option value="">انتخاب دپارتمان...</option>
+                                                            <option value="">انتخاب دیپارتمنت...</option>
                                                             {extDepartments.map(d => (
                                                                 <option key={d.id} value={d.id}>{d.name}</option>
                                                             ))}
@@ -549,7 +549,7 @@ export default function LettersCreate({
 
                                                 <div>
                                                     <label className="block text-xs font-medium text-slate-600 mb-1">
-                                                        سمت
+                                                        بست
                                                     </label>
                                                     <div className="relative">
                                                         <select
@@ -561,11 +561,10 @@ export default function LettersCreate({
                                                                 setData('recipient_position_id', id);
                                                                 setData('recipient_user_id', position?.user_id || null);
                                                                 setData('recipient_position_name', position?.name || '');
-                                                                setData('recipient_name', position?.user_name || '');
                                                             }}
                                                             disabled={!data.recipient_department_id || loadingExtPositions}
                                                             className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}>
-                                                            <option value="">انتخاب سمت...</option>
+                                                            <option value="">انتخاب بست...</option>
                                                             {extPositions.map(p => (
                                                                 <option key={p.id} value={p.id}>{p.name}</option>
                                                             ))}
@@ -588,10 +587,10 @@ export default function LettersCreate({
                                                         <p className="font-medium">گیرنده انتخاب شده:</p>
                                                         <p>وزارت: {data.recipient_name}</p>
                                                         {data.recipient_department_id && (
-                                                            <p>دپارتمان: {extDepartments.find(d => d.id === data.recipient_department_id)?.name}</p>
+                                                            <p>دیپارتمنت: {extDepartments.find(d => d.id === data.recipient_department_id)?.name}</p>
                                                         )}
                                                         {data.recipient_position_name && (
-                                                            <p>سمت: {data.recipient_position_name}</p>
+                                                            <p>بست: {data.recipient_position_name}</p>
                                                         )}
                                                     </div>
                                                 )}

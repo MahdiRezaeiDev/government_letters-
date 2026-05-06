@@ -51,8 +51,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
     pending: { label: 'در انتظار', color: '#b45309', bg: 'bg-amber-100', textColor: 'text-amber-700' },
     approved: { label: 'تایید شده', color: '#15803d', bg: 'bg-emerald-100', textColor: 'text-emerald-700' },
     rejected: { label: 'رد شده', color: '#b91c1c', bg: 'bg-red-100', textColor: 'text-red-700' },
-    archived: { label: 'بایگانی', color: '#475569', bg: 'bg-gray-100', textColor: 'text-gray-700' },
-    delegated: { label: 'ارجاع شده', color: '#d97706', bg: 'bg-amber-100', textColor: 'text-amber-700' }, // اضافه شد
+    archived: { label: 'ارشیف', color: '#475569', bg: 'bg-gray-100', textColor: 'text-gray-700' },
 };
 
 const ROUTING_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -120,7 +119,7 @@ export default function LettersShow({
     const isDelegatedByMe = letter.delegated_by_user_id === currentUser.id;
 
     const handleApprove = () => {
-        if (!confirm('آیا از تایید این نامه اطمینان دارید؟')) {
+        if (!confirm('آیا از تأیید این مکتوب اطمینان دارید؟')) {
             return;
         }
 
@@ -151,7 +150,7 @@ export default function LettersShow({
 
     return (
         <>
-            <Head title={`نامه: ${letter.subject}`} />
+            <Head title={`مکتوب: ${letter.subject}`} />
 
             <div className="min-h-screen">
                 <div className="max-w-3xl mx-auto">
@@ -280,7 +279,7 @@ export default function LettersShow({
                                         }}
                                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
                                     >
-                                        <Archive className="h-3.5 w-3.5" /> بایگانی
+                                        <Archive className="h-3.5 w-3.5" /> ارشیف
                                     </button>
                                 )} */}
                             </div>
@@ -357,7 +356,7 @@ export default function LettersShow({
                             {letter.content && (
                                 <div>
                                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                        متن نامه
+                                        متن مکتوب
                                     </h4>
                                     <div className="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-xl p-4 max-h-40 overflow-y-auto">
                                         <div dangerouslySetInnerHTML={{ __html: letter.content }} />
@@ -388,7 +387,7 @@ export default function LettersShow({
                                             disabled={loading}
                                             className="flex-1 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
                                         >
-                                            <CheckCircle className="h-4 w-4" /> تایید نامه
+                                            <CheckCircle className="h-4 w-4" /> تأیید مکتوب
                                         </button>
                                     )}
                                     {can.reject && (
@@ -397,7 +396,7 @@ export default function LettersShow({
                                             disabled={loading}
                                             className="flex-1 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
                                         >
-                                            <XCircle className="h-4 w-4" /> رد نامه
+                                            <XCircle className="h-4 w-4" /> رد مکتوب
                                         </button>
                                     )}
                                 </div>

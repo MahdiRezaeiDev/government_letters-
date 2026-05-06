@@ -290,7 +290,7 @@ return 'دائمی';
                                 onClick={() => setShowAttachModal(false)}
                                 className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
                             >
-                                انصراف
+                                لغوه
                             </button>
                             <button
                                 onClick={handleAttachLetter}

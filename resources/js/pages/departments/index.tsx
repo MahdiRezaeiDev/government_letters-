@@ -162,7 +162,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                             }`}
                                     >
-                                        جدولی
+                                        جدول
                                     </button>
                                     <button
                                         onClick={() => setViewMode('cards')}
@@ -171,7 +171,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                             }`}
                                     >
-                                        کارتی
+                                        کارت
                                     </button>
                                 </div>
                                 {can.create && (
@@ -180,7 +180,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                         className="group relative inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl text-sm font-medium text-white hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                                     >
                                         <Plus className="ml-2 h-4 w-4 transition-transform group-hover:rotate-90 duration-200" />
-                                        ثبت ریاست
+                                        ثبت 
                                         <span className="absolute inset-0 rounded-xl bg-white opacity-0 group-hover:opacity-10 transition-opacity"></span>
                                     </Link>
                                 )}
@@ -235,7 +235,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                                 }`}
                                         >
                                             <Filter className="ml-2 h-4 w-4" />
-                                            فیلترها
+                                            فیلتر
                                             {hasActiveFilters && (
                                                 <span className="mr-2 w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></span>
                                             )}
@@ -289,7 +289,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                                         className="inline-flex items-center px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
                                                     >
                                                         <X className="ml-1 h-4 w-4" />
-                                                        پاک کردن همه فیلترها
+                                                        پاک کردن همه فیلتر
                                                     </button>
                                                 </div>
                                             </div>
@@ -323,14 +323,14 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                                             <div className="p-4 bg-gray-100 rounded-full mb-4">
                                                                 <FolderTree className="h-12 w-12 text-gray-400" />
                                                             </div>
-                                                            <p className="text-gray-500 font-medium">هیچ ریاستی یافت نشد</p>
+                                                            <p className="text-gray-500 font-medium">هیچ ریاست دریافت نشد</p>
                                                             <p className="text-sm text-gray-400 mt-1">سعی کنید معیارهای جستجوی خود را تغییر دهید</p>
                                                             {hasActiveFilters && (
                                                                 <button
                                                                     onClick={handleReset}
                                                                     className="mt-4 text-indigo-600 hover:text-indigo-700 text-sm font-medium"
                                                                 >
-                                                                    پاک کردن فیلترها
+                                                                    پاک کردن فیلتر
                                                                 </button>
                                                             )}
                                                         </div>
@@ -545,7 +545,7 @@ export default function DepartmentsIndex({ departments, organizations, filters, 
                                             <div className="p-4 bg-gray-100 rounded-full mb-4">
                                                 <FolderTree className="h-12 w-12 text-gray-400" />
                                             </div>
-                                            <p className="text-gray-500 font-medium">هیچ ریاستی یافت نشد</p>
+                                            <p className="text-gray-500 font-medium">هیچ ریاست دریافت نشد</p>
                                             <p className="text-sm text-gray-400 mt-1">سعی کنید معیارهای جستجوی خود را تغییر دهید</p>
                                         </div>
                                     </div>
