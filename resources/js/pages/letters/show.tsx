@@ -283,34 +283,6 @@ export default function LettersShow({
                                         <Archive className="h-3.5 w-3.5" /> بایگانی
                                     </button>
                                 )} */}
-
-                                {can.route && letter.final_status === 'pending' && (
-                                    <Link
-                                        href={routings.create({ letter: letter.id })}
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition"
-                                    >
-                                        <Send className="h-3.5 w-3.5" /> ارجاع
-                                    </Link>
-                                )}
-
-                                {can.approve && letter.final_status === 'pending' && (
-                                    <>
-                                        <button
-                                            onClick={handleApprove}
-                                            disabled={loading}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 transition disabled:opacity-50"
-                                        >
-                                            <CheckCircle className="h-3.5 w-3.5" /> تایید
-                                        </button>
-                                        <button
-                                            onClick={handleReject}
-                                            disabled={loading}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-red-700 text-white rounded-lg hover:bg-red-800 transition disabled:opacity-50"
-                                        >
-                                            <XCircle className="h-3.5 w-3.5" /> رد
-                                        </button>
-                                    </>
-                                )}
                             </div>
                         </div>
 
