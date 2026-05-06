@@ -147,6 +147,7 @@ export default function LettersShow({
             onError: () => setLoading(false),
         });
     };
+    
 
     return (
         <>
@@ -404,57 +405,6 @@ export default function LettersShow({
                         </div>
                     </div>
 
-                    {/* ── Routing History ── */}
-                    {letter.routings && letter.routings.length > 0 && (
-                        <div className="mt-4 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
-                                <Clock className="h-4 w-4 text-gray-400" />
-                                <h3 className="text-sm font-bold text-gray-800">تاریخچه ارجاعات</h3>
-                                <span className="text-xs text-gray-500">({letter.routings.length})</span>
-                            </div>
-                            <div className="p-6">
-                                <div className="space-y-4">
-                                    {letter.routings.map((routing: any, idx: number) => {
-                                        const rStatus = ROUTING_STATUS_CONFIG[routing.status] || ROUTING_STATUS_CONFIG.pending;
-                                        const isLast = idx === letter.routings.length - 1;
-
-                                        return (
-                                            <div key={routing.id} className="relative flex gap-3">
-                                                {!isLast && (
-                                                    <div className="absolute right-2.5 top-6 bottom-0 w-px bg-gray-200" />
-                                                )}
-                                                <div className={`flex-shrink-0 h-5 w-5 rounded-full flex items-center justify-center ${rStatus.bg} mt-0.5`}>
-                                                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: rStatus.color }} />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                        <span className="text-sm font-semibold text-gray-800">
-                                                            {ACTION_LABELS[routing.action_type] || routing.action_type}
-                                                        </span>
-                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                                                            {rStatus.label}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-xs text-gray-500 mt-1">
-                                                        از {routing.from_user?.full_name || 'سیستم'} به{' '}
-                                                        {routing.to_user?.full_name || 'نامشخص'}
-                                                    </p>
-                                                    <p className="text-[10px] text-gray-400 mt-0.5">
-                                                        {formatDateTime(routing.created_at)}
-                                                    </p>
-                                                    {routing.instruction && (
-                                                        <p className="text-xs text-gray-600 mt-2 bg-gray-50 rounded-lg p-2">
-                                                            {routing.instruction}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     {/* ── Delegation History ── */}
                     {letter.delegations && letter.delegations.length > 0 && (

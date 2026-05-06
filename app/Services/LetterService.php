@@ -262,7 +262,7 @@ class LetterService
             'response_deadline' => $data['response_deadline'] ?? null,
             'sheet_count'       => $data['sheet_count'] ?? 1,
             'is_draft'          => $data['is_draft'] ?? false,
-            'final_status'      => ($data['is_draft'] ?? false) ? 'draft' : 'completed',
+            'final_status'      => ($data['is_draft'] ?? false) ? 'draft' : 'approved',
             'created_by'        => $creator->id,
 
             // فیلدهای کلیدی پاسخ و زنجیره
