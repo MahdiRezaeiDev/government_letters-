@@ -53,7 +53,7 @@ class LetterRequest extends FormRequest
             'instruction'       => 'nullable|string',
 
             'attachments'       => 'nullable|array',
-            'attachments.*'     => 'file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png',
+            'attachments.*'     => 'file|max:10240|mimes:pdf,jpg,jpeg,png',
         ];
     }
 
@@ -109,7 +109,7 @@ class LetterRequest extends FormRequest
             'instruction.string'            => 'رهنمود باید متن باشد.',
             'attachments.*.file'            => 'ضمیمه باید فایل باشد.',
             'attachments.*.max'             => 'حجم هر ضمیمه نمی‌تواند بیشتر از ۱۰ مگابایت باشد.',
-            'attachments.*.mimes'           => 'ضمیمه باید یکی از انواع PDF، Word یا تصویر باشد.',
+            'attachments.*.mimes'           => 'ضمیمه باید یکی از انواع PDF یا تصویر باشد.',
         ];
     }
 

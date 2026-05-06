@@ -301,14 +301,12 @@ export default function LettersCreate({
                             <div className="col-span-12 lg:col-span-4 space-y-5">
 
                                 {/* تنظیمات امنیتی */}
-                                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                                {/* <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
                                         <Shield className="h-4 w-4 text-slate-500" />
                                         <h3 className="text-sm font-bold text-slate-700">تنظیمات امنیتی</h3>
                                     </div>
                                     <div className="p-5 space-y-4">
-
-                                        {/* اولویت */}
                                         <div>
                                             <div className="flex items-center justify-between mb-2">
                                                 <label className="text-xs font-medium text-slate-600">اولویت</label>
@@ -332,7 +330,6 @@ export default function LettersCreate({
                                             </div>
                                         </div>
 
-                                        {/* سطح امنیتی */}
                                         <div>
                                             <div className="flex items-center justify-between mb-2">
                                                 <label className="text-xs font-medium text-slate-600">سطح امنیتی</label>
@@ -354,7 +351,7 @@ export default function LettersCreate({
                                             </select>
                                         </div>
                                     </div>
-                                </div>
+                                </div> */}
 
                                 {/* گیرنده */}
                                 <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
