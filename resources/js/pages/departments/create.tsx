@@ -280,7 +280,7 @@ export default function DepartmentsCreate({ organizations, parentDepartments, se
                                 </div>
 
                                 {/* Tips Card */}
-                                <div className="bg-indigo-50/50 rounded-xl border border-indigo-100 p-5">
+                                <div className="bg-white rounded-xl border border-indigo-100 p-5">
                                     <h4 className="text-sm font-semibold text-indigo-900 mb-3">نکات مهم</h4>
                                     <ul className="space-y-2">
                                         <li className="flex items-start gap-2 text-xs text-indigo-700">
