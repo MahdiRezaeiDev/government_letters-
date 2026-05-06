@@ -374,6 +374,11 @@ class Letter extends Model
         return $this->hasMany(LetterView::class);
     }
 
+    public function userView()
+{
+    return $this->hasOne(LetterView::class)->where('user_id', auth()->id());
+}
+
     public function signatures(): HasMany
     {
         return $this->hasMany(LetterSignature::class);
@@ -397,6 +402,7 @@ class Letter extends Model
     }
 
     // ─── Scopes ────────────────────────────────────────────────
+
 
     public function scopeOutgoing($query, $user)
     {

@@ -416,15 +416,12 @@ export default function LettersIndex({
     // رندر یک نامه در حالت دسکتاپ (جدول)
     const renderDesktopRow = (letter: ThreadedLetter, depth: number = 0) => {
         const role = getLetterRole(letter);
-        const roleConfigItem = roleConfig[role] || roleConfig.other;
-        const priority = priorityConfig[letter.priority] || priorityConfig.normal;
         const status = statusConfig[letter.final_status] || statusConfig.draft;
         const StatusIcon = status.icon;
         const TypeIcon = typeConfig[letter.letter_type]?.icon || File;
         const hasChildren = letter.children && letter.children.length > 0;
         const isExpanded = expandedThreads.has(letter.id);
         const unread = isUnread(letter);
-        const relationText = getRelationText(letter, role);
 
         // دریافت اطلاعات سازمانی بر اساس نقش
         const orgInfo = role === 'sent'
@@ -1016,7 +1013,6 @@ export default function LettersIndex({
                                                     <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 w-32">شماره / نوع</th>
                                                     <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 min-w-[200px]">موضوع</th>
                                                     <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 min-w-[180px]">وزارت / ریاست / بست</th>
-                                                    <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden xl:table-cell w-36">فرستنده/گیرنده</th>
                                                     <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden lg:table-cell w-24">وضعیت</th>
                                                     <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 hidden sm:table-cell w-28">تاریخ</th>
                                                     <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 w-20">عملیات</th>

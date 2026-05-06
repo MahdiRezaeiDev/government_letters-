@@ -45,7 +45,7 @@ class LetterController extends Controller
             'recipientOrganization',
             'senderUser',
             'recipientUser',
-            'views',
+            'userView',
             'replies' => function ($q) {
                 $q->select('id', 'parent_letter_id');
             },
