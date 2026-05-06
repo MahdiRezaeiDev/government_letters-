@@ -1,16 +1,19 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     Send, Clock, CheckCircle, XCircle, CornerUpLeft,
-    CornerUpRight, UserCheck
+    CornerUpRight, UserCheck,
+    MessageCircle,
+    User,
+    Info,
+    Calendar
 } from 'lucide-react';
 import { useState } from 'react';
 import AttachmentList from '@/components/AttachmentList';
 import AttachmentPreviewModal from '@/components/AttachmentPreviewModal';
 import { DelegateReplyModal } from '@/components/DelegateReplyModal';
-import letters from '@/routes/letters';
-import routings from '@/routes/routings';
-import type { Letter, Case } from '@/types';
 import delegations from '@/routes/delegations';
+import letters from '@/routes/letters';
+import type { Letter, Case } from '@/types';
 
 interface Attachment {
     id: number;
@@ -54,20 +57,6 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
     archived: { label: 'ارشیف', color: '#475569', bg: 'bg-gray-100', textColor: 'text-gray-700' },
 };
 
-const ROUTING_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    completed: { label: 'تکمیل', color: '#15803d', bg: 'bg-emerald-50' },
-    rejected: { label: 'رد', color: '#b91c1c', bg: 'bg-red-50' },
-    pending: { label: 'در انتظار', color: '#b45309', bg: 'bg-amber-50' },
-};
-
-const ACTION_LABELS: Record<string, string> = {
-    approval: 'جهت تایید',
-    action: 'جهت اقدام',
-    information: 'جهت اطلاع',
-    coordination: 'جهت هماهنگی',
-    sign: 'جهت امضاء',
-};
-
 // ─── Helper Functions ────────────────────────────────────────────────────────
 const formatDate = (dateString: string | undefined): string => {
     if (!dateString) {
@@ -81,15 +70,6 @@ const formatDate = (dateString: string | undefined): string => {
     });
 };
 
-const formatDateTime = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('fa-Af', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-};
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function LettersShow({
@@ -112,7 +92,7 @@ export default function LettersShow({
             && d.status === 'pending'
     );
 
-    console.log(letter.delegations);
+    console.log(letter.delegated_by_user_id);
 
 
     const isDelegatedToMe = !!activeDelegation;
@@ -147,6 +127,8 @@ export default function LettersShow({
             onError: () => setLoading(false),
         });
     };
+
+    console.log(isDelegatedByMe);
     
 
     return (
@@ -253,7 +235,7 @@ export default function LettersShow({
                                     </button>
                                 )}
 
-                                {can.reply && letter.final_status !== 'draft' && !isDelegatedToMe && (
+                                {can.reply && letter.final_status !== 'draft' && !isDelegatedByMe && (
                                     <Link
                                         href={letters.reply.form({ letter: letter.id })}
                                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
@@ -414,25 +396,139 @@ export default function LettersShow({
                             </div>
                             <div className="p-6">
                                 <div className="space-y-3">
-                                    {letter.delegations.map((delegation: any) => (
-                                        <div key={delegation.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                            <div>
-                                                <p className="text-sm font-medium text-gray-800">
-                                                    {delegation.delegated_by?.full_name} → {delegation.delegated_to?.full_name}
+                                    {/* تاریخچه ارجاع برای پاسخ */}
+                                    {letter.delegations && letter.delegations.length > 0 && (
+                                        <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                                            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                                                <div className="flex items-center gap-2">
+                                                    <CornerUpRight className="h-5 w-5 text-amber-500" />
+                                                    <h3 className="text-base font-bold text-gray-800">تاریخچه ارجاع برای پاسخ</h3>
+                                                    <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full">
+                                                        {letter.delegations.length}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-gray-500 mt-1 mr-7">
+                                                    سابقه ارجاعات این مکتوب به دیگران برای پاسخ‌دهی
                                                 </p>
-                                                {delegation.delegated_note && (
-                                                    <p className="text-xs text-gray-500 mt-1">{delegation.delegated_note}</p>
-                                                )}
                                             </div>
-                                            <span className={`text-xs px-2 py-1 rounded-full ${delegation.status === 'replied' ? 'bg-emerald-100 text-emerald-700' :
-                                                delegation.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                                                    'bg-gray-100 text-gray-600'
-                                                }`}>
-                                                {delegation.status === 'replied' ? 'پاسخ داده شد' :
-                                                    delegation.status === 'pending' ? 'در انتظار' : delegation.status}
-                                            </span>
+
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full">
+                                                    <thead className="bg-gray-50 border-b border-gray-100">
+                                                        <tr>
+                                                            <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                                                ارجاع دهنده
+                                                            </th>
+                                                            <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                                                ارجاع گیرنده
+                                                            </th>
+                                                            <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                                                دستورالعمل
+                                                            </th>
+                                                            <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                                                تاریخ ارجاع
+                                                            </th>
+                                                            <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                                                وضعیت
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-gray-100">
+                                                        {letter.delegations.map((delegation: any) => {
+                                                            const statusConfig = {
+                                                                pending: { label: 'در انتظار', color: 'amber', icon: Clock },
+                                                                accepted: { label: 'پذیرفته شده', color: 'emerald', icon: CheckCircle },
+                                                                replied: { label: 'پاسخ داده شد', color: 'blue', icon: MessageCircle },
+                                                                rejected: { label: 'رد شده', color: 'red', icon: XCircle },
+                                                            };
+                                                            const config = statusConfig[delegation.status] || statusConfig.pending;
+                                                            const StatusIcon = config.icon;
+
+                                                            return (
+                                                                <tr key={delegation.id} className="hover:bg-gray-50 transition-colors group">
+                                                                    <td className="px-6 py-4">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                                                                                <User className="h-4 w-4 text-amber-600" />
+                                                                            </div>
+                                                                            <div>
+                                                                                <p className="text-sm font-medium text-gray-900">
+                                                                                    {delegation.delegated_by?.first_name} {delegation.delegated_by?.last_name}
+                                                                                </p>
+                                                                                <p className="text-xs text-gray-400">
+                                                                                    {delegation.delegated_by?.position?.name || '—'}
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+
+                                                                    <td className="px-6 py-4">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                                                                <CornerUpRight className="h-4 w-4 text-blue-600" />
+                                                                            </div>
+                                                                            <div>
+                                                                                <p className="text-sm font-medium text-gray-900">
+                                                                                    {delegation.delegated_to?.first_name} {delegation.delegated_to?.last_name}
+                                                                                </p>
+                                                                                <p className="text-xs text-gray-400">
+                                                                                    {delegation.delegated_to?.position?.name || '—'}
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+
+                                                                    <td className="px-6 py-4">
+                                                                        {delegation.delegated_note ? (
+                                                                            <div className="max-w-xs">
+                                                                                <p className="text-sm text-gray-600 line-clamp-2">
+                                                                                    {delegation.delegated_note}
+                                                                                </p>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <span className="text-sm text-gray-400 italic">—</span>
+                                                                        )}
+                                                                    </td>
+
+                                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                                        <div className="flex items-center gap-1.5">
+                                                                            <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                                                                            <span className="text-sm text-gray-600">
+                                                                                {new Date(delegation.delegated_at).toLocaleDateString('fa-Af')}
+                                                                            </span>
+                                                                        </div>
+                                                                    </td>
+
+                                                                    <td className="px-6 py-4">
+                                                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
+                                                                                            ${config.color === 'amber' ? 'bg-amber-50 text-amber-700' : ''}
+                                                                                            ${config.color === 'emerald' ? 'bg-emerald-50 text-emerald-700' : ''}
+                                                                                            ${config.color === 'blue' ? 'bg-blue-50 text-blue-700' : ''}
+                                                                                            ${config.color === 'red' ? 'bg-red-50 text-red-700' : ''}
+                                                                                        `}>
+                                                                            <StatusIcon className="h-3 w-3" />
+                                                                            {config.label}
+                                                                        </span>
+                                                                        {delegation.replied_at && (
+                                                                            <p className="text-xs text-gray-400 mt-1">
+                                                                                {new Date(delegation.replied_at).toLocaleDateString('fa-IR')}
+                                                                            </p>
+                                                                        )}
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            {/* کارت اطلاع‌رسانی */}
+                                            <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-500 flex items-center gap-2">
+                                                <Info className="h-3.5 w-3.5" />
+                                                فقط افرادی که مکتوب به آنها ارجاع شده می‌توانند پاسخ دهند
+                                            </div>
                                         </div>
-                                    ))}
+                                    )}
                                 </div>
                             </div>
                         </div>

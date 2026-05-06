@@ -79,6 +79,11 @@ class LetterDelegationController extends Controller
             'status' => 'pending'
         ]);
 
+        $letter->delegated_by_user_id = auth()->id();
+        $letter->delegated_to_user_id = $request->delegated_to_user_id;
+
+        $letter->save();
+
         // به‌روزرسانی وضعیت مکتوب
         $letter->update(['status' => 'delegated']);
 
