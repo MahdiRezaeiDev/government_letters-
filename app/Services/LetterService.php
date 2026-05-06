@@ -24,8 +24,6 @@ class LetterService
 
             // آماده‌سازی داده‌های گیرنده (داخلی یا خارجی)
             $recipientData = $this->prepareRecipientData($data);
-            
-            dd($recipientData);
 
             // تولید شماره‌های نامه
             $trackingNumber = $this->generateTrackingNumber();
