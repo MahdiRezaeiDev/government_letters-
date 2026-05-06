@@ -268,6 +268,19 @@ export default function LettersCreate({
                                                 ))}
                                             </div>
                                         )}
+
+                                        {/* نمایش خطای attachments */}
+                                        {errors && Object.entries(errors).some(([key]) => key.startsWith('attachments.')) && (
+                                            <div className="mt-2">
+                                                {Object.entries(errors)
+                                                    .filter(([key]) => key.startsWith('attachments.'))
+                                                    .map(([key, message]) => (
+                                                        <p key={key} className="text-xs text-red-500 mt-1">
+                                                            {message}
+                                                        </p>
+                                                    ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
