@@ -7,7 +7,7 @@ import FieldLabel from '@/components/ui/FieldLabel';
 import InputField from '@/components/ui/InputField';
 import SelectField from '@/components/ui/SelectField';
 import positions from '@/routes/positions';
-import type { Department, Organization } from '@/types';
+import type { Organization } from '@/types';
 
 interface Props {
     organizations: Organization[];
@@ -16,12 +16,12 @@ interface Props {
 
 // ─── Main Component ────────────────────────────────────────────────────────
 
-export default function PositionsCreate({ organizations, selectedDepartment }: Props) {
+export default function PositionsCreate({ organizations }: Props) {
     const { data, setData, post, processing, errors, reset } = useForm({
         organization_id: '',
         department_id: '',
         name: '',
-        is_management: false,
+        is_management: true,
         description: '',
     });
 
@@ -48,7 +48,7 @@ export default function PositionsCreate({ organizations, selectedDepartment }: P
         <>
             <Head title="ایجاد وظیفه جدید" />
 
-            <div className="min-h-screen bg-slate-50/50" dir="rtl">
+            <div className="min-h-screen">
                 {/* Form Content */}
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 ">
                     <form id="pos-form" onSubmit={handleSubmit}>
@@ -107,7 +107,7 @@ export default function PositionsCreate({ organizations, selectedDepartment }: P
                                         </div>
 
                                         {/* Type Selection */}
-                                        <div>
+                                        {/* <div>
                                             <FieldLabel>نوع وظیفه</FieldLabel>
                                             <div className="grid grid-cols-2 gap-3">
                                                 <label
@@ -174,7 +174,7 @@ export default function PositionsCreate({ organizations, selectedDepartment }: P
                                                     )}
                                                 </label>
                                             </div>
-                                        </div>
+                                        </div> */}
 
                                         {/* Description */}
                                         <div>
@@ -196,7 +196,7 @@ export default function PositionsCreate({ organizations, selectedDepartment }: P
                             {/* Sidebar */}
                             <div className="space-y-6">
                                 {/* Tips Card */}
-                                <div className="bg-violet-50/50 rounded-xl border border-violet-100 p-5">
+                                <div className="bg-white rounded-xl border border-violet-100 p-5">
                                     <h4 className="text-sm font-semibold text-violet-900 mb-3">نکات مهم</h4>
                                     <ul className="space-y-2">
                                         <li className="flex items-start gap-2 text-xs text-violet-700">
@@ -217,7 +217,7 @@ export default function PositionsCreate({ organizations, selectedDepartment }: P
                         </div>
 
                         {/* Mobile Actions */}
-                        <div className=" bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 z-20">
+                        <div className="mt-5 rounded-2xl bg-white border-t border-slate-200 p-4 z-20">
                             <div className="flex gap-3 max-w-5xl mx-auto">
                                 <button
                                     type="submit"

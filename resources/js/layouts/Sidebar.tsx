@@ -54,7 +54,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 { title: 'ریاست‌ها', href: departmentsIndex(), icon: Sitemap, permission: 'org-admin' },
                 { title: 'بست‌های شغلی', href: positions.index(), icon: Briefcase, permission: 'dept-manager' },
                 { title: 'مدیریت  کارمندان', href: usersIndex(), icon: Users, permission: 'dept-manager' },
-                { title: 'طبقه‌بندی مکاتیب', href: categoriesIndex(), icon: FolderTree },
+                // { title: 'طبقه‌بندی مکاتیب', href: categoriesIndex(), icon: FolderTree },
             ],
         },
         { title: 'مکاتیب وارده', href: lettersIndex({ query: { direction: 'incoming' } }), icon: Inbox },

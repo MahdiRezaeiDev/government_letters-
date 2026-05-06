@@ -110,9 +110,8 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                 icon={User}
                                 iconColor="#0ea5e9"
                                 title="اطلاعات شخصی"
-                                subtitle="مشخصات هویتی کاربر"
-                                description="این اطلاعات پایه و اصلی کاربر است. نمبر تذکره باید دقیق و معتبر باشد.">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                subtitle="این اطلاعات پایه و اصلی کاربر است. نمبر تذکره باید دقیق و معتبر باشد.">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                                     <div>
                                         <FieldLabel required>نام</FieldLabel>
                                         <InputField
@@ -137,7 +136,6 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                             onChange={v => setData('national_code', v)}
                                             error={errors.national_code}
                                             placeholder="1234567890" />
-                                        <p className="text-xs text-slate-400 mt-1.5">نمبر تذکره منحصر به فرد</p>
                                     </div>
                                     {/* <div>
                                         <PersianDatePicker
@@ -174,10 +172,9 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                 icon={Key}
                                 iconColor="#10b981"
                                 title="اطلاعات حساب کاربری"
-                                subtitle="اطلاعات ورود به سیستم"
-                                description="با این اطلاعات کاربر وارد سیستم می‌شود. ایمیل باید معتبر و یکتا باشد.">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <div className="md:col-span-2">
+                                subtitle="با این اطلاعات کاربر وارد سیستم می‌شود. ایمیل باید معتبر و یکتا باشد.">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                    <div>
                                         <FieldLabel required>ایمیل</FieldLabel>
                                         <InputField
                                             icon={Mail}
@@ -217,8 +214,7 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                 icon={Building2}
                                 iconColor="#8b5cf6"
                                 title="اطلاعات سازمانی"
-                                subtitle="ساختار سازمانی کاربر"
-                                description="تعیین جایگاه کاربر در ساختار سازمانی. سمت اصلی در کارتابل و ارجاعات تأثیر دارد.">
+                                subtitle="تعیین جایگاه کاربر در ساختار سازمانی. سمت اصلی در کارتابل و ارجاعات تأثیر دارد.">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
                                         <FieldLabel required>سازمان</FieldLabel>
@@ -274,8 +270,7 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                 icon={Shield}
                                 iconColor="#f59e0b"
                                 title="وضعیت و نقش"
-                                subtitle="سطح دسترسی و وضعیت فعالیت کاربر"
-                                description="تعیین می‌کند کاربر چه دسترسی‌هایی در سیستم دارد.">
+                                subtitle="تعیین می‌کند کاربر چه دسترسی‌هایی در سیستم دارد.">
                                 <div className="space-y-6">
                                     {/* Status */}
                                     {/* <div>

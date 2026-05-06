@@ -22,8 +22,8 @@ class UserRequest extends FormRequest
         $rules = [
             // اطلاعات سازمانی
             'organization_id' => 'required|exists:organizations,id',
-            'department_id' => 'nullable|exists:departments,id',
-            'primary_position_id' => 'nullable|exists:positions,id',
+            'department_id' => 'required|exists:departments,id',
+            'primary_position_id' => 'required|exists:positions,id',
 
             // اطلاعات حساب کاربری
             'email' => [
@@ -82,6 +82,7 @@ class UserRequest extends FormRequest
             'department_id.exists' => 'دپارتمان انتخاب شده معتبر نیست.',
 
             // سمت
+            'primary_position_id.required' => 'اطمینان حاصل نمایید که سمت انتخاب شده و در درسترس باشد',
             'primary_position_id.exists' => 'سمت انتخاب شده معتبر نیست.',
 
             // ایمیل
@@ -191,7 +192,8 @@ class UserRequest extends FormRequest
                     $this->merge([
                         $field => $normalized,
                     ]);
-                } catch (\Exception $e) {}
+                } catch (\Exception $e) {
+                }
             }
         }
     }

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use App\Enums\RoleEnum;
 use App\Http\Requests\UserRequest;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -539,6 +540,12 @@ class UserController extends Controller
         }
 
         $positions = Position::where('department_id', $request->department_id)
+            ->where('status', 'active')
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('user_positions')
+                    ->whereColumn('user_positions.position_id', 'positions.id');
+            })
             ->select('id', 'name')
             ->orderBy('name')
             ->get();
