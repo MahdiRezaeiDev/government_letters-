@@ -375,9 +375,9 @@ class Letter extends Model
     }
 
     public function userView()
-{
-    return $this->hasOne(LetterView::class)->where('user_id', auth()->id());
-}
+    {
+        return $this->hasOne(LetterView::class)->where('user_id', auth()->id());
+    }
 
     public function signatures(): HasMany
     {

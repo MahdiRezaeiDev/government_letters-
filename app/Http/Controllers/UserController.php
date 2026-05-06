@@ -540,7 +540,6 @@ class UserController extends Controller
         }
 
         $positions = Position::where('department_id', $request->department_id)
-            ->where('status', 'active')
             ->whereNotExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('user_positions')
