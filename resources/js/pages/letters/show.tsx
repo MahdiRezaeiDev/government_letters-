@@ -10,6 +10,7 @@ import { DelegateReplyModal } from '@/components/DelegateReplyModal';
 import letters from '@/routes/letters';
 import routings from '@/routes/routings';
 import type { Letter, Case } from '@/types';
+import delegations from '@/routes/delegations';
 
 interface Attachment {
     id: number;
@@ -112,6 +113,9 @@ export default function LettersShow({
             && d.status === 'pending'
     );
 
+    console.log(letter.delegations);
+
+
     const isDelegatedToMe = !!activeDelegation;
     const isDelegatedByMe = letter.delegated_by_user_id === currentUser.id;
 
@@ -143,7 +147,7 @@ export default function LettersShow({
             },
             onError: () => setLoading(false),
         });
-    };    
+    };
 
     return (
         <>
@@ -159,19 +163,46 @@ export default function LettersShow({
                                 <UserCheck className="h-5 w-5 text-amber-600 mt-0.5" />
                                 <div className="flex-1">
                                     <p className="text-sm font-bold text-amber-800">
-                                        این مکتوب به شما ارجاع شده است
+                                        این مکتوب توسط {activeDelegation.delegated_by?.full_name} به شما ارجاع شده است
                                     </p>
                                     {activeDelegation?.delegated_note && (
                                         <p className="text-sm text-amber-700 mt-2">
                                             📌 {activeDelegation.delegated_note}
                                         </p>
                                     )}
-                                    <Link
-                                        href={letters.reply.form({ letter: letter.id })}
-                                        className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 text-xs font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition"
-                                    >
-                                        <CornerUpLeft className="h-3.5 w-3.5" /> پاسخ به این مکتوب
-                                    </Link>
+
+                                    {/* دکمه‌های اقدام */}
+                                    <div className="flex gap-3 mt-4">
+                                        {/* دکمه پذیرش */}
+                                        <button
+                                            onClick={() => {
+                                                router.post(delegations.accept({ delegation: activeDelegation.id }), {}, {
+                                                    onSuccess: () => router.reload()
+                                                });
+                                            }}
+                                            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
+                                        >
+                                            <CheckCircle className="h-4 w-4" />
+                                            پذیرش و پاسخ به مکتوب
+                                        </button>
+
+                                        {/* دکمه رد */}
+                                        <button
+                                            onClick={() => {
+                                                const reason = prompt('لطفاً دلیل رد را وارد کنید:');
+
+                                                if (reason) {
+                                                    router.post(delegations.reject({ delegation: activeDelegation.id }), { reason }, {
+                                                        onSuccess: () => router.reload()
+                                                    });
+                                                }
+                                            }}
+                                            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                                        >
+                                            <XCircle className="h-4 w-4" />
+                                            رد ارجاع
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

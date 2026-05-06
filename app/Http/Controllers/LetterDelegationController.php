@@ -12,6 +12,7 @@ use App\Notifications\DelegationRejectedNotification;
 use App\Notifications\DelegationRepliedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
+use Inertia\Inertia;
 
 class LetterDelegationController extends Controller
 {
@@ -83,7 +84,7 @@ class LetterDelegationController extends Controller
 
         // ارسال نوتیفیکیشن به شخص ارجاع شده
         $delegatedUser = $delegation->delegatedTo;
-        $delegatedUser->notify(new LetterDelegatedNotification($delegation));
+        // $delegatedUser->notify(new LetterDelegatedNotification($delegation));
 
         return redirect()->route('letters.show', $letter)
             ->with('success', 'مکتوب با موفقیت به ' . $delegatedUser->full_name . ' ارجاع شد');
@@ -106,7 +107,7 @@ class LetterDelegationController extends Controller
         $delegation->accept();
 
         // ارسال نوتیفیکیشن به شخص ارجاع دهنده
-        $delegation->delegatedBy->notify(new DelegationAcceptedNotification($delegation));
+        // $delegation->delegatedBy->notify(new DelegationAcceptedNotification($delegation));
 
         return redirect()->route('letters.show', $delegation->letter_id)
             ->with('success', 'شما پذیرفتید که به این مکتوب پاسخ دهید');
@@ -133,7 +134,7 @@ class LetterDelegationController extends Controller
 
         // ارسال نوتیفیکیشن به شخص ارجاع دهنده
         $reason = $request->input('reason');
-        $delegation->delegatedBy->notify(new DelegationRejectedNotification($delegation, $reason));
+        // $delegation->delegatedBy->notify(new DelegationRejectedNotification($delegation, $reason));
 
         return redirect()->route('letters.show', $delegation->letter_id)
             ->with('info', 'شما این ارجاع را رد کردید');
@@ -183,12 +184,12 @@ class LetterDelegationController extends Controller
         $delegation->letter->increment('reply_count');
 
         // ارسال نوتیفیکیشن به شخص ارجاع دهنده
-        $delegation->delegatedBy->notify(new DelegationRepliedNotification($delegation, $reply));
+        // $delegation->delegatedBy->notify(new DelegationRepliedNotification($delegation, $reply));
 
         // ارسال نوتیفیکیشن به فرستنده اصلی مکتوب
         $originalSender = $delegation->letter->senderUser;
         if ($originalSender) {
-            $originalSender->notify(new LetterRepliedNotification($reply));
+            // $originalSender->notify(new LetterRepliedNotification($reply));
         }
 
         return redirect()->route('letters.show', $delegation->letter_id)

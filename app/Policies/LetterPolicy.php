@@ -14,7 +14,7 @@ class LetterPolicy
         return $letter->created_by        === $user->id
             || $letter->sender_user_id    === $user->id
             || $letter->recipient_user_id === $user->id
-            || $letter->routings()->where('to_user_id', $user->id)->exists();
+            || $letter->delegations()->where('delegated_to_user_id', $user->id)->exists();
     }
 
     // ─── CRUD پایه ──────────────────────────────────────────────────────────
@@ -129,18 +129,21 @@ class LetterPolicy
             return false;
         }
 
-        // بررسی بر اساس نوع نامه
-        if ($letter->letter_type === 'internal') {
-            // نامه داخلی: فقط گیرنده می‌تواند پاسخ دهد
-            return $letter->recipient_user_id === $user->id;
-        }
-
-        if ($letter->letter_type === 'external') {
-            // نامه خارجی: فرستنده می‌تواند پاسخ دهد
-            return $letter->recipient_user_id === $user->id;
+        if ($this->is_delegate($user, $letter) || $this->is_receiver($user, $letter)) {
+            return true;
         }
 
         return false;
+    }
+
+    public function is_delegate(User $user, Letter $letter): bool
+    {
+        return $letter->delegations()->where('delegated_to_user_id', $user->id)->exists();
+    }
+
+    public function is_receiver(User $user, Letter $letter): bool
+    {
+        return $letter->recipient_user_id === $user->id;
     }
 
     public function delegate(User $user, Letter $letter): bool
