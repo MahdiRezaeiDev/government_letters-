@@ -216,8 +216,6 @@ class LetterController extends Controller
     {
         $this->authorize('create', Letter::class);
 
-        dd($request->all());
-
         try {
             $user   = Auth::user()->load(['primaryPosition', 'department']);
             $letter = $this->letterService->createLetter($request->validated(), $user);
