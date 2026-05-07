@@ -284,6 +284,7 @@ class LetterController extends Controller
             'letter'         => $letter,
             'securityLevels' => $this->getSecurityLevels(),
             'priorityLevels' => $this->getPriorityLevels(),
+            'organizations'  => Organization::all(),
             'users'          => $users,  // اضافه شد
             'can' => [
                 'edit'    => $user->can('update', $letter),

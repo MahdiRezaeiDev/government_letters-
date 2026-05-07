@@ -10,6 +10,7 @@ import {
 import { useState } from 'react';
 import cartable from '@/routes/cartable';
 import letters from '@/routes/letters';
+import delegationsRoute from '@/routes/delegations';
 
 interface Routing {
     id: number;
@@ -113,7 +114,7 @@ export default function CartableIndex({
     const [note, setNote] = useState('');
     const [reason, setReason] = useState('');
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
-    const [activeTab, setActiveTab] = useState<'routings' | 'delegations'>('routings');
+    const [activeTab, setActiveTab] = useState<'routings' | 'delegations'>('delegations');
 
     const applyFilters = () => {
         setLoading(true);
@@ -159,9 +160,14 @@ export default function CartableIndex({
     const handleComplete = () => {
         if (!note.trim()) {
             alert('لطفاً یادداشت اقدام را وارد کنید.');
+
             return;
         }
-        if (!selectedRoutingId) return;
+
+        if (!selectedRoutingId) {
+            return;
+        }
+
         setCompletingId(selectedRoutingId);
         router.post(cartable.complete(selectedRoutingId), { note }, {
             preserveScroll: true,
@@ -178,9 +184,14 @@ export default function CartableIndex({
     const handleReject = () => {
         if (!reason.trim()) {
             alert('لطفاً دلیل رد را وارد کنید.');
+
             return;
         }
-        if (!selectedRoutingId) return;
+
+        if (!selectedRoutingId) {
+            return;
+        }
+
         setRejectingId(selectedRoutingId);
         router.post(cartable.reject(selectedRoutingId), { reason }, {
             preserveScroll: true,
@@ -195,9 +206,12 @@ export default function CartableIndex({
     };
 
     const handleAcceptDelegation = (delegationId: number) => {
-        if (!confirm('آیا می‌خواهید این ارجاع را بپذیرید؟')) return;
+        if (!confirm('آیا می‌خواهید این ارجاع را بپذیرید؟')) {
+            return;
+        }
+
         setAcceptingDelegationId(delegationId);
-        router.post(route('cartable.delegations.accept', { delegation: delegationId }), {}, {
+        router.post(delegationsRoute.accept({ delegation: delegationId }), {}, {
             preserveScroll: true,
             onSuccess: () => router.reload(),
             onFinish: () => setAcceptingDelegationId(null),
@@ -207,11 +221,16 @@ export default function CartableIndex({
     const handleRejectDelegation = () => {
         if (!reason.trim()) {
             alert('لطفاً دلیل رد را وارد کنید.');
+
             return;
         }
-        if (!selectedDelegationId) return;
+
+        if (!selectedDelegationId) {
+            return;
+        }
+
         setRejectingDelegationId(selectedDelegationId);
-        router.post(route('cartable.delegations.reject', { delegation: selectedDelegationId }), { reason }, {
+        router.post(delegationsRoute.reject({ delegation: selectedDelegationId }), { reason }, {
             preserveScroll: true,
             onSuccess: () => {
                 setShowRejectDelegationModal(false);
@@ -283,7 +302,7 @@ export default function CartableIndex({
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                             }`}
                                     >
-                                    لیست 
+                                        لیست
                                     </button>
                                     <button
                                         onClick={() => setViewMode('grid')}
@@ -321,8 +340,8 @@ export default function CartableIndex({
                             <button
                                 onClick={() => setActiveTab('routings')}
                                 className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors border-b-2 ${activeTab === 'routings'
-                                        ? 'border-blue-600 text-blue-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    ? 'border-blue-600 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700'
                                     }`}
                             >
                                 <Target className="h-4 w-4" />
@@ -334,8 +353,8 @@ export default function CartableIndex({
                             <button
                                 onClick={() => setActiveTab('delegations')}
                                 className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors border-b-2 ${activeTab === 'delegations'
-                                        ? 'border-amber-600 text-amber-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    ? 'border-amber-600 text-amber-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700'
                                     }`}
                             >
                                 <CornerUpRight className="h-4 w-4" />
@@ -608,7 +627,11 @@ export default function CartableIndex({
                                         </div>
                                         <div className="flex gap-1.5">
                                             <button
-                                                onClick={() => { if (routings.current_page > 1) router.get(cartable.index(), { page: routings.current_page - 1, ...filters }); }}
+                                                onClick={() => {
+                                                    if (routings.current_page > 1) {
+                                                        router.get(cartable.index(), { page: routings.current_page - 1, ...filters });
+                                                    }
+                                                }}
                                                 disabled={routings.current_page === 1}
                                                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${routings.current_page > 1 ? 'text-gray-700 hover:bg-white hover:text-blue-600 shadow-sm' : 'text-gray-300 cursor-not-allowed'}`}
                                             >
@@ -616,10 +639,17 @@ export default function CartableIndex({
                                             </button>
                                             {[...Array(Math.min(5, routings.last_page))].map((_, i) => {
                                                 let pageNum;
-                                                if (routings.last_page <= 5) pageNum = i + 1;
-                                                else if (routings.current_page <= 3) pageNum = i + 1;
-                                                else if (routings.current_page >= routings.last_page - 2) pageNum = routings.last_page - 4 + i;
-                                                else pageNum = routings.current_page - 2 + i;
+
+                                                if (routings.last_page <= 5) {
+                                                    pageNum = i + 1;
+                                                } else if (routings.current_page <= 3) {
+                                                    pageNum = i + 1;
+                                                } else if (routings.current_page >= routings.last_page - 2) {
+                                                    pageNum = routings.last_page - 4 + i;
+                                                } else {
+                                                    pageNum = routings.current_page - 2 + i;
+                                                }
+
                                                 return (
                                                     <button key={pageNum} onClick={() => router.get(cartable.index(), { page: pageNum, ...filters })} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${routings.current_page === pageNum ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-md' : 'text-gray-700 hover:bg-white hover:text-blue-600'}`}>
                                                         {pageNum}
@@ -627,7 +657,11 @@ export default function CartableIndex({
                                                 );
                                             })}
                                             <button
-                                                onClick={() => { if (routings.current_page < routings.last_page) router.get(cartable.index(), { page: routings.current_page + 1, ...filters }); }}
+                                                onClick={() => {
+                                                    if (routings.current_page < routings.last_page) {
+                                                        router.get(cartable.index(), { page: routings.current_page + 1, ...filters });
+                                                    }
+                                                }}
                                                 disabled={routings.current_page === routings.last_page}
                                                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${routings.current_page < routings.last_page ? 'text-gray-700 hover:bg-white hover:text-blue-600 shadow-sm' : 'text-gray-300 cursor-not-allowed'}`}
                                             >
@@ -656,6 +690,7 @@ export default function CartableIndex({
                                             {pendingDelegations.map((delegation, index) => {
                                                 const priority = priorityConfig[delegation.letter?.priority] || priorityConfig.normal;
                                                 const PriorityIcon = priority.icon;
+
                                                 return (
                                                     <div key={delegation.id} className="group bg-white rounded-2xl shadow-sm border border-amber-100 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
                                                         <div className="p-5 border-r-4 border-r-amber-400">
@@ -729,6 +764,7 @@ export default function CartableIndex({
                                             {acceptedDelegations.map((delegation, index) => {
                                                 const priority = priorityConfig[delegation.letter?.priority] || priorityConfig.normal;
                                                 const PriorityIcon = priority.icon;
+
                                                 return (
                                                     <div key={delegation.id} className="group bg-white rounded-2xl shadow-sm border border-emerald-100 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
                                                         <div className="p-5 border-r-4 border-r-emerald-400">

@@ -1,11 +1,8 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
-    Send, Clock, CheckCircle, XCircle, CornerUpLeft,
-    CornerUpRight, UserCheck,
-    MessageCircle,
-    User,
-    Info,
-    Calendar
+    Clock, CheckCircle, XCircle, CornerUpLeft,
+    CornerUpRight, UserCheck, MessageCircle, User,
+    Info, Calendar
 } from 'lucide-react';
 import { useState } from 'react';
 import AttachmentList from '@/components/AttachmentList';
@@ -13,7 +10,7 @@ import AttachmentPreviewModal from '@/components/AttachmentPreviewModal';
 import { DelegateReplyModal } from '@/components/DelegateReplyModal';
 import delegations from '@/routes/delegations';
 import letters from '@/routes/letters';
-import type { Letter, Case } from '@/types';
+import type { Letter, Case, Organization } from '@/types';
 
 interface Attachment {
     id: number;
@@ -32,6 +29,7 @@ interface User {
 
 interface Props {
     letter: Letter;
+    organizations: Organization[]
     securityLevels: Record<string, string>;
     priorityLevels: Record<string, string>;
     availableCases?: Case[];
@@ -76,6 +74,7 @@ export default function LettersShow({
     letter,
     securityLevels,
     priorityLevels,
+    organizations,
     users,
     can
 }: Props) {
@@ -91,9 +90,6 @@ export default function LettersShow({
         (d: any) => d.delegated_to_user_id === currentUser.id
             && d.status === 'pending'
     );
-
-    console.log(letter.delegated_by_user_id);
-
 
     const isDelegatedToMe = !!activeDelegation;
     const isDelegatedByMe = letter.delegated_by_user_id === currentUser.id;
@@ -126,10 +122,7 @@ export default function LettersShow({
             },
             onError: () => setLoading(false),
         });
-    };
-
-    console.log(isDelegatedByMe);
-    
+    };    
 
     return (
         <>
@@ -550,6 +543,7 @@ export default function LettersShow({
                 onClose={() => setShowDelegateModal(false)}
                 letterId={letter.id}
                 letterSubject={letter.subject}
+                organizations={organizations}
                 users={users}
                 currentUserId={(window as any).__page?.props?.auth?.user?.id}
             />

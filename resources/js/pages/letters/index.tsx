@@ -610,8 +610,8 @@ export default function LettersIndex({
         <>
             <Head title="مدیریت مکتوب‌ها" />
 
-            <div className="min-h-screen bg-gray-50">
-                <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+            <div className="min-h-screen">
+                <div className="max-w-[1400px] mx-auto px-3">
                     <div className="space-y-4 sm:space-y-5 lg:space-y-6">
                         {/* Header Section */}
                         <div className="flex flex-col bg-white p-4 sm:p-5 rounded-2xl shadow-sm sm:flex-row sm:items-center sm:justify-between gap-3">
