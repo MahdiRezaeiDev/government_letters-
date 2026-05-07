@@ -1,8 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
-    Clock, CheckCircle, XCircle, CornerUpLeft,
-    CornerUpRight, UserCheck, MessageCircle, User,
-    Info, Calendar
+    Clock, CheckCircle, XCircle, CornerUpLeft, CornerUpRight,
+    UserCheck, MessageCircle, User, Info, Calendar
 } from 'lucide-react';
 import { useState } from 'react';
 import AttachmentList from '@/components/AttachmentList';

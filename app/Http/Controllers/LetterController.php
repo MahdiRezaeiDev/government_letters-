@@ -235,7 +235,6 @@ class LetterController extends Controller
     public function show(Letter $letter)
     {
         $this->authorize('view', $letter);  // ✅ جایگزین canViewLetter
-
         $user = auth()->user();
 
         $letter->load([
