@@ -2,7 +2,7 @@
 
 namespace App\Listeners;
 
-use App\Events\LetterSubmited;
+use App\Events\LetterSubmitted;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 
@@ -19,7 +19,7 @@ class SendLetterNotification
     /**
      * Handle the event.
      */
-    public function handle(LetterSubmited $event): void
+    public function handle(LetterSubmitted $event): void
     {
         //
     }
