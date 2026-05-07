@@ -168,9 +168,6 @@ export function DelegateReplyModal({
         });
     };
 
-    console.log(selectedUserId);
-
-
     // پیدا کردن نام‌های انتخاب شده برای نمایش
     const selectedOrganizationName = organizations.find(o => o.id.toString() === selectedOrganizationId)?.name;
     const selectedDepartmentName = departments.find(d => d.id.toString() === selectedDepartmentId)?.name;
@@ -278,7 +275,11 @@ export function DelegateReplyModal({
                                     const position = positions.find(p => p.id === id);
 
                                     setSelectedUserId(position?.user_id);
-                                    setUsers(position)
+
+                                    setUser({
+                                        user_id: position.user_id,
+                                        user_name: position.user_name
+                                    })
                                 }}
                                 disabled={!selectedDepartmentId || loadingPositions}
                                 className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -291,19 +292,8 @@ export function DelegateReplyModal({
                                 ))}
                             </select>
                             {loadingPositions && (
-                                <p className="text-xs text-gray-400 mt-1">در حال بارگذاری...</p>
+                                <p className="text-xs text-gray-400 mt-1">در حال ...</p>
                             )}
-                        </div>
-
-                        {/* انتخاب شخص */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                <UserPlus className="inline h-4 w-4 ml-1 text-gray-400" />
-                                ارجاع به <span className="text-red-500">*</span>
-                            </label>
-
-                            <p className="text-xs text-gray-400 mt-1">در حال بارگذاری...</p>
-
                         </div>
                     </div>
 
@@ -317,6 +307,8 @@ export function DelegateReplyModal({
                                 {selectedDepartmentName && <span>{selectedDepartmentName}</span>}
                                 {selectedDepartmentName && selectedPositionName && <span><ArrowLeft className='w-3 h-3' /></span>}
                                 {selectedPositionName && <span>{selectedPositionName}</span>}
+                                {selectedDepartmentName && selectedPositionName && <span><ArrowLeft className='w-3 h-3' /></span>}
+                                {selectedPositionName && <span>{user.user_name}</span>}
                             </div>
                         </div>
                     )}
