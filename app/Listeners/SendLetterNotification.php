@@ -21,6 +21,7 @@ class SendLetterNotification
      */
     public function handle(LetterSubmitted $event): void
     {
-        //
+        $letter = $event->letter;
+        
     }
 }
