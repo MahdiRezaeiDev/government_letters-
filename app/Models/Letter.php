@@ -162,10 +162,10 @@ class Letter extends Model
     // ✅ آیا این نامه نیاز به تعقیب دارد؟
     public function getNeedsFollowUpAttribute(): bool
     {
-        return $this->is_follow_up &&
-            $this->follow_up_status === 'pending' &&
-            $this->next_follow_up_date &&
-            $this->next_follow_up_date <= now();
+        return  $this->is_follow_up &&
+                $this->follow_up_status === 'pending' &&
+                $this->next_follow_up_date &&
+                $this->next_follow_up_date <= now();
     }
 
     // ─── Relationships ─────────────────────────────────────────

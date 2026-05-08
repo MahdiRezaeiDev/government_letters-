@@ -1,9 +1,13 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
-    Search, Bell, LayoutDashboard, Menu,
-    LogOut, User, Settings, ChevronDown
+    Bell,
+    ChevronDown,
+    LogOut,
+    Settings,
+    User,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import { useNotifications } from '@/hooks/use-notifications';
 
 interface HeaderProps {
     onMenuClick: () => void;
@@ -13,13 +17,11 @@ interface HeaderProps {
 
 export function Header({ onMenuClick, isMobile }: HeaderProps) {
     const { auth } = usePage().props as any;
+    const { notifications, unreadCount } = useNotifications(auth.user.id);
     const [currentTime, setCurrentTime] = useState(new Date());
-
-    // وضعیت دراپ‌دان‌ها
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
 
-    // Ref برای بستن دراپ‌دان با کلیک به بیرون
     const profileRef = useRef<HTMLDivElement>(null);
     const notifRef = useRef<HTMLDivElement>(null);
 
@@ -42,25 +44,10 @@ export function Header({ onMenuClick, isMobile }: HeaderProps) {
         <header className="sticky shadow-md top-0 z-40 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
             <div className="max-w-[1600px] mx-auto px-6 h-20 flex items-center justify-between">
 
-                {/* بخش راست: لوگو و جستجو */}
-                <div className="flex items-center gap-10">
-                    {/* <div className="flex items-center gap-3">
-                        {isMobile ? (
-                            <button onClick={onMenuClick} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
-                                <Menu className="text-slate-600 h-6 w-6" />
-                            </button>
-                        ) : (
-                            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
-                                <LayoutDashboard className="text-white h-6 w-6" />
-                            </div>
-                        )}
-                        <h1 className="text-xl font-black tracking-tight text-slate-800 hidden sm:block">
-                            سیستم مدیریت <span className="text-indigo-600">مکاتبات</span>
-                        </h1>
-                    </div> */}
-                </div>
+                {/* بخش راست */}
+                <div className="flex items-center gap-10"></div>
 
-                {/* بخش چپ: تاریخ، نوتفیکیشن و پروفایل */}
+                {/* بخش چپ */}
                 <div className="flex items-center gap-4">
 
                     {/* تاریخ */}
@@ -75,30 +62,54 @@ export function Header({ onMenuClick, isMobile }: HeaderProps) {
                     <div className="relative" ref={notifRef}>
                         <button
                             onClick={() => setShowNotifications(!showNotifications)}
-                            className={`relative p-2.5 rounded-xl transition-all shadow-sm group ${showNotifications ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                            className={`relative p-2.5 rounded-xl transition-all shadow-sm group ${showNotifications
+                                ? 'bg-indigo-600 text-white'
+                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                                }`}
                         >
                             <Bell className="h-5 w-5" />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
+                            {unreadCount > 0 && (
+                                <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
+                            )}
                         </button>
 
                         {showNotifications && (
                             <div className="absolute left-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                                 <div className="p-4 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
                                     <span className="font-bold text-sm text-slate-800">اعلان‌های جدید</span>
-                                    <span className="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold">۳ مورد</span>
+                                    {unreadCount > 0 && (
+                                        <span className="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold">
+                                            {unreadCount} مورد
+                                        </span>
+                                    )}
                                 </div>
+
                                 <div className="max-h-64 overflow-y-auto">
-                                    <div className="p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer">
-                                        <p className="text-xs font-bold text-slate-800">مکتوب جدید دریافت شد</p>
-                                        <p className="text-[10px] text-slate-500 mt-1">از طرف: صدارت عظمی - ۵ دقیقه قبل</p>
-                                    </div>
+                                    {notifications.length === 0 ? (
+                                        <div className="p-4 text-center text-xs text-slate-400">
+                                            اعلانی وجود ندارد
+                                        </div>
+                                    ) : (
+                                        notifications.map((n) => (
+                                            <div
+                                                key={n.id}
+                                                className="p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer"
+                                            >
+                                                <p className="text-xs font-bold text-slate-800">{n.message}</p>
+                                                <p className="text-[10px] text-slate-500 mt-1">{n.title}</p>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
-                                <button className="w-full py-3 text-center text-xs font-bold text-indigo-600 hover:bg-indigo-50 transition-colors">نمایش همه اعلان‌ها</button>
+
+                                <button className="w-full py-3 text-center text-xs font-bold text-indigo-600 hover:bg-indigo-50 transition-colors">
+                                    نمایش همه اعلان‌ها
+                                </button>
                             </div>
                         )}
                     </div>
 
-                    {/* دراپ‌دان پروفایل کاربر */}
+                    {/* دراپ‌دان پروفایل */}
                     <div className="relative" ref={profileRef}>
                         <button
                             onClick={() => setShowProfileMenu(!showProfileMenu)}

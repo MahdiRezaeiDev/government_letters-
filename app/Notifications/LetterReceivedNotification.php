@@ -28,7 +28,7 @@ class LetterReceivedNotification extends Notification implements ShouldBroadcast
     {
         return [
             'letter_id' => $this->letter->id,
-            'title'     => $this->letter->title,
+            'title'     => $this->letter->subject,
             'message'   => 'یک نامه جدید دریافت کردید',
         ];
     }
@@ -38,7 +38,7 @@ class LetterReceivedNotification extends Notification implements ShouldBroadcast
     {
         return new BroadcastMessage([
             'letter_id' => $this->letter->id,
-            'title'     => $this->letter->title,
+            'title'     => $this->letter->subject,
             'message'   => 'یک نامه جدید دریافت کردید',
         ]);
     }
