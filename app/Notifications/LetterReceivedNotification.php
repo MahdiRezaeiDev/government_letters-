@@ -47,7 +47,7 @@ class LetterReceivedNotification extends Notification implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('App.Models.User.' . $this->notifiable->id),
+            new PrivateChannel('App.Models.User.' .$this->letter->recipient_user_id),
         ];
     }
 }

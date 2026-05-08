@@ -32,7 +32,7 @@ class LetterSubmitted implements ShouldDispatchAfterCommit
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('channel-name'),
+            new PrivateChannel('letters.' . $this->letter->id),
         ];
     }
 }
