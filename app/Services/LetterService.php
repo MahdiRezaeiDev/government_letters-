@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\LetterSubmitted;
 use App\Models\Letter;
 use App\Models\User;
 use App\Models\Attachment;
@@ -41,6 +42,9 @@ class LetterService
                 $letterNumber
             );
 
+            //ارسال نوتیفیکشن برای یوزر دریافت کننده
+            LetterSubmitted::dispatch($letter);
+
             // آپلود پیوست‌ها
             if (!empty($data['attachments'])) {
                 $this->handleAttachments($letter, $data['attachments'], $creator);
@@ -73,7 +77,7 @@ class LetterService
         string $letterNumber
     ): Letter {
 
-        \Log::info('Attempting to create letter with data:', [
+        Log::info('Attempting to create letter with data:', [
             'organization_id' => $creator->organization_id,
             'letter_type' => $data['recipient_type'] ?? 'external',
             'recipient_data' => $recipientData,
@@ -121,7 +125,7 @@ class LetterService
                 'created_by'        => $creator->id,
             ]);
         } catch (\Exception $e) {
-            \Log::error('Letter creation failed in storeLetter:', [
+            Log::error('Letter creation failed in storeLetter:', [
                 'error' => $e->getMessage(),
                 'sql' => $e->getPrevious()?->getMessage(),
             ]);
