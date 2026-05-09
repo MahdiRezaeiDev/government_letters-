@@ -1,15 +1,16 @@
-import { useEffect } from 'react';
 import { usePage } from '@inertiajs/react';
-import { toast } from 'sonner';
 import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 export function useLetterNotifications() {
     const page = usePage<{ auth: { user: { id: number } } }>();
     const userId = page.props.auth?.user?.id;
 
     useEffect(() => {
-        if (!userId) return;
+        if (!userId) {
+return;
+}
 
         // ✅ مستقیم Echo بساز، بدون @laravel/echo-react
         const echoInstance = new Echo({

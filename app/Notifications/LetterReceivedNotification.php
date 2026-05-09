@@ -5,12 +5,11 @@ namespace App\Notifications;
 use App\Models\Letter;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Broadcasting\PrivateChannel;
 
-class LetterReceivedNotification extends Notification implements ShouldBroadcast, ShouldQueue
+// ✅ فقط ShouldBroadcast - بدون ShouldQueue
+class LetterReceivedNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
 
@@ -38,12 +37,4 @@ class LetterReceivedNotification extends Notification implements ShouldBroadcast
             'message'   => 'یک مکتوب جدید دریافت کردید',
         ]);
     }
-
-    public function broadcastOn(): array
-    {
-        return [
-            new PrivateChannel('App.Models.User.' . $this->letter->recipient_user_id),
-        ];
-    }
-
 }

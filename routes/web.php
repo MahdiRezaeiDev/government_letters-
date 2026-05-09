@@ -26,6 +26,39 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
+    Route::get('/notifications', fn() => auth()->user()->notifications()->paginate(20));
+    Route::post('/notifications/{id}/read', function ($id) {
+        auth()->user()->notifications()->findOrFail($id)->markAsRead();
+        return response()->noContent();
+    });
+    Route::post('/notifications/read-all', function () {
+        auth()->user()->unreadNotifications->markAsRead();
+        return response()->noContent();
+    });
+
+    Route::get('/test-notif', function () {
+        $user = \App\Models\User::find(1);
+        $user->notify(new \App\Notifications\GeneralNotification(
+            title: 'تست ریل‌تایم!',
+            message: 'اگر این رو دیدی، همه چیز کار می‌کنه 🎉',
+            type: 'success'
+        ));
+        return 'Notification sent!';
+    })->middleware('auth');
+
+
+    // routes/web.php - موقت
+    Route::get('/test-letter-notif', function () {
+        $letter = \App\Models\Letter::first();
+        $user   = \App\Models\User::find($letter->recipient_user_id);
+
+        \Illuminate\Support\Facades\Log::info('Sending to user: ' . $user->id);
+
+        $user->notify(new \App\Notifications\LetterReceivedNotification($letter));
+
+        return 'Sent to user: ' . $user->id;
+    });
+
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // ═══════════════════════════════════════════════════════
@@ -57,7 +90,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $currentUser = auth()->user()->load('department');
 
         $positions = Position::where('department_id', $request->department_id)
-        ->where('department_id', '!=',$currentUser->department->id)
+            ->where('id', '!=', $currentUser->primaryPosition->id)
             ->with(['users:id,first_name,last_name'])
             ->get(['id', 'name', 'department_id'])
             ->map(fn($p) => [
