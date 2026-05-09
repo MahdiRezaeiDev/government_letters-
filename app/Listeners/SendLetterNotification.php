@@ -24,7 +24,6 @@ class SendLetterNotification
     {
         $letter = $event->letter;
 
-        // گیرنده داخلی داره؟
         if ($letter->recipientUser) {
             $letter->recipientUser->notify(
                 new LetterReceivedNotification($letter)

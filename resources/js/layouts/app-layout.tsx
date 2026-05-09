@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useLetterNotifications } from '@/hooks/use-letter-notifications';
 import { Header } from './Header';
 import { MobileMenu } from './MobileMenu';
 import { Sidebar } from './Sidebar';
-import { useLetterNotifications } from '@/hooks/use-letter-notifications';
 
 interface AppLayoutProps {
     children: React.ReactNode;

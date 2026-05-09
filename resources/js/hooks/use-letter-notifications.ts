@@ -1,37 +1,42 @@
-// hooks/use-letter-notifications.ts
-
-import { useEcho } from '@laravel/echo-react';
+import { useEffect } from 'react';
 import { usePage } from '@inertiajs/react';
-import { router } from '@inertiajs/react';
 import { toast } from 'sonner';
-
-type NotificationData = {
-    letter_id: number;
-    title: string;
-    message: string;
-};
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
 
 export function useLetterNotifications() {
-    const { auth } = usePage<{ 
-        auth: { user: { id: number } } 
-    }>().props;
+    const page = usePage<{ auth: { user: { id: number } } }>();
+    const userId = page.props.auth?.user?.id;
 
-    const userId = auth.user.id;
+    useEffect(() => {
+        if (!userId) return;
 
-    useEcho<NotificationData>(
-        `App.Models.User.${userId}`,
-        '.letter.submitted',   // ✅ نقطه قبلش چون broadcastAs داری
-        (data) => {
-            console.log('✅ toast باید بیاد:', data);
+        // ✅ مستقیم Echo بساز، بدون @laravel/echo-react
+        const echoInstance = new Echo({
+            broadcaster: 'reverb',
+            key: import.meta.env.VITE_REVERB_APP_KEY,
+            wsHost: import.meta.env.VITE_REVERB_HOST,
+            wsPort: import.meta.env.VITE_REVERB_PORT,
+            forceTLS: false,
+            enabledTransports: ['ws', 'wss'],
+        });
 
-            toast('📩 نامه جدید دریافت شد', {
-                description: data.title,
-                duration: 5000,
-                action: {
-                    label: 'مشاهده نامه',
-                    onClick: () => router.visit(`/letters/${data.letter_id}`),
-                },
+        console.log('Echo ساخته شد');
+
+        echoInstance
+            .private(`App.Models.User.${userId}`)
+            .notification((data: any) => {
+                console.log('✅ دریافت شد:', data);
+                toast('📩 نامه جدید', {
+                    description: data.title,
+                    duration: 5000,
+                });
             });
-        }
-    );
+
+        return () => {
+            echoInstance.leave(`App.Models.User.${userId}`);
+            echoInstance.disconnect();
+        };
+
+    }, [userId]);
 }
