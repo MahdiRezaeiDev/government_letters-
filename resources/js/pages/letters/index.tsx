@@ -139,11 +139,12 @@ export default function LettersIndex({
     };
 
     const isUnread = (letter: Letter) => {
-        if (!letter.views || letter.views.length === 0) {
+        
+        if (!letter.user_view || letter.user_view.length === 0) {
             return true;
         }
 
-        return !letter.views.some((v: any) => v.user_id === currentUserId);
+        return !letter.user_view.user_id === currentUserId;
     };
 
     const handleSearch = () => {
@@ -280,7 +281,7 @@ export default function LettersIndex({
             <div
                 key={letter.id}
                 className={`bg-white rounded-xl border transition-all duration-200 ${unread
-                    ? 'border-r-4 border-r-blue-400 bg-gradient-to-r from-blue-50 via-blue-50/50 to-white shadow-md'
+                    ? 'border-r-4 border-r-blue-400 bg-blue-200  shadow-md'
                     : 'border-gray-100 shadow-sm hover:shadow-md'
                     }`}
             >
@@ -433,7 +434,7 @@ export default function LettersIndex({
                 <tr className={`
                     transition-all duration-200 group
                     ${unread
-                        ? 'bg-gradient-to-r from-blue-50 via-blue-50/30 to-white border-r-4 border-r-blue-500'
+                        ? 'bg-blue-100  border-r-4 border-r-blue-500'
                         : 'hover:bg-gray-50 border-r-4 border-r-transparent'
                     }
                     ${depth > 0 ? 'bg-gray-50/30' : ''}

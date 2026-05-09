@@ -50,6 +50,7 @@ class LetterController extends Controller
                 $q->select('id', 'parent_letter_id');
             },
         ])->withCount('replies');
+        
 
         // ── فیلتر بر اساس دسترسی کاربر ───────────────────────────────
         if ($user->isSuperAdmin()) {
