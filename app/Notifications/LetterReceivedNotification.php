@@ -42,6 +42,11 @@ class LetterReceivedNotification extends Notification implements ShouldBroadcast
             'message'   => 'یک نامه جدید دریافت کردید',
         ]);
     }
+    
+    public function broadcastAs(): string
+    {
+        return 'letter.submitted';
+    }
 
     // channel اختصاصی هر user
     public function broadcastOn(): array
