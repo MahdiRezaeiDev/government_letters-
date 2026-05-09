@@ -1,5 +1,6 @@
 import { createInertiaApp } from '@inertiajs/react';
 import { configureEcho } from '@laravel/echo-react';
+import { echo } from '@laravel/echo-react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
@@ -9,6 +10,11 @@ import AuthLayout from '@/layouts/auth-layout';
 configureEcho({
     broadcaster: 'reverb',
 });
+
+
+// ببین echo instance چیه
+console.log('Echo instance:', echo());
+console.log('Connection status:', echo().connectionStatus());
 
 const appName = import.meta.env.VITE_APP_NAME || 'سیستم مکاتیب اداری';
 
