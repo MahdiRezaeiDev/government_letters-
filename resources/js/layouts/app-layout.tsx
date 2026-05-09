@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from './Header';
 import { MobileMenu } from './MobileMenu';
 import { Sidebar } from './Sidebar';
+import { useLetterNotifications } from '@/hooks/use-letter-notifications';
 
 interface AppLayoutProps {
     children: React.ReactNode;
@@ -30,6 +31,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
     // محاسبه عرض سایدبار برای ایجاد فاصله در محتوا و هدر
     const sidebarWidthClasses = collapsed ? 'mr-20' : 'mr-72';
+    useLetterNotifications();
 
     return (
         <div className="min-h-screen bg-gray-100" dir="rtl">

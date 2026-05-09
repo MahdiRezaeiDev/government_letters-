@@ -15,8 +15,6 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        dd($user->unreadNotifications->count());
-
         // آمار کلی
         $stats = [
             // نامه‌های در انتظار اقدام (کارتابل)

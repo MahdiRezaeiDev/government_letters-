@@ -18,7 +18,7 @@ class LetterReceivedNotification extends Notification implements ShouldBroadcast
     public function __construct(public Letter $letter) {}
 
     // ۱. ذخیره در database ✅
-    public function via(): array
+    public function via(object $notifiable): array
     {
         return ['database', 'broadcast'];
     }
