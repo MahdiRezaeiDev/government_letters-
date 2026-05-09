@@ -9,10 +9,9 @@ export function useLetterNotifications() {
 
     useEffect(() => {
         if (!userId) {
-return;
-}
+            return;
+        }
 
-        // ✅ مستقیم Echo بساز، بدون @laravel/echo-react
         const echoInstance = new Echo({
             broadcaster: 'reverb',
             key: import.meta.env.VITE_REVERB_APP_KEY,
@@ -27,7 +26,6 @@ return;
         echoInstance
             .private(`App.Models.User.${userId}`)
             .notification((data: any) => {
-                console.log('✅ دریافت شد:', data);
                 toast('📩 نامه جدید', {
                     description: data.title,
                     duration: 5000,
@@ -38,6 +36,5 @@ return;
             echoInstance.leave(`App.Models.User.${userId}`);
             echoInstance.disconnect();
         };
-
     }, [userId]);
 }

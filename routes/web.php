@@ -36,23 +36,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return response()->noContent();
     });
 
-    Route::get('/test-notif', function () {
-        $user = \App\Models\User::find(1);
-        $user->notify(new \App\Notifications\GeneralNotification(
-            title: 'تست ریل‌تایم!',
-            message: 'اگر این رو دیدی، همه چیز کار می‌کنه 🎉',
-            type: 'success'
-        ));
-        return 'Notification sent!';
-    })->middleware('auth');
 
 
     // routes/web.php - موقت
     Route::get('/test-letter-notif', function () {
         $letter = \App\Models\Letter::first();
         $user   = \App\Models\User::find($letter->recipient_user_id);
-
-        \Illuminate\Support\Facades\Log::info('Sending to user: ' . $user->id);
 
         $user->notify(new \App\Notifications\LetterReceivedNotification($letter));
 
