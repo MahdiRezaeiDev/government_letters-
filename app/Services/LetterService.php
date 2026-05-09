@@ -42,9 +42,6 @@ class LetterService
                 $letterNumber
             );
 
-            //ارسال نوتیفیکشن برای یوزر دریافت کننده
-            LetterSubmitted::dispatch($letter);
-
             // آپلود پیوست‌ها
             if (!empty($data['attachments'])) {
                 $this->handleAttachments($letter, $data['attachments'], $creator);
@@ -56,13 +53,16 @@ class LetterService
             }
 
             DB::commit();
-
-            return $letter;
         } catch (\Exception $e) {
             DB::rollBack();
             $this->logError('Letter creation failed', $e);
             throw $e;
         }
+
+        //ارسال نوتیفیکشن برای یوزر دریافت کننده
+        LetterSubmitted::dispatch($letter);
+
+        return $letter;
     }
 
     /**
