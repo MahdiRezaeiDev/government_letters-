@@ -21,8 +21,6 @@ export function useLetterNotifications() {
             enabledTransports: ['ws', 'wss'],
         });
 
-        console.log('Echo ساخته شد');
-
         echoInstance
             .private(`App.Models.User.${userId}`)
             .notification((data: any) => {
