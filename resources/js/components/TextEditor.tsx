@@ -1,14 +1,12 @@
-// resources/js/components/TextEditor.tsx
-
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
+import BulletList from '@tiptap/extension-bullet-list';
+import Link from '@tiptap/extension-link';
+import ListItem from '@tiptap/extension-list-item';
+import OrderedList from '@tiptap/extension-ordered-list';
 import Placeholder from '@tiptap/extension-placeholder';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
-import BulletList from '@tiptap/extension-bullet-list';
-import OrderedList from '@tiptap/extension-ordered-list';
-import ListItem from '@tiptap/extension-list-item';
-import Link from '@tiptap/extension-link';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 import {
     Bold, Italic, Underline as UnderlineIcon, Strikethrough,
     List, ListOrdered, AlignLeft, AlignCenter, AlignRight, AlignJustify,
@@ -119,16 +117,20 @@ export default function TextEditor({
     });
 
     const setLink = useCallback(() => {
-        if (!editor) return;
+        if (!editor) {
+            return;
+        }
 
         if (linkUrl === '') {
             editor.chain().focus().extendMarkRange('link').unsetLink().run();
             setShowLinkInput(false);
+
             return;
         }
 
         // اضافه کردن پروتکل اگر وجود نداشته باشه
         let url = linkUrl;
+
         if (!url.startsWith('http://') && !url.startsWith('https://')) {
             url = 'https://' + url;
         }
@@ -139,12 +141,17 @@ export default function TextEditor({
     }, [editor, linkUrl]);
 
     const removeLink = useCallback(() => {
-        if (!editor) return;
+        if (!editor) {
+            return;
+        }
+
         editor.chain().focus().extendMarkRange('link').unsetLink().run();
     }, [editor]);
 
     const openLinkInput = useCallback(() => {
-        if (!editor) return;
+        if (!editor) {
+            return;
+        }
 
         // اگر متنی انتخاب شده یا لینکی فعاله
         const previousUrl = editor.getAttributes('link').href;
@@ -312,6 +319,7 @@ export default function TextEditor({
                                     e.preventDefault();
                                     setLink();
                                 }
+
                                 if (e.key === 'Escape') {
                                     setShowLinkInput(false);
                                     setLinkUrl('');

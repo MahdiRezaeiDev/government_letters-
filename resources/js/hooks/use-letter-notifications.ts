@@ -32,7 +32,7 @@ export function useLetterNotifications() {
 
         return () => {
             echoInstance.leave(`App.Models.User.${userId}`);
-            echoInstance.disconnect();
+            // echoInstance.disconnect();
         };
     }, [userId]);
 }
