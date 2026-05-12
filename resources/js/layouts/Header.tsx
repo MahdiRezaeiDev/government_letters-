@@ -125,7 +125,7 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                             امروز
                         </p>
                         <p className="text-sm font-bold text-slate-700">
-                            {currentTime.toLocaleDateString('fa-IR', {
+                            {currentTime.toLocaleDateString('fa-Af', {
                                 day: 'numeric',
                                 month: 'long'
                             })}
