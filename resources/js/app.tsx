@@ -5,9 +5,6 @@ import { Toaster } from '@/components/ui/sonner';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 
-// ست کردن Pusher به صورت global که Echo بتونه ازش استفاده کنه
-(window as any).Pusher = Pusher;
-
 // حالا Echo رو تنظیم کن
 configureEcho({
     broadcaster: 'reverb',

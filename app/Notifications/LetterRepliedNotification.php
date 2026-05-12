@@ -29,6 +29,30 @@ class LetterRepliedNotification extends Notification implements ShouldQueue
     }
 
     /**
+     * Clean UTF-8 strings to ensure they can be JSON encoded
+     */
+    private function cleanString($string, $default = ''): string
+    {
+        if (empty($string)) {
+            return $default;
+        }
+
+        // Convert to string
+        $string = (string) $string;
+
+        // Remove invalid UTF-8 characters
+        $string = mb_convert_encoding($string, 'UTF-8', 'UTF-8');
+
+        // Remove control characters
+        $string = preg_replace('/[\x00-\x1F\x7F-\x9F]/u', '', $string);
+
+        // Limit length
+        $string = mb_substr($string, 0, 200, 'UTF-8');
+
+        return $string ?: $default;
+    }
+
+    /**
      * Get the array representation of the notification (for database).
      */
     public function toArray(object $notifiable): array
@@ -37,13 +61,13 @@ class LetterRepliedNotification extends Notification implements ShouldQueue
             'type' => 'letter_replied',
             'reply_letter_id' => $this->replyLetter->id,
             'original_letter_id' => $this->originalLetter->id,
-            'original_letter_subject' => $this->originalLetter->subject,
-            'reply_content' => substr($this->replyLetter->content, 0, 100),
-            'replier_name' => $this->replyLetter->creator->name,
-            'replier_id' => $this->replyLetter->creator->id,
-            'replied_at' => $this->replyLetter->created_at->toISOString(),
-            'priority' => $this->replyLetter->priority,
-            'reference_number' => $this->originalLetter->reference_number,
+            'original_letter_subject' => $this->cleanString($this->originalLetter->subject, 'بدون موضوع'),
+            'reply_content' => $this->cleanString(substr($this->replyLetter->content, 0, 100), 'بدون متن'),
+            'replier_name' => $this->cleanString($this->replyLetter->senderUser->name, 'کاربر'),
+            'replier_id' => $this->replyLetter->senderUser->id,
+            'replied_at' => $this->replyLetter->created_at?->toISOString() ?? now()->toISOString(),
+            'priority' => $this->replyLetter->priority ?? 'normal',
+            'reference_number' => $this->cleanString($this->originalLetter->reference_number, ''),
         ];
     }
 
@@ -52,18 +76,22 @@ class LetterRepliedNotification extends Notification implements ShouldQueue
      */
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
+        $replierName = $this->cleanString($this->replyLetter->senderUser->name, 'کاربر');
+        $subject = $this->cleanString($this->originalLetter->subject, 'مکتوب');
+        $content = $this->cleanString(substr($this->replyLetter->content, 0, 100), 'پاسخ جدید');
+
         return new BroadcastMessage([
-            'id' => $this->id,
+            'id' => (string) $this->id,
             'type' => 'letter_replied',
             'data' => [
                 'reply_letter_id' => $this->replyLetter->id,
                 'original_letter_id' => $this->originalLetter->id,
-                'original_letter_subject' => $this->originalLetter->subject,
-                'reply_content' => substr($this->replyLetter->content, 0, 100),
-                'replier_name' => $this->replyLetter->creator->name,
-                'replied_at' => $this->replyLetter->created_at->diffForHumans(),
+                'original_letter_subject' => $subject,
+                'reply_content' => $content,
+                'replier_name' => $replierName,
+                'replied_at' => $this->replyLetter->created_at?->diffForHumans() ?? 'اخیرا',
             ],
-            'message' => $this->replyLetter->creator->name . ' به مکتوب شما پاسخ داد',
+            'message' => $replierName . ' به مکتوب شما پاسخ داد',
             'icon' => 'mail-reply',
             'link' => '/letters/' . $this->originalLetter->id,
         ]);
