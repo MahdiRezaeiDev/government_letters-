@@ -1,5 +1,3 @@
-// resources/js/pages/letters/index.tsx
-
 import { Head, Link, router } from '@inertiajs/react';
 import {
     Plus, Search, Filter, Eye, Edit, Trash2,
@@ -13,9 +11,9 @@ import {
     Building2, Briefcase, Users as UsersIcon
 } from 'lucide-react';
 import React, { useState, useMemo } from 'react';
+import PersianDatePicker from '@/components/PersianDatePicker';
 import lettersRoute from '@/routes/letters';
 import type { Letter, PaginatedResponse } from '@/types';
-import PersianDatePicker from '@/components/PersianDatePicker';
 
 interface Props {
     letters: PaginatedResponse<Letter>;
@@ -679,14 +677,18 @@ export default function LettersIndex({
                                     <span className="text-xs text-gray-500">نمایش:</span>
                                     <div className="flex bg-gray-100 rounded-lg p-0.5">
                                         <button
-                                            onClick={() => { setThreadView(true); setMobileMenuOpen(false); }}
+                                            onClick={() => {
+ setThreadView(true); setMobileMenuOpen(false); 
+}}
                                             className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 ${threadView ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}
                                         >
                                             <GitBranch className="h-3.5 w-3.5" />
                                             ترد شده
                                         </button>
                                         <button
-                                            onClick={() => { setThreadView(false); setMobileMenuOpen(false); }}
+                                            onClick={() => {
+ setThreadView(false); setMobileMenuOpen(false); 
+}}
                                             className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 ${!threadView ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}
                                         >
                                             <List className="h-3.5 w-3.5" />
