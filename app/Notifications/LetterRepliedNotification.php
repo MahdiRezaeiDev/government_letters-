@@ -52,6 +52,13 @@ class LetterRepliedNotification extends Notification implements ShouldQueue
         return $string ?: $default;
     }
 
+    private function repliedBy(Letter $letter): string
+    {
+        $user = $letter->senderUser;
+
+        return $user->first_name . ' ' . $user->last_name;
+    }
+
     /**
      * Get the array representation of the notification (for database).
      */
@@ -63,7 +70,7 @@ class LetterRepliedNotification extends Notification implements ShouldQueue
             'original_letter_id' => $this->originalLetter->id,
             'original_letter_subject' => $this->cleanString($this->originalLetter->subject, 'بدون موضوع'),
             'reply_content' => $this->cleanString(substr($this->replyLetter->content, 0, 100), 'بدون متن'),
-            'replier_name' => $this->cleanString($this->replyLetter->senderUser->name, 'کاربر'),
+            'replier_name' => $this->repliedBy($this->replyLetter),
             'replier_id' => $this->replyLetter->senderUser->id,
             'replied_at' => $this->replyLetter->created_at?->toISOString() ?? now()->toISOString(),
             'priority' => $this->replyLetter->priority ?? 'normal',
@@ -76,7 +83,7 @@ class LetterRepliedNotification extends Notification implements ShouldQueue
      */
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
-        $replierName = $this->cleanString($this->replyLetter->senderUser->name, 'کاربر');
+        $replierName = $this->repliedBy($this->replyLetter);
         $subject = $this->cleanString($this->originalLetter->subject, 'مکتوب');
         $content = $this->cleanString(substr($this->replyLetter->content, 0, 100), 'پاسخ جدید');
 

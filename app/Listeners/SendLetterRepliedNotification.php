@@ -14,8 +14,6 @@ class SendLetterRepliedNotification implements ShouldQueue
         // Notify the creator of the original letter
         $originalLetterCreator = $event->originalLetter->senderUser;
 
-        Log::info("". $originalLetterCreator->name ."");
-
         if ($originalLetterCreator) {
             $originalLetterCreator->notify(
                 new LetterRepliedNotification($event->replayLetter, $event->originalLetter)

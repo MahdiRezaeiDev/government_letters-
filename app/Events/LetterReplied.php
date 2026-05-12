@@ -18,7 +18,11 @@ class LetterReplied implements ShouldDispatchAfterCommit
     /**
      * Create a new event instance.
      */
-    public function __construct(public Letter $replayLetter, public Letter $originalLetter) {}
+    public function __construct(public Letter $replayLetter, public Letter $originalLetter)
+    {
+
+        Log::info($replayLetter->senderUser);
+    }
 
     /**
      * Get the channels the event should broadcast on.
