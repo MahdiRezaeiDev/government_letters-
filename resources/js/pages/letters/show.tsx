@@ -80,7 +80,6 @@ export default function LettersShow({
     const [loading, setLoading] = useState(false);
     const [previewAtt, setPreviewAtt] = useState<Attachment | null>(null);
     const [showDelegateModal, setShowDelegateModal] = useState(false);
-
     const status = STATUS_CONFIG[letter.final_status] || STATUS_CONFIG.pending;
     const currentUser = usePage().props.auth.user;
 
@@ -121,7 +120,7 @@ export default function LettersShow({
             },
             onError: () => setLoading(false),
         });
-    };    
+    };
 
     return (
         <>
@@ -301,7 +300,7 @@ export default function LettersShow({
                                         letter.priority === 'high' ? 'text-orange-600' :
                                             'text-gray-600'
                                         }`}>
-                                        {priorityLevels[letter.priority]?.lable || letter.priority}
+                                        {priorityLevels[letter.priority]?.label || 'ggfg'}
                                     </span>
                                 </div>
 
@@ -309,7 +308,7 @@ export default function LettersShow({
                                     <p className="text-xs text-gray-400 mb-1">سطح امنیتی</p>
                                     <span className="text-sm font-semibold text-gray-800">
                                         {letter.security_level && letter.security_level !== 'public'
-                                            ? securityLevels[letter.security_level]?.lable
+                                            ? securityLevels[letter.security_level]?.label
                                             : 'عادی'}
                                     </span>
                                 </div>

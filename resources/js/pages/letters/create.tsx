@@ -54,7 +54,7 @@ export default function LettersCreate({
     const { data, setData, post, processing, errors, reset } = useForm({
         category_id: null,
         subject: 'مکنوب جدید',
-        content: ' / استعلاممکتوب تست جدید',
+        content: 'مکتوب / استعلام  تست جدید',
         security_level: 'internal',
         priority: 'normal',
         date: new Date().toLocaleDateString('fa-IR', { calendar: 'persian', year: 'numeric', month: '2-digit', day: '2-digit' }),
@@ -81,7 +81,7 @@ export default function LettersCreate({
     const [loadingExtDepts, setLoadingExtDepts] = useState(false);
     const [loadingExtPositions, setLoadingExtPositions] = useState(false);
 
-    // فیلتر پست‌های داخلی بر اساس دپارتمان انتخابی
+    // فیلتر پست‌های داخلی بر اساس ریاست / آمریت انتخابی
     useEffect(() => {
         if (data.recipient_department_id && data.recipient_type === 'internal') {
             setLoadingPositions(true);
@@ -92,7 +92,7 @@ export default function LettersCreate({
         }
     }, [data.recipient_department_id, data.recipient_type, positions]);
 
-    // دریافت دپارتمان‌های وزارت خارجی
+    // دریافت ریاست / آمریت‌های وزارت خارجی
     useEffect(() => {
         if (data.recipient_organization_id && data.recipient_type === 'external') {
             setLoadingExtDepts(true);
@@ -108,7 +108,7 @@ export default function LettersCreate({
         }
     }, [data.recipient_organization_id, data.recipient_type]);
 
-    // دریافت پست‌های دپارتمان خارجی
+    // دریافت پست‌های ریاست / آمریت خارجی
     useEffect(() => {
         if (data.recipient_department_id && data.recipient_type === 'external') {
             setLoadingExtPositions(true);
@@ -166,7 +166,7 @@ export default function LettersCreate({
 
     return (
         <>
-            <Head title="ایجاد  / استعلاممکتوب جدید" />
+            <Head title="ایجاد مکتوب / استعلام  جدید" />
 
             <div className="min-h-screen">
 
@@ -182,16 +182,16 @@ export default function LettersCreate({
                                         <Tag className="h-4 w-4 text-teal-600" />
                                     </div>
                                     <div>
-                                        <h2 className="text-sm font-bold text-slate-800">ثبت  / استعلاممکتوب جدید</h2>
-                                        <p className="text-xs text-slate-400 mt-0.5">برای ثبت  / استعلاممکتوب جدید فورم ذیل را با دقت پرکنید.</p>
+                                        <h2 className="text-sm font-bold text-slate-800">ثبت مکتوب / استعلام  جدید</h2>
+                                        <p className="text-xs text-slate-400 mt-0.5">برای ثبت مکتوب / استعلام  جدید فورم ذیل را با دقت پرکنید.</p>
                                     </div>
                                 </div>
 
-                                {/* اطلاعات  / استعلاممکتوب */}
+                                {/* اطلاعات مکتوب / استعلام  */}
                                 <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
                                         <PenLine className="h-4 w-4 text-slate-500" />
-                                        <h3 className="text-sm font-bold text-slate-700">معلومات  / استعلاممکتوب</h3>
+                                        <h3 className="text-sm font-bold text-slate-700">معلومات مکتوب / استعلام </h3>
                                     </div>
                                     <div className="p-5 space-y-4">
 
@@ -199,20 +199,20 @@ export default function LettersCreate({
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div className="md:col-span-2">
                                                 <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                                                    موضوع  / استعلاممکتوب <span className="text-red-500">*</span>
+                                                    موضوع مکتوب / استعلام  <span className="text-red-500">*</span>
                                                 </label>
                                                 <input
                                                     type="text"
                                                     value={data.subject}
                                                     onChange={(e) => setData('subject', e.target.value)}
-                                                    placeholder="موضوع  / استعلاممکتوب را وارد نمایید..."
+                                                    placeholder="موضوع مکتوب / استعلام  را وارد نمایید..."
                                                     className={`${inputClass} py-3 placeholder:text-slate-400`}
                                                 />
                                                 {errors.subject && <p className="text-red-500 text-xs mt-1">{errors.subject}</p>}
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                                                    تاریخ  / استعلاممکتوب <span className="text-red-500">*</span>
+                                                    تاریخ مکتوب / استعلام  <span className="text-red-500">*</span>
                                                 </label>
                                                 <PersianDatePicker
                                                     value={data.date}
@@ -222,13 +222,13 @@ export default function LettersCreate({
                                             </div>
                                         </div>
 
-                                        {/* متن  / استعلاممکتوب */}
+                                        {/* متن مکتوب / استعلام  */}
                                         <div>
                                             <TextEditor
                                                 content={data.content}
                                                 onChange={(content) => setData('content', content)}
-                                                placeholder="متن  / استعلاممکتوب را اینجا بنویسید..."
-                                                label="متن  / استعلاممکتوب"
+                                                placeholder="متن مکتوب / استعلام  را اینجا بنویسید..."
+                                                label="متن مکتوب / استعلام "
                                                 required={true}
                                                 error={errors.content}
                                             />
@@ -411,7 +411,7 @@ export default function LettersCreate({
                                                             setData('recipient_name', '');
                                                         }}
                                                         className={inputClass}>
-                                                        <option value="">انتخاب دپارتمان...</option>
+                                                        <option value="">انتخاب ریاست / آمریت...</option>
                                                         {departments.map(d => (
                                                             <option key={d.id} value={d.id}>{d.name}</option>
                                                         ))}
@@ -424,7 +424,7 @@ export default function LettersCreate({
 
                                                 <div>
                                                     <label className="block text-xs font-medium text-slate-600 mb-1">
-                                                        سمت / عنوان <span className="text-red-500">*</span>
+                                                         عنوان <span className="text-red-500">*</span>
                                                     </label>
                                                     <div className="relative">
                                                         <select
@@ -440,7 +440,7 @@ export default function LettersCreate({
                                                             }}
                                                             disabled={!data.recipient_department_id || loadingPositions}
                                                             className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}>
-                                                            <option value="">انتخاب سمت...</option>
+                                                            <option value="">انتخاب عنوان...</option>
                                                             {availablePositions.map(p => (
                                                                 <option key={p.id} value={p.id}>{p.name}</option>
                                                             ))}
@@ -463,7 +463,7 @@ export default function LettersCreate({
                                                         <p className="font-medium mb-1">گیرنده انتخاب شده:</p>
                                                         <p>بست: {data.recipient_position_name}</p>
                                                         <p className="text-green-600 text-[10px] mt-1">
-                                                            دیپارتمنت: {departments.find(d => d.id === data.recipient_department_id)?.name}
+                                                            ریاست: {departments.find(d => d.id === data.recipient_department_id)?.name}
                                                         </p>
                                                         {data.recipient_name && (
                                                             <p className="text-green-700 text-[10px] font-medium">
@@ -534,7 +534,7 @@ export default function LettersCreate({
                                                             }}
                                                             disabled={!data.recipient_organization_id || loadingExtDepts}
                                                             className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}>
-                                                            <option value="">انتخاب دیپارتمنت...</option>
+                                                            <option value="">انتخاب ریاست...</option>
                                                             {extDepartments.map(d => (
                                                                 <option key={d.id} value={d.id}>{d.name}</option>
                                                             ))}
@@ -587,7 +587,7 @@ export default function LettersCreate({
                                                         <p className="font-medium">گیرنده انتخاب شده:</p>
                                                         <p>وزارت: {data.recipient_name}</p>
                                                         {data.recipient_department_id && (
-                                                            <p>دیپارتمنت: {extDepartments.find(d => d.id === data.recipient_department_id)?.name}</p>
+                                                            <p>ریاست: {extDepartments.find(d => d.id === data.recipient_department_id)?.name}</p>
                                                         )}
                                                         {data.recipient_position_name && (
                                                             <p>بست: {data.recipient_position_name}</p>
@@ -638,11 +638,11 @@ export default function LettersCreate({
                                     <div className="flex items-start gap-2">
                                         <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                                         <div className="text-xs text-blue-800">
-                                            <p className="font-medium mb-1">راهنمای ثبت  / استعلاممکتوب</p>
+                                            <p className="font-medium mb-1">راهنمای ثبت مکتوب / استعلام </p>
                                             <ul className="space-y-1 text-blue-700">
                                                 <li>• فیلدهای ستاره‌دار الزامی هستند</li>
-                                                <li>• پس از ثبت،  / استعلاممکتوب به کارتابل گیرنده ارسال می‌شود</li>
-                                                <li>• می‌توانید  / استعلاممکتوب را به صورت پیش‌نویس ذخیره کنید</li>
+                                                <li>• پس از ثبت، مکتوب / استعلام  به کارتابل گیرنده ارسال می‌شود</li>
+                                                <li>• می‌توانید مکتوب / استعلام  را به صورت پیش‌نویس ذخیره کنید</li>
                                             </ul>
                                         </div>
                                     </div>
