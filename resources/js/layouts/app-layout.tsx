@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useLetterNotifications } from '@/hooks/use-letter-notifications';
 import { Header } from './Header';
 import { MobileMenu } from './MobileMenu';
 import { Sidebar } from './Sidebar';
@@ -9,8 +8,8 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
-    const [sidebarOpen, setSidebarOpen] = useState(false); // مخصوص موبایل
-    const [collapsed, setCollapsed] = useState(false);    // مخصوص دسکتاپ
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [collapsed, setCollapsed] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
@@ -20,7 +19,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
             if (mobile) {
                 setCollapsed(false);
-            } // در موبایل حالت جمع شده نداریم
+            }
         };
 
         checkMobile();
@@ -29,13 +28,18 @@ export default function AppLayout({ children }: AppLayoutProps) {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    // محاسبه عرض سایدبار برای ایجاد فاصله در محتوا و هدر
-    const sidebarWidthClasses = collapsed ? 'mr-20' : 'mr-72';
-    useLetterNotifications();
+    // Close mobile menu when switching to desktop
+    useEffect(() => {
+        if (!isMobile) {
+            setSidebarOpen(false);
+        }
+    }, [isMobile]);
+
+    const sidebarWidthClasses = collapsed ? 'md:mr-20' : 'md:mr-72';
 
     return (
         <div className="min-h-screen bg-gray-100" dir="rtl">
-            {/* سایدبار دسکتاپ */}
+            {/* Desktop Sidebar */}
             {!isMobile && (
                 <Sidebar
                     collapsed={collapsed}
@@ -43,7 +47,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 />
             )}
 
-            {/* منوی موبایل */}
+            {/* Mobile Menu */}
             {isMobile && (
                 <MobileMenu
                     isOpen={sidebarOpen}
@@ -51,8 +55,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 />
             )}
 
-            {/* بخش محتوا و هدر: عرض این بخش با انیمیشن تغییر می‌کند */}
-            <div className={`flex flex-col min-h-screen  bg-gray-200 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${!isMobile ? sidebarWidthClasses : ''}`}>
+            {/* Main Content */}
+            <div className={`flex flex-col min-h-screen bg-gray-200 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${!isMobile ? sidebarWidthClasses : ''}`}>
                 <Header
                     onMenuClick={() => setSidebarOpen(true)}
                     isMobile={isMobile}

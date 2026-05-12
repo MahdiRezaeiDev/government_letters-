@@ -1,4 +1,3 @@
-// resources/js/components/layout/MobileMenu.tsx
 
 import { Link, usePage } from '@inertiajs/react';
 import {
