@@ -50,7 +50,7 @@ class LetterController extends Controller
                 $q->select('id', 'parent_letter_id');
             },
         ])->withCount('replies');
-        
+
 
         // ── فیلتر بر اساس دسترسی کاربر ───────────────────────────────
         if ($user->isSuperAdmin()) {
@@ -257,11 +257,11 @@ class LetterController extends Controller
         ]);
 
         // ثبت بازدید
-        $letter->views()->create([
+        $letter->views()->upsert([
             'user_id'    => $user->id,
             'viewed_at'  => now(),
             'ip_address' => request()->ip(),
-        ]);
+        ], ['viewed_at', 'user_id', 'letter_id'], ['viewed_at']);
 
         $users = User::where('id', '!=', $user->id)
             ->with(['positions' => function ($q) {

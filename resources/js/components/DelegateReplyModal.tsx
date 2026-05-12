@@ -1,5 +1,3 @@
-// resources/js/components/DelegateReplyModal.tsx
-
 import { router } from '@inertiajs/react';
 import axios from 'axios';
 import { X, Send, UserPlus, AlertCircle, Building2, Briefcase, Users, ArrowLeft } from 'lucide-react';
@@ -56,7 +54,6 @@ export function DelegateReplyModal({
     letterId,
     letterSubject,
     organizations,
-    currentUserId,
     currentUserOrganizationId
 }: DelegateReplyModalProps) {
     // State برای انتخاب‌های سلسله‌مراتبی
@@ -74,7 +71,6 @@ export function DelegateReplyModal({
     // State برای بارگذاری
     const [loadingDepartments, setLoadingDepartments] = useState(false);
     const [loadingPositions, setLoadingPositions] = useState(false);
-    const [loadingUsers, setLoadingUsers] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
