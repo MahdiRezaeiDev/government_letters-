@@ -6,7 +6,6 @@ use App\Models\Letter;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class LetterRepliedNotification extends Notification implements ShouldQueue
@@ -23,33 +22,14 @@ class LetterRepliedNotification extends Notification implements ShouldQueue
 
     /**
      * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database', 'broadcast'];
-    }
-
-    /**
-     * Get the mail representation of the notification.
-     */
-    public function toMail(object $notifiable): MailMessage
-    {
-        return (new MailMessage)
-            ->subject('پاسخ به مکتوب شما: ' . $this->originalLetter->subject)
-            ->greeting('سلام ' . $notifiable->name . '،')
-            ->line('به مکتوب شما با عنوان "' . $this->originalLetter->subject . '" پاسخ داده شده است.')
-            ->line('پاسخ: ' . substr($this->replyLetter->content, 0, 200))
-            ->action('مشاهده مکتوب', url('/letters/' . $this->originalLetter->id))
-            ->line('تاریخ پاسخ: ' . $this->replyLetter->created_at->format('Y/m/d'))
-            ->line('از توجه شما سپاسگزاریم.');
+        return ['database', 'broadcast'];
     }
 
     /**
      * Get the array representation of the notification (for database).
-     *
-     * @return array<string, mixed>
      */
     public function toArray(object $notifiable): array
     {
@@ -60,9 +40,10 @@ class LetterRepliedNotification extends Notification implements ShouldQueue
             'original_letter_subject' => $this->originalLetter->subject,
             'reply_content' => substr($this->replyLetter->content, 0, 100),
             'replier_name' => $this->replyLetter->creator->name,
-            'replier_avatar' => $this->replyLetter->creator->avatar ?? null,
+            'replier_id' => $this->replyLetter->creator->id,
             'replied_at' => $this->replyLetter->created_at->toISOString(),
             'priority' => $this->replyLetter->priority,
+            'reference_number' => $this->originalLetter->reference_number,
         ];
     }
 
