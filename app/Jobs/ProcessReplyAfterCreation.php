@@ -77,8 +77,8 @@ class ProcessReplyAfterCreation implements ShouldQueue
         }
 
         // 4. ارسال نوتیفیکیشن
-        // if ($this->replyLetter->recipient_user_id && $this->replyLetter->final_status !== 'draft') {
-        //     event(new \App\Events\LetterReplied($this->replyLetter, $this->originalLetter));
-        // }
+        if ($this->replyLetter->recipient_user_id && $this->replyLetter->final_status !== 'draft') {
+            event(new \App\Events\LetterSubmitted($this->replyLetter));
+        }
     }
 }

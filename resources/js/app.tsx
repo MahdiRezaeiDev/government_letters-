@@ -1,7 +1,23 @@
 import { createInertiaApp } from '@inertiajs/react';
+import { configureEcho } from '@laravel/echo-react';
+import Pusher from 'pusher-js';  // ← اضافه کن
 import { Toaster } from '@/components/ui/sonner';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
+
+// ست کردن Pusher به صورت global که Echo بتونه ازش استفاده کنه
+(window as any).Pusher = Pusher;
+
+// حالا Echo رو تنظیم کن
+configureEcho({
+    broadcaster: 'reverb',
+    key: import.meta.env.VITE_REVERB_APP_KEY,
+    wsHost: import.meta.env.VITE_REVERB_HOST,
+    wsPort: parseInt(import.meta.env.VITE_REVERB_PORT ?? '8080'),
+    wssPort: parseInt(import.meta.env.VITE_REVERB_PORT ?? '8080'),
+    forceTLS: false,
+    enabledTransports: ['ws', 'wss'],
+});
 
 const appName = import.meta.env.VITE_APP_NAME || 'سیستم مکاتیب اداری';
 

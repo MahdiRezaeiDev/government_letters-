@@ -74,15 +74,9 @@ export function useNotifications(userId: number) {
 
         echoRef.current = echo;
 
-        console.log(
-            `🎧 Listening for notifications on: App.Models.User.${userId}`,
-        );
-
         // استفاده از .notification() برای Laravel Notifications
         echo.private(`App.Models.User.${userId}`).notification(
             (eventData: any) => {
-                console.log('📨 New notification received:', eventData);
-
                 const newNotification: Notification = {
                     id: eventData.id || Date.now().toString(),
                     letter_id: eventData.letter_id || eventData.data?.letter_id,
@@ -100,7 +94,7 @@ export function useNotifications(userId: number) {
                 setNotifications((prev) => [newNotification, ...prev]);
                 setUnreadCount((prev) => prev + 1);
 
-                toast(`📩 ${newNotification.title}`, {
+                toast.info(`📩 ${newNotification.title}`, {
                     description: newNotification.message,
                     duration: 5000,
                     action: {
@@ -117,7 +111,6 @@ export function useNotifications(userId: number) {
 
         // Cleanup
         return () => {
-            console.log('👋 Leaving notification channel');
             echo.leave(`App.Models.User.${userId}`);
             echo.disconnect();
         };

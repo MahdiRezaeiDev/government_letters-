@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     Bell,
     ChevronDown,
@@ -6,10 +6,11 @@ import {
     Settings,
     User,
     Menu,
-    X
+    X,
+    Check,
+    Trash2
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { toast } from 'sonner';
 import { useNotifications } from '@/hooks/use-notifications';
 
 interface HeaderProps {
@@ -21,7 +22,13 @@ interface HeaderProps {
 export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
     const { auth } = usePage().props as any;
     const userId = auth?.user?.id;
-    const { notifications = [], unreadCount = 0, markAllAsRead } = useNotifications(userId || 0);
+    const {
+        notifications = [],
+        unreadCount = 0,
+        markAllAsRead,
+        deleteNotification,
+        markAsRead
+    } = useNotifications(userId || 0);
 
     const [currentTime, setCurrentTime] = useState(new Date());
     const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -31,14 +38,14 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
     const profileRef = useRef<HTMLDivElement>(null);
     const notifRef = useRef<HTMLDivElement>(null);
 
+    // آپدیت زمان
     useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(new Date());
-        }, 60000);
+        const timer = setInterval(() => setCurrentTime(new Date()), 60000);
 
         return () => clearInterval(timer);
     }, []);
 
+    // کلیک خارج از منو
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
@@ -54,24 +61,12 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Close notifications when switching to mobile
+    // بستن نوتیفیکیشن در حالت موبایل
     useEffect(() => {
         setShowNotifications(false);
     }, [isMobile]);
 
-    const filteredNotifications = activeTab === 'unread'
-        ? notifications.filter(n => !n.read_at)
-        : notifications;
-
-    const handleMarkAllAsRead = () => {
-        if (markAllAsRead) {
-            markAllAsRead();
-        }
-
-        toast.success('همه اعلان‌ها خوانده شدند');
-    };
-
-    // Prevent body scroll when notification panel is open on mobile
+    // جلوگیری از اسکرول در موبایل
     useEffect(() => {
         if (showNotifications && isMobile) {
             document.body.style.overflow = 'hidden';
@@ -84,13 +79,28 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
         };
     }, [showNotifications, isMobile]);
 
+    const filteredNotifications = activeTab === 'unread'
+        ? notifications.filter(n => !n.read_at)
+        : notifications;
+
+    const handleNotificationClick = async (notification: any) => {
+        if (!notification.read_at) {
+            await markAsRead(notification.id);
+        }
+
+        if (notification.data.letter_id) {
+            router.get(`/letters/${notification.data.letter_id}`);
+        }
+
+        setShowNotifications(false);
+    };
+
     return (
         <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200 shadow-sm">
             <div className="max-w-[1600px] mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
 
-                {/* Right side - Menu button + Logo/Title (RTL layout) */}
+                {/* Right side - Menu button + Title */}
                 <div className="flex items-center gap-3">
-                    {/* Mobile menu button - این دکمه باید باشد */}
                     {isMobile && (
                         <button
                             onClick={onMenuClick}
@@ -100,8 +110,6 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                             <Menu className="h-5 w-5 text-slate-600" />
                         </button>
                     )}
-
-                    {/* Optional: Logo or app title can go here */}
                     {isMobile && (
                         <span className="text-sm font-bold text-slate-700">
                             سیستم مکاتبات
@@ -109,9 +117,9 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                     )}
                 </div>
 
-                {/* Left side - Actions (RTL layout) */}
+                {/* Left side - Actions */}
                 <div className="flex items-center gap-2 md:gap-4">
-                    {/* Date - Hidden on mobile */}
+                    {/* Date */}
                     <div className="hidden md:block text-left border-l pl-5 border-slate-200">
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1">
                             امروز
@@ -146,7 +154,6 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                         {/* Notification Panel */}
                         {showNotifications && (
                             <>
-                                {/* Mobile overlay */}
                                 {isMobile && (
                                     <div
                                         className="fixed inset-0 bg-black/20 z-40"
@@ -157,7 +164,7 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                                 <div className={`
                                     ${isMobile
                                         ? 'fixed inset-x-0 top-0 z-50 h-full bg-white'
-                                        : 'absolute left-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-slate-200'
+                                        : 'absolute left-0 mt-2 w-80 md:w-96 bg-white rounded-2xl shadow-xl border border-slate-200'
                                     }
                                     animate-in slide-in-from-top-2 duration-200
                                 `}>
@@ -197,19 +204,13 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                                         ) : (
                                             <div className="divide-y divide-slate-50">
                                                 {filteredNotifications.map((n) => (
-                                                    <button
+                                                    <div
                                                         key={n.id}
                                                         className={`
-                                                            w-full text-left p-4 hover:bg-slate-50 transition-colors
+                                                            group relative p-4 hover:bg-slate-50 transition-colors cursor-pointer
                                                             ${!n.read_at ? 'bg-blue-50/30' : ''}
                                                         `}
-                                                        onClick={() => {
-                                                            if (n.letter_id) {
-                                                                window.location.href = `/letters/${n.letter_id}`;
-                                                            }
-
-                                                            setShowNotifications(false);
-                                                        }}
+                                                        onClick={() => handleNotificationClick(n)}
                                                     >
                                                         <div className="flex gap-3">
                                                             {!n.read_at && (
@@ -218,12 +219,23 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                                                                 </div>
                                                             )}
                                                             <div className="flex-1 min-w-0">
-                                                                <p className={`
-                                                                    text-sm leading-snug line-clamp-2
-                                                                    ${!n.read_at ? 'font-medium text-slate-800' : 'text-slate-600'}
-                                                                `}>
-                                                                    {n.title || 'نامه جدید'}
-                                                                </p>
+                                                                <div className="flex items-start justify-between gap-2">
+                                                                    <p className={`
+                                                                        text-sm leading-snug line-clamp-2
+                                                                        ${!n.read_at ? 'font-medium text-slate-800' : 'text-slate-600'}
+                                                                    `}>
+                                                                        {n.title || 'نامه جدید'}
+                                                                    </p>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            deleteNotification(n.id);
+                                                                        }}
+                                                                        className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                                                                    >
+                                                                        <Trash2 className="h-3.5 w-3.5 text-slate-400 hover:text-red-500" />
+                                                                    </button>
+                                                                </div>
                                                                 {n.message && (
                                                                     <p className="text-xs text-slate-500 mt-1 line-clamp-1">
                                                                         {n.message}
@@ -237,7 +249,7 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                    </button>
+                                                    </div>
                                                 ))}
                                             </div>
                                         )}
@@ -247,9 +259,10 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                                     {notifications.length > 0 && (
                                         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-100 bg-white">
                                             <button
-                                                onClick={handleMarkAllAsRead}
+                                                onClick={markAllAsRead}
                                                 className="w-full text-center text-xs font-medium text-slate-600 hover:text-slate-800 py-2 rounded-lg hover:bg-slate-50 transition-colors"
                                             >
+                                                <Check className="h-3 w-3 inline-block ml-1" />
                                                 علامت‌گذاری همه به عنوان خوانده شده
                                             </button>
                                         </div>
