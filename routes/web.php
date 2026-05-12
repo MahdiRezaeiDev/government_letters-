@@ -26,16 +26,27 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    Route::get('/notifications', fn() => auth()->user()->notifications()->paginate(20));
-    Route::post('/notifications/{id}/read', function ($id) {
-        auth()->user()->notifications()->findOrFail($id)->markAsRead();
-        return response()->noContent();
-    });
-    Route::post('/notifications/read-all', function () {
-        auth()->user()->unreadNotifications->markAsRead();
-        return response()->noContent();
+    Route::get('/notifications', function () {
+        return auth()->user()->notifications()->latest()->take(50)->get();
     });
 
+    Route::post('/notifications/{id}/read', function ($id) {
+        $notification = auth()->user()->notifications()->find($id);
+        if ($notification) {
+            $notification->markAsRead();
+        }
+        return response()->json(['success' => true]);
+    });
+
+    Route::post('/notifications/mark-all-read', function () {
+        auth()->user()->unreadNotifications->markAsRead();
+        return response()->json(['success' => true]);
+    });
+
+    Route::delete('/notifications/{id}', function ($id) {
+        auth()->user()->notifications()->find($id)->delete();
+        return response()->json(['success' => true]);
+    });
 
 
     // routes/web.php - موقت
