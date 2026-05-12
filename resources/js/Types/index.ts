@@ -270,6 +270,7 @@ export interface Attachment {
 // ============================================
 
 export interface PaginatedResponse<T> {
+    path(path: any, arg1: { search?: string; letter_type?: string; status?: string; priority?: string; date_from?: string; date_to?: string; direction?: string; page: number; }, arg2: { preserveState: true; }): void;
     data: T[];
     current_page: number;
     last_page: number;

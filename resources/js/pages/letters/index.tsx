@@ -15,6 +15,7 @@ import {
 import React, { useState, useMemo } from 'react';
 import lettersRoute from '@/routes/letters';
 import type { Letter, PaginatedResponse } from '@/types';
+import PersianDatePicker from '@/components/PersianDatePicker';
 
 interface Props {
     letters: PaginatedResponse<Letter>;
@@ -63,6 +64,10 @@ export default function LettersIndex({
     const [threadView, setThreadView] = useState(true);
     const [selectedDirection, setSelectedDirection] = useState(filters.direction || '');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    // State for date filters
+    const [dateFrom, setDateFrom] = useState(filters.date_from || '');
+    const [dateTo, setDateTo] = useState(filters.date_to || '');
 
     // تبدیل آرایه تخت به ساختار درختی
     const threadedLetters = useMemo(() => {
@@ -139,7 +144,6 @@ export default function LettersIndex({
     };
 
     const isUnread = (letter: Letter) => {
-        
         if (!letter.user_view || letter.user_view.length === 0) {
             return true;
         }
@@ -154,8 +158,8 @@ export default function LettersIndex({
             status: selectedStatus,
             priority: selectedPriority,
             direction: selectedDirection,
-            date_from: filters.date_from,
-            date_to: filters.date_to,
+            date_from: dateFrom,
+            date_to: dateTo,
         }, { preserveState: true, replace: true });
     };
 
@@ -165,6 +169,8 @@ export default function LettersIndex({
         setSelectedStatus('');
         setSelectedPriority('');
         setSelectedDirection('');
+        setDateFrom('');
+        setDateTo('');
         router.get(lettersRoute.index(), {}, { preserveState: true, replace: true });
     };
 
@@ -202,7 +208,7 @@ export default function LettersIndex({
         other: { label: 'سایر', icon: User, color: 'text-gray-400', bg: 'bg-gray-50' },
     };
 
-    const hasActiveFilters = filters.search || filters.status || filters.priority || filters.letter_type || filters.direction;
+    const hasActiveFilters = filters.search || filters.status || filters.priority || filters.letter_type || filters.direction || filters.date_from || filters.date_to;
 
     const getRelationText = (letter: Letter, role: string) => {
         const senderText = letter.sender_name || letter.sender_user?.full_name || 'نامشخص';
@@ -232,9 +238,9 @@ export default function LettersIndex({
             position: letter?.sender_position_name ||
                 letter?.sender_user?.primary_position?.name ||
                 '-',
-            person : letter?.sender_name
+            person: letter?.sender_name
         };
-    };    
+    };
 
     const getRecipientOrganizationInfo = (letter: Letter) => {
         return {
@@ -246,7 +252,7 @@ export default function LettersIndex({
             position: letter?.recipient_position_name ||
                 letter?.recipient_user?.primary_position?.name ||
                 '-',
-            person : letter?.recipient_name
+            person: letter?.recipient_name
         };
     };
 
@@ -281,7 +287,7 @@ export default function LettersIndex({
             <div
                 key={letter.id}
                 className={`bg-white rounded-xl border transition-all duration-200 ${unread
-                    ? 'border-r-4 border-r-blue-400 bg-blue-200  shadow-md'
+                    ? 'border-r-4 border-r-blue-400 bg-blue-200 shadow-md'
                     : 'border-gray-100 shadow-sm hover:shadow-md'
                     }`}
             >
@@ -434,7 +440,7 @@ export default function LettersIndex({
                 <tr className={`
                     transition-all duration-200 group
                     ${unread
-                        ? 'bg-blue-100  border-r-4 border-r-blue-500'
+                        ? 'bg-blue-100 border-r-4 border-r-blue-500'
                         : 'hover:bg-gray-50 border-r-4 border-r-transparent'
                     }
                     ${depth > 0 ? 'bg-gray-50/30' : ''}
@@ -504,7 +510,7 @@ export default function LettersIndex({
                         </div>
                     </td>
 
-                    {/* ستون اطلاعات سازمانی (وزارت، ریاست، وظیفه) */}
+                    {/* ستون اطلاعات سازمانی (وزارت، ریاست، بست) */}
                     <td className="px-3 sm:px-4 py-3 min-w-[160px] max-w-[200px]">
                         <div className="flex flex-col gap-0.5">
                             <div className="flex items-center gap-1 text-[10px] sm:text-xs min-w-0">
@@ -684,7 +690,7 @@ export default function LettersIndex({
                                             className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 ${!threadView ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}
                                         >
                                             <List className="h-3.5 w-3.5" />
-                                            لیست
+                                            لیست تخت
                                         </button>
                                     </div>
                                 </div>
@@ -909,7 +915,7 @@ export default function LettersIndex({
                                     </div>
                                 </div>
 
-                                {/* Extended Filters */}
+                                {/* Extended Filters with Date Pickers - بدون جستجوی خودکار */}
                                 {showFilters && (
                                     <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100">
                                         <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -930,10 +936,7 @@ export default function LettersIndex({
                                                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">جهت</label>
                                                 <select
                                                     value={selectedDirection}
-                                                    onChange={(e) => {
-                                                        setSelectedDirection(e.target.value);
-                                                        handleSearch();
-                                                    }}
+                                                    onChange={(e) => setSelectedDirection(e.target.value)}
                                                     className="w-full border border-gray-200 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 >
                                                     <option value="">همه</option>
@@ -968,14 +971,47 @@ export default function LettersIndex({
                                                     ))}
                                                 </select>
                                             </div>
+
+                                            {/* Date From Picker - بدون جستجوی خودکار */}
+                                            <div>
+                                                <PersianDatePicker
+                                                    label="از تاریخ"
+                                                    value={dateFrom}
+                                                    onChange={(date) => {
+                                                        setDateFrom(date);
+                                                    }}
+                                                    placeholder="انتخاب تاریخ شروع"
+                                                />
+                                            </div>
+
+                                            {/* Date To Picker - بدون جستجوی خودکار */}
+                                            <div>
+                                                <PersianDatePicker
+                                                    label="تا تاریخ"
+                                                    value={dateTo}
+                                                    onChange={(date) => {
+                                                        setDateTo(date);
+                                                    }}
+                                                    placeholder="انتخاب تاریخ پایان"
+                                                />
+                                            </div>
                                         </div>
-                                        <div className="flex justify-end mt-3 sm:mt-4">
+
+                                        <div className="flex justify-end gap-2 mt-3 sm:mt-4">
                                             <button
                                                 onClick={handleReset}
                                                 className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-red-600 hover:text-red-700 transition-colors"
                                             >
                                                 <X className="ml-1 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                                 پاک کردن همه فیلتر
+                                            </button>
+
+                                            <button
+                                                onClick={handleSearch}
+                                                className="inline-flex items-center px-4 sm:px-5 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-blue-700 transition-colors"
+                                            >
+                                                <Filter className="ml-1 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                                اعمال فیلتر
                                             </button>
                                         </div>
                                     </div>
@@ -1022,7 +1058,7 @@ export default function LettersIndex({
                                             <tbody className="bg-white divide-y divide-gray-100">
                                                 {threadView && threadedLetters
                                                     ? threadedLetters.map(letter => renderDesktopRow(letter))
-                                                    : letters.data.map(letter => renderDesktopRow({ ...letter, children: [] } as ThreadedLetter, 0))
+                                                    : letters.data.map(letter => renderDesktopRow({ ...letter, children: [] } as unknown as ThreadedLetter, 0))
                                                 }
                                             </tbody>
                                         </table>

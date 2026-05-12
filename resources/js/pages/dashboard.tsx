@@ -1,12 +1,13 @@
 import { Head, Link } from '@inertiajs/react';
 import {
-    Inbox, FileText, Archive, Users, History,ChevronLeft,
+    Inbox, FileText, Archive, Users, History, ChevronLeft,
     Activity, Download, BookOpen, LayoutGrid, Bell, CheckCircle2, Send, Edit3
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid,
-    Tooltip, ResponsiveContainer, PieChart, Pie, Cell} from 'recharts';
+    Tooltip, ResponsiveContainer, PieChart, Pie, Cell
+} from 'recharts';
 
 interface Props {
     stats: {
@@ -107,8 +108,8 @@ export default function Dashboard({
     // فیلتر کردن نامه‌ها بر اساس تب انتخاب شده
     const filteredLetters = useMemo(() => {
         if (activeTab === 'همه') {
-return recentLetters;
-}
+            return recentLetters;
+        }
 
         // اینجا می‌توانید بر اساس type فیلتر کنید
         return recentLetters;

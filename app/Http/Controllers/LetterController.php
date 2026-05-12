@@ -19,8 +19,10 @@ use App\Enums\SecurityLevelEnum;
 use App\Http\Requests\LetterRequest;
 use App\Models\User;
 use App\Services\LetterService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
+use Morilog\Jalali\Jalalian;
 
 class LetterController extends Controller
 {
@@ -94,10 +96,18 @@ class LetterController extends Controller
                 return $q->where('priority', $request->priority);
             })
             ->when($request->filled('date_from'), function ($q) use ($request) {
-                return $q->whereDate('date', '>=', $request->date_from);
+                $fromDate = $this->convertToGregorian($request->date_from);
+                if ($fromDate) {
+                    return $q->whereDate('date', '>=', $fromDate);
+                }
+                return $q;
             })
             ->when($request->filled('date_to'), function ($q) use ($request) {
-                return $q->whereDate('date', '<=', $request->date_to);
+                $toDate = $this->convertToGregorian($request->date_to);
+                if ($toDate) {
+                    return $q->whereDate('date', '<=', $toDate);
+                }
+                return $q;
             })
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->search;
@@ -175,6 +185,38 @@ class LetterController extends Controller
         }
         return 'other';
     }
+    /**
+     * تبدیل تاریخ شمسی به میلادی
+     */
+    private function convertToGregorian($jalaliDate)
+    {
+        if (empty($jalaliDate)) {
+            return null;
+        }
+
+        // تبدیل اعداد فارسی به انگلیسی
+        $jalaliDate = str_replace(
+            ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹', '/', '٫'],
+            ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '-'],
+            $jalaliDate
+        );
+
+        // حذف همه کاراکترهای غیر عددی به جز خط تیره
+        $jalaliDate = preg_replace('/[^\d\-]/', '', $jalaliDate);
+
+        // بررسی فرمت
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $jalaliDate)) {
+            return null;
+        }
+
+        try {
+            $carbonDate = Jalalian::fromFormat('Y-m-d', $jalaliDate)->toCarbon();
+            return $carbonDate->format('Y-m-d');
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
     // =========================================================
     // CREATE / STORE
     // =========================================================

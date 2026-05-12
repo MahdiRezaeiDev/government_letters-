@@ -145,9 +145,11 @@ class DashboardController extends Controller
             ['user_id' => 3, 'name' => 'احمد'],
         ]);
 
-        $collapsed = $collection->collapse();
+        $collection = collect(['John Doe']);
 
-        dd($collapsed);
+        $concatenated = $collection->concat(['Jane Doe'])->concat(['name' => 'Johnny Doe', 'age' => '28']);
+
+        dd($concatenated->all());
 
         return Inertia::render('dashboard', [
             'stats' => $stats,
