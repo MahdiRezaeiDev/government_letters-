@@ -1,5 +1,5 @@
-import Echo from 'laravel-echo';
 import axios from 'axios';
+import Echo from 'laravel-echo';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 
@@ -23,6 +23,7 @@ export function useNotifications(userId: number) {
     useEffect(() => {
         if (!userId) {
             setIsLoading(false);
+
             return;
         }
 
@@ -51,7 +52,9 @@ export function useNotifications(userId: number) {
 
     // گوش دادن به نوتیفیکیشن‌های جدید با Reverb
     useEffect(() => {
-        if (!userId) return;
+        if (!userId) {
+            return;
+        }
 
         // ساخت Echo instance
         const echo = new Echo({
@@ -201,9 +204,11 @@ export function useNotifications(userId: number) {
                 await markAsRead(notification.id);
             }
 
+            console.log(notification + 'fdffd');
+
             // هدایت به صفحه نامه
-            if (notification.letter_id) {
-                window.location.href = `/letters/${notification.letter_id}`;
+            if (notification.data.letter_id) {
+                window.location.href = `/letters/${notification.data.letter_id}`;
             }
         },
         [markAsRead],

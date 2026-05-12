@@ -87,6 +87,9 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
         if (!notification.read_at) {
             await markAsRead(notification.id);
         }
+        
+        console.log(notification);
+        
 
         if (notification.data.letter_id) {
             router.get(`/letters/${notification.data.letter_id}`);
