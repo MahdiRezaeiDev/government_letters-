@@ -85,7 +85,7 @@ export function DelegateReplyModal({
         }
     }, [isOpen, currentUserOrganizationId]);
 
-    // بارگذاری دپارتمان‌ها هنگام انتخاب سازمان
+    // بارگذاری آمریت‌ها هنگام انتخاب سازمان
     useEffect(() => {
         if (!selectedOrganizationId) {
             setDepartments([]);
@@ -106,7 +106,7 @@ export function DelegateReplyModal({
             });
     }, [selectedOrganizationId]);
 
-    // بارگذاری پوزیشن‌ها هنگام انتخاب دپارتمان
+    // بارگذاری ‌ها هنگام انتخاب آمریت
     useEffect(() => {
         if (!selectedDepartmentId) {
             setPositions([]);
@@ -212,7 +212,7 @@ export function DelegateReplyModal({
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 <Building2 className="inline h-4 w-4 ml-1 text-gray-400" />
-                                سازمان/وزارت <span className="text-red-500">*</span>
+                                وزارت <span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={selectedOrganizationId}
@@ -224,7 +224,7 @@ export function DelegateReplyModal({
                                 }}
                                 className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                             >
-                                <option value="">انتخاب سازمان...</option>
+                                <option value="">انتخاب وزارت...</option>
                                 {organizations.map(org => (
                                     <option key={org.id} value={org.id}>
                                         {org.name}
@@ -233,11 +233,11 @@ export function DelegateReplyModal({
                             </select>
                         </div>
 
-                        {/* انتخاب ریاست/دپارتمان */}
+                        {/* انتخاب ریاست/آمریت */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 <Briefcase className="inline h-4 w-4 ml-1 text-gray-400" />
-                                ریاست/دپارتمان
+                                ریاست/آمریت
                             </label>
                             <select
                                 value={selectedDepartmentId}
@@ -261,11 +261,11 @@ export function DelegateReplyModal({
                             )}
                         </div>
 
-                        {/* انتخاب پوزیشن */}
+                        {/* انتخاب  */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 <Users className="inline h-4 w-4 ml-1 text-gray-400" />
-                                وظیفه/پوزیشن
+                                وظیفه
                             </label>
                             <select
                                 value={selectedPositionId}
@@ -358,7 +358,7 @@ export function DelegateReplyModal({
                         onClick={handleClose}
                         className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-all"
                     >
-                        انصراف
+                        لغو
                     </button>
                 </div>
             </div>
