@@ -54,7 +54,7 @@ export default function LettersCreate({
     const { data, setData, post, processing, errors, reset } = useForm({
         category_id: null,
         subject: 'مکنوب جدید',
-        content: 'مکتوب تست جدید',
+        content: ' / استعلاممکتوب تست جدید',
         security_level: 'internal',
         priority: 'normal',
         date: new Date().toLocaleDateString('fa-IR', { calendar: 'persian', year: 'numeric', month: '2-digit', day: '2-digit' }),
@@ -166,7 +166,7 @@ export default function LettersCreate({
 
     return (
         <>
-            <Head title="ایجاد مکتوب جدید" />
+            <Head title="ایجاد  / استعلاممکتوب جدید" />
 
             <div className="min-h-screen">
 
@@ -182,16 +182,16 @@ export default function LettersCreate({
                                         <Tag className="h-4 w-4 text-teal-600" />
                                     </div>
                                     <div>
-                                        <h2 className="text-sm font-bold text-slate-800">ثبت مکتوب جدید</h2>
-                                        <p className="text-xs text-slate-400 mt-0.5">برای ثبت مکتوب جدید فورم ذیل را با دقت پرکنید.</p>
+                                        <h2 className="text-sm font-bold text-slate-800">ثبت  / استعلاممکتوب جدید</h2>
+                                        <p className="text-xs text-slate-400 mt-0.5">برای ثبت  / استعلاممکتوب جدید فورم ذیل را با دقت پرکنید.</p>
                                     </div>
                                 </div>
 
-                                {/* اطلاعات مکتوب */}
+                                {/* اطلاعات  / استعلاممکتوب */}
                                 <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
                                         <PenLine className="h-4 w-4 text-slate-500" />
-                                        <h3 className="text-sm font-bold text-slate-700">معلومات مکتوب</h3>
+                                        <h3 className="text-sm font-bold text-slate-700">معلومات  / استعلاممکتوب</h3>
                                     </div>
                                     <div className="p-5 space-y-4">
 
@@ -199,20 +199,20 @@ export default function LettersCreate({
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div className="md:col-span-2">
                                                 <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                                                    موضوع مکتوب <span className="text-red-500">*</span>
+                                                    موضوع  / استعلاممکتوب <span className="text-red-500">*</span>
                                                 </label>
                                                 <input
                                                     type="text"
                                                     value={data.subject}
                                                     onChange={(e) => setData('subject', e.target.value)}
-                                                    placeholder="موضوع مکتوب را وارد نمایید..."
+                                                    placeholder="موضوع  / استعلاممکتوب را وارد نمایید..."
                                                     className={`${inputClass} py-3 placeholder:text-slate-400`}
                                                 />
                                                 {errors.subject && <p className="text-red-500 text-xs mt-1">{errors.subject}</p>}
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                                                    تاریخ مکتوب <span className="text-red-500">*</span>
+                                                    تاریخ  / استعلاممکتوب <span className="text-red-500">*</span>
                                                 </label>
                                                 <PersianDatePicker
                                                     value={data.date}
@@ -222,13 +222,13 @@ export default function LettersCreate({
                                             </div>
                                         </div>
 
-                                        {/* متن مکتوب */}
+                                        {/* متن  / استعلاممکتوب */}
                                         <div>
                                             <TextEditor
                                                 content={data.content}
                                                 onChange={(content) => setData('content', content)}
-                                                placeholder="متن مکتوب را اینجا بنویسید..."
-                                                label="متن مکتوب"
+                                                placeholder="متن  / استعلاممکتوب را اینجا بنویسید..."
+                                                label="متن  / استعلاممکتوب"
                                                 required={true}
                                                 error={errors.content}
                                             />
@@ -638,11 +638,11 @@ export default function LettersCreate({
                                     <div className="flex items-start gap-2">
                                         <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                                         <div className="text-xs text-blue-800">
-                                            <p className="font-medium mb-1">راهنمای ثبت مکتوب</p>
+                                            <p className="font-medium mb-1">راهنمای ثبت  / استعلاممکتوب</p>
                                             <ul className="space-y-1 text-blue-700">
                                                 <li>• فیلدهای ستاره‌دار الزامی هستند</li>
-                                                <li>• پس از ثبت، مکتوب به کارتابل گیرنده ارسال می‌شود</li>
-                                                <li>• می‌توانید مکتوب را به صورت پیش‌نویس ذخیره کنید</li>
+                                                <li>• پس از ثبت،  / استعلاممکتوب به کارتابل گیرنده ارسال می‌شود</li>
+                                                <li>• می‌توانید  / استعلاممکتوب را به صورت پیش‌نویس ذخیره کنید</li>
                                             </ul>
                                         </div>
                                     </div>

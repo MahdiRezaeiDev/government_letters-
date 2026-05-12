@@ -1,13 +1,11 @@
-
 import { Link, usePage } from '@inertiajs/react';
 import {
     X, LayoutDashboard, Building2, Briefcase,
-    Users, Mail, Inbox, Send, FileText, Archive,
+    Users, Inbox, Send, Archive,
     BarChart3, Settings, ChevronDown, FolderTree,
-    LogOut, UserCircle,
-    Map
+    LogOut, UserCircle, Map, Sparkles, Layout, Zap
 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { dashboard, logout } from '@/routes';
 import archives from '@/routes/archives';
 import cartable from '@/routes/cartable';
@@ -29,11 +27,13 @@ interface NavItem {
     href?: string;
     icon: React.ComponentType<{ className?: string }>;
     children?: NavItem[];
+    permission?: string;
 }
 
 export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
     const { auth, url } = usePage().props as any;
     const [openMenus, setOpenMenus] = useState<string[]>([]);
+    const userRole = auth?.user?.roles?.[0]?.name || 'user';
 
     useEffect(() => {
         if (isOpen) {
@@ -56,48 +56,73 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
     };
 
     const navigationItems: NavItem[] = [
-        { title: 'داشبورد', href: dashboard(), icon: LayoutDashboard },
+        { title: 'داشبورد', href: dashboard().url, icon: LayoutDashboard },
         {
-            title: 'مدیریت وزارت',
+            title: 'مدیریت تشکیلات',
             icon: Building2,
             children: [
-                { title: 'وزارت ها', href: organizations.index(), icon: Building2 },
-                { title: 'دیپارتمنت ها', href: departments.index(), icon: Map },
-                { title: 'بست ها', href: positions(), icon: Briefcase },
-                { title: 'کاربران', href: users.index(), icon: Users },
-                { title: 'دسته‌بندی مکتوب ها', href: categories.index(), icon: FolderTree },
+                { title: 'وزارت‌ خانه‌ها', href: organizations.index().url, icon: Building2, permission: 'super-admin' },
+                { title: 'ریاست‌ها', href: departments.index().url, icon: Map, permission: 'org-admin' },
+                { title: 'بست‌های کاری', href: positions().url, icon: Briefcase, permission: 'dept-manager' },
+                { title: 'مدیریت کارمندان', href: users.index().url, icon: Users, permission: 'dept-manager' },
+                { title: 'طبقه‌بندی مکتوب ها', href: categories.index().url, icon: FolderTree },
             ],
         },
+        { title: 'کارتابل جاری', href: cartable.index().url, icon: Layout },
+        { title: 'مکتوب ها وارده', href: letters.index({ query: { direction: 'incoming' } }).url, icon: Inbox },
+        { title: 'مکتوب ها صادره', href: letters.index({ query: { direction: 'outgoing' } }).url, icon: Send },
+        { title: 'ثبت مکتوب / استعلام', href: letters.create().url, icon: Sparkles },
+        { title: 'آرشیف مرکزی', href: archives.index().url, icon: Archive },
+        { title: 'گزارشات تحلیلی', href: reports.index().url, icon: BarChart3, permission: 'dept-manager' },
         {
-            title: 'مکتوب ها',
-            icon: Mail,
-            children: [
-                { title: 'مکتوب ها وارده', href: letters.index({ query: { type: 'incoming' } }), icon: Inbox },
-                { title: 'مکتوب ها صادره', href: letters.index({ query: { type: 'outgoing' } }), icon: Send },
-                { title: 'مکتوب ها داخلی', href: letters.index({ query: { type: 'internal' } }), icon: FileText },
-                { title: 'مکتوب جدید', href: letters.create(), icon: Mail },
-            ],
-        },
-        { title: 'کارتابل', href: cartable.index(), icon: Inbox },
-        { title: 'ارشیف', href: archives.index(), icon: Archive },
-        { title: 'گزارشات', href: reports.index(), icon: BarChart3 },
-        {
-            title: 'تنظیمات',
+            title: 'تنظیمات سیستم',
             icon: Settings,
             children: [
-                { title: 'پروفایل', href: profile.edit(), icon: UserCircle },
-                { title: 'تنظیمات سیستم', href: profile.edit(), icon: Settings },
+                { title: 'پروفایل کاربری', href: profile.edit().url, icon: UserCircle },
+                { title: 'پیکربندی اصلی', href: profile.edit().url, icon: Settings },
             ],
         },
     ];
+
+    // فیلتر کردن آیتم‌ها بر اساس نقش کاربر
+    const filteredNavItems = useMemo(() => {
+        const filter = (items: NavItem[]): NavItem[] => {
+            return items
+                .filter(item => {
+                    if (item.permission === 'super-admin') {
+                        return userRole === 'super-admin';
+                    }
+
+                    if (item.permission === 'org-admin') {
+                        return ['super-admin', 'org-admin'].includes(userRole);
+                    }
+
+                    if (item.permission === 'dept-manager') {
+                        return ['super-admin', 'org-admin', 'dept-manager'].includes(userRole);
+                    }
+
+                    if (item.permission === 'user') {
+                        return ['super-admin', 'org-admin', 'dept-manager', 'user'].includes(userRole);
+                    }
+
+                    return true;
+                })
+                .map(item => ({ ...item, children: item.children ? filter(item.children) : undefined }))
+                .filter(item => !item.children || item.children.length > 0);
+        };
+
+        return filter(navigationItems);
+    }, [userRole]);
 
     const isActive = (href?: string) => {
         if (!href) {
             return false;
         }
 
-        // return url === href || url.startsWith(href + '?');
-        return true;
+        const currentPath = url?.split('?')[0];
+        const targetPath = href.split('?')[0];
+
+        return currentPath === targetPath || currentPath?.startsWith(targetPath + '/');
     };
 
     if (!isOpen) {
@@ -114,11 +139,11 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                 {/* هدر */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200">
                     <div className="flex items-center gap-2">
-                        <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-                            <span className="text-white font-bold text-lg">م</span>
+                        <div className="h-10 w-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                            <Zap className="text-white h-5 w-5 fill-current" />
                         </div>
                         <div>
-                            <p className="font-bold text-gray-800">سیستم مکتوب ها</p>
+                            <p className="font-bold text-gray-800">سیستم مدیریت مکتوب ها</p>
                             <p className="text-xs text-gray-500">{auth.user?.email}</p>
                         </div>
                     </div>
@@ -132,14 +157,14 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
 
                 {/* منو */}
                 <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-                    {navigationItems.map((item) => (
+                    {filteredNavItems.map((item) => (
                         <div key={item.title}>
                             {item.children ? (
                                 <div>
                                     <button
                                         onClick={() => toggleMenu(item.title)}
                                         className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${openMenus.includes(item.title)
-                                            ? 'text-blue-600 bg-blue-50'
+                                            ? 'text-indigo-600 bg-indigo-50'
                                             : 'text-gray-700 hover:bg-gray-100'
                                             }`}
                                     >
@@ -147,7 +172,8 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                                             <item.icon className="h-5 w-5" />
                                             <span>{item.title}</span>
                                         </div>
-                                        <ChevronDown className={`h-4 w-4 transition-transform ${openMenus.includes(item.title) ? 'rotate-180' : ''}`} />
+                                        <ChevronDown className={`h-4 w-4 transition-transform ${openMenus.includes(item.title) ? 'rotate-180' : ''
+                                            }`} />
                                     </button>
 
                                     {openMenus.includes(item.title) && (
@@ -158,7 +184,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                                                     href={child.href!}
                                                     onClick={onClose}
                                                     className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive(child.href)
-                                                        ? 'text-blue-600 bg-blue-50'
+                                                        ? 'text-indigo-600 bg-indigo-50'
                                                         : 'text-gray-600 hover:bg-gray-100'
                                                         }`}
                                                 >
@@ -174,7 +200,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                                     href={item.href!}
                                     onClick={onClose}
                                     className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors ${isActive(item.href)
-                                        ? 'text-blue-600 bg-blue-50'
+                                        ? 'text-indigo-600 bg-indigo-50'
                                         : 'text-gray-700 hover:bg-gray-100'
                                         }`}
                                 >

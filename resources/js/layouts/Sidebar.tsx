@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutDashboard, Building2, Map as Sitemap, Briefcase,
-    Users, Mail, Inbox, Send, FileText, Archive,
+    Users, Inbox, Send, Archive,
     BarChart3, Settings, ChevronDown, ChevronLeft,
     FolderTree, Sparkles, Layout, Zap
 } from 'lucide-react';
@@ -59,7 +59,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
         },
         { title: 'مکتوب ها وارده', href: lettersIndex({ query: { direction: 'incoming' } }), icon: Inbox },
         { title: 'مکتوب ها صادره', href: lettersIndex({ query: { direction: 'outgoing' } }), icon: Send },
-        { title: 'ثبت مکتوب جدید', href: lettersCreate(), icon: Sparkles },
+        { title: 'ثبت مکتوب / استعلام', href: lettersCreate(), icon: Sparkles },
 
         { title: 'آرشیف مرکزی', href: archivesIndex(), icon: Archive },
         { title: 'گزارشات تحلیلی', href: reportsIndex(), icon: BarChart3, permission: 'dept-manager' },
