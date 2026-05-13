@@ -1,9 +1,10 @@
+// resources/js/components/Sidebar.tsx
 import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutDashboard, Building2, Map as Sitemap, Briefcase,
-    Users, Inbox, Send, Archive,
+    Users, Mail, Inbox, Send, FileText, Archive,
     BarChart3, Settings, ChevronDown, ChevronLeft,
-    FolderTree, Sparkles, Layout, Zap
+    FolderTree, Sparkles, Layout, Zap, X
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -23,9 +24,12 @@ import { index as usersIndex } from '@/routes/users';
 interface SidebarProps {
     collapsed: boolean;
     setCollapsed: (val: boolean) => void;
+    isMobile?: boolean;
+    isOpen?: boolean;
+    onClose?: () => void;
 }
 
-export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
+export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: SidebarProps) {
     const { url } = usePage();
     const { auth } = usePage().props as any;
     const [openMenus, setOpenMenus] = useState<string[]>([]);
@@ -42,7 +46,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
         return currentPath === targetPath || currentPath.startsWith(targetPath + '/');
     };
 
-    // لیست کامل آیتم‌ها (همه بخش‌های قبلی بازگردانده شد)
+    // لیست کامل آیتم‌ها
     const navigationItems = [
         { title: 'داشبورد', href: dashboard(), icon: LayoutDashboard },
         { title: 'کارتابل جاری', href: cartableIndex(), icon: Layout },
@@ -53,14 +57,13 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 { title: 'وزارت‌ خانه‌ها', href: organizationsIndex(), icon: Building2, permission: 'super-admin' },
                 { title: 'ریاست‌ها', href: departmentsIndex(), icon: Sitemap, permission: 'org-admin' },
                 { title: 'بست‌های کاری', href: positions.index(), icon: Briefcase, permission: 'dept-manager' },
-                { title: 'مدیریت  کارمندان', href: usersIndex(), icon: Users, permission: 'dept-manager' },
+                { title: 'مدیریت کارمندان', href: usersIndex(), icon: Users, permission: 'dept-manager' },
                 { title: 'طبقه‌بندی مکتوب ها', href: categoriesIndex(), icon: FolderTree },
             ],
         },
         { title: 'مکتوب ها وارده', href: lettersIndex({ query: { direction: 'incoming' } }), icon: Inbox },
         { title: 'مکتوب ها صادره', href: lettersIndex({ query: { direction: 'outgoing' } }), icon: Send },
         { title: 'ثبت مکتوب / استعلام', href: lettersCreate(), icon: Sparkles },
-
         { title: 'آرشیف مرکزی', href: archivesIndex(), icon: Archive },
         { title: 'گزارشات تحلیلی', href: reportsIndex(), icon: BarChart3, permission: 'dept-manager' },
         {
@@ -102,14 +105,15 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
         return filter(navigationItems);
     }, [userRole]);
 
-    return (
-        <aside className={`fixed right-0 top-0 h-screen bg-[#c3e3e8] backdrop-blur-2xl border-l border-slate-200/60 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] z-50 ${collapsed ? 'w-20' : 'w-72'}`}>
+    // محتوای سایدبار (برای استفاده در هر دو حالت دسکتاپ و موبایل)
+    const sidebarContent = (
+        <>
             <div className="h-24 flex items-center px-6">
                 <div className="flex items-center gap-3">
                     <div className="h-10 w-10 shrink-0 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-100 ring-2 ring-white">
                         <Zap className="text-white h-5 w-5 fill-current" />
                     </div>
-                    {!collapsed && (
+                    {(!collapsed || isMobile) && (
                         <div className="flex flex-col animate-in fade-in slide-in-from-right-4 duration-700">
                             <span className="font-semibold text-xs text-slate-900 leading-none">سیستم مدیریت مکتوب ها</span>
                             <span className="text-[10px] text-slate-500 font-medium mt-1">Correspondence System</span>
@@ -118,11 +122,25 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 </div>
             </div>
 
-            <button onClick={() => setCollapsed(!collapsed)} className="absolute -left-3.5 top-10 h-7 w-7 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all z-50 group">
-                <ChevronLeft className={`h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-600 transition-transform duration-500 ${collapsed ? 'rotate-180' : ''}`} />
-            </button>
+            {!isMobile && (
+                <button
+                    onClick={() => setCollapsed(!collapsed)}
+                    className="absolute -left-3.5 top-10 h-7 w-7 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all z-50 group"
+                >
+                    <ChevronLeft className={`h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-600 transition-transform duration-500 ${collapsed ? 'rotate-180' : ''}`} />
+                </button>
+            )}
 
-            <nav className="px-3 space-y-1 h-[calc(100%-10rem)] overflow-y-auto [&::-webkit-scrollbar]:w-0 scrollbar-none">
+            {isMobile && onClose && (
+                <button
+                    onClick={onClose}
+                    className="absolute left-4 top-6 h-8 w-8 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all z-50 group"
+                >
+                    <X className="h-4 w-4 text-slate-400 group-hover:text-indigo-600" />
+                </button>
+            )}
+
+            <nav className="px-3 space-y-1 h-[calc(100%-6rem)] overflow-y-auto [&::-webkit-scrollbar]:w-0 scrollbar-none">
                 {filteredNavItems.map((item) => {
                     const active = isUrlActive(item.href);
                     const isOpen = openMenus.includes(item.title);
@@ -131,17 +149,27 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                         <div key={item.title}>
                             {item.children ? (
                                 <>
-                                    <button onClick={() => !collapsed && setOpenMenus(prev => prev.includes(item.title) ? prev.filter(t => t !== item.title) : [...prev, item.title])} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all ${isOpen && !collapsed ? 'bg-indigo-50/50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}>
+                                    <button
+                                        onClick={() => !collapsed && !isMobile && setOpenMenus(prev => prev.includes(item.title) ? prev.filter(t => t !== item.title) : [...prev, item.title])}
+                                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all ${(isOpen && !collapsed && !isMobile) ? 'bg-indigo-50/50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'
+                                            }`}
+                                    >
                                         <div className="flex items-center gap-3">
                                             <item.icon className={`h-5 w-5 ${isOpen ? 'text-indigo-600' : 'text-slate-400'}`} />
-                                            {!collapsed && <span className="text-sm font-semibold">{item.title}</span>}
+                                            {(!collapsed || isMobile) && <span className="text-sm font-semibold">{item.title}</span>}
                                         </div>
-                                        {!collapsed && <ChevronDown className={`h-4 w-4 opacity-30 transition-transform ${isOpen ? 'rotate-180' : ''}`} />}
+                                        {(!collapsed || isMobile) && <ChevronDown className={`h-4 w-4 opacity-30 transition-transform ${isOpen ? 'rotate-180' : ''}`} />}
                                     </button>
-                                    {!collapsed && isOpen && (
+                                    {(!collapsed || isMobile) && isOpen && (
                                         <div className="mr-6 pr-3 border-r border-slate-200 space-y-1 py-1">
                                             {item.children.map((child: any) => (
-                                                <Link key={child.title} href={child.href} className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${isUrlActive(child.href) ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50'}`}>
+                                                <Link
+                                                    key={child.title}
+                                                    href={child.href}
+                                                    onClick={() => isMobile && onClose?.()}
+                                                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${isUrlActive(child.href) ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50'
+                                                        }`}
+                                                >
                                                     <child.icon className="h-4 w-4" />
                                                     <span>{child.title}</span>
                                                 </Link>
@@ -150,15 +178,46 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                                     )}
                                 </>
                             ) : (
-                                <Link href={item.href} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${active ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-slate-600 hover:bg-slate-50'}`}>
+                                <Link
+                                    href={item.href}
+                                    onClick={() => isMobile && onClose?.()}
+                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${active ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-slate-600 hover:bg-slate-50'
+                                        }`}
+                                >
                                     <item.icon className={`h-5 w-5 ${active ? 'text-white' : 'text-slate-400'}`} />
-                                    {!collapsed && <span className="text-sm font-semibold">{item.title}</span>}
+                                    {(!collapsed || isMobile) && <span className="text-sm font-semibold">{item.title}</span>}
                                 </Link>
                             )}
                         </div>
                     );
                 })}
             </nav>
+        </>
+    );
+
+    // اگر موبایل است، با backdrop نمایش بده
+    if (isMobile) {
+        return (
+            <>
+                {isOpen && (
+                    <div className="fixed inset-0 z-50">
+                        <div
+                            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                            onClick={onClose}
+                        />
+                        <aside className={`fixed right-0 top-0 h-full w-80 bg-[#c3e3e8] backdrop-blur-2xl border-l border-slate-200/60 transition-all duration-700 z-50 overflow-y-auto`}>
+                            {sidebarContent}
+                        </aside>
+                    </div>
+                )}
+            </>
+        );
+    }
+
+    // حالت دسکتاپ
+    return (
+        <aside className={`fixed right-0 top-0 h-screen bg-[#c3e3e8] backdrop-blur-2xl border-l border-slate-200/60 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] z-50 ${collapsed ? 'w-20' : 'w-72'}`}>
+            {sidebarContent}
         </aside>
     );
 }
