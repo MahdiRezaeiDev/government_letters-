@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\UserPermissionController;
 use App\Http\Controllers\ArchiveController;
 use App\Http\Controllers\CartableController;
 use App\Http\Controllers\CaseController;
@@ -74,6 +75,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('organizations/{organization}', [OrganizationController::class, 'update'])->name('organizations.update');
         Route::delete('organizations/{organization}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
         Route::post('organizations/{organization}/toggle-status', [OrganizationController::class, 'toggleStatus'])->name('organizations.toggle-status');
+
+        Route::get('/users/{user}/permissions', [UserPermissionController::class, 'edit'])
+            ->name('admin.users.permissions.edit');
+
+        Route::put('/users/{user}/permissions', [UserPermissionController::class, 'update'])
+            ->name('admin.users.permissions.update');
     });
 
     // ═══════════════════════════════════════════════════════

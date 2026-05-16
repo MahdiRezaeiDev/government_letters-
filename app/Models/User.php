@@ -98,7 +98,6 @@ class User extends Authenticatable
         return $this->belongsTo(Position::class, 'primary_position_id');
     }
 
-    // app/Models/User.php
     public function positions()
     {
         return $this->belongsToMany(Position::class, 'user_positions')
@@ -139,12 +138,12 @@ class User extends Authenticatable
 
     public function delegationsFrom(): HasMany
     {
-        return $this->hasMany(Delegation::class, 'from_user_id');
+        return $this->hasMany(LetterDelegation::class, 'from_user_id');
     }
 
     public function delegationsTo(): HasMany
     {
-        return $this->hasMany(Delegation::class, 'to_user_id');
+        return $this->hasMany(LetterDelegation::class, 'to_user_id');
     }
 
     public function reminders(): HasMany
@@ -167,6 +166,20 @@ class User extends Authenticatable
     public function scopeByDepartment($query, $departmentId)
     {
         return $query->where('department_id', $departmentId);
+    }
+
+    public function getAllPermissionsForFrontend(): array
+    {
+        return [
+            'all' => $this->getAllPermissions()->pluck('name'),
+            'direct' => $this->getDirectPermissions()->pluck('name'),
+            'via_roles' => $this->getPermissionsViaRoles()->pluck('name'),
+        ];
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        return $this->hasPermissionTo($permission);
     }
 
     // ─── Helpers ───────────────────────────────────────────────
