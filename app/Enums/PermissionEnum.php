@@ -4,9 +4,9 @@ namespace App\Enums;
 
 enum PermissionEnum: string
 {
-    // ============================================
-    // مجوزهای سازمانی (فقط ادمین کل)
-    // ============================================
+        // ============================================
+        // مجوزهای سازمانی (فقط ادمین کل)
+        // ============================================
     case VIEW_ORGANIZATIONS  = 'view-organizations';
     case CREATE_ORGANIZATION = 'create-organization';
     case EDIT_ORGANIZATION   = 'edit-organization';
@@ -72,9 +72,18 @@ enum PermissionEnum: string
     case EDIT_CATEGORY     = 'edit-category';
     case DELETE_CATEGORY   = 'delete-category';
 
-    // ============================================
-    // متدهای کمکی
-    // ============================================
+
+        // ============================================
+        // مجوزهای  تاییدی تذکره
+        // ============================================
+    case NID_REGISTER   = 'nid-register';
+    case NID_APPROVE    = 'nid-approve';
+    case NID_VIEW       = 'nid-view';
+    case NID_DESTROY   = 'nid-destroy';
+
+        // ============================================
+        // متدهای کمکی
+        // ============================================
 
     public static function all(): array
     {
