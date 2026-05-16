@@ -2,10 +2,10 @@ import { Head, usePage } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import axios from 'axios';
 import {
-    Save, Paperclip, Send, Trash2, FileText, Shield,
-    UserCheck, Info, Loader2, PenLine, Tag
+    Save, Paperclip, Send, Trash2, FileText, 
+    UserCheck, Info, Loader2, PenLine, Tag, Search, X
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import PersianDatePicker from '@/components/PersianDatePicker';
 import TextEditor from '@/components/TextEditor';
 import LetterRoute from '@/routes/letters';
@@ -69,17 +69,87 @@ export default function LettersCreate({
         recipient_position_name: '',
     });
 
+    // State برای سرچ
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [searchType, setSearchType] = useState<'internal' | 'external'>('internal');
+
     const [availablePositions, setAvailablePositions] = useState<{
         id: number;
         name: string;
+        department_id: number;
         user_id?: number;
         user_name?: string;
     }[]>([]);
     const [extDepartments, setExtDepartments] = useState<{ id: number; name: string }[]>([]);
-    const [extPositions, setExtPositions] = useState<{ id: number; name: string }[]>([]);
+    const [extPositions, setExtPositions] = useState<{ id: number; name: string; department_id: number }[]>([]);
     const [loadingPositions, setLoadingPositions] = useState(false);
     const [loadingExtDepts, setLoadingExtDepts] = useState(false);
     const [loadingExtPositions, setLoadingExtPositions] = useState(false);
+
+    // نتایج جستجوی داخلی
+    const internalSearchResults = useMemo(() => {
+        if (!searchTerm.trim() || searchType !== 'internal') return [];
+
+        const term = searchTerm.toLowerCase().trim();
+
+        // جستجو در ریاست‌ها
+        const deptResults = departments
+            .filter(dept => dept.name.toLowerCase().includes(term))
+            .map(dept => ({
+                id: dept.id,
+                name: dept.name,
+                type: 'department' as const,
+                parentName: null,
+                positionId: null,
+                departmentId: dept.id
+            }));
+
+        // جستجو در پست‌ها
+        const positionResults = positions
+            .filter(pos => {
+                const dept = departments.find(d => d.id === pos.department_id);
+                return pos.name.toLowerCase().includes(term) ||
+                    (dept && dept.name.toLowerCase().includes(term));
+            })
+            .map(pos => ({
+                id: pos.id,
+                name: pos.name,
+                type: 'position' as const,
+                parentName: departments.find(d => d.id === pos.department_id)?.name || '',
+                positionId: pos.id,
+                departmentId: pos.department_id,
+                userId: pos.user_id,
+                userName: pos.user_name
+            }));
+
+        return [...deptResults, ...positionResults];
+    }, [searchTerm, departments, positions, searchType]);
+
+    // نتایج جستجوی خارجی
+    const externalSearchResults = useMemo(() => {
+        if (!searchTerm.trim() || searchType !== 'external') return [];
+
+        const term = searchTerm.toLowerCase().trim();
+
+        // جستجو در وزارت‌ها
+        const orgResults = externalOrganizations
+            .filter(org => org.name.toLowerCase().includes(term))
+            .map(org => ({
+                id: org.id,
+                name: org.name,
+                type: 'organization' as const,
+                parentName: null,
+                organizationId: org.id,
+                departmentId: null,
+                positionId: null
+            }));
+
+        // جستجو در ریاست‌ها (نیاز به API جداگانه دارد)
+        // برای سادگی، فعلاً فقط وزارت‌ها را نمایش می‌دهیم
+
+        return orgResults;
+    }, [searchTerm, externalOrganizations, searchType]);
 
     // فیلتر پست‌های داخلی بر اساس ریاست / آمریت انتخابی
     useEffect(() => {
@@ -139,6 +209,8 @@ export default function LettersCreate({
                     setAvailablePositions([]);
                     setExtDepartments([]);
                     setExtPositions([]);
+                    setSearchTerm('');
+                    setIsSearchOpen(false);
                 }
             },
         });
@@ -162,6 +234,46 @@ export default function LettersCreate({
         const i = Math.floor(Math.log(bytes) / Math.log(k));
 
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
+    // هندلر انتخاب از جستجو (داخلی)
+    const handleInternalSearchSelect = (result: any) => {
+        if (result.type === 'department') {
+            // انتخاب ریاست
+            setData('recipient_department_id', result.id);
+            setData('recipient_position_id', null);
+            setData('recipient_position_name', '');
+            setData('recipient_user_id', null);
+            setData('recipient_name', '');
+        } else if (result.type === 'position') {
+            // انتخاب بست
+            setData('recipient_department_id', result.departmentId);
+            setData('recipient_position_id', result.id);
+            setData('recipient_position_name', result.name);
+            setData('recipient_user_id', result.userId || null);
+            setData('recipient_name', result.userName || '');
+        }
+
+        setIsSearchOpen(false);
+        setSearchTerm('');
+    };
+
+    // هندلر انتخاب از جستجو (خارجی)
+    const handleExternalSearchSelect = (result: any) => {
+        if (result.type === 'organization') {
+            // انتخاب وزارت
+            const org = externalOrganizations.find(o => o.id === result.id);
+            setData('recipient_organization_id', result.id);
+            setData('recipient_name', org?.name || '');
+            setData('recipient_department_id', null);
+            setData('recipient_position_id', null);
+            setData('recipient_position_name', '');
+            setExtDepartments([]);
+            setExtPositions([]);
+        }
+
+        setIsSearchOpen(false);
+        setSearchTerm('');
     };
 
     return (
@@ -300,60 +412,7 @@ export default function LettersCreate({
                             {/* ══ ستون کناری ══ */}
                             <div className="col-span-12 lg:col-span-4 space-y-5">
 
-                                {/* تنظیمات امنیتی */}
-                                {/* <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-                                    <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
-                                        <Shield className="h-4 w-4 text-slate-500" />
-                                        <h3 className="text-sm font-bold text-slate-700">تنظیمات امنیتی</h3>
-                                    </div>
-                                    <div className="p-5 space-y-4">
-                                        <div>
-                                            <div className="flex items-center justify-between mb-2">
-                                                <label className="text-xs font-medium text-slate-600">اولویت</label>
-                                                <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${priorityLevels[data.priority]?.activeColor.split(' ').slice(0, 2).join(' ')
-                                                    }`}>
-                                                    {priorityLevels[data.priority]?.label ?? 'معمولی'}
-                                                </span>
-                                            </div>
-                                            <div className="grid grid-cols-5 gap-1.5">
-                                                {Object.entries(priorityLevels).map(([key, value]) => (
-                                                    <button
-                                                        key={key}
-                                                        type="button"
-                                                        onClick={() => setData('priority', key)}
-                                                        className={`py-2 rounded-md text-[11px] font-medium border transition-all
-                                                            ${data.priority === key ? value.activeColor : value.inactiveColor}`}
-                                                    >
-                                                        {value.label}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <div className="flex items-center justify-between mb-2">
-                                                <label className="text-xs font-medium text-slate-600">سطح امنیتی</label>
-                                                <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${securityLevels[data.security_level]?.color ?? 'bg-blue-100 text-blue-700'
-                                                    }`}>
-                                                    {securityLevels[data.security_level]?.label ?? 'داخلی'}
-                                                </span>
-                                            </div>
-                                            <select
-                                                value={data.security_level}
-                                                onChange={(e) => setData('security_level', e.target.value)}
-                                                className={inputClass}
-                                            >
-                                                {Object.entries(securityLevels).map(([key, value]) => (
-                                                    <option key={key} value={key}>
-                                                        {value.label}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div> */}
-
-                                {/* گیرنده */}
+                                {/* گیرنده با قابلیت سرچ */}
                                 <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                                     <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center gap-2">
                                         <UserCheck className="h-4 w-4 text-slate-500" />
@@ -361,12 +420,141 @@ export default function LettersCreate({
                                     </div>
                                     <div className="p-5 space-y-4">
 
+                                        {/* دکمه جستجو */}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSearchType(data.recipient_type);
+                                                setIsSearchOpen(true);
+                                            }}
+                                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-all duration-200 border border-blue-200"
+                                        >
+                                            <Search className="h-4 w-4" />
+                                            <span className="text-sm font-medium">جستجوی گیرنده</span>
+                                        </button>
+
+                                        {/* مودال جستجو */}
+                                        {isSearchOpen && (
+                                            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setIsSearchOpen(false)}>
+                                                <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+                                                    <div className="flex items-center justify-between p-4 border-b">
+                                                        <h3 className="text-lg font-bold text-slate-800">
+                                                            جستجوی گیرنده - {searchType === 'internal' ? 'داخلی' : 'خارج از وزارت'}
+                                                        </h3>
+                                                        <button
+                                                            onClick={() => setIsSearchOpen(false)}
+                                                            className="p-1 hover:bg-slate-100 rounded-lg transition"
+                                                        >
+                                                            <X className="h-5 w-5 text-slate-500" />
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="p-4 border-b">
+                                                        <div className="relative">
+                                                            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                                            <input
+                                                                type="text"
+                                                                value={searchTerm}
+                                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                                placeholder={searchType === 'internal' ?
+                                                                    "جستجو بر اساس نام ریاست یا بست..." :
+                                                                    "جستجو بر اساس نام وزارت..."
+                                                                }
+                                                                className="w-full pr-10 pl-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                                                autoFocus
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                                                        {searchType === 'internal' && internalSearchResults.length === 0 && searchTerm && (
+                                                            <div className="text-center py-8 text-slate-500">
+                                                                <p>نتیجه‌ای یافت نشد</p>
+                                                            </div>
+                                                        )}
+
+                                                        {searchType === 'external' && externalSearchResults.length === 0 && searchTerm && (
+                                                            <div className="text-center py-8 text-slate-500">
+                                                                <p>نتیجه‌ای یافت نشد</p>
+                                                            </div>
+                                                        )}
+
+                                                        {/* نتایج داخلی */}
+                                                        {searchType === 'internal' && internalSearchResults.map((result, index) => (
+                                                            <div
+                                                                key={`${result.type}-${result.id}-${index}`}
+                                                                onClick={() => handleInternalSearchSelect(result)}
+                                                                className="p-3 border border-slate-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all"
+                                                            >
+                                                                <div className="flex items-start justify-between">
+                                                                    <div>
+                                                                        <p className="font-medium text-slate-800 text-sm">
+                                                                            {result.name}
+                                                                        </p>
+                                                                        <p className="text-xs text-slate-500 mt-1">
+                                                                            {result.type === 'department' ? 'ریاست / آمریت' : 'بست'}
+                                                                            {result.parentName && (
+                                                                                <span className="mr-2">
+                                                                                    • {result.parentName}
+                                                                                </span>
+                                                                            )}
+                                                                        </p>
+                                                                        {result.type === 'position' && result.userName && (
+                                                                            <p className="text-xs text-green-600 mt-1">
+                                                                                مسئول: {result.userName}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="text-xs px-2 py-1 bg-slate-100 rounded text-slate-600">
+                                                                        {result.type === 'department' ? 'ریاست' : 'بست'}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+
+                                                        {/* نتایج خارجی */}
+                                                        {searchType === 'external' && externalSearchResults.map((result) => (
+                                                            <div
+                                                                key={`org-${result.id}`}
+                                                                onClick={() => handleExternalSearchSelect(result)}
+                                                                className="p-3 border border-slate-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all"
+                                                            >
+                                                                <div className="flex items-start justify-between">
+                                                                    <div>
+                                                                        <p className="font-medium text-slate-800 text-sm">
+                                                                            {result.name}
+                                                                        </p>
+                                                                        <p className="text-xs text-slate-500 mt-1">
+                                                                            وزارت / اداره
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="text-xs px-2 py-1 bg-slate-100 rounded text-slate-600">
+                                                                        وزارت
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+
+                                                    <div className="p-4 border-t bg-slate-50">
+                                                        <button
+                                                            onClick={() => setIsSearchOpen(false)}
+                                                            className="w-full px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50"
+                                                        >
+                                                            بستن
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* toggle داخلی / خارجی */}
                                         <div className="flex gap-2">
                                             {(['internal', 'external'] as const).map(type => (
                                                 <button key={type} type="button"
                                                     onClick={() => {
                                                         setData('recipient_type', type);
+                                                        setSearchType(type);
 
                                                         if (type === 'internal') {
                                                             setData('recipient_organization_id', currentUser.organization_id);
@@ -416,7 +604,6 @@ export default function LettersCreate({
                                                             <option key={d.id} value={d.id}>{d.name}</option>
                                                         ))}
                                                     </select>
-                                                    {/* ✅ نمایش خطای recipient_department_id */}
                                                     {errors.recipient_department_id && (
                                                         <p className="text-red-500 text-xs mt-1">{errors.recipient_department_id}</p>
                                                     )}
@@ -424,7 +611,7 @@ export default function LettersCreate({
 
                                                 <div>
                                                     <label className="block text-xs font-medium text-slate-600 mb-1">
-                                                         عنوان <span className="text-red-500">*</span>
+                                                        عنوان <span className="text-red-500">*</span>
                                                     </label>
                                                     <div className="relative">
                                                         <select
@@ -451,7 +638,6 @@ export default function LettersCreate({
                                                             </div>
                                                         )}
                                                     </div>
-                                                    {/* ✅ نمایش خطای recipient_position_id */}
                                                     {errors.recipient_position_id && (
                                                         <p className="text-red-500 text-xs mt-1">{errors.recipient_position_id}</p>
                                                     )}
@@ -512,7 +698,6 @@ export default function LettersCreate({
                                                             <option key={o.id} value={o.id}>{o.name}</option>
                                                         ))}
                                                     </select>
-                                                    {/* ✅ نمایش خطای recipient_name برای گیرنده خارجی */}
                                                     {errors.recipient_name && (
                                                         <p className="text-red-500 text-xs mt-1">{errors.recipient_name}</p>
                                                     )}
@@ -575,7 +760,6 @@ export default function LettersCreate({
                                                             </div>
                                                         )}
                                                     </div>
-                                                    {/* ✅ نمایش خطای recipient_position_name برای گیرنده خارجی */}
                                                     {errors.recipient_position_name && (
                                                         <p className="text-red-500 text-xs mt-1">{errors.recipient_position_name}</p>
                                                     )}
@@ -643,6 +827,7 @@ export default function LettersCreate({
                                                 <li>• فیلدهای ستاره‌دار الزامی هستند</li>
                                                 <li>• پس از ثبت، مکتوب / استعلام  به کارتابل گیرنده ارسال می‌شود</li>
                                                 <li>• می‌توانید مکتوب / استعلام  را به صورت پیش‌نویس ذخیره کنید</li>
+                                                <li>• از دکمه جستجو برای یافتن سریع گیرنده استفاده کنید</li>
                                             </ul>
                                         </div>
                                     </div>
