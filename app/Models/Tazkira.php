@@ -55,6 +55,21 @@ class Tazkira extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
+    public function attachments()
+    {
+        return $this->hasMany(TazkiraAttachment::class);
+    }
+
+    public function reviewLogs()
+    {
+        return $this->hasMany(TazkiraReviewLog::class)->orderBy('reviewed_at', 'desc');
+    }
+
+    public function latestReviewLog()
+    {
+        return $this->hasOne(TazkiraReviewLog::class)->latest('reviewed_at');
+    }
+
     // ==================== اسکوپ‌ها ====================
 
     public function scopePending($query)
