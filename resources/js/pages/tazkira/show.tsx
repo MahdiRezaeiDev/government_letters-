@@ -91,26 +91,14 @@ const STATUS_CONFIG = {
 };
 
 const formatFileSize = (bytes: number) => {
-    if (!bytes) {
-return '0 B';
-}
-
-    if (bytes < 1024) {
-return bytes + ' B';
-}
-
-    if (bytes < 1024 * 1024) {
-return (bytes / 1024).toFixed(1) + ' KB';
-}
-
+    if (!bytes) return '0 B';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 };
 
 const formatDate = (dateString: string) => {
-    if (!dateString) {
-return '—';
-}
-
+    if (!dateString) return '—';
     return new Date(dateString).toLocaleDateString('fa-IR');
 };
 
@@ -119,6 +107,7 @@ export default function TazkiraShow({ tazkira, can }: Props) {
     const [showImageModal, setShowImageModal] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [reviewAction, setReviewAction] = useState<'approve' | 'reject'>('approve');
+    const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
     const [expandedSections, setExpandedSections] = useState({
         personal: true,
         tazkira: true,
@@ -127,9 +116,6 @@ export default function TazkiraShow({ tazkira, can }: Props) {
         attachments: true,
         history: true,
     });
-
-    console.log(tazkira);
-    
 
     const statusConfig = STATUS_CONFIG[tazkira.status];
     const StatusIcon = statusConfig.icon;
@@ -518,14 +504,34 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                                         {tazkira.attachments && tazkira.attachments.length > 0 ? (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                 {tazkira.attachments.map((att) => (
-                                                    <div key={att.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors group/att">
-                                                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                                                    <div
+                                                        key={att.id}
+                                                        className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors group/att"
+                                                    >
+                                                        <div
+                                                            className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                                                            onClick={() => {
+                                                                if (att.file_type?.startsWith('image/')) {
+                                                                    setPreviewImage({ url: att.file_url, name: att.file_name });
+                                                                }
+                                                            }}
+                                                        >
                                                             {att.file_type?.startsWith('image/') ? (
-                                                                <div className="p-1.5 bg-blue-100 rounded-lg">
-                                                                    <ImageIcon className="h-4 w-4 text-blue-600" />
+                                                                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-blue-100 flex-shrink-0">
+                                                                    <img
+                                                                        src={att.file_url}
+                                                                        alt={att.file_name}
+                                                                        className="w-full h-full object-cover"
+                                                                        onError={(e) => {
+                                                                            (e.target as HTMLImageElement).style.display = 'none';
+                                                                        }}
+                                                                    />
+                                                                    <div className="absolute inset-0 bg-black/0 group-hover/att:bg-black/20 transition-colors flex items-center justify-center">
+                                                                        <Eye className="h-4 w-4 text-white opacity-0 group-hover/att:opacity-100 transition-opacity" />
+                                                                    </div>
                                                                 </div>
                                                             ) : (
-                                                                <div className="p-1.5 bg-gray-200 rounded-lg">
+                                                                <div className="p-1.5 bg-gray-200 rounded-lg flex-shrink-0">
                                                                     <File className="h-4 w-4 text-gray-600" />
                                                                 </div>
                                                             )}
@@ -685,21 +691,77 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                 </div>
             )}
 
-            {/* Image Modal */}
+            {/* Image Modal (تصویر اصلی تذکره) */}
             {showImageModal && tazkira.tazkira_image_url && tazkira.tazkira_image_url !== '/images/no-image.png' && (
-                <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4" onClick={() => setShowImageModal(false)}>
+                <div
+                    className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
+                    onClick={() => setShowImageModal(false)}
+                >
                     <div className="relative max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
                         <img
                             src={tazkira.tazkira_image_url}
                             alt="تصویر تذکره"
-                            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+                            className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
                         />
-                        <button
-                            onClick={() => setShowImageModal(false)}
-                            className="absolute -top-12 left-0 text-white bg-black/50 rounded-full p-2 hover:bg-black/70 transition-colors"
-                        >
-                            <XCircle className="h-6 w-6" />
-                        </button>
+                        <div className="absolute -top-12 left-0 right-0 flex items-center justify-between">
+                            <span className="text-white text-sm">تصویر تذکره</span>
+                            <div className="flex items-center gap-2">
+                                <a
+                                    href={tazkira.tazkira_image_url}
+                                    download
+                                    target="_blank"
+                                    className="text-white bg-black/50 rounded-full p-2 hover:bg-black/70 transition-colors"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <Download className="h-5 w-5" />
+                                </a>
+                                <button
+                                    onClick={() => setShowImageModal(false)}
+                                    className="text-white bg-black/50 rounded-full p-2 hover:bg-black/70 transition-colors"
+                                >
+                                    <XCircle className="h-6 w-6" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Attachment Preview Modal (ضمیمه‌ها) */}
+            {previewImage && (
+                <div
+                    className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
+                    onClick={() => setPreviewImage(null)}
+                >
+                    <div
+                        className="relative max-w-[90vw] max-h-[90vh]"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <img
+                            src={previewImage.url}
+                            alt={previewImage.name}
+                            className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+                        />
+                        <div className="absolute -top-12 left-0 right-0 flex items-center justify-between">
+                            <span className="text-white text-sm truncate max-w-xs">{previewImage.name}</span>
+                            <div className="flex items-center gap-2">
+                                <a
+                                    href={previewImage.url}
+                                    download
+                                    target="_blank"
+                                    className="text-white bg-black/50 rounded-full p-2 hover:bg-black/70 transition-colors"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <Download className="h-5 w-5" />
+                                </a>
+                                <button
+                                    onClick={() => setPreviewImage(null)}
+                                    className="text-white bg-black/50 rounded-full p-2 hover:bg-black/70 transition-colors"
+                                >
+                                    <XCircle className="h-6 w-6" />
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
