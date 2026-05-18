@@ -15,6 +15,7 @@ use App\Http\Controllers\PositionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\TazkiraController;
 use App\Http\Controllers\UserController;
 use App\Models\Department;
 use App\Models\Position;
@@ -73,7 +74,43 @@ Route::middleware(['auth', 'verified'])->group(function () {
         //     ->name('admin.users.permissions.update');
 
     });
-    Route::get('nid', [NidController::class, 'index'])->name('');
+
+
+    // ==================== مدیریت تذکره ====================
+    Route::prefix('tazkira')->middleware(['auth', 'verified'])->group(function () {
+        // صفحه اصلی (لیست تذکره‌ها)
+        Route::get('/', [TazkiraController::class, 'index'])->name('tazkira.index');
+
+        // فرم ایجاد تذکره جدید
+        Route::get('/create', [TazkiraController::class, 'create'])->name('tazkira.create');
+
+        // ذخیره تذکره جدید
+        Route::post('/', [TazkiraController::class, 'store'])->name('tazkira.store');
+
+        // نمایش جزئیات یک تذکره
+        Route::get('/{tazkira}', [TazkiraController::class, 'show'])->name('tazkira.show');
+
+        // فرم ویرایش تذکره
+        Route::get('/{tazkira}/edit', [TazkiraController::class, 'edit'])->name('tazkira.edit');
+
+        // بروزرسانی تذکره
+        Route::put('/{tazkira}', [TazkiraController::class, 'update'])->name('tazkira.update');
+
+        // حذف تذکره
+        Route::delete('/{tazkira}', [TazkiraController::class, 'destroy'])->name('tazkira.destroy');
+
+        // تأیید تذکره
+        Route::post('/{tazkira}/approve', [TazkiraController::class, 'approve'])->name('tazkira.approve');
+
+        // رد تذکره
+        Route::post('/{tazkira}/reject', [TazkiraController::class, 'reject'])->name('tazkira.reject');
+
+        // جستجوی تذکره
+        Route::get('/search', [TazkiraController::class, 'search'])->name('tazkira.search');
+
+        // دریافت اطلاعات تذکره با شماره (API)
+        Route::get('/by-number/{tazkiraNumber}', [TazkiraController::class, 'getByNumber'])->name('tazkira.by-number');
+    });
 
     // ═══════════════════════════════════════════════════════
     // API Helpers — فقط auth (بدون permission)
