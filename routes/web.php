@@ -72,8 +72,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Route::put('/users/{user}/permissions', [UserPermissionController::class, 'update'])
         //     ->name('admin.users.permissions.update');
 
-        Route::resources([NidController::class]);
     });
+    Route::get('nid', [NidController::class, 'index'])->name('');
 
     // ═══════════════════════════════════════════════════════
     // API Helpers — فقط auth (بدون permission)

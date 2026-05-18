@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class NidController extends Controller
 {
@@ -11,7 +12,7 @@ class NidController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render("Nid/Index");
     }
 
     /**
