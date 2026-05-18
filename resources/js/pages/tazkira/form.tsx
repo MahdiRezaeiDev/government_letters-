@@ -5,12 +5,10 @@ import { useForm } from '@inertiajs/react';
 import {
     User, Hash, BookOpen, FileText, Grid, Calendar, MapPin, Phone, Mail,
     CheckCircle, AlertCircle, Save, X, Users, Fingerprint, Shield, Upload, Trash2,
-    Paperclip, Image as ImageIcon, Plus
+    Paperclip, Plus
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import SectionCard from '@/components/ui/SectionCard';
-import InputField from '@/components/ui/InputField';
-import FieldLabel from '@/components/ui/FieldLabel';
 
 interface Attachment {
     id?: number;
@@ -59,8 +57,10 @@ const STATUS_OPTIONS = [
     { value: 'rejected', label: 'رد شده', icon: AlertCircle, color: '#ef4444', bg: '#fee2e2' },
 ];
 
+const inputClass = "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white";
+
 export default function TazkiraForm({ tazkira, isEdit = false }: Props) {
-    const { data, setData, processing, post, put, errors, reset } = useForm({
+    const { data, setData, processing, post, put, errors } = useForm({
         first_name: tazkira?.first_name || '',
         last_name: tazkira?.last_name || '',
         father_name: tazkira?.father_name || '',
@@ -91,50 +91,58 @@ export default function TazkiraForm({ tazkira, isEdit = false }: Props) {
         e.preventDefault();
 
         const formData = new FormData();
+
+        // اضافه کردن تمام فیلدها به FormData
         Object.keys(data).forEach(key => {
             const value = data[key as keyof typeof data];
+
             if (value !== null && value !== undefined) {
                 formData.append(key, value as string);
             }
         });
 
+        // اضافه کردن تصویر اصلی
         if (tazkiraImage) {
             formData.append('tazkira_image', tazkiraImage);
         }
 
+        // حذف تصویر
         if (removeImage) {
             formData.append('remove_image', '1');
         }
 
-        // اضافه کردن ضمیمه‌های جدید
+        // اضافه کردن ضمیمه‌ها
         attachments.forEach(att => {
             if (att.is_new && att.file) {
                 formData.append('attachments[]', att.file);
             }
         });
 
+        // اضافه کردن توضیحات ضمیمه
         if (attachmentDescription) {
             formData.append('attachment_description', attachmentDescription);
         }
 
-        if (isEdit && tazkira?.id) {
-            formData.append('_method', 'PUT');
-            post(`/tazkira/${tazkira.id}`, {
-                data: formData,
-                preserveScroll: true,
-                onSuccess: () => router.get('/tazkira'),
-            });
-        } else {
-            post('/tazkira', {
-                data: formData,
-                preserveScroll: true,
-                onSuccess: () => router.get('/tazkira'),
-            });
-        }
+        // ارسال با router.post و تنظیمات صحیح
+        const url = isEdit && tazkira?.id
+            ? `/tazkira/${tazkira.id}`
+            : '/tazkira';
+
+        const method = isEdit ? 'POST' : 'POST';
+
+        router.post(url, formData, {
+            preserveScroll: true,
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+            onSuccess: () => router.get('/tazkira'),
+        });
     };
+
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
+
         if (file) {
             setTazkiraImage(file);
             const reader = new FileReader();
@@ -153,6 +161,7 @@ export default function TazkiraForm({ tazkira, isEdit = false }: Props) {
 
     const handleAddAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
+
         if (files) {
             const newAttachments: Attachment[] = Array.from(files).map(file => ({
                 file_name: file.name,
@@ -162,6 +171,7 @@ export default function TazkiraForm({ tazkira, isEdit = false }: Props) {
             }));
             setAttachments([...attachments, ...newAttachments]);
         }
+
         e.target.value = '';
     };
 
@@ -170,8 +180,14 @@ export default function TazkiraForm({ tazkira, isEdit = false }: Props) {
     };
 
     const formatFileSize = (bytes: number) => {
-        if (bytes < 1024) return bytes + ' B';
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        if (bytes < 1024) {
+            return bytes + ' B';
+        }
+
+        if (bytes < 1024 * 1024) {
+            return (bytes / 1024).toFixed(1) + ' KB';
+        }
+
         return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     };
 
@@ -185,7 +201,7 @@ export default function TazkiraForm({ tazkira, isEdit = false }: Props) {
                         <div className="space-y-5">
 
                             {/* Header */}
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                                 <div>
                                     <h1 className="text-2xl font-bold text-gray-900">
                                         {isEdit ? 'ویرایش تذکره' : 'ثبت تذکره جدید'}
@@ -212,40 +228,76 @@ export default function TazkiraForm({ tazkira, isEdit = false }: Props) {
                                 description="اطلاعات کامل شخص مطابق تذکره الکترونیکی"
                             >
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <InputField
-                                        label="نام"
-                                        required
-                                        value={data.first_name}
-                                        onChange={v => setData('first_name', v)}
-                                        error={errors.first_name}
-                                        placeholder="علی"
-                                    />
-                                    <InputField
-                                        label="تخلص"
-                                        required
-                                        value={data.last_name}
-                                        onChange={v => setData('last_name', v)}
-                                        error={errors.last_name}
-                                        placeholder="رضایی"
-                                    />
-                                    <InputField
-                                        label="نام پدر"
-                                        icon={Users}
-                                        value={data.father_name}
-                                        onChange={v => setData('father_name', v)}
-                                        error={errors.father_name}
-                                        placeholder="محمد"
-                                        helperText="نام پدر شخص مطابق تذکره"
-                                    />
-                                    <InputField
-                                        label="نام پدر کلان"
-                                        icon={Users}
-                                        value={data.grandfather_name}
-                                        onChange={v => setData('grandfather_name', v)}
-                                        error={errors.grandfather_name}
-                                        placeholder="احمد"
-                                        helperText="نام پدر بزرگ شخص"
-                                    />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            نام <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={data.first_name}
+                                            onChange={(e) => setData('first_name', e.target.value)}
+                                            className={inputClass}
+                                            placeholder="علی"
+                                        />
+                                        {errors.first_name && (
+                                            <p className="text-xs text-red-500 mt-1">{errors.first_name}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            تخلص <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={data.last_name}
+                                            onChange={(e) => setData('last_name', e.target.value)}
+                                            className={inputClass}
+                                            placeholder="رضایی"
+                                        />
+                                        {errors.last_name && (
+                                            <p className="text-xs text-red-500 mt-1">{errors.last_name}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            نام پدر
+                                        </label>
+                                        <div className="relative">
+                                            <Users className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                value={data.father_name}
+                                                onChange={(e) => setData('father_name', e.target.value)}
+                                                className={`${inputClass} pr-9`}
+                                                placeholder="محمد"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-gray-400 mt-1">نام پدر شخص مطابق تذکره</p>
+                                        {errors.father_name && (
+                                            <p className="text-xs text-red-500 mt-1">{errors.father_name}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            نام پدر کلان
+                                        </label>
+                                        <div className="relative">
+                                            <Users className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                value={data.grandfather_name}
+                                                onChange={(e) => setData('grandfather_name', e.target.value)}
+                                                className={`${inputClass} pr-9`}
+                                                placeholder="احمد"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-gray-400 mt-1">نام پدر بزرگ شخص</p>
+                                        {errors.grandfather_name && (
+                                            <p className="text-xs text-red-500 mt-1">{errors.grandfather_name}</p>
+                                        )}
+                                    </div>
                                 </div>
                             </SectionCard>
 
@@ -258,42 +310,73 @@ export default function TazkiraForm({ tazkira, isEdit = false }: Props) {
                                 description="مشخصات اصلی تذکره شامل جلد، صفحه، صکو و شماره تذکره"
                             >
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <InputField
-                                        label="شماره تذکره"
-                                        required
-                                        icon={Hash}
-                                        value={data.tazkira_number}
-                                        onChange={v => setData('tazkira_number', v)}
-                                        error={errors.tazkira_number}
-                                        placeholder="123456789"
-                                    />
-                                    <InputField
-                                        label="جلد"
-                                        icon={BookOpen}
-                                        value={data.volume}
-                                        onChange={v => setData('volume', v)}
-                                        error={errors.volume}
-                                        placeholder="1"
-                                        helperText="شماره جلد تذکره"
-                                    />
-                                    <InputField
-                                        label="صفحه"
-                                        icon={FileText}
-                                        value={data.page}
-                                        onChange={v => setData('page', v)}
-                                        error={errors.page}
-                                        placeholder="10"
-                                        helperText="شماره صفحه تذکره"
-                                    />
-                                    <InputField
-                                        label="صکو / شماره ثبت"
-                                        icon={Grid}
-                                        value={data.registration_number}
-                                        onChange={v => setData('registration_number', v)}
-                                        error={errors.registration_number}
-                                        placeholder="12345"
-                                        helperText="شماره ثبت / صکو در تذکره"
-                                    />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            شماره تذکره <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="relative">
+                                            <Hash className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                required
+                                                value={data.tazkira_number}
+                                                onChange={(e) => setData('tazkira_number', e.target.value)}
+                                                className={`${inputClass} pr-9`}
+                                                placeholder="123456789"
+                                            />
+                                        </div>
+                                        {errors.tazkira_number && (
+                                            <p className="text-xs text-red-500 mt-1">{errors.tazkira_number}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            جلد
+                                        </label>
+                                        <div className="relative">
+                                            <BookOpen className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                value={data.volume}
+                                                onChange={(e) => setData('volume', e.target.value)}
+                                                className={`${inputClass} pr-9`}
+                                                placeholder="1"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-gray-400 mt-1">شماره جلد تذکره</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            صفحه
+                                        </label>
+                                        <div className="relative">
+                                            <FileText className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                value={data.page}
+                                                onChange={(e) => setData('page', e.target.value)}
+                                                className={`${inputClass} pr-9`}
+                                                placeholder="10"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-gray-400 mt-1">شماره صفحه تذکره</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            صکو / شماره ثبت
+                                        </label>
+                                        <div className="relative">
+                                            <Grid className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                value={data.registration_number}
+                                                onChange={(e) => setData('registration_number', e.target.value)}
+                                                className={`${inputClass} pr-9`}
+                                                placeholder="12345"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-gray-400 mt-1">شماره ثبت / صکو در تذکره</p>
+                                    </div>
                                 </div>
                             </SectionCard>
 
@@ -306,38 +389,65 @@ export default function TazkiraForm({ tazkira, isEdit = false }: Props) {
                                 description="اطلاعات تکمیلی مانند تاریخ تولد، کد ملی و ..."
                             >
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <InputField
-                                        label="تاریخ تولد"
-                                        type="date"
-                                        icon={Calendar}
-                                        value={data.birth_date}
-                                        onChange={v => setData('birth_date', v)}
-                                        error={errors.birth_date}
-                                    />
-                                    <InputField
-                                        label="محل تولد"
-                                        icon={MapPin}
-                                        value={data.birth_place}
-                                        onChange={v => setData('birth_place', v)}
-                                        error={errors.birth_place}
-                                        placeholder="کابل"
-                                    />
-                                    <InputField
-                                        label="کد ملی"
-                                        icon={Hash}
-                                        value={data.national_code}
-                                        onChange={v => setData('national_code', v)}
-                                        error={errors.national_code}
-                                        placeholder="1234567890"
-                                    />
-                                    <InputField
-                                        label="شماره کارت پدر"
-                                        icon={Fingerprint}
-                                        value={data.father_card_number}
-                                        onChange={v => setData('father_card_number', v)}
-                                        error={errors.father_card_number}
-                                        placeholder="شماره کارت تذکره پدر"
-                                    />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            تاریخ تولد
+                                        </label>
+                                        <div className="relative">
+                                            <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                type="date"
+                                                value={data.birth_date}
+                                                onChange={(e) => setData('birth_date', e.target.value)}
+                                                className={`${inputClass} pr-9`}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            محل تولد
+                                        </label>
+                                        <div className="relative">
+                                            <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                value={data.birth_place}
+                                                onChange={(e) => setData('birth_place', e.target.value)}
+                                                className={`${inputClass} pr-9`}
+                                                placeholder="کابل"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            کد ملی
+                                        </label>
+                                        <div className="relative">
+                                            <Hash className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                value={data.national_code}
+                                                onChange={(e) => setData('national_code', e.target.value)}
+                                                className={`${inputClass} pr-9`}
+                                                placeholder="1234567890"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            شماره کارت پدر
+                                        </label>
+                                        <div className="relative">
+                                            <Fingerprint className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                value={data.father_card_number}
+                                                onChange={(e) => setData('father_card_number', e.target.value)}
+                                                className={`${inputClass} pr-9`}
+                                                placeholder="شماره کارت تذکره پدر"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </SectionCard>
 
@@ -350,42 +460,65 @@ export default function TazkiraForm({ tazkira, isEdit = false }: Props) {
                                 description="اطلاعات تماس فرد برای پیگیری‌های بعدی"
                             >
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <InputField
-                                        label="تلفن ثابت"
-                                        icon={Phone}
-                                        value={data.phone}
-                                        onChange={v => setData('phone', v)}
-                                        error={errors.phone}
-                                        placeholder="021-12345678"
-                                    />
-                                    <InputField
-                                        label="تلفن همراه"
-                                        icon={Phone}
-                                        value={data.mobile}
-                                        onChange={v => setData('mobile', v)}
-                                        error={errors.mobile}
-                                        placeholder="09123456789"
-                                    />
-                                    <div className="md:col-span-2">
-                                        <InputField
-                                            label="آدرس"
-                                            icon={MapPin}
-                                            value={data.address}
-                                            onChange={v => setData('address', v)}
-                                            error={errors.address}
-                                            placeholder="آدرس کامل محل سکونت"
-                                        />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            تلفن ثابت
+                                        </label>
+                                        <div className="relative">
+                                            <Phone className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                value={data.phone}
+                                                onChange={(e) => setData('phone', e.target.value)}
+                                                className={`${inputClass} pr-9`}
+                                                placeholder="021-12345678"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            تلفن همراه
+                                        </label>
+                                        <div className="relative">
+                                            <Phone className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                value={data.mobile}
+                                                onChange={(e) => setData('mobile', e.target.value)}
+                                                className={`${inputClass} pr-9`}
+                                                placeholder="09123456789"
+                                            />
+                                        </div>
                                     </div>
                                     <div className="md:col-span-2">
-                                        <InputField
-                                            label="ایمیل"
-                                            type="email"
-                                            icon={Mail}
-                                            value={data.email}
-                                            onChange={v => setData('email', v)}
-                                            error={errors.email}
-                                            placeholder="example@mail.com"
-                                        />
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            آدرس
+                                        </label>
+                                        <div className="relative">
+                                            <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                value={data.address}
+                                                onChange={(e) => setData('address', e.target.value)}
+                                                className={`${inputClass} pr-9`}
+                                                placeholder="آدرس کامل محل سکونت"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            ایمیل
+                                        </label>
+                                        <div className="relative">
+                                            <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                type="email"
+                                                value={data.email}
+                                                onChange={(e) => setData('email', e.target.value)}
+                                                className={`${inputClass} pr-9`}
+                                                placeholder="example@mail.com"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </SectionCard>
@@ -493,24 +626,24 @@ export default function TazkiraForm({ tazkira, isEdit = false }: Props) {
                                                         type="button"
                                                         onClick={() => setData('status', opt.value)}
                                                         className={`relative p-4 rounded-xl border-2 text-right transition-all ${isSelected
-                                                                ? `border-${opt.value === 'approved' ? 'emerald' : opt.value === 'pending' ? 'amber' : 'red'}-400 bg-${opt.value === 'approved' ? 'emerald' : opt.value === 'pending' ? 'amber' : 'red'}-50`
-                                                                : 'border-gray-200 hover:border-gray-300'
+                                                            ? `border-${opt.value === 'approved' ? 'emerald' : opt.value === 'pending' ? 'amber' : 'red'}-400 bg-${opt.value === 'approved' ? 'emerald' : opt.value === 'pending' ? 'amber' : 'red'}-50`
+                                                            : 'border-gray-200 hover:border-gray-300'
                                                             }`}
                                                     >
                                                         <div className="flex items-center gap-3">
                                                             <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${isSelected
-                                                                    ? `bg-${opt.value === 'approved' ? 'emerald' : opt.value === 'pending' ? 'amber' : 'red'}-100`
-                                                                    : 'bg-gray-100'
+                                                                ? `bg-${opt.value === 'approved' ? 'emerald' : opt.value === 'pending' ? 'amber' : 'red'}-100`
+                                                                : 'bg-gray-100'
                                                                 }`}>
                                                                 <Icon className={`h-4 w-4 ${isSelected
-                                                                        ? `text-${opt.value === 'approved' ? 'emerald' : opt.value === 'pending' ? 'amber' : 'red'}-600`
-                                                                        : 'text-gray-500'
+                                                                    ? `text-${opt.value === 'approved' ? 'emerald' : opt.value === 'pending' ? 'amber' : 'red'}-600`
+                                                                    : 'text-gray-500'
                                                                     }`} />
                                                             </div>
                                                             <div>
                                                                 <p className={`text-sm font-bold ${isSelected
-                                                                        ? `text-${opt.value === 'approved' ? 'emerald' : opt.value === 'pending' ? 'amber' : 'red'}-700`
-                                                                        : 'text-gray-700'
+                                                                    ? `text-${opt.value === 'approved' ? 'emerald' : opt.value === 'pending' ? 'amber' : 'red'}-700`
+                                                                    : 'text-gray-700'
                                                                     }`}>{opt.label}</p>
                                                             </div>
                                                         </div>
