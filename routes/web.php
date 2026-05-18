@@ -9,6 +9,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\LetterCategoryController;
 use App\Http\Controllers\LetterController;
 use App\Http\Controllers\LetterDelegationController;
+use App\Http\Controllers\NidController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\ReportController;
@@ -70,6 +71,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Route::put('/users/{user}/permissions', [UserPermissionController::class, 'update'])
         //     ->name('admin.users.permissions.update');
+
+        Route::resources([NidController::class]);
     });
 
     // ═══════════════════════════════════════════════════════
