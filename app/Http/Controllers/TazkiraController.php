@@ -53,10 +53,10 @@ class TazkiraController extends Controller
             'tazkiras' => $tazkiras,
             'filters' => $request->only(['search', 'status']),
             'can' => [
-                'create' => $user->can('create', Tazkira::class),
-                'edit' => $user->can('update', Tazkira::class),
-                'delete' => $user->can('delete', Tazkira::class),
-                'approve' => $user->can('approve', Tazkira::class),
+                'create' => true,
+                'edit' => true,
+                'delete' => true,
+                'approve' => true,
             ],
         ]);
     }
@@ -161,9 +161,9 @@ class TazkiraController extends Controller
         return Inertia::render('tazkira/show', [
             'tazkira' => $tazkira,
             'can' => [
-                'edit' => auth()->user()->can('update', $tazkira),
-                'delete' => auth()->user()->can('delete', $tazkira),
-                'approve' => auth()->user()->can('approve', $tazkira),
+                'edit' => true,
+                'delete' => true,
+                'approve' => true,
             ],
         ]);
     }
