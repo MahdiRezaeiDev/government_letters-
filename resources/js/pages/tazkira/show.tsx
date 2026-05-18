@@ -1,5 +1,3 @@
-// resources/js/pages/tazkira/show.tsx
-
 import { Head, Link, router } from '@inertiajs/react';
 import {
     User, Hash, BookOpen, FileText, Grid, Calendar, MapPin, Phone, Mail,
@@ -28,6 +26,8 @@ interface ReviewAttachment {
     file_path: string;
     file_url: string;
     file_size: number;
+    file_type: string | null;
+    mime_type: string | null;
     uploaded_by?: { full_name: string };
 }
 
@@ -91,14 +91,26 @@ const STATUS_CONFIG = {
 };
 
 const formatFileSize = (bytes: number) => {
-    if (!bytes) return '0 B';
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    if (!bytes) {
+        return '0 B';
+    }
+
+    if (bytes < 1024) {
+        return bytes + ' B';
+    }
+
+    if (bytes < 1024 * 1024) {
+        return (bytes / 1024).toFixed(1) + ' KB';
+    }
+
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 };
 
 const formatDate = (dateString: string) => {
-    if (!dateString) return '—';
+    if (!dateString) {
+        return '—';
+    }
+
     return new Date(dateString).toLocaleDateString('fa-IR');
 };
 
@@ -618,20 +630,66 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                                                     )}
                                                     {log.attachments && log.attachments.length > 0 && (
                                                         <div className="p-3">
-                                                            <p className="text-xs text-gray-500 mb-2">ضمیمه‌ها:</p>
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {log.attachments.map((att) => (
-                                                                    <a
-                                                                        key={att.id}
-                                                                        href={att.file_url}
-                                                                        download
-                                                                        target="_blank"
-                                                                        className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-100 rounded-lg text-xs text-gray-600 hover:bg-gray-200 transition-colors"
-                                                                    >
-                                                                        <Download className="h-3 w-3" />
-                                                                        {att.file_name}
-                                                                    </a>
-                                                                ))}
+                                                            <p className="text-xs text-gray-500 mb-2">
+                                                                ضمیمه‌ها ({log.attachments.length}):
+                                                            </p>
+                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                                {log.attachments.map((att) => {
+                                                                    const isImage = att.file_type?.startsWith('image/') || att.mime_type?.startsWith('image/');
+
+                                                                    return (
+                                                                        <div
+                                                                            key={att.id}
+                                                                            className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group/ratt"
+                                                                        >
+                                                                            <div
+                                                                                className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer"
+                                                                                onClick={() => {
+                                                                                    if (isImage) {
+                                                                                        setPreviewImage({ url: att.file_url, name: att.file_name });
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                {isImage ? (
+                                                                                    <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-blue-100 flex-shrink-0">
+                                                                                        <img
+                                                                                            src={att.file_url}
+                                                                                            alt={att.file_name}
+                                                                                            className="w-full h-full object-cover"
+                                                                                            onError={(e) => {
+                                                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                                                            }}
+                                                                                        />
+                                                                                        <div className="absolute inset-0 bg-black/0 group-hover/ratt:bg-black/20 transition-colors flex items-center justify-center">
+                                                                                            <Eye className="h-3 w-3 text-white opacity-0 group-hover/ratt:opacity-100 transition-opacity" />
+                                                                                        </div>
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <div className="p-1.5 bg-gray-200 rounded-lg flex-shrink-0">
+                                                                                        <File className="h-3.5 w-3.5 text-gray-600" />
+                                                                                    </div>
+                                                                                )}
+                                                                                <div className="min-w-0 flex-1">
+                                                                                    <p className="text-xs font-medium text-gray-700 truncate" title={att.file_name}>
+                                                                                        {att.file_name}
+                                                                                    </p>
+                                                                                    <p className="text-xs text-gray-400">
+                                                                                        {formatFileSize(att.file_size)}
+                                                                                    </p>
+                                                                                </div>
+                                                                            </div>
+                                                                            <a
+                                                                                href={att.file_url}
+                                                                                download
+                                                                                target="_blank"
+                                                                                className="p-1.5 text-gray-400 hover:text-indigo-600 rounded-lg transition-colors opacity-0 group-hover/ratt:opacity-100 flex-shrink-0"
+                                                                                title="دانلود"
+                                                                            >
+                                                                                <Download className="h-3.5 w-3.5" />
+                                                                            </a>
+                                                                        </div>
+                                                                    );
+                                                                })}
                                                             </div>
                                                         </div>
                                                     )}

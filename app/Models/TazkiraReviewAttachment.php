@@ -4,6 +4,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class TazkiraReviewAttachment extends Model
 {
@@ -18,6 +19,13 @@ class TazkiraReviewAttachment extends Model
         'file_size',
         'uploaded_by',
     ];
+
+    protected $appends = ['file_url']; // ← اضافه شد
+
+    public function getFileUrlAttribute(): ?string
+    {
+        return $this->file_path ? Storage::url($this->file_path) : null;
+    }
 
     public function reviewLog()
     {

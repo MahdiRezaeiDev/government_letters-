@@ -2,7 +2,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutDashboard, Building2, Map as Sitemap, Briefcase,
-    Users, Mail, Inbox, Send, FileText, Archive,
+    Users, Inbox, Send, Archive,
     BarChart3, Settings, ChevronDown, ChevronLeft,
     FolderTree, Sparkles, Layout, Zap, X
 } from 'lucide-react';
@@ -19,6 +19,7 @@ import { index as organizationsIndex } from '@/routes/organizations';
 import positions from '@/routes/positions';
 import { edit as profileEdit } from '@/routes/profile';
 import { index as reportsIndex } from '@/routes/reports';
+import tazkira from '@/routes/tazkira';
 import { index as usersIndex } from '@/routes/users';
 
 interface SidebarProps {
@@ -66,6 +67,8 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: 
         { title: 'ثبت مکتوب / استعلام', href: lettersCreate(), icon: Sparkles },
         { title: 'آرشیف مرکزی', href: archivesIndex(), icon: Archive },
         { title: 'گزارشات تحلیلی', href: reportsIndex(), icon: BarChart3, permission: 'dept-manager' },
+        { title: 'تایید تذکره', href: tazkira.index(), icon: BarChart3, },
+
         {
             title: 'تنظیمات سیستم',
             icon: Settings,

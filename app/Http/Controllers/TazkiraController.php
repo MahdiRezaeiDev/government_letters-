@@ -66,7 +66,7 @@ class TazkiraController extends Controller
      */
     public function create()
     {
-        return Inertia::render('tazkira/form', [
+        return Inertia::render('tazkira/create', [
             'isEdit' => false,
         ]);
     }
@@ -177,7 +177,7 @@ class TazkiraController extends Controller
 
         $tazkira->load('attachments');
 
-        return Inertia::render('tazkira/form', [
+        return Inertia::render('tazkira/edit', [
             'tazkira' => $tazkira,
             'isEdit' => true,
         ]);
