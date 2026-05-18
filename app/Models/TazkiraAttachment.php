@@ -21,6 +21,10 @@ class TazkiraAttachment extends Model
         'uploaded_by',
     ];
 
+    protected $appends = [
+        'file_url', // ← این خط را اضافه کنید
+    ];
+
     public function tazkira()
     {
         return $this->belongsTo(Tazkira::class);

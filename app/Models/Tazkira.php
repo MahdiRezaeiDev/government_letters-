@@ -43,6 +43,10 @@ class Tazkira extends Model
         'approved_at' => 'datetime',
     ];
 
+    protected $appends = [
+        'tazkira_image_url', // ← این خط را اضافه کنید
+    ];
+
     // ==================== روابط ====================
 
     public function createdBy()

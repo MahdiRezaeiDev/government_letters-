@@ -6,7 +6,7 @@ import {
     CheckCircle, XCircle, Clock, Eye, Edit, Trash2, ArrowLeft, Printer,
     Download, AlertCircle, Fingerprint, Paperclip, ImageIcon,
     File, ChevronDown, ChevronUp, Smartphone
-    } from 'lucide-react';
+} from 'lucide-react';
 import { useState } from 'react';
 import { TazkiraReviewModal } from '@/components/TazkiraReviewModal';
 
@@ -61,6 +61,7 @@ interface Tazkira {
     address: string | null;
     email: string | null;
     tazkira_image: string | null;
+    tazkira_image_url: string | null;
     status: 'pending' | 'approved' | 'rejected';
     status_text: string;
     status_color: string;
@@ -91,24 +92,24 @@ const STATUS_CONFIG = {
 
 const formatFileSize = (bytes: number) => {
     if (!bytes) {
-        return '0 B';
-    }
+return '0 B';
+}
 
     if (bytes < 1024) {
-        return bytes + ' B';
-    }
+return bytes + ' B';
+}
 
     if (bytes < 1024 * 1024) {
-        return (bytes / 1024).toFixed(1) + ' KB';
-    }
+return (bytes / 1024).toFixed(1) + ' KB';
+}
 
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 };
 
 const formatDate = (dateString: string) => {
     if (!dateString) {
-        return '—';
-    }
+return '—';
+}
 
     return new Date(dateString).toLocaleDateString('fa-IR');
 };
@@ -126,6 +127,9 @@ export default function TazkiraShow({ tazkira, can }: Props) {
         attachments: true,
         history: true,
     });
+
+    console.log(tazkira);
+    
 
     const statusConfig = STATUS_CONFIG[tazkira.status];
     const StatusIcon = statusConfig.icon;
@@ -259,22 +263,33 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
                         {/* تصویر تذکره */}
-
-                        {tazkira.tazkira_image && (
+                        {tazkira.tazkira_image_url && tazkira.tazkira_image_url !== '/images/no-image.png' ? (
                             <div
-                                className="relative h-52 bg-gradient-to-r from-gray-100 to-gray-200 cursor-pointer overflow-hidden"
+                                className="relative h-52 bg-gradient-to-r from-gray-100 to-gray-200 cursor-pointer overflow-hidden group"
                                 onClick={() => setShowImageModal(true)}
                             >
                                 <img
-                                    src={tazkira.tazkira_image}
+                                    src={tazkira.tazkira_image_url}
                                     alt="تصویر تذکره"
-                                    className="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
+                                    className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).src = '/images/no-image.png';
+                                    }}
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end justify-end p-4">
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-end p-4">
                                     <div className="bg-white/90 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 flex items-center gap-2">
                                         <Eye className="h-4 w-4" />
                                         مشاهده بزرگ
                                     </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="relative h-52 bg-gradient-to-r from-gray-100 to-gray-200 flex items-center justify-center">
+                                <div className="text-center">
+                                    <div className="p-3 bg-white/50 rounded-full inline-block mb-2">
+                                        <ImageIcon className="h-8 w-8 text-gray-400" />
+                                    </div>
+                                    <p className="text-sm text-gray-500">تصویر تذکره وجود ندارد</p>
                                 </div>
                             </div>
                         )}
@@ -648,7 +663,7 @@ export default function TazkiraShow({ tazkira, can }: Props) {
             {/* Delete Modal */}
             {showDeleteModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+                    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="p-2 bg-red-100 rounded-full">
                                 <AlertCircle className="h-6 w-6 text-red-600" />
@@ -671,11 +686,11 @@ export default function TazkiraShow({ tazkira, can }: Props) {
             )}
 
             {/* Image Modal */}
-            {showImageModal && tazkira.tazkira_image && (
+            {showImageModal && tazkira.tazkira_image_url && tazkira.tazkira_image_url !== '/images/no-image.png' && (
                 <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4" onClick={() => setShowImageModal(false)}>
                     <div className="relative max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
                         <img
-                            src={tazkira.tazkira_image}
+                            src={tazkira.tazkira_image_url}
                             alt="تصویر تذکره"
                             className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
                         />
