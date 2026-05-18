@@ -49,17 +49,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return response()->json(['success' => true]);
     });
 
-
-    // routes/web.php - موقت
-    Route::get('/test-letter-notif', function () {
-        $letter = \App\Models\Letter::first();
-        $user   = \App\Models\User::find($letter->recipient_user_id);
-
-        $user->notify(new \App\Notifications\LetterReceivedNotification($letter));
-
-        return 'Sent to user: ' . $user->id;
-    });
-
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // ═══════════════════════════════════════════════════════
@@ -76,11 +65,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('organizations/{organization}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
         Route::post('organizations/{organization}/toggle-status', [OrganizationController::class, 'toggleStatus'])->name('organizations.toggle-status');
 
-        Route::get('/users/{user}/permissions', [UserPermissionController::class, 'edit'])
-            ->name('admin.users.permissions.edit');
+        // Route::get('/users/{user}/permissions', [UserPermissionController::class, 'edit'])
+        //     ->name('admin.users.permissions.edit');
 
-        Route::put('/users/{user}/permissions', [UserPermissionController::class, 'update'])
-            ->name('admin.users.permissions.update');
+        // Route::put('/users/{user}/permissions', [UserPermissionController::class, 'update'])
+        //     ->name('admin.users.permissions.update');
     });
 
     // ═══════════════════════════════════════════════════════
