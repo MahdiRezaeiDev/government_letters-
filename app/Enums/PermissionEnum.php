@@ -79,7 +79,7 @@ enum PermissionEnum: string
     case NID_REGISTER   = 'nid-register';
     case NID_APPROVE    = 'nid-approve';
     case NID_VIEW       = 'nid-view';
-    case NID_DESTROY   = 'nid-destroy';
+    case NID_DESTROY    = 'nid-destroy';
 
         // ============================================
         // متدهای کمکی
