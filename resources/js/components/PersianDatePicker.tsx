@@ -17,8 +17,6 @@ interface Props {
     placeholder?: string;
 }
 
-// ✅ Override the locale's months instead of using the `months` prop
-// react-multi-date-picker expects [fullName, shortName] tuples
 const afghan_dari = {
     ...persian_fa,
     months: [
