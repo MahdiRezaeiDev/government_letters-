@@ -63,7 +63,9 @@ const formatDate = (dateString: string | undefined): string => {
     return new Date(dateString).toLocaleDateString('fa-Af', {
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
     });
 };
 
