@@ -53,7 +53,7 @@ class LetterRequest extends FormRequest
             'instruction'       => 'nullable|string',
 
             'attachments'       => 'nullable|array',
-            'attachments.*'     => 'file|max:10240|mimes:pdf,jpg,jpeg,png',
+            'attachments.*'     => 'file|max:10240|mimes:pdf,jpg,jpeg,png,docx',
         ];
     }
 
