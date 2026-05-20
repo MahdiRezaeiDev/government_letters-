@@ -232,8 +232,8 @@ class LetterController extends Controller
             fn($q) =>
             $q->where('organization_id', $user->organization_id)
                 ->where('status', 'active')
-                ->where('id', '!=', $user->primaryPosition->id)
         )
+            ->where('id', '!=', $user->primaryPosition->id)
             ->with(['users:id,first_name,last_name'])
             ->get(['id', 'name', 'department_id'])
             ->map(fn($p) => [
