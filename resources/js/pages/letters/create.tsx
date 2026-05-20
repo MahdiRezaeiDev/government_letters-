@@ -53,11 +53,11 @@ export default function LettersCreate({
 
     const { data, setData, post, processing, errors, reset } = useForm({
         category_id: null,
-        subject: 'مکنوب جدید',
-        content: 'مکتوب / استعلام  تست جدید',
+        subject: "",
+        content: "",
         security_level: 'internal',
         priority: 'normal',
-        date: new Date().toLocaleDateString('fa-IR', { calendar: 'persian', year: 'numeric', month: '2-digit', day: '2-digit' }),
+        date: new Date().toLocaleDateString('fa-Af', { calendar: 'persian', year: 'numeric', month: '2-digit', day: '2-digit' }),
         attachments: [],
         is_draft: false,
         recipient_type: 'internal',
