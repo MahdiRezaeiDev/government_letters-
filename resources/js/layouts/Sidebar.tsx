@@ -67,7 +67,7 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: 
         { title: 'ثبت مکتوب / استعلام', href: lettersCreate(), icon: Sparkles },
         { title: 'آرشیف مرکزی', href: archivesIndex(), icon: Archive },
         { title: 'گزارشات تحلیلی', href: reportsIndex(), icon: BarChart3, permission: 'dept-manager' },
-        { title: 'تایید تذکره', href: tazkira.index(), icon: BarChart3, },
+        // { title: 'تایید تذکره', href: tazkira.index(), icon: BarChart3, },
 
         {
             title: 'تنظیمات سیستم',
