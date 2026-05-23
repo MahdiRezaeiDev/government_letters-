@@ -404,7 +404,7 @@ export default function LettersIndex({
                     <div className="flex items-center justify-between text-[10px] text-gray-400 pt-2 border-t border-gray-50">
                         <div className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            {letter.date}
+                            {new Date(letter.created_at).toLocaleDateString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                         </div>
                         {letter.due_date && (
                             <div className={`flex items-center gap-1 ${new Date(letter.due_date) < new Date() ? 'text-red-500' : 'text-orange-500'}`}>
@@ -563,12 +563,12 @@ export default function LettersIndex({
                         <div className="flex flex-col gap-0.5">
                             <div className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-gray-500">
                                 <Calendar className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                                {letter.date}
+                                {new Date(letter.created_at).toLocaleDateString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                             </div>
                             {letter.due_date && (
                                 <div className={`flex items-center gap-0.5 text-[8px] sm:text-[10px] ${new Date(letter.due_date) < new Date() ? 'text-red-500' : 'text-orange-500'}`}>
                                     <Clock className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
-                                    {letter.due_date}
+                                    {new Date(letter.due_date).toLocaleDateString('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                                 </div>
                             )}
                         </div>
