@@ -66,7 +66,7 @@ class Letter extends Model
 
     protected $casts = [
         'cc_recipients' => 'array',
-        'date' => JalaliDateCast::class,
+        'date' => 'date',
         'due_date' => JalaliDateCast::class,
         'response_deadline' => JalaliDateCast::class,
         'replied_at' => 'datetime',

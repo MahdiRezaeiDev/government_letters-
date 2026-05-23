@@ -678,8 +678,8 @@ export default function LettersIndex({
                                     <div className="flex bg-gray-100 rounded-lg p-0.5">
                                         <button
                                             onClick={() => {
- setThreadView(true); setMobileMenuOpen(false); 
-}}
+                                                setThreadView(true); setMobileMenuOpen(false);
+                                            }}
                                             className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 ${threadView ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}
                                         >
                                             <GitBranch className="h-3.5 w-3.5" />
@@ -687,8 +687,8 @@ export default function LettersIndex({
                                         </button>
                                         <button
                                             onClick={() => {
- setThreadView(false); setMobileMenuOpen(false); 
-}}
+                                                setThreadView(false); setMobileMenuOpen(false);
+                                            }}
                                             className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 ${!threadView ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'}`}
                                         >
                                             <List className="h-3.5 w-3.5" />
