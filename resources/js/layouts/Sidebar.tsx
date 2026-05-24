@@ -21,6 +21,7 @@ import { edit as profileEdit } from '@/routes/profile';
 import { index as reportsIndex } from '@/routes/reports';
 import tazkira from '@/routes/tazkira';
 import { index as usersIndex } from '@/routes/users';
+import settings from '@/routes/settings';
 
 interface SidebarProps {
     collapsed: boolean;
@@ -59,7 +60,7 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: 
                 { title: 'ریاست‌ها', href: departmentsIndex(), icon: Sitemap, permission: 'org-admin' },
                 { title: 'بست‌های کاری', href: positions.index(), icon: Briefcase, permission: 'dept-manager' },
                 { title: 'مدیریت کارمندان', href: usersIndex(), icon: Users, permission: 'dept-manager' },
-                { title: 'طبقه‌بندی مکتوب ها', href: categoriesIndex(), icon: FolderTree },
+                // { title: 'طبقه‌بندی مکتوب ها', href: categoriesIndex(), icon: FolderTree },
             ],
         },
         { title: 'مکتوب ها وارده', href: lettersIndex({ query: { direction: 'incoming' } }), icon: Inbox },
@@ -74,7 +75,7 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: 
             icon: Settings,
             children: [
                 { title: 'پروفایل کاربری', href: profileEdit(), icon: Users },
-                { title: 'پیکربندی اصلی', href: usersIndex(), icon: Settings },
+                { title: 'پیکربندی اصلی', href: settings.index(), icon: Settings },
             ],
         },
     ];

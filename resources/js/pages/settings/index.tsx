@@ -2,9 +2,16 @@ import { Head } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import {
     Save, Shield, Globe, Database, Mail, Settings,
-    CheckCircle, Server, Lock, FileType, Clock, Hash
+    CheckCircle, Server, Lock, FileType, Clock, Hash, Type
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+const FONTS = [
+    { value: 'Vazirmatn', label: 'وزیرمتن', sample: 'سیستم مدیریت لوژیستیک' },
+    { value: 'Sahel', label: 'ساحل', sample: 'سیستم مدیریت لوژیستیک' },
+    { value: 'DroidArabicKufi', label: 'کوفی عربی', sample: 'سیستم مدیریت لوژیستیک' },
+    { value: 'IranNastaliq', label: 'نستعلیق', sample: 'سیستم مدیریت لوژیستیک' },
+];
 
 interface Props {
     settings: {
@@ -18,6 +25,7 @@ interface Props {
         session_lifetime: number;
         max_upload_size: number;
         allowed_file_types: string;
+        preferred_font: string; // ← اضافه شد
     };
 }
 
@@ -77,6 +85,47 @@ function SelectField({
     );
 }
 
+// ─── Font Picker ───────────────────────────────────────────────────────────
+
+function FontPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+    return (
+        <div className="grid grid-cols-2 gap-3">
+            {FONTS.map(font => {
+                const isActive = value === font.value;
+                return (
+                    <button
+                        key={font.value}
+                        type="button"
+                        onClick={() => onChange(font.value)}
+                        className={`relative flex flex-col items-start gap-2 p-4 rounded-xl border-2 transition-all duration-200 text-right ${isActive
+                            ? 'border-indigo-400 bg-indigo-50/60 shadow-sm'
+                            : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                            }`}
+                    >
+                        {/* نشانه انتخاب */}
+                        {isActive && (
+                            <span className="absolute top-2.5 left-2.5 h-4 w-4 rounded-full bg-indigo-500 flex items-center justify-center">
+                                <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </span>
+                        )}
+                        {/* نام فونت */}
+                        <span className="text-xs font-semibold text-slate-500">{font.label}</span>
+                        {/* پیش‌نمایش */}
+                        <span
+                            className="text-base text-slate-800 leading-relaxed w-full truncate"
+                            style={{ fontFamily: font.value }}
+                        >
+                            {font.sample}
+                        </span>
+                    </button>
+                );
+            })}
+        </div>
+    );
+}
+
 // ─── Toggle Switch ─────────────────────────────────────────────────────────
 
 function ToggleRow({
@@ -106,7 +155,7 @@ function ToggleRow({
     );
 }
 
-// ─── Section Card wrapper (no tabs) ───────────────────────────────────────
+// ─── Section Card ──────────────────────────────────────────────────────────
 
 function SectionCard({ icon: Icon, iconColor, title, subtitle, children }: {
     icon: React.ElementType; iconColor: string; title: string; subtitle: string; children: React.ReactNode;
@@ -144,7 +193,13 @@ export default function SystemSettings({ settings }: Props) {
         mail_port: settings.mail_port,
         mail_username: settings.mail_username,
         mail_encryption: settings.mail_encryption,
+        preferred_font: settings.preferred_font ?? 'Vazirmatn', // ← اضافه شد
     });
+
+    // اعمال فونت به صورت زنده هنگام تغییر
+    useEffect(() => {
+        document.documentElement.style.setProperty('--font-family', `'${data.preferred_font}', Tahoma, sans-serif`);
+    }, [data.preferred_font]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -163,8 +218,6 @@ export default function SystemSettings({ settings }: Props) {
         { id: 'security', label: 'امنیت', icon: Shield, color: '#10b981' },
         { id: 'upload', label: 'آپلود فایل', icon: Database, color: '#f59e0b' },
     ];
-
-    const activeTabCfg = tabs.find(t => t.id === activeTab)!;
 
     return (
         <>
@@ -185,7 +238,7 @@ export default function SystemSettings({ settings }: Props) {
                             </div>
                             <div className="flex items-center gap-3">
                                 {saved && (
-                                    <span className="scale-in inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-full">
+                                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-full">
                                         <CheckCircle className="h-3.5 w-3.5" />
                                         ذخیره شد
                                     </span>
@@ -243,15 +296,15 @@ export default function SystemSettings({ settings }: Props) {
 
                             {/* ── General Tab ── */}
                             {activeTab === 'general' && (
-                                <SectionCard icon={Globe} iconColor="#6366f1" title="تنظیمات عمومی" subtitle="نام، زبان و مدت نشست سیستم">
-                                    <div className="space-y-5 fade-up">
+                                <SectionCard icon={Globe} iconColor="#6366f1" title="تنظیمات عمومی" subtitle="نام، زبان، فونت و مدت نشست سیستم">
+                                    <div className="space-y-6 fade-up">
                                         <div>
                                             <FieldLabel>نام سیستم</FieldLabel>
                                             <InputField
                                                 icon={Settings}
                                                 value={data.app_name}
                                                 onChange={v => setData('app_name', v)}
-                                                placeholder="سیستم مدیریت مکتوب ها"
+                                                placeholder="سیستم مدیریت لوژیستیک"
                                             />
                                         </div>
                                         <div>
@@ -261,10 +314,23 @@ export default function SystemSettings({ settings }: Props) {
                                                 value={data.app_locale}
                                                 onChange={v => setData('app_locale', v)}
                                             >
-                                                <option value="fa">فارسی</option>
+                                                <option value="fa">فارسی / دری</option>
                                                 <option value="en">English</option>
                                             </SelectField>
                                         </div>
+
+                                        {/* ── Font Picker ── */}
+                                        <div>
+                                            <FieldLabel>فونت سیستم</FieldLabel>
+                                            <FontPicker
+                                                value={data.preferred_font}
+                                                onChange={v => setData('preferred_font', v)}
+                                            />
+                                            <FieldHint>
+                                                فونت انتخاب شده بلافاصله اعمال می‌شود و پس از ذخیره برای همه کاربران فعال خواهد بود.
+                                            </FieldHint>
+                                        </div>
+
                                         <div>
                                             <FieldLabel>مدت زمان نشست (دقیقه)</FieldLabel>
                                             <InputField
@@ -319,7 +385,7 @@ export default function SystemSettings({ settings }: Props) {
                                             <InputField
                                                 icon={Lock}
                                                 type="password"
-                                                value={data.mail_password ?? ''}
+                                                value={''}
                                                 onChange={v => setData('mail_password', v)}
                                                 placeholder="••••••••"
                                             />
@@ -351,7 +417,6 @@ export default function SystemSettings({ settings }: Props) {
                                             onChange={v => setData('two_factor_enabled', v)}
                                             color="#10b981"
                                         />
-                                        {/* Expandable hint when 2FA is on */}
                                         {data.two_factor_enabled && (
                                             <div className="pt-4 fade-up">
                                                 <div className="flex items-start gap-3 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3.5">
@@ -392,7 +457,6 @@ export default function SystemSettings({ settings }: Props) {
                                                 placeholder="pdf,doc,docx,jpg,png"
                                             />
                                             <FieldHint>فرمت‌ها را با کاما و بدون فاصله جدا کنید.</FieldHint>
-                                            {/* Live tag preview */}
                                             {data.allowed_file_types && (
                                                 <div className="flex flex-wrap gap-1.5 mt-2.5">
                                                     {data.allowed_file_types.split(',').filter(Boolean).map((ext, i) => (
