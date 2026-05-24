@@ -1,11 +1,8 @@
 @import 'tailwindcss';
-
 @import 'tw-animate-css';
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-
-@custom-variant dark (&:is(.dark *));
 
 @font-face {
     font-family: 'Vazirmatn';
@@ -72,13 +69,14 @@
 
 @font-face {
     font-family: 'IranNastaliq';
-    src: url('../../resources/fonts/IranNastaliq.ttf') format('ttf');
-    font-weight: 900;
+    src: url('../../resources/fonts/IranNastaliq.ttf') format('truetype');
+    font-weight: 400;
     font-style: normal;
 }
+
 @font-face {
     font-family: 'DroidArabicKufi';
-    src: url('/resources/fonts/KufyanArabicRegular.ttf') format('truetype');
+    src: url('../../resources/fonts/KufyanArabicRegular.ttf') format('truetype');
     font-weight: 300;
     font-style: normal;
     font-display: swap;
@@ -240,8 +238,6 @@ body {
     }
 }
 
-/* resources/css/app.css */
-
 .ProseMirror {
     min-height: 250px;
     outline: none;
@@ -258,7 +254,6 @@ body {
     height: 0;
 }
 
-/* استایل لینک‌ها */
 .ProseMirror a {
     color: #2563eb !important;
     text-decoration: underline !important;
@@ -269,7 +264,6 @@ body {
     color: #1d4ed8 !important;
 }
 
-/* استایل لیست‌ها - نسخه RTL */
 .ProseMirror ul {
     list-style-type: disc !important;
     padding-right: 1.5rem !important;
@@ -296,7 +290,6 @@ body {
     margin: 0 !important;
 }
 
-/* استایل هدینگ‌ها */
 .ProseMirror h1 {
     font-size: 1.5rem;
     font-weight: bold;
@@ -319,7 +312,6 @@ body {
     margin: 0.5rem 0;
 }
 
-/* استایل نقل قول */
 .ProseMirror blockquote {
     border-right: 3px solid #3b82f6;
     padding-right: 1rem;
@@ -329,7 +321,6 @@ body {
     padding: 0.5rem 1rem;
 }
 
-/* خط افقی */
 .ProseMirror hr {
     border: none;
     border-top: 2px solid #e2e8f0;
