@@ -57,6 +57,7 @@ return new class extends Migration
             // تنظیمات کاربر
             $table->json('preferences')->nullable(); // theme, language, notifications, etc.
             $table->string('locale', 10)->default('fa');
+            $table->string('preferred_font')->default('Vazirmatn');
             $table->string('timezone', 50)->default('Asia/Tehran');
             
             $table->timestamps();

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
@@ -19,6 +20,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('settings/password', [SecurityController::class, 'update'])
         ->middleware('throttle:6,1')
         ->name('user-password.update');
+
+    Route::post('settings/preferred-font', function (Request $request) {
+
+        request()->validate([
+            'preferred_font' => 'required|string|max:255',
+        ]);
+
+        $user = auth()->user();
+        $user->preferred_font = $request->preferred_font;
+        $user->save();
+
+
+        return response()->json(['message' => $user]);
+    })->name('settings.changeFont');
 
     Route::inertia('settings/appearance', 'settings/appearance')->name('appearance.edit');
 });

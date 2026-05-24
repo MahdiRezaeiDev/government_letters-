@@ -1,10 +1,12 @@
 import { Head } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
+import axios from 'axios';
 import {
     Save, Shield, Globe, Database, Mail, Settings,
     CheckCircle, Server, Lock, FileType, Clock, Hash, Type
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import settingsRoutes from '@/routes/settings';
 
 const FONTS = [
     { value: 'Vazirmatn', label: 'وزیرمتن', sample: 'سیستم مدیریت لوژیستیک' },
@@ -199,6 +201,15 @@ export default function SystemSettings({ settings }: Props) {
     // اعمال فونت به صورت زنده هنگام تغییر
     useEffect(() => {
         document.documentElement.style.setProperty('--font-family', `'${data.preferred_font}', Tahoma, sans-serif`);
+        axios.post(settingsRoutes.changeFont().url, { preferred_font: data.preferred_font })
+            .then((res) => {
+                console.log(res);
+
+            })
+            .catch((error) => {
+                console.log(error);
+
+            });
     }, [data.preferred_font]);
 
     const handleSubmit = (e: React.FormEvent) => {
