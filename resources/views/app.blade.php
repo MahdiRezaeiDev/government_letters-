@@ -41,16 +41,16 @@
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
     <x-inertia::head>
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ config('app.name', 'سیستم مدیریت مکتوب') }}</title>
     </x-inertia::head>
 </head>
 
-<body class="font-sans antialiased Vazir">
+<body class="antialiased">
     <x-inertia::app />
 </body>
 <script>
     // تغییر فونت
-    document.getElementById('font-selector').addEventListener('change', function () {        
+    document.getElementById('font-selector').addEventListener('change', function () {
         document.documentElement.style.setProperty('--font-family', this.value);
         localStorage.setItem('user_font', this.value);
     });
