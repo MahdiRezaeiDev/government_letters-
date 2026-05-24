@@ -8,56 +8,64 @@
 @custom-variant dark (&:is(.dark *));
 
 @font-face {
-    font-family: 'Vazir';
-    src: url('../../resources/fonts/ad3cd4cbda94aee8578c1b622b9002f9dfe345c05870eb375a02da853d08f072.woff2')
-        format('woff2');
+    font-family: 'Vazirmatn';
+    src: url('../../resources/fonts/Vazirmatn-Thin.woff2') format('woff2');
     font-weight: 100;
     font-style: normal;
 }
 
 @font-face {
-    font-family: 'IranNastaliq';
-    src: url('../../resources/fonts/IranNastaliq.ttf') format('truetype');
-    font-weight: 700;
+    font-family: 'Vazirmatn';
+    src: url('../../resources/fonts/Vazirmatn-ExtraLight.woff2') format('woff2');
+    font-weight: 200;
     font-style: normal;
 }
 
 @font-face {
-    font-family: 'Vazir';
-    src: url('../../resources/fonts/046a76746039189feb148c360dfb82d07a1e3464d31a2078363587af6f5a1cfb.woff2')
-        format('woff2');
+    font-family: 'Vazirmatn';
+    src: url('../../resources/fonts/Vazirmatn-Light.woff2') format('woff2');
     font-weight: 300;
     font-style: normal;
 }
 
 @font-face {
-    font-family: 'Vazir';
-    src: url('../../resources/fonts/d783603a0dd07db6896ecd8a3460e2256a48dca62373a0478706a05490c1a2d8.woff2')
-        format('woff2');
+    font-family: 'Vazirmatn';
+    src: url('../../resources/fonts/Vazirmatn-Regular.woff2') format('woff2');
     font-weight: 400;
     font-style: normal;
 }
 
 @font-face {
-    font-family: 'Vazir';
-    src: url('../../resources/fonts/fc6648da06acebfe96ad5a8f077f569c5c4dd75b77122951723ddfbfeb191728.woff2')
-        format('woff2');
+    font-family: 'Vazirmatn';
+    src: url('../../resources/fonts/Vazirmatn-Medium.woff2') format('woff2');
     font-weight: 500;
     font-style: normal;
 }
 
 @font-face {
-    font-family: 'Vazir';
-    src: url('../../resources/fonts/3b2277e82a583c9f91de41aa9e198a14d7ef7f4ccd04828abdd623acd116a88b.woff2')
-        format('woff2');
+    font-family: 'Vazirmatn';
+    src: url('../../resources/fonts/Vazirmatn-SemiBold.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../../resources/fonts/Vazirmatn-Bold.woff2') format('woff2');
     font-weight: 700;
     font-style: normal;
 }
 
 @font-face {
-    font-family: 'Vazir';
-    src: url('../../resources/fonts/71671477a4b62305fbd3ed4976a31c3c08520cf914656ece6b79543524a49132.woff2')
-        format('woff2');
+    font-family: 'Vazirmatn';
+    src: url('../../resources/fonts/Vazirmatn-ExtraBold.woff2') format('woff2');
+    font-weight: 800;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../../resources/fonts/Vazirmatn-Black.woff2') format('woff2');
     font-weight: 900;
     font-style: normal;
 }
@@ -76,12 +84,55 @@
     font-display: swap;
 }
 
-* {
-    font-family: 'DroidArabicKufi', serif;
+@font-face {
+    font-family: 'Sahel';
+    src: url('../../resources/fonts/Sahel-Light.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Sahel';
+    src: url('../../resources/fonts/Sahel.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Sahel';
+    src: url('../../resources/fonts/Sahel-SemiBold.woff') format('woff');
+    font-weight: 600;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Sahel';
+    src: url('../../resources/fonts/Sahel-Bold.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Sahel';
+    src: url('../../resources/fonts/Sahel-Black.woff') format('woff');
+    font-weight: 900;
+    font-style: normal;
+}
+
+.sahel {
+    font-family: 'Sahel' !important;
+}
+
+.DroidArabicKufi {
+    font-family: 'DroidArabicKufi' !important;
+}
+
+.vazir {
+    font-family: 'Vazirmatn' !important;
 }
 
 .nastaliq {
-    font-family: IranNastaliq !important;
+    font-family: 'IranNastaliq' !important;
 }
 
 @theme {
@@ -139,6 +190,7 @@
 }
 
 :root {
+    --font-family: 'DroidArabicKufi', serif;
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
@@ -172,6 +224,10 @@
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.87 0 0);
+}
+
+body {
+    font-family: var(--font-family);
 }
 
 @layer base {

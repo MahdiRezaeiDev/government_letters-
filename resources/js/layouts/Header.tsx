@@ -87,9 +87,9 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
         if (!notification.read_at) {
             await markAsRead(notification.id);
         }
-        
+
         console.log(notification);
-        
+
 
         if (notification.data.letter_id) {
             router.get(`/letters/${notification.data.letter_id}`);
@@ -119,7 +119,11 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                         </span>
                     )}
                 </div>
-
+                <select id="font-selector">
+                    <option value="Vazirmatn">وزیر متن</option>
+                    <option value="Sahel">ساحل</option>
+                    <option value="DroidArabicKufi">کوفی</option>
+                </select>
                 {/* Left side - Actions */}
                 <div className="flex items-center gap-2 md:gap-4">
                     {/* Date */}
