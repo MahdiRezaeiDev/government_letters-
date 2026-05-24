@@ -119,8 +119,7 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: 
                     </div>
                     {(!collapsed || isMobile) && (
                         <div className="flex flex-col animate-in fade-in slide-in-from-right-4 duration-700">
-                            <span className="font-semibold text-xs text-slate-900 leading-none">سیستم مدیریت مکتوب ها</span>
-                            <span className="text-[10px] text-slate-500 font-medium mt-1">Correspondence System</span>
+                            <span className="font-bold text-sm text-slate-900 leading-none">سیستم مدیریت مکتوب ها</span>
                         </div>
                     )}
                 </div>
