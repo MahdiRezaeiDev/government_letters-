@@ -213,7 +213,7 @@ export default function LettersShow({
 
                                 <span className="text-sm text-gray-600">
                                     <span className="text-gray-400">تاریخ:</span>{' '}
-                                    {(letter.date)}
+                                    {formatDate(letter.created_at)}
                                 </span>
                             </div>
 

@@ -1,11 +1,11 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import {
-    Save, UserIcon, Mail, Phone, Hash, Camera,
+    Save, UserIcon, Mail, Camera,
     Lock, Eye, EyeOff, CheckCircle, AlertCircle,
-    Briefcase, Building2, Calendar, Shield, LogOut,
+    Briefcase, Building2, Shield, LogOut,
     Smartphone, IdCard, Globe, Moon, Sun, Bell,
-    Database, Key, Fingerprint, UserCheck, Clock
+    Database, Key, Clock
 } from 'lucide-react';
 import { Settings } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
@@ -175,8 +175,8 @@ export default function ProfileSettings() {
         const file = e.target.files?.[0];
 
         if (!file) {
-return;
-}
+            return;
+        }
 
         if (file.size > 2 * 1024 * 1024) {
             showToast('حجم فایل نباید بیشتر از 2 مگابایت باشد', 'error');
