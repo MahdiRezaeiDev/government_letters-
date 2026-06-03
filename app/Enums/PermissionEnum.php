@@ -4,9 +4,9 @@ namespace App\Enums;
 
 enum PermissionEnum: string
 {
-        // ============================================
-        // مجوزهای سازمانی (فقط ادمین کل)
-        // ============================================
+    // ============================================
+    // مجوزهای سازمانی (فقط ادمین کل)
+    // ============================================
     case VIEW_ORGANIZATIONS  = 'view-organizations';
     case CREATE_ORGANIZATION = 'create-organization';
     case EDIT_ORGANIZATION   = 'edit-organization';
@@ -81,9 +81,19 @@ enum PermissionEnum: string
     case NID_VIEW       = 'nid-view';
     case NID_DESTROY    = 'nid-destroy';
 
-        // ============================================
-        // متدهای کمکی
-        // ============================================
+    // ============================================
+    // متدهای کمکی
+    // ============================================
+
+    public static function nidPermissions(): array
+    {
+        return [
+            self::NID_REGISTER->value,
+            self::NID_APPROVE->value,
+            self::NID_VIEW->value,
+            self::NID_DESTROY->value,
+        ];
+    }
 
     public static function all(): array
     {
@@ -95,7 +105,7 @@ enum PermissionEnum: string
      */
     public static function superAdminPermissions(): array
     {
-        return self::all();
+        return array_merge(self::all(), self::nidPermissions());
     }
 
     /**
@@ -221,6 +231,29 @@ enum PermissionEnum: string
             self::CREATE_CATEGORY   => 'ایجاد دسته‌بندی',
             self::EDIT_CATEGORY     => 'ویرایش دسته‌بندی',
             self::DELETE_CATEGORY   => 'حذف دسته‌بندی',
+
+            self::NID_REGISTER => 'ثبت تذکره',
+            self::NID_APPROVE => 'تأیید تذکره',
+            self::NID_VIEW => 'مشاهده تذکره',
+            self::NID_DESTROY => 'حذف تذکره',
         };
+    }
+
+    public static function nidPermissionsWithLabels(): array
+    {
+        return [
+            self::NID_REGISTER->value => 'ثبت تذکره',
+            self::NID_APPROVE->value => 'تأیید تذکره',
+            self::NID_VIEW->value => 'مشاهده تذکره',
+            self::NID_DESTROY->value => 'حذف/ابطال تذکره',
+        ];
+    }
+
+    /**
+     * آیا مجوز مربوط به تذکره است؟
+     */
+    public function isNidPermission(): bool
+    {
+        return in_array($this->value, self::nidPermissions());
     }
 }

@@ -2,8 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import {
     Building2, Shield, Mail, Phone, User, Key, AlertCircle, CheckCircle, Hash, Globe, Lock, MapPin,
-    Save,
-    X
+    Save, X, FileText, Eye, Trash2, PenSquare, CheckSquare
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import PersianDatePicker from '@/components/PersianDatePicker';
@@ -20,6 +19,7 @@ interface Props {
     positions: Position[];
     roles: Role[];
     myOrganizationId: number | null;
+    nidPermissions: Record<string, string>;
 }
 
 const STATUS_OPTIONS = [
@@ -35,9 +35,22 @@ const SECURITY_LEVELS = [
     { value: 'secret', label: 'سری', desc: 'دسترسی به معلومات سری و حساس', icon: Shield, color: '#ef4444', bg: '#fee2e2' },
 ] as const;
 
-// ─── Main Component ────────────────────────────────────────────────────────
+// NID Permission Labels
+const NID_PERMISSION_LABELS: Record<string, { label: string; desc: string; icon: any }> = {
+    'nid-register': { label: 'ثبت تذکره', desc: 'امکان ثبت تذکره جدید', icon: PenSquare },
+    'nid-approve': { label: 'تأیید تذکره', desc: 'امکان تأیید تذکره‌ها', icon: CheckSquare },
+    'nid-view': { label: 'مشاهده تذکره', desc: 'امکان مشاهده تمام تذکره‌ها', icon: Eye },
+    'nid-destroy': { label: 'حذف/ابطال تذکره', desc: 'امکان حذف یا ابطال تذکره', icon: Trash2 },
+};
 
-export default function UsersCreate({ organizations, departments: initialDepartments, positions: initialPositions, roles, myOrganizationId }: Props) {
+export default function UsersCreate({
+    organizations,
+    departments: initialDepartments,
+    positions: initialPositions,
+    roles,
+    myOrganizationId,
+    nidPermissions
+}: Props) {
 
     const [departments, setDepartments] = useState<Department[]>(initialDepartments);
     const [positions, setPositions] = useState<Position[]>(initialPositions);
@@ -59,6 +72,7 @@ export default function UsersCreate({ organizations, departments: initialDepartm
         status: 'active',
         security_clearance: 'internal',
         role: 'user',
+        nid_permissions: [] as string[], // مجوزهای تذکره
     });
 
     useEffect(() => {
@@ -88,9 +102,18 @@ export default function UsersCreate({ organizations, departments: initialDepartm
         post(users.store().url, {
             preserveScroll: true,
             onSuccess: () => {
-                reset(); router.get(users.index());
+                reset();
+                router.get(users.index());
             },
         });
+    };
+
+    const handleNidPermissionChange = (permission: string) => {
+        setData('nid_permissions',
+            data.nid_permissions.includes(permission)
+                ? data.nid_permissions.filter(p => p !== permission)
+                : [...data.nid_permissions, permission]
+        );
     };
 
     const selectedStatus = STATUS_OPTIONS.find(s => s.value === data.status)!;
@@ -101,7 +124,6 @@ export default function UsersCreate({ organizations, departments: initialDepartm
             <Head title="ایجاد کاربر جدید" />
 
             <div className="min-h-screen">
-
                 <div className="max-w-6xl mx-auto px-4 sm:px-6">
                     <form id="user-form" onSubmit={handleSubmit}>
                         <div className="space-y-5">
@@ -112,7 +134,7 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                 title="معلومات شخصی"
                                 subtitle="مشخصات هویتی کاربر"
                                 description="این معلومات پایه و اصلی کاربر است. نمبر تذکره باید دقیق و معتبر باشد.">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                                     <div>
                                         <FieldLabel required>نام</FieldLabel>
                                         <InputField
@@ -138,33 +160,6 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                             error={errors.national_code}
                                             placeholder="1234567890" />
                                     </div>
-                                    {/* <div>
-                                        <PersianDatePicker
-                                            label="تاریخ تولد"
-                                            value={data.birth_date}
-                                            onChange={(date) => setData('birth_date', date as string)}
-                                            error={errors.birth_date}
-                                        />
-                                        <p className="text-xs text-slate-400 mt-1.5">تاریخ تولد را به شمسی انتخاب کنید</p>
-                                    </div>
-                                    <div>
-                                        <FieldLabel>تلفن همراه</FieldLabel>
-                                        <InputField
-                                            icon={Phone}
-                                            value={data.mobile}
-                                            onChange={v => setData('mobile', v)}
-                                            error={errors.mobile}
-                                            placeholder="09123456789" />
-                                    </div>
-                                    <div>
-                                        <FieldLabel>آدرس</FieldLabel>
-                                        <InputField
-                                            icon={MapPin}
-                                            value={data.address}
-                                            onChange={v => setData('address', v)}
-                                            error={errors.address}
-                                            placeholder="آدرس کامل" />
-                                    </div> */}
                                 </div>
                             </SectionCard>
 
@@ -175,8 +170,8 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                 title="معلومات حساب کاربری"
                                 subtitle="معلومات ورود به سیستم"
                                 description="با این معلومات کاربر وارد سیستم می‌شود. ایمیل باید معتبر و یکتا باشد.">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <div className="md:col-span-2">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                    <div>
                                         <FieldLabel required>ایمیل</FieldLabel>
                                         <InputField
                                             icon={Mail}
@@ -268,68 +263,55 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                 </div>
                             </SectionCard>
 
-                            {/* 4. Status, Security & Role */}
+                            {/* 4. NID Permissions (Side Permissions) */}
+                            <SectionCard
+                                icon={FileText}
+                                iconColor="#8b5cf6"
+                                title="مجوزهای تذکره"
+                                subtitle="دسترسی‌های جانبی"
+                                description="این مجوزها به صورت جانبی و جدا از نقش اصلی به کاربر اعطا می‌شوند.">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {Object.entries(NID_PERMISSION_LABELS).map(([value, { label, desc, icon: Icon }]) => (
+                                        <label
+                                            key={value}
+                                            className={`flex items-start p-3 rounded-xl border-2 cursor-pointer transition-all ${data.nid_permissions.includes(value)
+                                                ? 'border-indigo-400 bg-indigo-50'
+                                                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                                                }`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={data.nid_permissions.includes(value)}
+                                                onChange={() => handleNidPermissionChange(value)}
+                                                className="mt-1 ml-3 h-4 w-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                                            />
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    <Icon className={`h-4 w-4 ${data.nid_permissions.includes(value) ? 'text-indigo-600' : 'text-slate-400'}`} />
+                                                    <span className={`font-medium ${data.nid_permissions.includes(value) ? 'text-indigo-700' : 'text-slate-700'}`}>
+                                                        {label}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-slate-500 mt-1">{desc}</p>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+                                <div className="mt-4 p-3 bg-slate-50 rounded-lg">
+                                    <p className="text-xs text-slate-500 flex items-center gap-2">
+                                        <Shield className="h-3 w-3" />
+                                        این مجوزها به کاربر اجازه می‌دهد بدون توجه به نقش اصلی، به عملیات مربوط به تذکره دسترسی داشته باشد.
+                                    </p>
+                                </div>
+                            </SectionCard>
+
+                            {/* 5. Status, Security & Actions */}
                             <SectionCard
                                 icon={Shield}
                                 iconColor="#f59e0b"
                                 title="وضعیت و نقش"
                                 subtitle="تعیین می‌کند کاربر چه دسترسی‌هایی در سیستم دارد.">
                                 <div className="space-y-6">
-                                    {/* Status */}
-                                    {/* <div>
-                                        <FieldLabel>وضعیت کاربر</FieldLabel>
-                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                            {STATUS_OPTIONS.map(opt => {
-                                                const Icon = opt.icon;
-                                                const isSelected = data.status === opt.value;
-
-                                                return (
-                                                    <button
-                                                        key={opt.value}
-                                                        type="button"
-                                                        onClick={() => setData('status', opt.value)}
-                                                        className={`relative p-4 rounded-xl border-2 text-right transition-all ${isSelected ? `border-${opt.value === 'active' ? 'emerald' : opt.value === 'inactive' ? 'gray' : 'red'}-400 bg-${opt.value === 'active' ? 'emerald' : opt.value === 'inactive' ? 'gray' : 'red'}-50` : 'border-slate-200 hover:border-slate-300'}`}>
-                                                        <div className="flex items-center gap-3">
-                                                            <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${isSelected ? `bg-${opt.value === 'active' ? 'emerald' : opt.value === 'inactive' ? 'gray' : 'red'}-100` : 'bg-slate-100'}`}>
-                                                                <Icon className={`h-4 w-4 ${isSelected ? `text-${opt.value === 'active' ? 'emerald' : opt.value === 'inactive' ? 'gray' : 'red'}-600` : 'text-slate-500'}`} />
-                                                            </div>
-                                                            <div>
-                                                                <p className={`text-sm font-bold ${isSelected ? `text-${opt.value === 'active' ? 'emerald' : opt.value === 'inactive' ? 'gray' : 'red'}-700` : 'text-slate-700'}`}>{opt.label}</p>
-                                                                <p className="text-xs text-slate-500 mt-0.5">{opt.desc}</p>
-                                                            </div>
-                                                        </div>
-                                                        {isSelected && (
-                                                            <CheckCircle className={`absolute top-3 left-3 h-5 w-5 text-${opt.value === 'active' ? 'emerald' : opt.value === 'inactive' ? 'gray' : 'red'}-500`} />
-                                                        )}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div> */}
-
-                                    {/* Security Clearance */}
-                                    {/* <div>
-                                        <FieldLabel>سطح امنیتی</FieldLabel>
-                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                            {SECURITY_LEVELS.map(lvl => {
-                                                const Icon = lvl.icon;
-                                                const isSelected = data.security_clearance === lvl.value;
-
-                                                return (
-                                                    <button
-                                                        key={lvl.value}
-                                                        type="button"
-                                                        onClick={() => setData('security_clearance', lvl.value)}
-                                                        className={`py-3 px-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${isSelected ? `border-${lvl.value === 'public' ? 'gray' : lvl.value === 'internal' ? 'blue' : lvl.value === 'confidential' ? 'amber' : 'red'}-400 bg-${lvl.value === 'public' ? 'gray' : lvl.value === 'internal' ? 'blue' : lvl.value === 'confidential' ? 'amber' : 'red'}-50` : 'border-slate-200 hover:border-slate-300'}`}>
-                                                        <Icon className={`h-5 w-5 ${isSelected ? `text-${lvl.value === 'public' ? 'gray' : lvl.value === 'internal' ? 'blue' : lvl.value === 'confidential' ? 'amber' : 'red'}-600` : 'text-slate-500'}`} />
-                                                        <span className="text-xs font-bold">{lvl.label}</span>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                        <p className="text-xs text-slate-400 mt-1.5">سطح دسترسی به اطلاعات محرمانه را تعیین می‌کند</p>
-                                    </div> */}
-                                    {/* Summary */}
                                     <div className="flex flex-wrap items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
                                         <span className="text-xs font-semibold text-slate-500">خلاصه وضعیت:</span>
                                         <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: selectedStatus.bg, color: selectedStatus.color }}>
@@ -341,8 +323,17 @@ export default function UsersCreate({ organizations, departments: initialDepartm
                                         </span>
                                         <span className="text-slate-300">•</span>
                                         <span className="text-xs font-bold text-slate-600 bg-slate-200 px-2.5 py-1 rounded-full">{roles.find(r => r.name === data.role)?.label || data.role}</span>
+                                        {data.nid_permissions.length > 0 && (
+                                            <>
+                                                <span className="text-slate-300">•</span>
+                                                <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700">
+                                                    <FileText className="h-3 w-3" />
+                                                    {data.nid_permissions.length} مجوز تذکره
+                                                </span>
+                                            </>
+                                        )}
                                     </div>
-                                    {/* Mobile Actions */}
+
                                     <div className="bg-white border-slate-200 p-4 z-20">
                                         <div className="flex gap-3 max-w-5xl mx-auto">
                                             <button

@@ -14,6 +14,7 @@ use Inertia\Inertia;
 use App\Enums\RoleEnum;
 use App\Http\Requests\UserRequest;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -25,7 +26,7 @@ class UserController extends Controller
         $currentUser = auth()->user();
 
         $query = User::query()
-            ->with(['organization', 'department', 'primaryPosition', 'positions', 'roles']);
+            ->with(['organization', 'department', 'primaryPosition', 'positions', 'roles', 'permissions']);
 
         // ============================================
         // فیلتر بر اساس سطح دسترسی (مهم)
@@ -123,20 +124,23 @@ class UserController extends Controller
         }
 
         $departments = collect();
-
         $positions = collect();
 
         $roles = collect(RoleEnum::cases())->map(fn($role) => [
-            'name'                              => $role->value,
-            'label'                             => $role->label(),
+            'name'  => $role->value,
+            'label' => $role->label(),
         ]);
 
+        // مجوزهای تذکره
+        $nidPermissions = PermissionEnum::nidPermissionsWithLabels();
+
         return Inertia::render('users/create', [
-            'organizations'                     => $organizations,
-            'departments'                       => $departments,
-            'positions'                         => $positions,
-            'roles'                             => $roles,
-            'myOrganizationId'                  => $currentUser->organization_id,
+            'organizations'    => $organizations,
+            'departments'      => $departments,
+            'positions'        => $positions,
+            'roles'            => $roles,
+            'myOrganizationId' => $currentUser->organization_id,
+            'nidPermissions'   => $nidPermissions,
         ]);
     }
 
@@ -148,20 +152,37 @@ class UserController extends Controller
         $currentUser = auth()->user();
         $targetOrganizationId = $request->organization_id;
 
+        // ============================================
+        // اعتبارسنجی مجوزهای تذکره
+        // ============================================
+        $request->validate([
+            'nid_permissions' => 'nullable|array',
+            'nid_permissions.*' => Rule::in(PermissionEnum::nidPermissions()),
+        ]);
+
+        // ============================================
+        // 1. بررسی دسترسی به سازمان
+        // ============================================
         if (!$currentUser->canManageOrganization($targetOrganizationId)) {
             return back()->withErrors(['organization_id' => 'شما دسترسی ایجاد کاربر در این سازمان را ندارید.'])->withInput();
         }
 
+        // ============================================
+        // 2. جلوگیری از ایجاد super-admin توسط org-admin
+        // ============================================
         if ($currentUser->isOrgAdmin() && $request->role === RoleEnum::SUPER_ADMIN->value) {
             return back()->withErrors(['role' => 'شما نمی‌توانید نقش ادمین کل را تخصیص دهید.'])->withInput();
         }
 
+        // ============================================
+        // 3. محدودیت سلسله مراتب نقش‌ها برای org-admin
+        // ============================================
         if ($currentUser->isOrgAdmin()) {
             $roleHierarchy = [
-                'super-admin'                   => 4,
-                'org-admin'                     => 3,
-                'dept-manager'                  => 2,
-                'user'                          => 1,
+                'super-admin'   => 4,
+                'org-admin'     => 3,
+                'dept-manager'  => 2,
+                'user'          => 1,
             ];
 
             $currentUserRoleLevel = $roleHierarchy[$currentUser->roles->first()->name] ?? 0;
@@ -176,24 +197,24 @@ class UserController extends Controller
         // 4. ایجاد کاربر
         // ============================================
         $user = User::create([
-            'organization_id'                           => $request->organization_id,
-            'department_id'                             => $request->department_id,
-            'primary_position_id'                       => $request->primary_position_id,
-            'email'                                     => $request->email,
-            'password'                                  => Hash::make($request->password),
-            'first_name'                                => $request->first_name,
-            'last_name'                                 => $request->last_name,
-            'national_code'                             => $request->national_code,
-            'mobile'                                    => $request->mobile,
-            'employment_code'                           => User::generateCode(),
-            'gender'                                    => 'male',
-            'birth_date'                                => $request->birth_date,
-            'emergency_phone'                           => $request->emergency_phone,
-            'address'                                   => $request->address,
-            'status'                                    => $request->status,
-            'security_clearance'                        => $request->security_clearance,
-            'locale'                                    => 'fa',
-            'timezone'                                  => 'Asia/Kabul',
+            'organization_id'       => $request->organization_id,
+            'department_id'         => $request->department_id,
+            'primary_position_id'   => $request->primary_position_id,
+            'email'                 => $request->email,
+            'password'              => Hash::make($request->password),
+            'first_name'            => $request->first_name,
+            'last_name'             => $request->last_name,
+            'national_code'         => $request->national_code,
+            'mobile'                => $request->mobile,
+            'employment_code'       => User::generateCode(),
+            'gender'                => $request->gender ?? 'male',
+            'birth_date'            => $request->birth_date,
+            'emergency_phone'       => $request->emergency_phone,
+            'address'               => $request->address,
+            'status'                => $request->status,
+            'security_clearance'    => $request->security_clearance,
+            'locale'                => 'fa',
+            'timezone'              => 'Asia/Kabul',
         ]);
 
         // ============================================
@@ -202,15 +223,37 @@ class UserController extends Controller
         $user->assignRole($request->role);
 
         // ============================================
-        // 6. ذخیره رابطه user_positions (در صورت وجود department_id و primary_position_id)
+        // 6. تخصیص مجوزهای تذکره (جانبی)
+        // ============================================
+        if ($request->has('nid_permissions') && is_array($request->nid_permissions)) {
+            foreach ($request->nid_permissions as $permission) {
+                $user->givePermissionTo($permission);
+            }
+        }
+
+        // ============================================
+        // 7. ذخیره رابطه user_positions (در صورت وجود department_id و primary_position_id)
         // ============================================
         if ($request->department_id && $request->primary_position_id) {
             $user->positions()->attach($request->primary_position_id, [
                 'is_primary' => true,
                 'start_date' => now(),
-                'status' => 'active',
+                'status'     => 'active',
             ]);
         }
+
+        // ============================================
+        // 8. لاگ عملیات
+        // ============================================
+        \App\Models\EventLog::log(
+            'user_created',
+            "کاربر جدید {$user->full_name} ایجاد شد",
+            $user,
+            [
+                'role' => $request->role,
+                'nid_permissions' => $request->nid_permissions ?? []
+            ]
+        );
 
         return redirect()->route('users.index')
             ->with('success', 'کاربر با موفقیت ایجاد شد.');
@@ -239,18 +282,29 @@ class UserController extends Controller
             'primaryPosition',
             'positions.department',
             'roles',
+            'permissions',
         ]);
 
         // آمار فعالیت‌های کاربر
         $stats = [
-            'created_letters' => $user->createdLetters()->count(),
+            'created_letters'   => $user->createdLetters()->count(),
             'assigned_routings' => $user->routingsTo()->where('status', 'pending')->count(),
             'completed_actions' => $user->actions()->count(),
         ];
 
+        // مجوزهای تذکره کاربر
+        $nidPermissions = $user->getAllPermissions()
+            ->whereIn('name', PermissionEnum::nidPermissions())
+            ->values()
+            ->map(fn($perm) => [
+                'name' => $perm->name,
+                'label' => $perm->label()
+            ]);
+
         return Inertia::render('users/show', [
-            'user' => $user,
-            'stats' => $stats,
+            'user'           => $user,
+            'stats'          => $stats,
+            'nidPermissions' => $nidPermissions,
         ]);
     }
 
@@ -290,18 +344,32 @@ class UserController extends Controller
 
         // نقش‌های قابل تخصیص
         $roles = collect(RoleEnum::cases())->map(fn($role) => [
-            'name' => $role->value,
+            'name'  => $role->value,
             'label' => $role->label(),
         ]);
 
+        // مجوزهای تذکره
+        $nidPermissions = PermissionEnum::nidPermissionsWithLabels();
+
+        // دریافت مجوزهای تذکره فعلی کاربر
+        $userNidPermissions = $user->getAllPermissions()
+            ->whereIn('name', PermissionEnum::nidPermissions())
+            ->pluck('name')
+            ->toArray();
+
+        // بارگذاری user با roles
+        $user->load(['roles', 'permissions']);
+
         return Inertia::render('users/edit', [
-            'user' => $user->load(['roles']),
-            'organizations' => $organizations,
-            'departments' => $departments,
-            'positions' => $positions,
-            'roles' => $roles,
-            'userRole' => $user->roles->first()?->name,
-            'canEditRole' => $currentUser->can('assign-role') &&
+            'user'                 => $user,
+            'organizations'        => $organizations,
+            'departments'          => $departments,
+            'positions'            => $positions,
+            'roles'                => $roles,
+            'myOrganizationId'     => $currentUser->organization_id,
+            'nidPermissions'       => $nidPermissions,
+            'userNidPermissions'   => $userNidPermissions,
+            'canEditRole'          => $currentUser->can('assign-role') &&
                 ($currentUser->isSuperAdmin() ||
                     ($currentUser->isOrgAdmin() && $currentUser->organization_id === $user->organization_id)),
         ]);
@@ -314,6 +382,14 @@ class UserController extends Controller
     {
         $currentUser = auth()->user();
         $targetOrganizationId = $request->organization_id;
+
+        // ============================================
+        // اعتبارسنجی مجوزهای تذکره
+        // ============================================
+        $request->validate([
+            'nid_permissions' => 'nullable|array',
+            'nid_permissions.*' => Rule::in(PermissionEnum::nidPermissions()),
+        ]);
 
         // ============================================
         // 1. بررسی دسترسی به سازمان
@@ -383,7 +459,20 @@ class UserController extends Controller
         $user->syncRoles([$request->role]);
 
         // ============================================
-        // 7. آپدیت رابطه user_positions
+        // 7. به‌روزرسانی مجوزهای تذکره
+        // ============================================
+        // حذف مجوزهای قبلی تذکره
+        $user->revokePermissionTo(PermissionEnum::nidPermissions());
+
+        // اضافه کردن مجوزهای جدید
+        if ($request->has('nid_permissions') && is_array($request->nid_permissions)) {
+            foreach ($request->nid_permissions as $permission) {
+                $user->givePermissionTo($permission);
+            }
+        }
+
+        // ============================================
+        // 8. آپدیت رابطه user_positions
         // ============================================
         if ($request->department_id && $request->primary_position_id) {
             // حذف position های قبلی
@@ -393,12 +482,26 @@ class UserController extends Controller
             $user->positions()->attach($request->primary_position_id, [
                 'is_primary' => true,
                 'start_date' => now(),
-                'status' => 'active',
+                'status'     => 'active',
             ]);
         } else {
             // اگر department یا position نال است، همه position ها را حذف کن
             $user->positions()->detach();
         }
+
+        // ============================================
+        // 9. لاگ عملیات
+        // ============================================
+        \App\Models\EventLog::log(
+            'user_updated',
+            "کاربر {$user->full_name} به‌روزرسانی شد",
+            $user,
+            [
+                'role' => $request->role,
+                'nid_permissions' => $request->nid_permissions ?? [],
+                'status' => $request->status
+            ]
+        );
 
         return redirect()->route('users.index')
             ->with('success', 'کاربر با موفقیت به‌روزرسانی شد.');
@@ -410,6 +513,10 @@ class UserController extends Controller
     public function assignRole(Request $request, User $user)
     {
         $currentUser = auth()->user();
+
+        $request->validate([
+            'role' => ['required', Rule::in(RoleEnum::values())],
+        ]);
 
         // ============================================
         // فقط ادمین کل و ادمین سازمان می‌توانند نقش بدهند
@@ -443,7 +550,48 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'نقش با موفقیت تخصیص یافت.',
-            'role' => $request->role
+            'role'    => $request->role
+        ]);
+    }
+
+    /**
+     * تخصیص مجوزهای تذکره به کاربر (API)
+     */
+    public function assignNidPermissions(Request $request, User $user)
+    {
+        $currentUser = auth()->user();
+
+        // بررسی دسترسی
+        if (
+            !$currentUser->isSuperAdmin() &&
+            !($currentUser->isOrgAdmin() && $currentUser->organization_id === $user->organization_id)
+        ) {
+            return response()->json(['message' => 'شما دسترسی تخصیص مجوز را ندارید.'], 403);
+        }
+
+        $request->validate([
+            'permissions' => 'required|array',
+            'permissions.*' => Rule::in(PermissionEnum::nidPermissions()),
+        ]);
+
+        // حذف مجوزهای قبلی تذکره
+        $user->revokePermissionTo(PermissionEnum::nidPermissions());
+
+        // اضافه کردن مجوزهای جدید
+        foreach ($request->permissions as $permission) {
+            $user->givePermissionTo($permission);
+        }
+
+        \App\Models\EventLog::log(
+            'nid_permissions_assigned',
+            "مجوزهای تذکره برای کاربر {$user->full_name} به‌روزرسانی شد",
+            $user,
+            ['permissions' => $request->permissions]
+        );
+
+        return response()->json([
+            'message'     => 'مجوزهای تذکره با موفقیت تخصیص یافت.',
+            'permissions' => $request->permissions
         ]);
     }
 
@@ -468,6 +616,12 @@ class UserController extends Controller
         }
 
         $userName = $user->full_name;
+
+        // حذف روابط
+        $user->positions()->detach();
+        $user->permissions()->detach();
+        $user->roles()->detach();
+
         $user->delete();
 
         // لاگ عملیات
@@ -501,7 +655,16 @@ class UserController extends Controller
 
         $user->update(['status' => $newStatus]);
 
-        return back()->with('success', "وضعیت کاربر به " . ($newStatus === 'active' ? 'فعال' : ($newStatus === 'inactive' ? 'غیرفعال' : 'تعلیق')) . " تغییر کرد.");
+        \App\Models\EventLog::log(
+            'status_changed',
+            "وضعیت کاربر {$user->full_name} به {$newStatus} تغییر کرد",
+            $user,
+            ['old_status' => $user->getOriginal('status'), 'new_status' => $newStatus]
+        );
+
+        $statusLabels = ['active' => 'فعال', 'inactive' => 'غیرفعال', 'suspended' => 'تعلیق'];
+
+        return back()->with('success', "وضعیت کاربر به {$statusLabels[$newStatus]} تغییر کرد.");
     }
 
     /**
@@ -540,15 +703,40 @@ class UserController extends Controller
         }
 
         $positions = Position::where('department_id', $request->department_id)
-            ->whereNotExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('user_positions')
-                    ->whereColumn('user_positions.position_id', 'positions.id');
-            })
             ->select('id', 'name')
             ->orderBy('name')
             ->get();
 
         return response()->json(['positions' => $positions]);
+    }
+
+    /**
+     * دریافت مجوزهای تذکره کاربر (برای API)
+     */
+    public function getUserNidPermissions(User $user)
+    {
+        $currentUser = auth()->user();
+
+        // بررسی دسترسی
+        if (
+            !$currentUser->isSuperAdmin() &&
+            !($currentUser->isOrgAdmin() && $currentUser->organization_id === $user->organization_id) &&
+            $currentUser->id !== $user->id
+        ) {
+            return response()->json(['message' => 'دسترسی غیرمجاز'], 403);
+        }
+
+        $permissions = $user->getAllPermissions()
+            ->whereIn('name', PermissionEnum::nidPermissions())
+            ->values()
+            ->map(fn($perm) => [
+                'name'  => $perm->name,
+                'label' => $perm->label()
+            ]);
+
+        return response()->json([
+            'user_id'     => $user->id,
+            'permissions' => $permissions
+        ]);
     }
 }
