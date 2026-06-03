@@ -1,10 +1,9 @@
-// resources/js/components/Sidebar.tsx
 import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutDashboard, Building2, Map as Sitemap, Briefcase,
     Users, Inbox, Send, Archive,
     BarChart3, Settings, ChevronDown, ChevronLeft,
-    FolderTree, Sparkles, Layout, Zap, X
+    Sparkles, Layout, Zap, X
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -12,16 +11,15 @@ import { useState, useMemo } from 'react';
 import { dashboard } from '@/routes';
 import { index as archivesIndex } from '@/routes/archives';
 import { index as cartableIndex } from '@/routes/cartable';
-import { index as categoriesIndex } from '@/routes/categories';
 import { index as departmentsIndex } from '@/routes/departments';
 import { index as lettersIndex, create as lettersCreate } from '@/routes/letters';
 import { index as organizationsIndex } from '@/routes/organizations';
 import positions from '@/routes/positions';
 import { edit as profileEdit } from '@/routes/profile';
 import { index as reportsIndex } from '@/routes/reports';
+import settings from '@/routes/settings';
 import tazkira from '@/routes/tazkira';
 import { index as usersIndex } from '@/routes/users';
-import settings from '@/routes/settings';
 
 interface SidebarProps {
     collapsed: boolean;
@@ -68,7 +66,7 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: 
         { title: 'ثبت مکتوب / استعلام', href: lettersCreate(), icon: Sparkles },
         { title: 'آرشیف مرکزی', href: archivesIndex(), icon: Archive },
         { title: 'گزارشات تحلیلی', href: reportsIndex(), icon: BarChart3, permission: 'dept-manager' },
-        // { title: 'تایید تذکره', href: tazkira.index(), icon: BarChart3, },
+        { title: 'تایید تذکره', href: tazkira.index(), icon: BarChart3, },
 
         {
             title: 'تنظیمات سیستم',

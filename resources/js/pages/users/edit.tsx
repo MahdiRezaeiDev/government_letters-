@@ -1,11 +1,11 @@
 import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import {
-    Building2, Shield, Mail, Phone, UserIcon, Key, AlertCircle, CheckCircle, Hash, Globe, Lock, MapPin,
-    Save, X, FileText, Eye, PenSquare, Trash2, CheckSquare
+    Building2, Shield, Mail, Key, AlertCircle, CheckCircle, Hash, Globe, Lock, 
+    Save, X, FileText, Eye, Trash2, PenSquare, CheckSquare,
+    User as UserIcon
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import PersianDatePicker from '@/components/PersianDatePicker';
 import FieldLabel from '@/components/ui/FieldLabel';
 import InputField from '@/components/ui/InputField';
 import SectionCard from '@/components/ui/SectionCard';
@@ -20,8 +20,8 @@ interface Props {
     positions: Position[];
     roles: Role[];
     myOrganizationId: number | null;
-    nidPermissions?: Record<string, string>;
-    userNidPermissions?: string[];
+    nidPermissions: Record<string, string>;
+    userNidPermissions: string[];
 }
 
 const STATUS_OPTIONS = [
@@ -31,10 +31,10 @@ const STATUS_OPTIONS = [
 ] as const;
 
 const SECURITY_LEVELS = [
-    { value: 'public', label: 'عمومی', desc: 'دسترسی به اطلاعات عمومی', icon: Globe, color: '#64748b', bg: '#f8fafc' },
-    { value: 'internal', label: 'داخلی', desc: 'دسترسی به اطلاعات داخلی سازمان', icon: Shield, color: '#3b82f6', bg: '#eff6ff' },
-    { value: 'confidential', label: 'محرمانه', desc: 'دسترسی به اطلاعات محرمانه', icon: Lock, color: '#f59e0b', bg: '#fffbeb' },
-    { value: 'secret', label: 'سری', desc: 'دسترسی به اطلاعات سری و حساس', icon: Shield, color: '#ef4444', bg: '#fee2e2' },
+    { value: 'public', label: 'عمومی', desc: 'دسترسی به معلومات عمومی', icon: Globe, color: '#64748b', bg: '#f8fafc' },
+    { value: 'internal', label: 'داخلی', desc: 'دسترسی به معلومات داخلی وزارت', icon: Shield, color: '#3b82f6', bg: '#eff6ff' },
+    { value: 'confidential', label: 'محرمانه', desc: 'دسترسی به معلومات محرمانه', icon: Lock, color: '#f59e0b', bg: '#fffbeb' },
+    { value: 'secret', label: 'سری', desc: 'دسترسی به معلومات سری و حساس', icon: Shield, color: '#ef4444', bg: '#fee2e2' },
 ] as const;
 
 // NID Permission Labels
@@ -52,7 +52,7 @@ export default function UsersEdit({
     positions: initialPositions,
     roles,
     myOrganizationId,
-    nidPermissions = {},
+    nidPermissions,
     userNidPermissions = []
 }: Props) {
 
@@ -73,9 +73,6 @@ export default function UsersEdit({
         last_name: user.last_name,
         national_code: user.national_code,
         mobile: user.mobile || '',
-        birth_date: user.birth_date || '',
-        emergency_phone: user.emergency_phone || '',
-        address: user.address || '',
         status: user.status,
         security_clearance: user.security_clearance,
         role: currentUserRole,
@@ -130,16 +127,17 @@ export default function UsersEdit({
         <>
             <Head title={`ویرایش کاربر - ${user.first_name} ${user.last_name}`} />
 
-            <div className="min-h-screen bg-gray-50">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+            <div className="min-h-screen">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6">
                     <form id="user-form" onSubmit={handleSubmit}>
                         <div className="space-y-5">
                             {/* 1. Personal Info */}
                             <SectionCard
                                 icon={UserIcon}
                                 iconColor="#0ea5e9"
-                                title="اطلاعات شخصی"
-                                subtitle="این اطلاعات پایه و اصلی کاربر است. نمبر تذکره باید دقیق و معتبر باشد.">
+                                title="معلومات شخصی"
+                                subtitle="مشخصات هویتی کاربر"
+                                description="این معلومات پایه و اصلی کاربر است. نمبر تذکره باید دقیق و معتبر باشد.">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                                     <div>
                                         <FieldLabel required>نام</FieldLabel>
@@ -150,7 +148,7 @@ export default function UsersEdit({
                                             placeholder="علی" />
                                     </div>
                                     <div>
-                                        <FieldLabel required>نام خانوادگی</FieldLabel>
+                                        <FieldLabel required>تخلص</FieldLabel>
                                         <InputField
                                             value={data.last_name}
                                             onChange={v => setData('last_name', v)}
@@ -165,44 +163,6 @@ export default function UsersEdit({
                                             onChange={v => setData('national_code', v)}
                                             error={errors.national_code}
                                             placeholder="1234567890" />
-                                        <p className="text-xs text-slate-400 mt-1.5">نمبر تذکره منحصر به فرد</p>
-                                    </div>
-                                    <div>
-                                        <PersianDatePicker
-                                            label="تاریخ تولد"
-                                            value={data.birth_date}
-                                            onChange={(date) => setData('birth_date', date as string)}
-                                            error={errors.birth_date}
-                                        />
-                                        <p className="text-xs text-slate-400 mt-1.5">تاریخ تولد را به شمسی انتخاب کنید</p>
-                                    </div>
-                                    <div>
-                                        <FieldLabel>تلفن همراه</FieldLabel>
-                                        <InputField
-                                            icon={Phone}
-                                            value={data.mobile}
-                                            onChange={v => setData('mobile', v)}
-                                            error={errors.mobile}
-                                            placeholder="09123456789" />
-                                    </div>
-                                    <div>
-                                        <FieldLabel>تلفن اضطراری</FieldLabel>
-                                        <InputField
-                                            icon={Phone}
-                                            value={data.emergency_phone}
-                                            onChange={v => setData('emergency_phone', v)}
-                                            error={errors.emergency_phone}
-                                            placeholder="تلفن همراه اضطراری" />
-                                        <p className="text-xs text-slate-400 mt-1.5">برای مواقع ضروری - اختیاری</p>
-                                    </div>
-                                    <div className="md:col-span-3">
-                                        <FieldLabel>آدرس</FieldLabel>
-                                        <InputField
-                                            icon={MapPin}
-                                            value={data.address}
-                                            onChange={v => setData('address', v)}
-                                            error={errors.address}
-                                            placeholder="آدرس کامل" />
                                     </div>
                                 </div>
                             </SectionCard>
@@ -211,10 +171,11 @@ export default function UsersEdit({
                             <SectionCard
                                 icon={Key}
                                 iconColor="#10b981"
-                                title="اطلاعات حساب کاربری"
-                                subtitle="با این اطلاعات کاربر وارد سیستم می‌شود. ایمیل باید معتبر و یکتا باشد.">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <div className="md:col-span-2">
+                                title="معلومات حساب کاربری"
+                                subtitle="معلومات ورود به سیستم"
+                                description="با این معلومات کاربر وارد سیستم می‌شود. ایمیل باید معتبر و یکتا باشد.">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                    <div>
                                         <FieldLabel required>ایمیل</FieldLabel>
                                         <InputField
                                             icon={Mail}
@@ -253,17 +214,16 @@ export default function UsersEdit({
                             <SectionCard
                                 icon={Building2}
                                 iconColor="#8b5cf6"
-                                title="اطلاعات سازمانی"
-                                subtitle="ساختار سازمانی کاربر"
-                                description="تعیین جایگاه کاربر در ساختار سازمانی. سمت اصلی در کارتابل و ارجاعات تأثیر دارد.">
+                                title="معلومات وزارت"
+                                subtitle="ساختار وزارت کاربر"
+                                description="تعیین جایگاه کاربر در ساختار وزارت. سمت اصلی در کارتابل و ارجاعات تأثیر دارد.">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div>
-                                        <FieldLabel required>سازمان</FieldLabel>
+                                        <FieldLabel required>وزارت</FieldLabel>
                                         <SelectField
                                             value={data.organization_id}
                                             onChange={v => setData('organization_id', parseInt(v))}
                                             error={errors.organization_id}>
-                                            <option value="">انتخاب سازمان...</option>
                                             {organizations.map(org => <option key={org.id} value={org.id}>{org.name}</option>)}
                                         </SelectField>
                                     </div>
@@ -276,10 +236,10 @@ export default function UsersEdit({
                                             <option value="">انتخاب کنید...</option>
                                             {departments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}
                                         </SelectField>
-                                        <p className="text-xs text-slate-400 mt-1.5">دپارتمانی که کاربر در آن فعالیت می‌کند</p>
+                                        <p className="text-xs text-slate-400 mt-1.5">دیپارتمنت که کاربر در آن فعالیت می‌کند</p>
                                     </div>
                                     <div>
-                                        <FieldLabel>سمت اصلی</FieldLabel>
+                                        <FieldLabel>بست اصلی</FieldLabel>
                                         <SelectField
                                             value={data.primary_position_id || ''}
                                             onChange={v => setData('primary_position_id', parseInt(v) || null)}
@@ -290,7 +250,7 @@ export default function UsersEdit({
                                         </SelectField>
                                         {!data.department_id && (
                                             <p className="text-xs text-amber-600 mt-1.5 flex items-center gap-1">
-                                                <AlertCircle className="h-3 w-3" /> ابتدا دپارتمان را انتخاب کنید
+                                                <AlertCircle className="h-3 w-3" /> ابتدا دیپارتمنت را انتخاب کنید
                                             </p>
                                         )}
                                     </div>
@@ -300,7 +260,6 @@ export default function UsersEdit({
                                             value={data.role}
                                             onChange={v => setData('role', v)}
                                             error={errors.role}>
-                                            <option value="">انتخاب نقش...</option>
                                             {roles.map(role => <option key={role.name} value={role.name}>{role.label}</option>)}
                                         </SelectField>
                                         <p className="text-xs text-slate-400 mt-1.5">نقش تعیین می‌کند کاربر چه مجوزهایی در سیستم دارد</p>
@@ -308,7 +267,7 @@ export default function UsersEdit({
                                 </div>
                             </SectionCard>
 
-                            {/* 4. NID Permissions (Side Permissions) - NEW SECTION */}
+                            {/* 4. NID Permissions (Side Permissions) */}
                             <SectionCard
                                 icon={FileText}
                                 iconColor="#8b5cf6"
@@ -342,95 +301,21 @@ export default function UsersEdit({
                                         </label>
                                     ))}
                                 </div>
-                                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                                    <p className="text-xs text-blue-600 flex items-center gap-2">
+                                <div className="mt-4 p-3 bg-slate-50 rounded-lg">
+                                    <p className="text-xs text-slate-500 flex items-center gap-2">
                                         <Shield className="h-3 w-3" />
                                         این مجوزها به کاربر اجازه می‌دهد بدون توجه به نقش اصلی، به عملیات مربوط به تذکره دسترسی داشته باشد.
                                     </p>
                                 </div>
                             </SectionCard>
 
-                            {/* 5. Status & Security */}
+                            {/* 5. Status, Security & Actions */}
                             <SectionCard
                                 icon={Shield}
                                 iconColor="#f59e0b"
-                                title="وضعیت و امنیت"
+                                title="وضعیت و نقش"
                                 subtitle="تعیین می‌کند کاربر چه دسترسی‌هایی در سیستم دارد.">
                                 <div className="space-y-6">
-                                    {/* Status */}
-                                    <div>
-                                        <FieldLabel>وضعیت کاربر</FieldLabel>
-                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                            {STATUS_OPTIONS.map(opt => {
-                                                const Icon = opt.icon;
-                                                const isSelected = data.status === opt.value;
-
-                                                return (
-                                                    <button
-                                                        key={opt.value}
-                                                        type="button"
-                                                        onClick={() => setData('status', opt.value)}
-                                                        className={`relative p-4 rounded-xl border-2 text-right transition-all ${isSelected
-                                                            ? `border-${opt.value === 'active' ? 'emerald' : opt.value === 'inactive' ? 'gray' : 'red'}-400 bg-${opt.value === 'active' ? 'emerald' : opt.value === 'inactive' ? 'gray' : 'red'}-50`
-                                                            : 'border-slate-200 hover:border-slate-300'
-                                                            }`}>
-                                                        <div className="flex items-center gap-3">
-                                                            <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${isSelected
-                                                                ? `bg-${opt.value === 'active' ? 'emerald' : opt.value === 'inactive' ? 'gray' : 'red'}-100`
-                                                                : 'bg-slate-100'
-                                                                }`}>
-                                                                <Icon className={`h-4 w-4 ${isSelected
-                                                                    ? `text-${opt.value === 'active' ? 'emerald' : opt.value === 'inactive' ? 'gray' : 'red'}-600`
-                                                                    : 'text-slate-500'
-                                                                    }`} />
-                                                            </div>
-                                                            <div>
-                                                                <p className={`text-sm font-bold ${isSelected
-                                                                    ? `text-${opt.value === 'active' ? 'emerald' : opt.value === 'inactive' ? 'gray' : 'red'}-700`
-                                                                    : 'text-slate-700'
-                                                                    }`}>{opt.label}</p>
-                                                                <p className="text-xs text-slate-500 mt-0.5">{opt.desc}</p>
-                                                            </div>
-                                                        </div>
-                                                        {isSelected && (
-                                                            <CheckCircle className={`absolute top-3 left-3 h-5 w-5 text-${opt.value === 'active' ? 'emerald' : opt.value === 'inactive' ? 'gray' : 'red'}-500`} />
-                                                        )}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-
-                                    {/* Security Clearance */}
-                                    <div>
-                                        <FieldLabel>سطح امنیتی</FieldLabel>
-                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                            {SECURITY_LEVELS.map(lvl => {
-                                                const Icon = lvl.icon;
-                                                const isSelected = data.security_clearance === lvl.value;
-
-                                                return (
-                                                    <button
-                                                        key={lvl.value}
-                                                        type="button"
-                                                        onClick={() => setData('security_clearance', lvl.value)}
-                                                        className={`py-3 px-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${isSelected
-                                                            ? `border-${lvl.value === 'public' ? 'gray' : lvl.value === 'internal' ? 'blue' : lvl.value === 'confidential' ? 'amber' : 'red'}-400 bg-${lvl.value === 'public' ? 'gray' : lvl.value === 'internal' ? 'blue' : lvl.value === 'confidential' ? 'amber' : 'red'}-50`
-                                                            : 'border-slate-200 hover:border-slate-300'
-                                                            }`}>
-                                                        <Icon className={`h-5 w-5 ${isSelected
-                                                            ? `text-${lvl.value === 'public' ? 'gray' : lvl.value === 'internal' ? 'blue' : lvl.value === 'confidential' ? 'amber' : 'red'}-600`
-                                                            : 'text-slate-500'
-                                                            }`} />
-                                                        <span className="text-xs font-bold">{lvl.label}</span>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                        <p className="text-xs text-slate-400 mt-1.5">سطح دسترسی به اطلاعات محرمانه را تعیین می‌کند</p>
-                                    </div>
-
-                                    {/* Summary */}
                                     <div className="flex flex-wrap items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
                                         <span className="text-xs font-semibold text-slate-500">خلاصه وضعیت:</span>
                                         <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: selectedStatus.bg, color: selectedStatus.color }}>
@@ -441,9 +326,7 @@ export default function UsersEdit({
                                             <selectedSecurity.icon className="h-3 w-3" /> {selectedSecurity.label}
                                         </span>
                                         <span className="text-slate-300">•</span>
-                                        <span className="text-xs font-bold text-slate-600 bg-slate-200 px-2.5 py-1 rounded-full">
-                                            {roles.find(r => r.name === data.role)?.label || data.role}
-                                        </span>
+                                        <span className="text-xs font-bold text-slate-600 bg-slate-200 px-2.5 py-1 rounded-full">{roles.find(r => r.name === data.role)?.label || data.role}</span>
                                         {data.nid_permissions.length > 0 && (
                                             <>
                                                 <span className="text-slate-300">•</span>
@@ -455,9 +338,8 @@ export default function UsersEdit({
                                         )}
                                     </div>
 
-                                    {/* Actions */}
-                                    <div className="bg-white border-t border-slate-200 pt-6">
-                                        <div className="flex gap-3">
+                                    <div className="bg-white border-slate-200 p-4 z-20">
+                                        <div className="flex gap-3 max-w-5xl mx-auto">
                                             <button
                                                 type="submit"
                                                 disabled={processing}
@@ -469,10 +351,10 @@ export default function UsersEdit({
                                             <button
                                                 type="button"
                                                 onClick={() => router.get(users.index())}
-                                                className="cursor-pointer flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                                                className="cursor-pointer flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-slate-700 bg-slate-200 hover:bg-slate-200 rounded-lg transition-colors"
                                             >
                                                 <X className="h-4 w-4" />
-                                                انصراف
+                                                لغوه
                                             </button>
                                         </div>
                                     </div>
