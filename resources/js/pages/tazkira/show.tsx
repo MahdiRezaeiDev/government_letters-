@@ -129,7 +129,7 @@ export default function TazkiraShow({ tazkira, can }: Props) {
         additional: true,
         attachments: true,
         history: true,
-    });
+    });    
 
     const statusConfig = STATUS_CONFIG[tazkira.status];
     const StatusIcon = statusConfig.icon;

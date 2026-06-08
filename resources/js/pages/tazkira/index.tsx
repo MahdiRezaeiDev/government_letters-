@@ -57,9 +57,6 @@ export default function TazkiraIndex({ tazkiras, filters, can }: Props) {
     const [selectedTazkira, setSelectedTazkira] = useState<Tazkira | null>(null);
     const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
 
-    console.log(can);
-
-
     const handleSearch = () => {
         router.get('/tazkira', {
             search: searchTerm,

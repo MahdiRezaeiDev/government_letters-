@@ -173,7 +173,7 @@ class TazkiraController extends Controller
         return Inertia::render('tazkira/show', [
             'tazkira' => $tazkira,
             'can' => [
-                'edit' => $user->can(PermissionEnum::NID_VIEW),
+                'edit' => $user->can(PermissionEnum::NID_REGISTER),
                 'delete' => $user->can(PermissionEnum::NID_DESTROY),
                 'approve' => $user->can(PermissionEnum::NID_APPROVE),
             ],
