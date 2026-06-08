@@ -26,32 +26,86 @@ class TazkiraController extends Controller
             ->with(['createdBy', 'approvedBy', 'attachments'])
             ->orderBy('created_at', 'desc');
 
-        // فیلتر بر اساس وضعیت
+        // فیلتر بر اساس فیلدهای جداگانه
+        if ($request->filled('first_name')) {
+            $query->where('first_name', 'like', '%' . $request->first_name . '%');
+        }
+        if ($request->filled('last_name')) {
+            $query->where('last_name', 'like', '%' . $request->last_name . '%');
+        }
+        if ($request->filled('father_name')) {
+            $query->where('father_name', 'like', '%' . $request->father_name . '%');
+        }
+        if ($request->filled('grandfather_name')) {
+            $query->where('grandfather_name', 'like', '%' . $request->grandfather_name . '%');
+        }
+        if ($request->filled('tazkira_number')) {
+            $query->where('tazkira_number', 'like', '%' . $request->tazkira_number . '%');
+        }
+        if ($request->filled('volume')) {
+            $query->where('volume', 'like', '%' . $request->volume . '%');
+        }
+        if ($request->filled('page')) {
+            $query->where('page', 'like', '%' . $request->page . '%');
+        }
+        if ($request->filled('registration_number')) {
+            $query->where('registration_number', 'like', '%' . $request->registration_number . '%');
+        }
+        if ($request->filled('velayat')) {
+            $query->where('velayat', 'like', '%' . $request->velayat . '%');
+        }
+        if ($request->filled('volosvali')) {
+            $query->where('volosvali', 'like', '%' . $request->volosvali . '%');
+        }
+        if ($request->filled('qaria')) {
+            $query->where('qaria', 'like', '%' . $request->qaria . '%');
+        }
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // جستجو
+        // جستجوی عمومی (اختیاری)
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
                     ->orWhere('father_name', 'like', "%{$search}%")
-                    ->orWhere('tazkira_number', 'like', "%{$search}%");
+                    ->orWhere('grandfather_name', 'like', "%{$search}%")
+                    ->orWhere('tazkira_number', 'like', "%{$search}%")
+                    ->orWhere('velayat', 'like', "%{$search}%")
+                    ->orWhere('volosvali', 'like', "%{$search}%")
+                    ->orWhere('qaria', 'like', "%{$search}%");
             });
         }
 
-        // محدودیت دسترسی
+        // محدودیت دسترسی (در صورت نیاز فعال شود)
         // if (!$user->isSuperAdmin() && !$user->isOrgAdmin()) {
         //     $query->where('created_by', $user->id);
         // }
 
         $tazkiras = $query->paginate(15);
 
+        // ارسال همه فیلترها برای حفظ در فرم
+        $filters = $request->only([
+            'first_name',
+            'last_name',
+            'father_name',
+            'grandfather_name',
+            'tazkira_number',
+            'volume',
+            'page',
+            'registration_number',
+            'velayat',
+            'volosvali',
+            'qaria',
+            'status',
+            'search'
+        ]);
+
         return Inertia::render('tazkira/index', [
             'tazkiras' => $tazkiras,
-            'filters' => $request->only(['search', 'status']),
+            'filters' => $filters,
             'can' => [
                 'create' => $user->can(PermissionEnum::NID_REGISTER),
                 'edit' => $user->can(PermissionEnum::NID_REGISTER),
@@ -188,7 +242,7 @@ class TazkiraController extends Controller
         $user = auth()->user();
 
         // بررسی دسترسی برای ویرایش
-        if (!$user->can(PermissionEnum::NID_VIEW)) {
+        if (!$user->can(PermissionEnum::NID_REGISTER)) {
             abort(403, 'شما مجاز به ویرایش تذکره نیستید.');
         }
 
@@ -197,7 +251,7 @@ class TazkiraController extends Controller
         return Inertia::render('tazkira/edit', [
             'tazkira' => $tazkira,
             'can' => [
-                'edit' => $user->can(PermissionEnum::NID_VIEW),
+                'edit' => $user->can(PermissionEnum::NID_REGISTER),
                 'delete' => $user->can(PermissionEnum::NID_DESTROY),
             ],
         ]);
@@ -211,7 +265,7 @@ class TazkiraController extends Controller
         $user = auth()->user();
 
         // بررسی دسترسی برای ویرایش
-        if (!$user->can(PermissionEnum::NID_VIEW)) {
+        if (!$user->can(PermissionEnum::NID_REGISTER)) {
             abort(403, 'شما مجاز به ویرایش تذکره نیستید.');
         }
 
@@ -465,7 +519,7 @@ class TazkiraController extends Controller
         $user = auth()->user();
 
         // بررسی دسترسی برای ویرایش
-        if (!$user->can(PermissionEnum::NID_VIEW)) {
+        if (!$user->can(PermissionEnum::NID_REGISTER)) {
             abort(403, 'شما مجاز به افزودن ضمیمه نیستید.');
         }
 
@@ -515,7 +569,7 @@ class TazkiraController extends Controller
         $user = auth()->user();
 
         // بررسی دسترسی برای ویرایش
-        if (!$user->can(PermissionEnum::NID_VIEW)) {
+        if (!$user->can(PermissionEnum::NID_REGISTER)) {
             abort(403, 'شما مجاز به حذف ضمیمه نیستید.');
         }
 
@@ -534,9 +588,14 @@ class TazkiraController extends Controller
 
         $tazkiras = Tazkira::where('first_name', 'like', "%{$search}%")
             ->orWhere('last_name', 'like', "%{$search}%")
+            ->orWhere('father_name', 'like', "%{$search}%")
+            ->orWhere('grandfather_name', 'like', "%{$search}%")
             ->orWhere('tazkira_number', 'like', "%{$search}%")
+            ->orWhere('velayat', 'like', "%{$search}%")
+            ->orWhere('volosvali', 'like', "%{$search}%")
+            ->orWhere('qaria', 'like', "%{$search}%")
             ->limit(10)
-            ->get(['id', 'first_name', 'last_name', 'father_name', 'tazkira_number']);
+            ->get(['id', 'first_name', 'last_name', 'father_name', 'grandfather_name', 'tazkira_number', 'velayat', 'volosvali', 'qaria']);
 
         return response()->json($tazkiras);
     }
