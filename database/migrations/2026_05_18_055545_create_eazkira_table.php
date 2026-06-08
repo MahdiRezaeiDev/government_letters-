@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -22,17 +23,10 @@ return new class extends Migration
             $table->string('page', 20)->nullable()->comment('صفحه');
             $table->string('registration_number', 50)->nullable()->comment('صکو / شماره ثبت');
 
-            // ==================== اطلاعات تکمیلی ====================
-            $table->date('birth_date')->nullable()->comment('تاریخ تولد');
-            $table->string('birth_place', 200)->nullable()->comment('محل تولد');
-            $table->string('national_code', 20)->nullable()->unique()->comment('کد ملی');
-            $table->string('father_card_number', 50)->nullable()->comment('شماره کارت پدر');
-
-            // ==================== اطلاعات تماس ====================
-            $table->string('phone', 20)->nullable()->comment('تلفن ثابت');
-            $table->string('mobile', 20)->nullable()->comment('تلفن همراه');
-            $table->text('address')->nullable()->comment('آدرس');
-            $table->string('email', 100)->nullable()->comment('ایمیل');
+            // ==================== اطلاعات تکمیلی (مطابق فرم) ====================
+            $table->string('velayat', 100)->nullable()->comment('ولایت');
+            $table->string('volosvali', 100)->nullable()->comment('ولسوالی');
+            $table->string('qaria', 100)->nullable()->comment('قریه / ناحیه');
 
             // ==================== تصویر تذکره ====================
             $table->string('tazkira_image', 500)->nullable()->comment('مسیر تصویر تذکره');
@@ -51,9 +45,10 @@ return new class extends Migration
 
             // ==================== ایندکس‌ها ====================
             $table->index('tazkira_number');
-            $table->index('national_code');
             $table->index('status');
             $table->index(['first_name', 'last_name']);
+            $table->index('velayat');
+            $table->index('volosvali');
             $table->index('created_at');
         });
     }

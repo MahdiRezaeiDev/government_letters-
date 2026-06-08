@@ -91,28 +91,36 @@ const STATUS_CONFIG = {
 };
 
 const formatFileSize = (bytes: number) => {
-    if (!bytes) {
-        return '0 B';
-    }
-
-    if (bytes < 1024) {
-        return bytes + ' B';
-    }
-
-    if (bytes < 1024 * 1024) {
-        return (bytes / 1024).toFixed(1) + ' KB';
-    }
-
+    if (!bytes) return '0 B';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 };
 
 const formatDate = (dateString: string) => {
-    if (!dateString) {
-        return '—';
-    }
-
+    if (!dateString) return '—';
     return new Date(dateString).toLocaleDateString('fa-IR');
 };
+
+// SVG placeholder for broken images
+const ImagePlaceholder = ({ className = "h-12 w-12" }: { className?: string }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="100"
+        height="100"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={className}
+    >
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+        <polyline points="21 15 16 10 5 21"></polyline>
+    </svg>
+);
 
 export default function TazkiraShow({ tazkira, can }: Props) {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -144,6 +152,27 @@ export default function TazkiraShow({ tazkira, can }: Props) {
 
     const handlePrint = () => {
         window.print();
+    };
+
+    // Helper function to handle image errors
+    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+        const target = e.currentTarget;
+        target.style.display = 'none';
+
+        const parent = target.parentElement;
+        if (parent) {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'w-full h-full flex items-center justify-center bg-gray-100';
+            placeholder.innerHTML = `
+                <div class="text-center">
+                    <svg class="h-12 w-12 text-gray-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p class="text-xs text-gray-500 mt-1">تصویر وجود ندارد</p>
+                </div>
+            `;
+            parent.appendChild(placeholder);
+        }
     };
 
     return (
@@ -260,37 +289,25 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                     {/* Main Card */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
-                        {/* تصویر تذکره */}
-                        {tazkira.tazkira_image_url && tazkira.tazkira_image_url !== '/images/no-image.png' ? (
-                            <div
-                                className="relative h-52 bg-gradient-to-r from-gray-100 to-gray-200 cursor-pointer overflow-hidden group"
-                                onClick={() => setShowImageModal(true)}
-                            >
+                        {/* Main Tazkira Image */}
+                        <div className="relative h-52 bg-gradient-to-r from-gray-100 to-gray-200">
+                            {tazkira.tazkira_image_url ? (
                                 <img
                                     src={tazkira.tazkira_image_url}
                                     alt="تصویر تذکره"
-                                    className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
-                                    onError={(e) => {
-                                        (e.target as HTMLImageElement).src = '/images/no-image.png';
-                                    }}
+                                    className="w-full h-full object-contain cursor-pointer transition-transform duration-300 hover:scale-105"
+                                    onClick={() => setShowImageModal(true)}
+                                    onError={handleImageError}
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-end p-4">
-                                    <div className="bg-white/90 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 flex items-center gap-2">
-                                        <Eye className="h-4 w-4" />
-                                        مشاهده بزرگ
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <div className="text-center">
+                                        <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                                        <p className="text-sm text-gray-500">تصویر تذکره وجود ندارد</p>
                                     </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="relative h-52 bg-gradient-to-r from-gray-100 to-gray-200 flex items-center justify-center">
-                                <div className="text-center">
-                                    <div className="p-3 bg-white/50 rounded-full inline-block mb-2">
-                                        <ImageIcon className="h-8 w-8 text-gray-400" />
-                                    </div>
-                                    <p className="text-sm text-gray-500">تصویر تذکره وجود ندارد</p>
-                                </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
 
                         <div className="p-6 space-y-5">
 
@@ -386,111 +403,7 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                                 )}
                             </div>
 
-                            {/* Section 3: اطلاعات تکمیلی */}
-                            <div className="group">
-                                <button
-                                    onClick={() => toggleSection('additional')}
-                                    className="flex items-center justify-between w-full"
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <div className="p-1.5 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors">
-                                            <Calendar className="h-4 w-4 text-emerald-600" />
-                                        </div>
-                                        <h2 className="text-base font-bold text-gray-800">اطلاعات تکمیلی</h2>
-                                    </div>
-                                    {expandedSections.additional ? (
-                                        <ChevronUp className="h-5 w-5 text-gray-400" />
-                                    ) : (
-                                        <ChevronDown className="h-5 w-5 text-gray-400" />
-                                    )}
-                                </button>
-                                {expandedSections.additional && (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-100">
-                                        <div className="bg-gray-50 rounded-xl p-3">
-                                            <div className="flex items-center gap-1 mb-1">
-                                                <Calendar className="h-3 w-3 text-gray-400" />
-                                                <p className="text-xs text-gray-400">تاریخ تولد</p>
-                                            </div>
-                                            <p className="text-sm font-semibold text-gray-800">{tazkira.birth_date ? formatDate(tazkira.birth_date) : '—'}</p>
-                                        </div>
-                                        <div className="bg-gray-50 rounded-xl p-3">
-                                            <div className="flex items-center gap-1 mb-1">
-                                                <MapPin className="h-3 w-3 text-gray-400" />
-                                                <p className="text-xs text-gray-400">محل تولد</p>
-                                            </div>
-                                            <p className="text-sm font-semibold text-gray-800">{tazkira.birth_place || '—'}</p>
-                                        </div>
-                                        <div className="bg-gray-50 rounded-xl p-3">
-                                            <div className="flex items-center gap-1 mb-1">
-                                                <Hash className="h-3 w-3 text-gray-400" />
-                                                <p className="text-xs text-gray-400">کد ملی</p>
-                                            </div>
-                                            <p className="text-sm font-semibold text-gray-800">{tazkira.national_code || '—'}</p>
-                                        </div>
-                                        <div className="bg-gray-50 rounded-xl p-3">
-                                            <div className="flex items-center gap-1 mb-1">
-                                                <Fingerprint className="h-3 w-3 text-gray-400" />
-                                                <p className="text-xs text-gray-400">شماره کارت پدر</p>
-                                            </div>
-                                            <p className="text-sm font-semibold text-gray-800">{tazkira.father_card_number || '—'}</p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Section 4: اطلاعات تماس */}
-                            <div className="group">
-                                <button
-                                    onClick={() => toggleSection('contact')}
-                                    className="flex items-center justify-between w-full"
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <div className="p-1.5 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
-                                            <Phone className="h-4 w-4 text-blue-600" />
-                                        </div>
-                                        <h2 className="text-base font-bold text-gray-800">اطلاعات تماس</h2>
-                                    </div>
-                                    {expandedSections.contact ? (
-                                        <ChevronUp className="h-5 w-5 text-gray-400" />
-                                    ) : (
-                                        <ChevronDown className="h-5 w-5 text-gray-400" />
-                                    )}
-                                </button>
-                                {expandedSections.contact && (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-100">
-                                        <div className="bg-gray-50 rounded-xl p-3">
-                                            <div className="flex items-center gap-1 mb-1">
-                                                <Phone className="h-3 w-3 text-gray-400" />
-                                                <p className="text-xs text-gray-400">تلفن ثابت</p>
-                                            </div>
-                                            <p className="text-sm font-semibold text-gray-800">{tazkira.phone || '—'}</p>
-                                        </div>
-                                        <div className="bg-gray-50 rounded-xl p-3">
-                                            <div className="flex items-center gap-1 mb-1">
-                                                <Smartphone className="h-3 w-3 text-gray-400" />
-                                                <p className="text-xs text-gray-400">تلفن همراه</p>
-                                            </div>
-                                            <p className="text-sm font-semibold text-gray-800">{tazkira.mobile || '—'}</p>
-                                        </div>
-                                        <div className="bg-gray-50 rounded-xl p-3">
-                                            <div className="flex items-center gap-1 mb-1">
-                                                <Mail className="h-3 w-3 text-gray-400" />
-                                                <p className="text-xs text-gray-400">ایمیل</p>
-                                            </div>
-                                            <p className="text-sm font-semibold text-gray-800 break-all">{tazkira.email || '—'}</p>
-                                        </div>
-                                        <div className="bg-gray-50 rounded-xl p-3">
-                                            <div className="flex items-center gap-1 mb-1">
-                                                <MapPin className="h-3 w-3 text-gray-400" />
-                                                <p className="text-xs text-gray-400">آدرس</p>
-                                            </div>
-                                            <p className="text-sm font-semibold text-gray-800">{tazkira.address || '—'}</p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Section 5: ضمیمه‌ها */}
+                            {/* Section 3: ضمیمه‌ها */}
                             <div className="group">
                                 <button
                                     onClick={() => toggleSection('attachments')}
@@ -523,24 +436,39 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                                                         <div
                                                             className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
                                                             onClick={() => {
-                                                                if (att.file_type?.startsWith('image/')) {
+                                                                if (att.file_type?.startsWith('image/') && att.file_url) {
                                                                     setPreviewImage({ url: att.file_url, name: att.file_name });
                                                                 }
                                                             }}
                                                         >
                                                             {att.file_type?.startsWith('image/') ? (
                                                                 <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-blue-100 flex-shrink-0">
-                                                                    <img
-                                                                        src={att.file_url}
-                                                                        alt={att.file_name}
-                                                                        className="w-full h-full object-cover"
-                                                                        onError={(e) => {
-                                                                            (e.target as HTMLImageElement).style.display = 'none';
-                                                                        }}
-                                                                    />
-                                                                    <div className="absolute inset-0 bg-black/0 group-hover/att:bg-black/20 transition-colors flex items-center justify-center">
-                                                                        <Eye className="h-4 w-4 text-white opacity-0 group-hover/att:opacity-100 transition-opacity" />
-                                                                    </div>
+                                                                    {att.file_url ? (
+                                                                        <img
+                                                                            src={att.file_url}
+                                                                            alt={att.file_name}
+                                                                            className="w-full h-full object-cover"
+                                                                            onError={(e) => {
+                                                                                const target = e.currentTarget;
+                                                                                target.style.display = 'none';
+                                                                                const parent = target.parentElement;
+                                                                                if (parent) {
+                                                                                    const placeholder = document.createElement('div');
+                                                                                    placeholder.className = 'w-full h-full flex items-center justify-center bg-gray-200';
+                                                                                    placeholder.innerHTML = `
+                                                                                        <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                                        </svg>
+                                                                                    `;
+                                                                                    parent.appendChild(placeholder);
+                                                                                }
+                                                                            }}
+                                                                        />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                                                                            <ImageIcon className="h-6 w-6 text-gray-400" />
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             ) : (
                                                                 <div className="p-1.5 bg-gray-200 rounded-lg flex-shrink-0">
@@ -559,15 +487,17 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <a
-                                                            href={att.file_url}
-                                                            download
-                                                            target="_blank"
-                                                            className="p-2 text-gray-400 hover:text-indigo-600 rounded-lg transition-colors opacity-0 group-hover/att:opacity-100"
-                                                            title="دانلود"
-                                                        >
-                                                            <Download className="h-4 w-4" />
-                                                        </a>
+                                                        {att.file_url && (
+                                                            <a
+                                                                href={att.file_url}
+                                                                download
+                                                                target="_blank"
+                                                                className="p-2 text-gray-400 hover:text-indigo-600 rounded-lg transition-colors opacity-0 group-hover/att:opacity-100"
+                                                                title="دانلود"
+                                                            >
+                                                                <Download className="h-4 w-4" />
+                                                            </a>
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>
@@ -580,125 +510,6 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                                     </div>
                                 )}
                             </div>
-
-                            {/* Section 6: تاریخچه بررسی */}
-                            {tazkira.review_logs && tazkira.review_logs.length > 0 && (
-                                <div className="group">
-                                    <button
-                                        onClick={() => toggleSection('history')}
-                                        className="flex items-center justify-between w-full"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <div className="p-1.5 bg-gray-100 rounded-lg group-hover:bg-gray-200 transition-colors">
-                                                <Clock className="h-4 w-4 text-gray-600" />
-                                            </div>
-                                            <h2 className="text-base font-bold text-gray-800">
-                                                تاریخچه بررسی
-                                                <span className="mr-2 text-xs font-normal text-gray-400">({tazkira.review_logs.length})</span>
-                                            </h2>
-                                        </div>
-                                        {expandedSections.history ? (
-                                            <ChevronUp className="h-5 w-5 text-gray-400" />
-                                        ) : (
-                                            <ChevronDown className="h-5 w-5 text-gray-400" />
-                                        )}
-                                    </button>
-                                    {expandedSections.history && (
-                                        <div className="space-y-4 mt-4 pt-4 border-t border-gray-100">
-                                            {tazkira.review_logs.map((log) => (
-                                                <div key={log.id} className="border rounded-xl overflow-hidden">
-                                                    <div className={`p-3 flex items-center justify-between ${log.action === 'approved' ? 'bg-emerald-50' : 'bg-red-50'}`}>
-                                                        <div className="flex items-center gap-2">
-                                                            {log.action === 'approved' ? (
-                                                                <CheckCircle className="h-5 w-5 text-emerald-600" />
-                                                            ) : (
-                                                                <XCircle className="h-5 w-5 text-red-600" />
-                                                            )}
-                                                            <span className={`text-sm font-bold ${log.action === 'approved' ? 'text-emerald-700' : 'text-red-700'}`}>
-                                                                {log.action_text}
-                                                            </span>
-                                                        </div>
-                                                        <div className="text-xs text-gray-500">
-                                                            {log.reviewer?.full_name} • {formatDate(log.reviewed_at)}
-                                                        </div>
-                                                    </div>
-                                                    {log.note && (
-                                                        <div className="p-3 bg-gray-50 border-b">
-                                                            <p className="text-xs text-gray-500 mb-1">یادداشت:</p>
-                                                            <p className="text-sm text-gray-700">{log.note}</p>
-                                                        </div>
-                                                    )}
-                                                    {log.attachments && log.attachments.length > 0 && (
-                                                        <div className="p-3">
-                                                            <p className="text-xs text-gray-500 mb-2">
-                                                                ضمیمه‌ها ({log.attachments.length}):
-                                                            </p>
-                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                                {log.attachments.map((att) => {
-                                                                    const isImage = att.file_type?.startsWith('image/') || att.mime_type?.startsWith('image/');
-
-                                                                    return (
-                                                                        <div
-                                                                            key={att.id}
-                                                                            className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group/ratt"
-                                                                        >
-                                                                            <div
-                                                                                className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer"
-                                                                                onClick={() => {
-                                                                                    if (isImage) {
-                                                                                        setPreviewImage({ url: att.file_url, name: att.file_name });
-                                                                                    }
-                                                                                }}
-                                                                            >
-                                                                                {isImage ? (
-                                                                                    <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-blue-100 flex-shrink-0">
-                                                                                        <img
-                                                                                            src={att.file_url}
-                                                                                            alt={att.file_name}
-                                                                                            className="w-full h-full object-cover"
-                                                                                            onError={(e) => {
-                                                                                                (e.target as HTMLImageElement).style.display = 'none';
-                                                                                            }}
-                                                                                        />
-                                                                                        <div className="absolute inset-0 bg-black/0 group-hover/ratt:bg-black/20 transition-colors flex items-center justify-center">
-                                                                                            <Eye className="h-3 w-3 text-white opacity-0 group-hover/ratt:opacity-100 transition-opacity" />
-                                                                                        </div>
-                                                                                    </div>
-                                                                                ) : (
-                                                                                    <div className="p-1.5 bg-gray-200 rounded-lg flex-shrink-0">
-                                                                                        <File className="h-3.5 w-3.5 text-gray-600" />
-                                                                                    </div>
-                                                                                )}
-                                                                                <div className="min-w-0 flex-1">
-                                                                                    <p className="text-xs font-medium text-gray-700 truncate" title={att.file_name}>
-                                                                                        {att.file_name}
-                                                                                    </p>
-                                                                                    <p className="text-xs text-gray-400">
-                                                                                        {formatFileSize(att.file_size)}
-                                                                                    </p>
-                                                                                </div>
-                                                                            </div>
-                                                                            <a
-                                                                                href={att.file_url}
-                                                                                download
-                                                                                target="_blank"
-                                                                                className="p-1.5 text-gray-400 hover:text-indigo-600 rounded-lg transition-colors opacity-0 group-hover/ratt:opacity-100 flex-shrink-0"
-                                                                                title="دانلود"
-                                                                            >
-                                                                                <Download className="h-3.5 w-3.5" />
-                                                                            </a>
-                                                                        </div>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
 
                             {/* اطلاعات سیستمی */}
                             <div className="pt-4 border-t border-gray-200">
@@ -749,8 +560,8 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                 </div>
             )}
 
-            {/* Image Modal (تصویر اصلی تذکره) */}
-            {showImageModal && tazkira.tazkira_image_url && tazkira.tazkira_image_url !== '/images/no-image.png' && (
+            {/* Main Image Modal */}
+            {showImageModal && tazkira.tazkira_image_url && (
                 <div
                     className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
                     onClick={() => setShowImageModal(false)}
@@ -760,6 +571,9 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                             src={tazkira.tazkira_image_url}
                             alt="تصویر تذکره"
                             className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="%23999" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"%3E%3Crect x="3" y="3" width="18" height="18" rx="2" ry="2"%3E%3C/rect%3E%3Ccircle cx="8.5" cy="8.5" r="1.5"%3E%3C/circle%3E%3Cpolyline points="21 15 16 10 5 21"%3E%3C/polyline%3E%3C/svg%3E';
+                            }}
                         />
                         <div className="absolute -top-12 left-0 right-0 flex items-center justify-between">
                             <span className="text-white text-sm">تصویر تذکره</span>
@@ -785,7 +599,7 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                 </div>
             )}
 
-            {/* Attachment Preview Modal (ضمیمه‌ها) */}
+            {/* Attachment Preview Modal */}
             {previewImage && (
                 <div
                     className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
@@ -799,6 +613,9 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                             src={previewImage.url}
                             alt={previewImage.name}
                             className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="%23999" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"%3E%3Crect x="3" y="3" width="18" height="18" rx="2" ry="2"%3E%3C/rect%3E%3Ccircle cx="8.5" cy="8.5" r="1.5"%3E%3C/circle%3E%3Cpolyline points="21 15 16 10 5 21"%3E%3C/polyline%3E%3C/svg%3E';
+                            }}
                         />
                         <div className="absolute -top-12 left-0 right-0 flex items-center justify-between">
                             <span className="text-white text-sm truncate max-w-xs">{previewImage.name}</span>
