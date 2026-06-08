@@ -4,9 +4,9 @@ import { Head, Link, router } from '@inertiajs/react';
 import {
     Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle, XCircle, Clock,
     Hash, FileText, Calendar, ChevronLeft, ChevronRight,
-    AlertCircle, MapPin, User, BookOpen, X, Users
+    AlertCircle, MapPin, User, BookOpen, X
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 interface Tazkira {
     id: number;
@@ -84,18 +84,15 @@ export default function TazkiraIndex({ tazkiras, filters, can }: Props) {
     const [showFilters, setShowFilters] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedTazkira, setSelectedTazkira] = useState<Tazkira | null>(null);
-    const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
 
     const handleFilterChange = (field: string, value: string) => {
         setFilterForm(prev => ({ ...prev, [field]: value }));
     };
 
     const handleSearch = () => {
-        // حذف فیلدهای خالی
         const cleanFilters = Object.fromEntries(
             Object.entries(filterForm).filter(([_, value]) => value !== '')
         );
-
         router.get('/tazkira', cleanFilters, { preserveState: true, replace: true });
     };
 
@@ -198,26 +195,6 @@ export default function TazkiraIndex({ tazkiras, filters, can }: Props) {
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-1 bg-white rounded-xl border border-gray-200 p-1">
-                                    <button
-                                        onClick={() => setViewMode('table')}
-                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'table'
-                                            ? 'bg-indigo-600 text-white shadow-sm'
-                                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                                            }`}
-                                    >
-                                        جدولی
-                                    </button>
-                                    <button
-                                        onClick={() => setViewMode('cards')}
-                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${viewMode === 'cards'
-                                            ? 'bg-indigo-600 text-white shadow-sm'
-                                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                                            }`}
-                                    >
-                                        کارتی
-                                    </button>
-                                </div>
                                 {can.create && (
                                     <Link
                                         href="/tazkira/create"
@@ -488,7 +465,7 @@ export default function TazkiraIndex({ tazkiras, filters, can }: Props) {
                             </div>
                         </div>
 
-                        {/* Content */}
+                        {/* Table View */}
                         {tazkiras.data.length === 0 ? (
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center">
                                 <div className="flex flex-col items-center justify-center">
@@ -507,8 +484,7 @@ export default function TazkiraIndex({ tazkiras, filters, can }: Props) {
                                     )}
                                 </div>
                             </div>
-                        ) : viewMode === 'table' ? (
-                            /* Table View */
+                        ) : (
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                                 <div className="overflow-x-auto">
                                     <table className="min-w-full divide-y divide-gray-200">
@@ -617,7 +593,10 @@ export default function TazkiraIndex({ tazkiras, filters, can }: Props) {
                                             <button
                                                 onClick={() => {
                                                     if (tazkiras.current_page > 1) {
-                                                        router.get('/tazkira', { ...filterForm, page: tazkiras.current_page - 1 });
+                                                        const cleanFilters = Object.fromEntries(
+                                                            Object.entries(filterForm).filter(([_, value]) => value !== '')
+                                                        );
+                                                        router.get('/tazkira', { ...cleanFilters, page: tazkiras.current_page - 1 });
                                                     }
                                                 }}
                                                 disabled={tazkiras.current_page === 1}
@@ -642,23 +621,31 @@ export default function TazkiraIndex({ tazkiras, filters, can }: Props) {
                                                     pages.push(i);
                                                 }
 
-                                                return pages.map((page) => (
-                                                    <button
-                                                        key={page}
-                                                        onClick={() => router.get('/tazkira', { ...filterForm, page })}
-                                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${tazkiras.current_page === page
-                                                            ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
-                                                            : 'text-gray-700 hover:bg-white hover:text-indigo-600'
-                                                            }`}
-                                                    >
-                                                        {page}
-                                                    </button>
-                                                ));
+                                                return pages.map((page) => {
+                                                    const cleanFilters = Object.fromEntries(
+                                                        Object.entries(filterForm).filter(([_, value]) => value !== '')
+                                                    );
+                                                    return (
+                                                        <button
+                                                            key={page}
+                                                            onClick={() => router.get('/tazkira', { ...cleanFilters, page })}
+                                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${tazkiras.current_page === page
+                                                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                                                                : 'text-gray-700 hover:bg-white hover:text-indigo-600'
+                                                                }`}
+                                                        >
+                                                            {page}
+                                                        </button>
+                                                    );
+                                                });
                                             })()}
                                             <button
                                                 onClick={() => {
                                                     if (tazkiras.current_page < tazkiras.last_page) {
-                                                        router.get('/tazkira', { ...filterForm, page: tazkiras.current_page + 1 });
+                                                        const cleanFilters = Object.fromEntries(
+                                                            Object.entries(filterForm).filter(([_, value]) => value !== '')
+                                                        );
+                                                        router.get('/tazkira', { ...cleanFilters, page: tazkiras.current_page + 1 });
                                                     }
                                                 }}
                                                 disabled={tazkiras.current_page === tazkiras.last_page}
@@ -672,79 +659,6 @@ export default function TazkiraIndex({ tazkiras, filters, can }: Props) {
                                         </div>
                                     </div>
                                 )}
-                            </div>
-                        ) : (
-                            /* Cards View */
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                                {tazkiras.data.map((tazkira) => (
-                                    <div key={tazkira.id} className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                                        <div className={`h-1.5 bg-gradient-to-r ${getRandomGradient(tazkira.id)}`} />
-                                        <div className="p-5">
-                                            <div className="flex items-start justify-between mb-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${getRandomGradient(tazkira.id)} flex items-center justify-center text-white font-bold text-lg shadow-md`}>
-                                                        {getInitials(tazkira.first_name, tazkira.last_name)}
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="font-semibold text-gray-900">
-                                                            {tazkira.first_name} {tazkira.last_name}
-                                                        </h3>
-                                                        <p className="text-xs text-gray-500">
-                                                            {tazkira.father_name ? `پدر: ${tazkira.father_name}` : '—'}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                {getStatusBadge(tazkira.status)}
-                                            </div>
-                                            <div className="space-y-2 mt-4">
-                                                <div className="flex items-center gap-2 text-sm">
-                                                    <Hash className="h-4 w-4 text-gray-400" />
-                                                    <span className="text-gray-600 font-mono">{tazkira.tazkira_number}</span>
-                                                </div>
-                                                {(tazkira.volume || tazkira.page) && (
-                                                    <div className="flex items-center gap-2 text-sm">
-                                                        <BookOpen className="h-4 w-4 text-gray-400" />
-                                                        <span className="text-gray-600">
-                                                            جلد: {tazkira.volume || '—'} | صفحه: {tazkira.page || '—'}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {tazkira.velayat && (
-                                                    <div className="flex items-center gap-2 text-sm">
-                                                        <MapPin className="h-4 w-4 text-gray-400" />
-                                                        <span className="text-gray-600">
-                                                            {tazkira.velayat} {tazkira.volosvali ? `- ${tazkira.volosvali}` : ''}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                <div className="flex items-center gap-2 text-sm pt-2 border-t border-gray-100">
-                                                    <Calendar className="h-4 w-4 text-gray-400" />
-                                                    <span className="text-gray-500 text-xs">
-                                                        ثبت: {new Date(tazkira.created_at).toLocaleDateString('fa-IR')}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
-                                                <Link
-                                                    href={`/tazkira/${tazkira.id}`}
-                                                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors"
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                    مشاهده
-                                                </Link>
-                                                {can.edit && (
-                                                    <Link
-                                                        href={`/tazkira/${tazkira.id}/edit`}
-                                                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
-                                                    >
-                                                        <Edit className="h-4 w-4" />
-                                                        ویرایش
-                                                    </Link>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
                             </div>
                         )}
                     </div>
