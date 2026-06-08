@@ -52,6 +52,9 @@ interface Tazkira {
     volume: string | null;
     page: string | null;
     registration_number: string | null;
+    velayat: string | null;
+    volosvali: string | null;
+    qaria: string | null;
     birth_date: string | null;
     birth_place: string | null;
     national_code: string | null;
@@ -102,26 +105,6 @@ const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fa-IR');
 };
 
-// SVG placeholder for broken images
-const ImagePlaceholder = ({ className = "h-12 w-12" }: { className?: string }) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="100"
-        height="100"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={className}
-    >
-        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-        <polyline points="21 15 16 10 5 21"></polyline>
-    </svg>
-);
-
 export default function TazkiraShow({ tazkira, can }: Props) {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showImageModal, setShowImageModal] = useState(false);
@@ -131,8 +114,7 @@ export default function TazkiraShow({ tazkira, can }: Props) {
     const [expandedSections, setExpandedSections] = useState({
         personal: true,
         tazkira: true,
-        additional: false,
-        contact: false,
+        additional: true,
         attachments: true,
         history: true,
     });
@@ -154,11 +136,9 @@ export default function TazkiraShow({ tazkira, can }: Props) {
         window.print();
     };
 
-    // Helper function to handle image errors
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
         const target = e.currentTarget;
         target.style.display = 'none';
-
         const parent = target.parentElement;
         if (parent) {
             const placeholder = document.createElement('div');
@@ -403,7 +383,52 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                                 )}
                             </div>
 
-                            {/* Section 3: ضمیمه‌ها */}
+                            {/* Section 3: اطلاعات تکمیلی (ولایت، ولسوالی، قریه) */}
+                            <div className="group">
+                                <button
+                                    onClick={() => toggleSection('additional')}
+                                    className="flex items-center justify-between w-full"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-1.5 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors">
+                                            <MapPin className="h-4 w-4 text-emerald-600" />
+                                        </div>
+                                        <h2 className="text-base font-bold text-gray-800">اطلاعات تکمیلی</h2>
+                                    </div>
+                                    {expandedSections.additional ? (
+                                        <ChevronUp className="h-5 w-5 text-gray-400" />
+                                    ) : (
+                                        <ChevronDown className="h-5 w-5 text-gray-400" />
+                                    )}
+                                </button>
+                                {expandedSections.additional && (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-100">
+                                        <div className="bg-gray-50 rounded-xl p-3">
+                                            <div className="flex items-center gap-1 mb-1">
+                                                <MapPin className="h-3 w-3 text-gray-400" />
+                                                <p className="text-xs text-gray-400">ولایت</p>
+                                            </div>
+                                            <p className="text-sm font-semibold text-gray-800">{tazkira.velayat || '—'}</p>
+                                        </div>
+                                        <div className="bg-gray-50 rounded-xl p-3">
+                                            <div className="flex items-center gap-1 mb-1">
+                                                <MapPin className="h-3 w-3 text-gray-400" />
+                                                <p className="text-xs text-gray-400">ولسوالی</p>
+                                            </div>
+                                            <p className="text-sm font-semibold text-gray-800">{tazkira.volosvali || '—'}</p>
+                                        </div>
+                                        <div className="bg-gray-50 rounded-xl p-3 sm:col-span-2">
+                                            <div className="flex items-center gap-1 mb-1">
+                                                <MapPin className="h-3 w-3 text-gray-400" />
+                                                <p className="text-xs text-gray-400">قریه / ناحیه</p>
+                                            </div>
+                                            <p className="text-sm font-semibold text-gray-800">{tazkira.qaria || '—'}</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Section 4: ضمیمه‌ها */}
                             <div className="group">
                                 <button
                                     onClick={() => toggleSection('attachments')}
@@ -510,6 +535,60 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                                     </div>
                                 )}
                             </div>
+
+                            {/* تاریخچه بررسی */}
+                            {tazkira.review_logs && tazkira.review_logs.length > 0 && (
+                                <div className="group">
+                                    <button
+                                        onClick={() => toggleSection('history')}
+                                        className="flex items-center justify-between w-full"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-1.5 bg-gray-100 rounded-lg group-hover:bg-gray-200 transition-colors">
+                                                <Clock className="h-4 w-4 text-gray-600" />
+                                            </div>
+                                            <h2 className="text-base font-bold text-gray-800">
+                                                تاریخچه بررسی
+                                                <span className="mr-2 text-xs font-normal text-gray-400">({tazkira.review_logs.length})</span>
+                                            </h2>
+                                        </div>
+                                        {expandedSections.history ? (
+                                            <ChevronUp className="h-5 w-5 text-gray-400" />
+                                        ) : (
+                                            <ChevronDown className="h-5 w-5 text-gray-400" />
+                                        )}
+                                    </button>
+                                    {expandedSections.history && (
+                                        <div className="space-y-4 mt-4 pt-4 border-t border-gray-100">
+                                            {tazkira.review_logs.map((log) => (
+                                                <div key={log.id} className="border rounded-xl overflow-hidden">
+                                                    <div className={`p-3 flex items-center justify-between ${log.action === 'approved' ? 'bg-emerald-50' : 'bg-red-50'}`}>
+                                                        <div className="flex items-center gap-2">
+                                                            {log.action === 'approved' ? (
+                                                                <CheckCircle className="h-5 w-5 text-emerald-600" />
+                                                            ) : (
+                                                                <XCircle className="h-5 w-5 text-red-600" />
+                                                            )}
+                                                            <span className={`text-sm font-bold ${log.action === 'approved' ? 'text-emerald-700' : 'text-red-700'}`}>
+                                                                {log.action_text}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">
+                                                            {log.reviewer?.full_name} • {formatDate(log.reviewed_at)}
+                                                        </div>
+                                                    </div>
+                                                    {log.note && (
+                                                        <div className="p-3 bg-gray-50 border-b">
+                                                            <p className="text-xs text-gray-500 mb-1">یادداشت:</p>
+                                                            <p className="text-sm text-gray-700">{log.note}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {/* اطلاعات سیستمی */}
                             <div className="pt-4 border-t border-gray-200">

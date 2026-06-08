@@ -1,11 +1,9 @@
-// resources/js/pages/tazkira/edit.tsx
-
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    User, Hash, BookOpen, FileText, Grid, Calendar, MapPin, Phone, Mail,
-    Save, X, Users, Fingerprint, Upload, Trash2, Paperclip, Plus,
-    ArrowLeft, CheckCircle, AlertCircle, XCircle, Clock,
-    File as FileIcon, Download, Eye, ImageIcon
+    Hash, BookOpen, FileText, Grid, Calendar, MapPin, Phone, Mail,
+    Save, X, Users, Fingerprint, Upload, Trash2, Plus,
+    ArrowLeft, CheckCircle, XCircle, Clock,
+    File as FileIcon, Download, Eye
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -75,8 +73,14 @@ const inputClass = "w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-
 const labelClass = "block text-sm font-medium text-gray-700 mb-1.5";
 
 const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1024) {
+        return bytes + ' B';
+    }
+
+    if (bytes < 1024 * 1024) {
+        return (bytes / 1024).toFixed(1) + ' KB';
+    }
+
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 };
 
@@ -133,7 +137,10 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
 
     const set = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
-        if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
+
+        if (errors[field]) {
+            setErrors(prev => ({ ...prev, [field]: '' }));
+        }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -144,11 +151,18 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
         fd.append('_method', 'PUT');
 
         Object.entries(formData).forEach(([key, value]) => {
-            if (value !== null && value !== undefined) fd.append(key, value);
+            if (value !== null && value !== undefined) {
+                fd.append(key, value);
+            }
         });
 
-        if (tazkiraImage) fd.append('tazkira_image', tazkiraImage);
-        if (removeImage) fd.append('remove_image', '1');
+        if (tazkiraImage) {
+            fd.append('tazkira_image', tazkiraImage);
+        }
+
+        if (removeImage) {
+            fd.append('remove_image', '1');
+        }
 
         removedAttachmentIds.forEach(id => fd.append('remove_attachments[]', String(id)));
         newAttachments.forEach(att => fd.append('attachments[]', att.file));
@@ -156,14 +170,20 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
         router.post(`/tazkira/${tazkira.id}`, fd, {
             preserveScroll: true,
             onSuccess: () => router.get(`/tazkira/${tazkira.id}`),
-            onError: (errs) => { setErrors(errs); setProcessing(false); },
+            onError: (errs) => {
+                setErrors(errs); setProcessing(false);
+            },
             onFinish: () => setProcessing(false),
         });
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file) return;
+
+        if (!file) {
+            return;
+        }
+
         setTazkiraImage(file);
         setRemoveImage(false);
         const reader = new FileReader();
@@ -184,7 +204,11 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
 
     const handleAddNewAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
-        if (!files) return;
+
+        if (!files) {
+            return;
+        }
+
         const newAtts: NewAttachment[] = Array.from(files).map(f => ({ file_name: f.name, file_size: f.size, file: f }));
         setNewAttachments(prev => [...prev, ...newAtts]);
         e.target.value = '';
@@ -411,6 +435,7 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
                                         <div className="space-y-2">
                                             {existingAttachments.map(att => {
                                                 const isImage = att.file_type?.startsWith('image/');
+
                                                 return (
                                                     <div key={att.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 group">
                                                         <div
@@ -507,6 +532,7 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
                                     const Icon = opt.icon;
                                     const isSelected = formData.status === opt.value;
                                     const colors = STATUS_COLORS[opt.value];
+
                                     return (
                                         <button
                                             key={opt.value}

@@ -107,19 +107,10 @@ class Tazkira extends Model
     {
         return trim($this->first_name . ' ' . $this->last_name);
     }
-
     public function getTazkiraImageUrlAttribute(): ?string
     {
         if ($this->tazkira_image) {
-            // اطمینان از مسیر صحیح برای تصاویر تذکره
-            $path = $this->tazkira_image;
-
-            // اگر مسیر با 'tazkira/' شروع می‌شود، به 'tazkiras/' تبدیل کن
-            if (str_starts_with($path, 'tazkira/')) {
-                $path = str_replace('tazkira/', 'tazkiras/', $path);
-            }
-
-            return Storage::disk('public')->url($path);
+            return Storage::url($this->tazkira_image);
         }
         return null;
     }
