@@ -22,14 +22,9 @@ class Tazkira extends Model
         'volume',
         'page',
         'registration_number',
-        'birth_date',
-        'birth_place',
-        'national_code',
-        'father_card_number',
-        'phone',
-        'mobile',
-        'address',
-        'email',
+        'velayat',        // اضافه شد
+        'volosvali',      // اضافه شد
+        'qaria',          // اضافه شد
         'tazkira_image',
         'status',
         'notes',
@@ -39,12 +34,12 @@ class Tazkira extends Model
     ];
 
     protected $casts = [
-        'birth_date' => 'date',
         'approved_at' => 'datetime',
     ];
 
     protected $appends = [
-        'tazkira_image_url', // ← این خط را اضافه کنید
+        'tazkira_image_url',
+        'full_name',
     ];
 
     // ==================== روابط ====================
@@ -116,7 +111,15 @@ class Tazkira extends Model
     public function getTazkiraImageUrlAttribute(): ?string
     {
         if ($this->tazkira_image) {
-            return Storage::url($this->tazkira_image);
+            // اطمینان از مسیر صحیح برای تصاویر تذکره
+            $path = $this->tazkira_image;
+
+            // اگر مسیر با 'tazkira/' شروع می‌شود، به 'tazkiras/' تبدیل کن
+            if (str_starts_with($path, 'tazkira/')) {
+                $path = str_replace('tazkira/', 'tazkiras/', $path);
+            }
+
+            return Storage::disk('public')->url($path);
         }
         return null;
     }

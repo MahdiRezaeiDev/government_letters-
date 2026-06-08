@@ -74,75 +74,65 @@ class TazkiraController extends Controller
     /**
      * ذخیره تذکره جدید
      */
+    // در کنترلر خود (TazkiraController)
     public function store(Request $request)
     {
         $validated = $request->validate([
-            // معلومات شخصی
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
             'father_name' => 'nullable|string|max:100',
             'grandfather_name' => 'nullable|string|max:100',
-
-            // مشخصات تذکره
             'tazkira_number' => 'required|string|max:50|unique:tazkiras',
             'volume' => 'nullable|string|max:20',
             'page' => 'nullable|string|max:20',
             'registration_number' => 'nullable|string|max:50',
-
-            // اطلاعات تکمیلی
-            'birth_date' => 'nullable|date',
-            'birth_place' => 'nullable|string|max:200',
-            'national_code' => 'nullable|string|max:20|unique:tazkiras',
-            'father_card_number' => 'nullable|string|max:50',
-
-            // اطلاعات تماس
-            'phone' => 'nullable|string|max:20',
-            'mobile' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'email' => 'nullable|email|max:100',
-
-            // وضعیت
-            'status' => 'in:pending,approved,rejected',
-            'notes' => 'nullable|string',
+            'velayat' => 'nullable|string|max:100',
+            'volosvali' => 'nullable|string|max:100',
+            'qaria' => 'nullable|string|max:100',
+            'tazkira_image' => 'nullable|image|max:5120', // 5MB
+            'attachments.*' => 'nullable|file|max:10240', // 10MB each
         ]);
 
-        // آپلود تصویر اصلی تذکره
+        // ذخیره در دیتابیس
+        $tazkira = Tazkira::create([
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
+            'father_name' => $validated['father_name'] ?? null,
+            'grandfather_name' => $validated['grandfather_name'] ?? null,
+            'tazkira_number' => $validated['tazkira_number'],
+            'volume' => $validated['volume'] ?? null,
+            'page' => $validated['page'] ?? null,
+            'registration_number' => $validated['registration_number'] ?? null,
+            'velayat' => $validated['velayat'] ?? null,
+            'volosvali' => $validated['volosvali'] ?? null,
+            'qaria' => $validated['qaria'] ?? null,
+            'created_by' => auth()->id(),
+            'status' => 'pending',
+        ]);
+
+        // ذخیره تصویر اصلی
         if ($request->hasFile('tazkira_image')) {
-            $imagePath = $request->file('tazkira_image')->store('tazkiras/main', 'public');
-            $validated['tazkira_image'] = $imagePath;
+            $path = $request->file('tazkira_image')->store('tazkiras/main', 'public');
+            $tazkira->update(['tazkira_image' => $path]);
         }
 
-        $validated['created_by'] = auth()->id();
+        // ذخیره ضمیمه‌ها
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $filePath = $file->store('tazkira/attachments/' . $tazkira->id, 'public');
 
-        DB::beginTransaction();
-        try {
-            $tazkira = Tazkira::create($validated);
-
-            // آپلود ضمیمه‌های اضافی
-            if ($request->hasFile('attachments')) {
-                foreach ($request->file('attachments') as $file) {
-                    $path = $file->store('tazkira/attachments/' . $tazkira->id, 'public');
-                    TazkiraAttachment::create([
-                        'tazkira_id' => $tazkira->id,
-                        'file_name' => $file->getClientOriginalName(),
-                        'file_path' => $path,
-                        'file_type' => $file->getClientMimeType(),
-                        'mime_type' => $file->getMimeType(),
-                        'file_size' => $file->getSize(),
-                        'description' => $request->attachment_description,
-                        'uploaded_by' => auth()->id(),
-                    ]);
-                }
+                TazkiraAttachment::create([
+                    'tazkira_id' => $tazkira->id,
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $filePath,
+                    'file_type' => $file->getMimeType(),
+                    'file_size' => $file->getSize(),
+                    'uploaded_by' => auth()->id(),
+                ]);
             }
-
-            DB::commit();
-
-            return redirect()->route('tazkira.show', $tazkira)
-                ->with('success', 'تذکره با موفقیت ثبت شد.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'خطا در ثبت تذکره: ' . $e->getMessage());
         }
+
+        return redirect()->route('tazkira.show', $tazkira->id);
     }
 
     /**
