@@ -51,6 +51,9 @@ export default function TazkiraCreate() {
         volume: '',
         page: '',
         registration_number: '',
+        velayat: '',
+        volosvali: '',
+        qaria: '',
     });
 
     const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -212,7 +215,35 @@ export default function TazkiraCreate() {
                             </div>
                         </div>
 
-                        {/* 3. تصویر اصلی تذکره */}
+                        {/* 3. معلومات تکمیلی */}
+                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                            <SectionHeader color="#10b981" title="معلومات تکمیلی" />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label className={labelClass}>ولایت</label>
+                                    <div className="relative">
+                                        <MapPin className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                                        <input type="text" value={formData.velayat} onChange={e => set('velayat', e.target.value)} className={`${inputClass} pr-8`} placeholder="کابل" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className={labelClass}>ولسوالی</label>
+                                    <div className="relative">
+                                        <MapPin className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                                        <input type="text" value={formData.volosvali} onChange={e => set('volosvali', e.target.value)} className={`${inputClass} pr-8`} placeholder="نهمارکزی" />
+                                    </div>
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className={labelClass}>قریه / ناحیه</label>
+                                    <div className="relative">
+                                        <MapPin className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                                        <input type="text" value={formData.qaria} onChange={e => set('qaria', e.target.value)} className={`${inputClass} pr-8`} placeholder="سرک تذکره" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 4. تصویر اصلی تذکره */}
                         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                             <SectionHeader color="#ef4444" title="تصویر اصلی تذکره" />
                             {previewImage ? (
@@ -241,7 +272,7 @@ export default function TazkiraCreate() {
                             )}
                         </div>
 
-                        {/* 4. ضمیمه‌های اضافی */}
+                        {/* 5. ضمیمه‌های اضافی */}
                         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                             <SectionHeader color="#06b6d4" title="ضمیمه‌های اضافی" />
                             <div className="space-y-2">
