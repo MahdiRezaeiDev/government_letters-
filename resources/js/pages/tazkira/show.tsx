@@ -1,9 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    User, Hash, BookOpen, FileText, Grid, Calendar, MapPin, Phone, Mail,
-    CheckCircle, XCircle, Clock, Eye, Edit, Trash2, ArrowLeft, Printer,
+    User, Hash, BookOpen, FileText, Grid, Calendar, MapPin, 
+    CheckCircle, XCircle, Clock, Edit, Trash2, 
     Download, AlertCircle, Fingerprint, Paperclip, ImageIcon,
-    File, ChevronDown, ChevronUp, Smartphone
+    File, ChevronDown, ChevronUp, ArrowRight
 } from 'lucide-react';
 import { useState } from 'react';
 import { TazkiraReviewModal } from '@/components/TazkiraReviewModal';
@@ -94,14 +94,26 @@ const STATUS_CONFIG = {
 };
 
 const formatFileSize = (bytes: number) => {
-    if (!bytes) return '0 B';
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    if (!bytes) {
+        return '0 B';
+    }
+
+    if (bytes < 1024) {
+        return bytes + ' B';
+    }
+
+    if (bytes < 1024 * 1024) {
+        return (bytes / 1024).toFixed(1) + ' KB';
+    }
+
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 };
 
 const formatDate = (dateString: string) => {
-    if (!dateString) return '—';
+    if (!dateString) {
+        return '—';
+    }
+
     return new Date(dateString).toLocaleDateString('fa-IR');
 };
 
@@ -140,6 +152,7 @@ export default function TazkiraShow({ tazkira, can }: Props) {
         const target = e.currentTarget;
         target.style.display = 'none';
         const parent = target.parentElement;
+
         if (parent) {
             const placeholder = document.createElement('div');
             placeholder.className = 'w-full h-full flex items-center justify-center bg-gray-100';
@@ -169,7 +182,7 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                                 href="/tazkira"
                                 className="p-2.5 bg-white rounded-xl shadow-sm hover:bg-gray-50 hover:shadow transition-all duration-200 border border-gray-100"
                             >
-                                <ArrowLeft className="h-5 w-5 text-gray-600" />
+                                <ArrowRight className="h-5 w-5 text-gray-600" />
                             </Link>
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900">
@@ -182,14 +195,6 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                         </div>
 
                         <div className="flex items-center gap-2 flex-wrap">
-                            <button
-                                onClick={handlePrint}
-                                className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 shadow-sm"
-                            >
-                                <Printer className="h-4 w-4" />
-                                چاپ
-                            </button>
-
                             {can.approve && tazkira.status === 'pending' && (
                                 <>
                                     <button
@@ -477,6 +482,7 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                                                                                 const target = e.currentTarget;
                                                                                 target.style.display = 'none';
                                                                                 const parent = target.parentElement;
+
                                                                                 if (parent) {
                                                                                     const placeholder = document.createElement('div');
                                                                                     placeholder.className = 'w-full h-full flex items-center justify-center bg-gray-200';

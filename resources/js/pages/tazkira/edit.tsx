@@ -1,9 +1,11 @@
+// resources/js/pages/tazkira/edit.tsx
+
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    Hash, BookOpen, FileText, Grid, Calendar, MapPin, Phone, Mail,
-    Save, X, Users, Fingerprint, Upload, Trash2, Plus,
-    ArrowLeft, CheckCircle, XCircle, Clock,
-    File as FileIcon, Download, Eye
+    User, Hash, BookOpen, FileText, Grid, MapPin,
+    Save, X, Users, Fingerprint, Upload, Trash2, Paperclip, Plus,
+    ArrowLeft, CheckCircle, AlertCircle, XCircle, Clock,
+    File as FileIcon, Download, Eye, ImageIcon
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -34,14 +36,9 @@ interface Tazkira {
     volume: string | null;
     page: string | null;
     registration_number: string | null;
-    birth_date: string | null;
-    birth_place: string | null;
-    national_code: string | null;
-    father_card_number: string | null;
-    phone: string | null;
-    mobile: string | null;
-    address: string | null;
-    email: string | null;
+    velayat: string | null;
+    volosvali: string | null;
+    qaria: string | null;
     tazkira_image: string | null;
     tazkira_image_url: string | null;
     status: string;
@@ -73,14 +70,8 @@ const inputClass = "w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-
 const labelClass = "block text-sm font-medium text-gray-700 mb-1.5";
 
 const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) {
-        return bytes + ' B';
-    }
-
-    if (bytes < 1024 * 1024) {
-        return (bytes / 1024).toFixed(1) + ' KB';
-    }
-
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 };
 
@@ -109,14 +100,9 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
         volume: tazkira.volume || '',
         page: tazkira.page || '',
         registration_number: tazkira.registration_number || '',
-        birth_date: tazkira.birth_date || '',
-        birth_place: tazkira.birth_place || '',
-        national_code: tazkira.national_code || '',
-        father_card_number: tazkira.father_card_number || '',
-        phone: tazkira.phone || '',
-        mobile: tazkira.mobile || '',
-        address: tazkira.address || '',
-        email: tazkira.email || '',
+        velayat: tazkira.velayat || '',
+        volosvali: tazkira.volosvali || '',
+        qaria: tazkira.qaria || '',
         status: tazkira.status || 'pending',
         notes: tazkira.notes || '',
     });
@@ -125,22 +111,14 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
     const [tazkiraImage, setTazkiraImage] = useState<File | null>(null);
     const [removeImage, setRemoveImage] = useState(false);
 
-    // ضمیمه‌های موجود (از سرور)
     const [existingAttachments, setExistingAttachments] = useState<ExistingAttachment[]>(tazkira.attachments || []);
     const [removedAttachmentIds, setRemovedAttachmentIds] = useState<number[]>([]);
-
-    // ضمیمه‌های جدید
     const [newAttachments, setNewAttachments] = useState<NewAttachment[]>([]);
-
-    // preview modal
     const [previewAtt, setPreviewAtt] = useState<{ url: string; name: string } | null>(null);
 
     const set = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
-
-        if (errors[field]) {
-            setErrors(prev => ({ ...prev, [field]: '' }));
-        }
+        if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -151,18 +129,11 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
         fd.append('_method', 'PUT');
 
         Object.entries(formData).forEach(([key, value]) => {
-            if (value !== null && value !== undefined) {
-                fd.append(key, value);
-            }
+            if (value !== null && value !== undefined) fd.append(key, value);
         });
 
-        if (tazkiraImage) {
-            fd.append('tazkira_image', tazkiraImage);
-        }
-
-        if (removeImage) {
-            fd.append('remove_image', '1');
-        }
+        if (tazkiraImage) fd.append('tazkira_image', tazkiraImage);
+        if (removeImage) fd.append('remove_image', '1');
 
         removedAttachmentIds.forEach(id => fd.append('remove_attachments[]', String(id)));
         newAttachments.forEach(att => fd.append('attachments[]', att.file));
@@ -170,20 +141,14 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
         router.post(`/tazkira/${tazkira.id}`, fd, {
             preserveScroll: true,
             onSuccess: () => router.get(`/tazkira/${tazkira.id}`),
-            onError: (errs) => {
-                setErrors(errs); setProcessing(false);
-            },
+            onError: (errs) => { setErrors(errs); setProcessing(false); },
             onFinish: () => setProcessing(false),
         });
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-
-        if (!file) {
-            return;
-        }
-
+        if (!file) return;
         setTazkiraImage(file);
         setRemoveImage(false);
         const reader = new FileReader();
@@ -204,11 +169,7 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
 
     const handleAddNewAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
-
-        if (!files) {
-            return;
-        }
-
+        if (!files) return;
         const newAtts: NewAttachment[] = Array.from(files).map(f => ({ file_name: f.name, file_size: f.size, file: f }));
         setNewAttachments(prev => [...prev, ...newAtts]);
         e.target.value = '';
@@ -224,7 +185,7 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
                     <form onSubmit={handleSubmit} className="space-y-5">
 
-                        {/* ── Header ── */}
+                        {/* Header */}
                         <div className="flex items-center justify-between bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                             <div className="flex items-center gap-3">
                                 <Link
@@ -246,7 +207,7 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
                             </div>
                         </div>
 
-                        {/* ── ۱. معلومات شخصی ── */}
+                        {/* 1. معلومات شخصی */}
                         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                             <SectionHeader color="#6366f1" title="معلومات شخصی" subtitle="مشخصات هویتی فرد مطابق تذکره" />
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -277,7 +238,7 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
                             </div>
                         </div>
 
-                        {/* ── ۲. مشخصات تذکره ── */}
+                        {/* 2. مشخصات تذکره */}
                         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                             <SectionHeader color="#8b5cf6" title="مشخصات تذکره" subtitle="اطلاعات اصلی تذکره الکترونیکی" />
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -313,77 +274,35 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
                             </div>
                         </div>
 
-                        {/* ── ۳. اطلاعات تکمیلی ── */}
+                        {/* 3. اطلاعات تکمیلی (ولایت، ولسوالی، قریه) */}
                         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                            <SectionHeader color="#10b981" title="اطلاعات تکمیلی" subtitle="تاریخ تولد، کد ملی و سایر مشخصات" />
+                            <SectionHeader color="#10b981" title="اطلاعات تکمیلی" subtitle="موقعیت مکانی فرد" />
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
-                                    <label className={labelClass}>تاریخ تولد</label>
-                                    <div className="relative">
-                                        <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                        <input type="date" value={formData.birth_date} onChange={e => set('birth_date', e.target.value)} className={`${inputClass} pr-9`} />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className={labelClass}>محل تولد</label>
+                                    <label className={labelClass}>ولایت</label>
                                     <div className="relative">
                                         <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                        <input type="text" value={formData.birth_place} onChange={e => set('birth_place', e.target.value)} className={`${inputClass} pr-9`} />
+                                        <input type="text" value={formData.velayat} onChange={e => set('velayat', e.target.value)} className={`${inputClass} pr-9`} placeholder="کابل" />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className={labelClass}>کد ملی</label>
+                                    <label className={labelClass}>ولسوالی</label>
                                     <div className="relative">
-                                        <Hash className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                        <input type="text" value={formData.national_code} onChange={e => set('national_code', e.target.value)} className={`${inputClass} pr-9`} />
+                                        <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <input type="text" value={formData.volosvali} onChange={e => set('volosvali', e.target.value)} className={`${inputClass} pr-9`} placeholder="نهمارکزی" />
                                     </div>
                                 </div>
-                                <div>
-                                    <label className={labelClass}>شماره کارت پدر</label>
+                                <div className="md:col-span-2">
+                                    <label className={labelClass}>قریه / ناحیه</label>
                                     <div className="relative">
-                                        <Fingerprint className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                        <input type="text" value={formData.father_card_number} onChange={e => set('father_card_number', e.target.value)} className={`${inputClass} pr-9`} />
+                                        <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <input type="text" value={formData.qaria} onChange={e => set('qaria', e.target.value)} className={`${inputClass} pr-9`} placeholder="سرک تذکره" />
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* ── ۴. اطلاعات تماس ── */}
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                            <SectionHeader color="#f59e0b" title="اطلاعات تماس" subtitle="راه‌های ارتباطی فرد" />
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div>
-                                    <label className={labelClass}>تلفن ثابت</label>
-                                    <div className="relative">
-                                        <Phone className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                        <input type="text" value={formData.phone} onChange={e => set('phone', e.target.value)} className={`${inputClass} pr-9`} />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className={labelClass}>تلفن همراه</label>
-                                    <div className="relative">
-                                        <Phone className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                        <input type="text" value={formData.mobile} onChange={e => set('mobile', e.target.value)} className={`${inputClass} pr-9`} />
-                                    </div>
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className={labelClass}>آدرس</label>
-                                    <div className="relative">
-                                        <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                        <input type="text" value={formData.address} onChange={e => set('address', e.target.value)} className={`${inputClass} pr-9`} />
-                                    </div>
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className={labelClass}>ایمیل</label>
-                                    <div className="relative">
-                                        <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                        <input type="email" value={formData.email} onChange={e => set('email', e.target.value)} className={`${inputClass} pr-9`} />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* ── ۵. تصویر اصلی تذکره ── */}
+                        {/* 4. تصویر اصلی تذکره */}
                         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                             <SectionHeader color="#ef4444" title="تصویر اصلی تذکره" subtitle="اسکن یا عکس تذکره الکترونیکی" />
                             {previewImage ? (
@@ -423,19 +342,17 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
                             )}
                         </div>
 
-                        {/* ── ۶. ضمیمه‌ها ── */}
+                        {/* 5. ضمیمه‌ها */}
                         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                             <SectionHeader color="#06b6d4" title="ضمیمه‌ها" subtitle="مدیریت فایل‌های پیوست تذکره" />
                             <div className="space-y-4">
 
-                                {/* ضمیمه‌های موجود */}
                                 {existingAttachments.length > 0 && (
                                     <div>
                                         <p className="text-xs font-medium text-gray-500 mb-2">ضمیمه‌های فعلی ({existingAttachments.length})</p>
                                         <div className="space-y-2">
                                             {existingAttachments.map(att => {
                                                 const isImage = att.file_type?.startsWith('image/');
-
                                                 return (
                                                     <div key={att.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 group">
                                                         <div
@@ -445,11 +362,9 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
                                                             {isImage ? (
                                                                 <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-blue-100 flex-shrink-0">
                                                                     <img src={att.file_url} alt={att.file_name} className="w-full h-full object-cover" />
-                                                                    {isImage && (
-                                                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                                                            <Eye className="h-3 w-3 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                                        </div>
-                                                                    )}
+                                                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                                                        <Eye className="h-3 w-3 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                                    </div>
                                                                 </div>
                                                             ) : (
                                                                 <div className="p-2 bg-white rounded-lg shadow-sm flex-shrink-0">
@@ -486,7 +401,6 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
                                     </div>
                                 )}
 
-                                {/* ضمیمه‌های جدید */}
                                 {newAttachments.length > 0 && (
                                     <div>
                                         <p className="text-xs font-medium text-indigo-600 mb-2">ضمیمه‌های جدید ({newAttachments.length})</p>
@@ -515,7 +429,6 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
                                     </div>
                                 )}
 
-                                {/* دکمه افزودن */}
                                 <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 transition-all">
                                     <Plus className="h-4 w-4 text-gray-400" />
                                     <span className="text-sm text-gray-500">افزودن ضمیمه جدید</span>
@@ -524,7 +437,7 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
                             </div>
                         </div>
 
-                        {/* ── ۷. وضعیت تأیید ── */}
+                        {/* 6. وضعیت تأیید */}
                         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                             <SectionHeader color="#10b981" title="وضعیت تأیید" subtitle="تعیین وضعیت نهایی تذکره" />
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
@@ -532,7 +445,6 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
                                     const Icon = opt.icon;
                                     const isSelected = formData.status === opt.value;
                                     const colors = STATUS_COLORS[opt.value];
-
                                     return (
                                         <button
                                             key={opt.value}
@@ -569,7 +481,7 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
                             </div>
                         </div>
 
-                        {/* ── دکمه‌های اقدام ── */}
+                        {/* Action Buttons */}
                         <div className="sticky bottom-0 z-20">
                             <div className="bg-white/80 backdrop-blur-md border-t border-gray-200 rounded-2xl shadow-lg p-4">
                                 <div className="flex gap-3">
@@ -596,7 +508,7 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
                 </div>
             </div>
 
-            {/* ── Attachment Preview Modal ── */}
+            {/* Attachment Preview Modal */}
             {previewAtt && (
                 <div
                     className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
