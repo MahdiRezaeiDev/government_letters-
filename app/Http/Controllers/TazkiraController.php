@@ -3,6 +3,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PermissionEnum;
 use App\Models\Tazkira;
 use App\Models\TazkiraAttachment;
 use App\Models\TazkiraReviewLog;
@@ -37,15 +38,14 @@ class TazkiraController extends Controller
                 $q->where('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
                     ->orWhere('father_name', 'like', "%{$search}%")
-                    ->orWhere('tazkira_number', 'like', "%{$search}%")
-                    ->orWhere('national_code', 'like', "%{$search}%");
+                    ->orWhere('tazkira_number', 'like', "%{$search}%");
             });
         }
 
         // محدودیت دسترسی
-        if (!$user->isSuperAdmin() && !$user->isOrgAdmin()) {
-            $query->where('created_by', $user->id);
-        }
+        // if (!$user->isSuperAdmin() && !$user->isOrgAdmin()) {
+        //     $query->where('created_by', $user->id);
+        // }
 
         $tazkiras = $query->paginate(15);
 
@@ -53,10 +53,10 @@ class TazkiraController extends Controller
             'tazkiras' => $tazkiras,
             'filters' => $request->only(['search', 'status']),
             'can' => [
-                'create' => true,
-                'edit' => true,
-                'delete' => true,
-                'approve' => true,
+                'create' => $user->can(PermissionEnum::NID_REGISTER),
+                'edit' => $user->can(PermissionEnum::NID_REGISTER),
+                'delete' => $user->can(PermissionEnum::NID_DESTROY),
+                'approve' => $user->can(PermissionEnum::NID_APPROVE),
             ],
         ]);
     }
@@ -66,17 +66,27 @@ class TazkiraController extends Controller
      */
     public function create()
     {
+        $user = auth()->user();
+
         return Inertia::render('tazkira/create', [
-            'isEdit' => false,
+            'can' => [
+                'create' => $user->can(PermissionEnum::NID_REGISTER),
+            ],
         ]);
     }
 
     /**
      * ذخیره تذکره جدید
      */
-    // در کنترلر خود (TazkiraController)
     public function store(Request $request)
     {
+        $user = auth()->user();
+
+        // بررسی دسترسی برای ثبت تذکره
+        if (!$user->can(PermissionEnum::NID_REGISTER)) {
+            abort(403, 'شما مجاز به ثبت تذکره نیستید.');
+        }
+
         $validated = $request->validate([
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
@@ -89,50 +99,60 @@ class TazkiraController extends Controller
             'velayat' => 'nullable|string|max:100',
             'volosvali' => 'nullable|string|max:100',
             'qaria' => 'nullable|string|max:100',
-            'tazkira_image' => 'nullable|image|max:5120', // 5MB
-            'attachments.*' => 'nullable|file|max:10240', // 10MB each
+            'tazkira_image' => 'nullable|image|max:5120',
+            'attachments.*' => 'nullable|file|max:10240',
         ]);
 
-        // ذخیره در دیتابیس
-        $tazkira = Tazkira::create([
-            'first_name' => $validated['first_name'],
-            'last_name' => $validated['last_name'],
-            'father_name' => $validated['father_name'] ?? null,
-            'grandfather_name' => $validated['grandfather_name'] ?? null,
-            'tazkira_number' => $validated['tazkira_number'],
-            'volume' => $validated['volume'] ?? null,
-            'page' => $validated['page'] ?? null,
-            'registration_number' => $validated['registration_number'] ?? null,
-            'velayat' => $validated['velayat'] ?? null,
-            'volosvali' => $validated['volosvali'] ?? null,
-            'qaria' => $validated['qaria'] ?? null,
-            'created_by' => auth()->id(),
-            'status' => 'pending',
-        ]);
+        DB::beginTransaction();
+        try {
+            // ذخیره در دیتابیس
+            $tazkira = Tazkira::create([
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
+                'father_name' => $validated['father_name'] ?? null,
+                'grandfather_name' => $validated['grandfather_name'] ?? null,
+                'tazkira_number' => $validated['tazkira_number'],
+                'volume' => $validated['volume'] ?? null,
+                'page' => $validated['page'] ?? null,
+                'registration_number' => $validated['registration_number'] ?? null,
+                'velayat' => $validated['velayat'] ?? null,
+                'volosvali' => $validated['volosvali'] ?? null,
+                'qaria' => $validated['qaria'] ?? null,
+                'created_by' => $user->id,
+                'status' => 'pending',
+            ]);
 
-        // ذخیره تصویر اصلی
-        if ($request->hasFile('tazkira_image')) {
-            $path = $request->file('tazkira_image')->store('tazkiras/main', 'public');
-            $tazkira->update(['tazkira_image' => $path]);
-        }
-
-        // ذخیره ضمیمه‌ها
-        if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $file) {
-                $filePath = $file->store('tazkira/attachments/' . $tazkira->id, 'public');
-
-                TazkiraAttachment::create([
-                    'tazkira_id' => $tazkira->id,
-                    'file_name' => $file->getClientOriginalName(),
-                    'file_path' => $filePath,
-                    'file_type' => $file->getMimeType(),
-                    'file_size' => $file->getSize(),
-                    'uploaded_by' => auth()->id(),
-                ]);
+            // ذخیره تصویر اصلی
+            if ($request->hasFile('tazkira_image')) {
+                $path = $request->file('tazkira_image')->store('tazkiras/main', 'public');
+                $tazkira->update(['tazkira_image' => $path]);
             }
-        }
 
-        return redirect()->route('tazkira.show', $tazkira->id);
+            // ذخیره ضمیمه‌ها
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $filePath = $file->store('tazkira/attachments/' . $tazkira->id, 'public');
+
+                    TazkiraAttachment::create([
+                        'tazkira_id' => $tazkira->id,
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => $filePath,
+                        'file_type' => $file->getMimeType(),
+                        'mime_type' => $file->getMimeType(),
+                        'file_size' => $file->getSize(),
+                        'uploaded_by' => $user->id,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('tazkira.show', $tazkira->id)
+                ->with('success', 'تذکره با موفقیت ثبت شد.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'خطا در ثبت تذکره: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -140,6 +160,8 @@ class TazkiraController extends Controller
      */
     public function show(Tazkira $tazkira)
     {
+        $user = auth()->user();
+
         $tazkira->load([
             'createdBy',
             'approvedBy',
@@ -151,9 +173,9 @@ class TazkiraController extends Controller
         return Inertia::render('tazkira/show', [
             'tazkira' => $tazkira,
             'can' => [
-                'edit' => true,
-                'delete' => true,
-                'approve' => true,
+                'edit' => $user->can(PermissionEnum::NID_VIEW),
+                'delete' => $user->can(PermissionEnum::NID_DESTROY),
+                'approve' => $user->can(PermissionEnum::NID_APPROVE),
             ],
         ]);
     }
@@ -163,13 +185,21 @@ class TazkiraController extends Controller
      */
     public function edit(Tazkira $tazkira)
     {
-        // $this->authorize('update', $tazkira);
+        $user = auth()->user();
+
+        // بررسی دسترسی برای ویرایش
+        if (!$user->can(PermissionEnum::NID_VIEW)) {
+            abort(403, 'شما مجاز به ویرایش تذکره نیستید.');
+        }
 
         $tazkira->load('attachments');
 
         return Inertia::render('tazkira/edit', [
             'tazkira' => $tazkira,
-            'isEdit' => true,
+            'can' => [
+                'edit' => $user->can(PermissionEnum::NID_VIEW),
+                'delete' => $user->can(PermissionEnum::NID_DESTROY),
+            ],
         ]);
     }
 
@@ -178,7 +208,12 @@ class TazkiraController extends Controller
      */
     public function update(Request $request, Tazkira $tazkira)
     {
-        // $this->authorize('update', $tazkira);
+        $user = auth()->user();
+
+        // بررسی دسترسی برای ویرایش
+        if (!$user->can(PermissionEnum::NID_VIEW)) {
+            abort(403, 'شما مجاز به ویرایش تذکره نیستید.');
+        }
 
         $validated = $request->validate([
             'first_name' => 'required|string|max:100',
@@ -189,37 +224,43 @@ class TazkiraController extends Controller
             'volume' => 'nullable|string|max:20',
             'page' => 'nullable|string|max:20',
             'registration_number' => 'nullable|string|max:50',
-            'birth_date' => 'nullable|date',
-            'birth_place' => 'nullable|string|max:200',
-            'national_code' => 'nullable|string|max:20|unique:tazkiras,national_code,' . $tazkira->id,
-            'father_card_number' => 'nullable|string|max:50',
-            'phone' => 'nullable|string|max:20',
-            'mobile' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'email' => 'nullable|email|max:100',
+            'velayat' => 'nullable|string|max:100',
+            'volosvali' => 'nullable|string|max:100',
+            'qaria' => 'nullable|string|max:100',
             'status' => 'in:pending,approved,rejected',
             'notes' => 'nullable|string',
         ]);
 
-        // آپلود تصویر اصلی جدید
-        if ($request->hasFile('tazkira_image')) {
-            if ($tazkira->tazkira_image) {
-                Storage::disk('public')->delete($tazkira->tazkira_image);
-            }
-            $imagePath = $request->file('tazkira_image')->store('tazkiras/main', 'public');
-            $validated['tazkira_image'] = $imagePath;
-        }
-
-        // حذف تصویر اصلی
-        if ($request->input('remove_image') == '1') {
-            if ($tazkira->tazkira_image) {
-                Storage::disk('public')->delete($tazkira->tazkira_image);
-            }
-            $validated['tazkira_image'] = null;
-        }
-
         DB::beginTransaction();
         try {
+            // آپلود تصویر اصلی جدید
+            if ($request->hasFile('tazkira_image')) {
+                if ($tazkira->tazkira_image) {
+                    Storage::disk('public')->delete($tazkira->tazkira_image);
+                }
+                $imagePath = $request->file('tazkira_image')->store('tazkiras/main', 'public');
+                $validated['tazkira_image'] = $imagePath;
+            }
+
+            // حذف تصویر اصلی
+            if ($request->input('remove_image') == '1') {
+                if ($tazkira->tazkira_image) {
+                    Storage::disk('public')->delete($tazkira->tazkira_image);
+                }
+                $validated['tazkira_image'] = null;
+            }
+
+            // حذف ضمیمه‌های مشخص شده
+            if ($request->has('remove_attachments')) {
+                $removeIds = $request->remove_attachments;
+                $attachmentsToRemove = TazkiraAttachment::whereIn('id', $removeIds)->get();
+
+                foreach ($attachmentsToRemove as $attachment) {
+                    Storage::disk('public')->delete($attachment->file_path);
+                    $attachment->delete();
+                }
+            }
+
             $tazkira->update($validated);
 
             // آپلود ضمیمه‌های جدید
@@ -230,11 +271,10 @@ class TazkiraController extends Controller
                         'tazkira_id' => $tazkira->id,
                         'file_name' => $file->getClientOriginalName(),
                         'file_path' => $path,
-                        'file_type' => $file->getClientMimeType(),
+                        'file_type' => $file->getMimeType(),
                         'mime_type' => $file->getMimeType(),
                         'file_size' => $file->getSize(),
-                        'description' => $request->attachment_description,
-                        'uploaded_by' => auth()->id(),
+                        'uploaded_by' => $user->id,
                     ]);
                 }
             }
@@ -254,7 +294,12 @@ class TazkiraController extends Controller
      */
     public function destroy(Tazkira $tazkira)
     {
-        // $this->authorize('delete', $tazkira);
+        $user = auth()->user();
+
+        // بررسی دسترسی برای حذف
+        if (!$user->can(PermissionEnum::NID_DESTROY)) {
+            abort(403, 'شما مجاز به حذف تذکره نیستید.');
+        }
 
         DB::beginTransaction();
         try {
@@ -291,12 +336,17 @@ class TazkiraController extends Controller
      */
     public function approve(Request $request, Tazkira $tazkira)
     {
-        // $this->authorize('approve', $tazkira);
+        $user = auth()->user();
+
+        // بررسی دسترسی برای تأیید
+        if (!$user->can(PermissionEnum::NID_APPROVE)) {
+            abort(403, 'شما مجاز به تأیید تذکره نیستید.');
+        }
 
         $request->validate([
             'note' => 'nullable|string|max:1000',
             'attachments' => 'nullable|array',
-            'attachments.*' => 'file|max:10240', // هر فایل حداکثر 10MB
+            'attachments.*' => 'file|max:10240',
         ]);
 
         DB::beginTransaction();
@@ -306,7 +356,7 @@ class TazkiraController extends Controller
                 'tazkira_id' => $tazkira->id,
                 'action' => 'approved',
                 'note' => $request->note,
-                'reviewed_by' => auth()->id(),
+                'reviewed_by' => $user->id,
                 'reviewed_at' => now(),
             ]);
 
@@ -318,10 +368,10 @@ class TazkiraController extends Controller
                         'review_log_id' => $reviewLog->id,
                         'file_name' => $file->getClientOriginalName(),
                         'file_path' => $path,
-                        'file_type' => $file->getClientMimeType(),
+                        'file_type' => $file->getMimeType(),
                         'mime_type' => $file->getMimeType(),
                         'file_size' => $file->getSize(),
-                        'uploaded_by' => auth()->id(),
+                        'uploaded_by' => $user->id,
                     ]);
                 }
             }
@@ -329,7 +379,7 @@ class TazkiraController extends Controller
             // به‌روزرسانی وضعیت تذکره
             $tazkira->update([
                 'status' => 'approved',
-                'approved_by' => auth()->id(),
+                'approved_by' => $user->id,
                 'approved_at' => now(),
                 'notes' => $request->note ?? $tazkira->notes,
             ]);
@@ -349,7 +399,12 @@ class TazkiraController extends Controller
      */
     public function reject(Request $request, Tazkira $tazkira)
     {
-        // $this->authorize('approve', $tazkira);
+        $user = auth()->user();
+
+        // بررسی دسترسی برای رد
+        if (!$user->can(PermissionEnum::NID_APPROVE)) {
+            abort(403, 'شما مجاز به رد تذکره نیستید.');
+        }
 
         $request->validate([
             'note' => 'required|string|max:1000',
@@ -364,7 +419,7 @@ class TazkiraController extends Controller
                 'tazkira_id' => $tazkira->id,
                 'action' => 'rejected',
                 'note' => $request->note,
-                'reviewed_by' => auth()->id(),
+                'reviewed_by' => $user->id,
                 'reviewed_at' => now(),
             ]);
 
@@ -376,10 +431,10 @@ class TazkiraController extends Controller
                         'review_log_id' => $reviewLog->id,
                         'file_name' => $file->getClientOriginalName(),
                         'file_path' => $path,
-                        'file_type' => $file->getClientMimeType(),
+                        'file_type' => $file->getMimeType(),
                         'mime_type' => $file->getMimeType(),
                         'file_size' => $file->getSize(),
-                        'uploaded_by' => auth()->id(),
+                        'uploaded_by' => $user->id,
                     ]);
                 }
             }
@@ -387,7 +442,7 @@ class TazkiraController extends Controller
             // به‌روزرسانی وضعیت تذکره
             $tazkira->update([
                 'status' => 'rejected',
-                'approved_by' => auth()->id(),
+                'approved_by' => $user->id,
                 'approved_at' => now(),
                 'notes' => $request->note,
             ]);
@@ -407,9 +462,16 @@ class TazkiraController extends Controller
      */
     public function addAttachment(Request $request, Tazkira $tazkira)
     {
+        $user = auth()->user();
+
+        // بررسی دسترسی برای ویرایش
+        if (!$user->can(PermissionEnum::NID_VIEW)) {
+            abort(403, 'شما مجاز به افزودن ضمیمه نیستید.');
+        }
+
         $request->validate([
             'attachments' => 'required|array',
-            'attachments.*' => 'file|max:20480', // 20MB max
+            'attachments.*' => 'file|max:20480',
             'description' => 'nullable|string|max:500',
         ]);
 
@@ -421,11 +483,11 @@ class TazkiraController extends Controller
                 'tazkira_id' => $tazkira->id,
                 'file_name' => $file->getClientOriginalName(),
                 'file_path' => $path,
-                'file_type' => $file->getClientMimeType(),
+                'file_type' => $file->getMimeType(),
                 'mime_type' => $file->getMimeType(),
                 'file_size' => $file->getSize(),
                 'description' => $request->description,
-                'uploaded_by' => auth()->id(),
+                'uploaded_by' => $user->id,
             ]);
 
             $attachments[] = [
@@ -450,7 +512,12 @@ class TazkiraController extends Controller
      */
     public function deleteAttachment(TazkiraAttachment $attachment)
     {
-        // $this->authorize('update', $attachment->tazkira);
+        $user = auth()->user();
+
+        // بررسی دسترسی برای ویرایش
+        if (!$user->can(PermissionEnum::NID_VIEW)) {
+            abort(403, 'شما مجاز به حذف ضمیمه نیستید.');
+        }
 
         Storage::disk('public')->delete($attachment->file_path);
         $attachment->delete();
@@ -468,7 +535,6 @@ class TazkiraController extends Controller
         $tazkiras = Tazkira::where('first_name', 'like', "%{$search}%")
             ->orWhere('last_name', 'like', "%{$search}%")
             ->orWhere('tazkira_number', 'like', "%{$search}%")
-            ->orWhere('national_code', 'like', "%{$search}%")
             ->limit(10)
             ->get(['id', 'first_name', 'last_name', 'father_name', 'tazkira_number']);
 

@@ -92,7 +92,7 @@ export function TazkiraReviewModal({ isOpen, onClose, tazkiraId, tazkiraName, ac
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {isApprove ? 'یادداشت (اختیاری)' : 'دلیل رد <span class="text-red-500">*</span>'}
+                            {isApprove ? 'یادداشت (اختیاری)' : 'دلیل رد (الزامی)'}
                         </label>
                         <textarea
                             value={note}

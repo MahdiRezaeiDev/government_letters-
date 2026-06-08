@@ -3,11 +3,10 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
     Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle, XCircle, Clock,
-    User, Hash, FileText, Calendar, Phone, Mail, MapPin, ChevronLeft, ChevronRight,
-    Users, Download, Printer, AlertCircle, MoreVertical
+    Hash, FileText, Calendar, Phone, ChevronLeft, ChevronRight,
+    AlertCircle
 } from 'lucide-react';
 import { useState } from 'react';
-import tazkiraRoute from '@/routes/tazkira';
 
 interface Tazkira {
     id: number;
@@ -57,6 +56,9 @@ export default function TazkiraIndex({ tazkiras, filters, can }: Props) {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedTazkira, setSelectedTazkira] = useState<Tazkira | null>(null);
     const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+
+    console.log(can);
+
 
     const handleSearch = () => {
         router.get('/tazkira', {
