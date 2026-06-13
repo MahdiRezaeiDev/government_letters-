@@ -248,13 +248,7 @@ class TazkiraController extends Controller
     public function edit(Tazkira $tazkira)
     {
         $user = auth()->user();
-
-        $this->authorize('update', Tazkira::class, $tazkira);
-
-        // بررسی دسترسی برای ویرایش
-        if (!$user->can(PermissionEnum::NID_REGISTER)) {
-            abort(403, 'شما مجاز به ویرایش تذکره نیستید.');
-        }
+        $this->authorize('update', $tazkira);
 
         $tazkira->load('attachments');
 
