@@ -46,10 +46,10 @@ export default function Login() {
                             />
                         </div>
                         <h2 className="text-xl font-bold text-white">
-                            اداره عمومی احصائیه و معلومات
+                           د افغانستان اسلامي امارت
                         </h2>
                         <p className="text-gray-400 text-sm mt-1">
-                            د افغانستان اسلامی امارت
+                           د احصایې او معلوماتو عمومي اداره
                         </p>
                     </div>
 
