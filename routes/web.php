@@ -382,8 +382,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ═══════════════════════════════════════════════════════
     // تنظیمات سیستم
     // ═══════════════════════════════════════════════════════
-    Route::get('settings', [SettingController::class, 'index'])
-        ->middleware('role:super-admin|org-admin')->name('settings.index');
+    Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::post('settings', [SettingController::class, 'update'])
         ->middleware('role:super-admin|org-admin')->name('settings.update');
 });
