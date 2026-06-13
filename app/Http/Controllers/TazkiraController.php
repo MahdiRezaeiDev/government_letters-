@@ -8,6 +8,7 @@ use App\Models\Tazkira;
 use App\Models\TazkiraAttachment;
 use App\Models\TazkiraReviewLog;
 use App\Models\TazkiraReviewAttachment;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 
 class TazkiraController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * نمایش لیست تذکره‌ها
      */
@@ -124,6 +126,8 @@ class TazkiraController extends Controller
     {
         $user = auth()->user();
 
+        $this->authorize('create', Tazkira::class);
+
         return Inertia::render('tazkira/create', [
             'can' => [
                 'create' => $user->can(PermissionEnum::NID_REGISTER),
@@ -218,6 +222,8 @@ class TazkiraController extends Controller
     {
         $user = auth()->user();
 
+        $this->authorize('view', $tazkira);
+
         $tazkira->load([
             'createdBy',
             'approvedBy',
@@ -242,6 +248,8 @@ class TazkiraController extends Controller
     public function edit(Tazkira $tazkira)
     {
         $user = auth()->user();
+
+        $this->authorize('update', Tazkira::class);
 
         // بررسی دسترسی برای ویرایش
         if (!$user->can(PermissionEnum::NID_REGISTER)) {

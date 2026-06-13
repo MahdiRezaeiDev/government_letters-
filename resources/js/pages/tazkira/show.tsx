@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    User, Hash, BookOpen, FileText, Grid, Calendar, MapPin, 
-    CheckCircle, XCircle, Clock, Edit, Trash2, 
+    User, Hash, BookOpen, FileText, Grid, Calendar, MapPin,
+    CheckCircle, XCircle, Clock, Edit, Trash2,
     Download, AlertCircle, Fingerprint, Paperclip, ImageIcon,
     File, ChevronDown, ChevronUp, ArrowRight
 } from 'lucide-react';
@@ -129,7 +129,7 @@ export default function TazkiraShow({ tazkira, can }: Props) {
         additional: true,
         attachments: true,
         history: true,
-    });    
+    });
 
     const statusConfig = STATUS_CONFIG[tazkira.status];
     const StatusIcon = statusConfig.icon;
@@ -564,18 +564,22 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                                             <ChevronDown className="h-5 w-5 text-gray-400" />
                                         )}
                                     </button>
+
                                     {expandedSections.history && (
                                         <div className="space-y-4 mt-4 pt-4 border-t border-gray-100">
                                             {tazkira.review_logs.map((log) => (
                                                 <div key={log.id} className="border rounded-xl overflow-hidden">
-                                                    <div className={`p-3 flex items-center justify-between ${log.action === 'approved' ? 'bg-emerald-50' : 'bg-red-50'}`}>
+                                                    {/* Header */}
+                                                    <div className={`p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 ${log.action === 'approved' ? 'bg-emerald-50' : 'bg-red-50'
+                                                        }`}>
                                                         <div className="flex items-center gap-2">
                                                             {log.action === 'approved' ? (
                                                                 <CheckCircle className="h-5 w-5 text-emerald-600" />
                                                             ) : (
                                                                 <XCircle className="h-5 w-5 text-red-600" />
                                                             )}
-                                                            <span className={`text-sm font-bold ${log.action === 'approved' ? 'text-emerald-700' : 'text-red-700'}`}>
+                                                            <span className={`text-sm font-bold ${log.action === 'approved' ? 'text-emerald-700' : 'text-red-700'
+                                                                }`}>
                                                                 {log.action_text}
                                                             </span>
                                                         </div>
@@ -583,10 +587,85 @@ export default function TazkiraShow({ tazkira, can }: Props) {
                                                             {log.reviewer?.full_name} • {formatDate(log.reviewed_at)}
                                                         </div>
                                                     </div>
+
+                                                    {/* Note */}
                                                     {log.note && (
                                                         <div className="p-3 bg-gray-50 border-b">
                                                             <p className="text-xs text-gray-500 mb-1">یادداشت:</p>
                                                             <p className="text-sm text-gray-700">{log.note}</p>
+                                                        </div>
+                                                    )}
+
+                                                    {/* ✅ Attachments - اضافه شدن بخش ضمیمه‌ها */}
+                                                    {log.attachments && log.attachments.length > 0 && (
+                                                        <div className="p-3 bg-white">
+                                                            <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                                                                <Paperclip className="h-3 w-3" />
+                                                                ضمیمه‌ها ({log.attachments.length})
+                                                            </p>
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                                {log.attachments.map((att) => (
+                                                                    <div
+                                                                        key={att.id}
+                                                                        className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group/att"
+                                                                    >
+                                                                        <div
+                                                                            className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer"
+                                                                            onClick={() => {
+                                                                                if (att.file_type?.startsWith('image/') && att.file_url) {
+                                                                                    setPreviewImage({ url: att.file_url, name: att.file_name });
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            {/* Icon based on file type */}
+                                                                            {att.file_type?.startsWith('image/') ? (
+                                                                                <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-blue-100 flex-shrink-0">
+                                                                                    {att.file_url ? (
+                                                                                        <img
+                                                                                            src={att.file_url}
+                                                                                            alt={att.file_name}
+                                                                                            className="w-full h-full object-cover"
+                                                                                            onError={(e) => {
+                                                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                                                            }}
+                                                                                        />
+                                                                                    ) : (
+                                                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                                                                                            <ImageIcon className="h-5 w-5 text-gray-400" />
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            ) : (
+                                                                                <div className="p-1.5 bg-gray-200 rounded-lg flex-shrink-0">
+                                                                                    <File className="h-4 w-4 text-gray-600" />
+                                                                                </div>
+                                                                            )}
+
+                                                                            <div className="min-w-0 flex-1">
+                                                                                <p className="text-xs font-medium text-gray-800 truncate" title={att.file_name}>
+                                                                                    {att.file_name}
+                                                                                </p>
+                                                                                <p className="text-xs text-gray-400">
+                                                                                    {formatFileSize(att.file_size)}
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {att.file_url && (
+                                                                            <a
+                                                                                href={att.file_url}
+                                                                                download
+                                                                                target="_blank"
+                                                                                className="p-1.5 text-gray-400 hover:text-indigo-600 rounded-lg transition-colors opacity-0 group-hover/att:opacity-100"
+                                                                                title="دانلود"
+                                                                                onClick={(e) => e.stopPropagation()}
+                                                                            >
+                                                                                <Download className="h-3.5 w-3.5" />
+                                                                            </a>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
