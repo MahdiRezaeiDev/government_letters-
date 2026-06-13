@@ -249,7 +249,7 @@ class TazkiraController extends Controller
     {
         $user = auth()->user();
 
-        $this->authorize('update', Tazkira::class);
+        $this->authorize('update', Tazkira::class, $tazkira);
 
         // بررسی دسترسی برای ویرایش
         if (!$user->can(PermissionEnum::NID_REGISTER)) {
