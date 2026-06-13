@@ -16,11 +16,6 @@ class SettingController extends Controller
     {
         $user = auth()->user();
         
-        // فقط ادمین کل می‌تواند تنظیمات را ببیند
-        if (!$user->isSuperAdmin()) {
-            abort(403);
-        }
-        
         // دریافت تنظیمات سازمان (اگر کاربر سازمان دارد)
         $settings = SystemSetting::where('organization_id', $user->organization_id)
             ->orWhereNull('organization_id')
