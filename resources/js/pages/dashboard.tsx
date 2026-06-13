@@ -72,7 +72,7 @@ export default function Dashboard({
         return () => clearInterval(t);
     }, []);
 
-    const persianDate = currentTime.toLocaleDateString('fa-IR', {
+    const persianDate = currentTime.toLocaleDateString('fa-af', {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
 
@@ -306,7 +306,7 @@ export default function Dashboard({
                                         {filteredLetters.map(letter => {
                                             const pri = priorityConfig[letter.priority ?? 'normal'] ?? priorityConfig.normal;
                                             const sts = statusConfig[letter.final_status ?? 'pending'] ?? statusConfig.pending;
-                                            const date = letter.created_at ? new Date(letter.created_at).toLocaleDateString('fa-IR') : '—';
+                                            const date = letter.created_at ? new Date(letter.created_at).toLocaleDateString('fa-af') : '—';
 
                                             return (
                                                 <tr key={letter.id}

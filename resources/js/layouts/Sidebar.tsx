@@ -98,6 +98,8 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: 
                         return ['super-admin', 'org-admin', 'dept-manager', 'user'].includes(userRole);
                     }
 
+                    
+
                     return true;
                 })
                 .map(item => ({ ...item, children: item.children ? filter(item.children) : undefined }))
