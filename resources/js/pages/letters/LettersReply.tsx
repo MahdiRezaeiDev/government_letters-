@@ -351,7 +351,7 @@ export default function LettersReply({
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs text-slate-500">تاریخ:</span>
                                             <span className="text-xs font-medium text-slate-700">
-                                                {originalLetter.date}
+                                                {new Date(originalLetter.date).toLocaleDateString('fa-Af', { calendar: 'persian', year: 'numeric', month: '2-digit', day: '2-digit' })}
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between">
