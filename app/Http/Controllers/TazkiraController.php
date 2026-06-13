@@ -22,6 +22,8 @@ class TazkiraController extends Controller
     {
         $user = auth()->user();
 
+        $this->authorize('viewAny', Tazkira::class);
+
         $query = Tazkira::query()
             ->with(['createdBy', 'approvedBy', 'attachments'])
             ->orderBy('created_at', 'desc');
