@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Admin\UserPermissionController;
 use App\Http\Controllers\ArchiveController;
 use App\Http\Controllers\CartableController;
 use App\Http\Controllers\CaseController;
@@ -9,7 +8,6 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\LetterCategoryController;
 use App\Http\Controllers\LetterController;
 use App\Http\Controllers\LetterDelegationController;
-use App\Http\Controllers\NidController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\ReportController;
@@ -19,9 +17,9 @@ use App\Http\Controllers\TazkiraController;
 use App\Http\Controllers\UserController;
 use App\Models\Department;
 use App\Models\Position;
-use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Features;
-use Symfony\Component\HttpFoundation\Request;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route as Route;
+
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -385,6 +383,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::post('settings', [SettingController::class, 'update'])
         ->middleware('role:super-admin|org-admin')->name('settings.update');
+
+    Route::post('/generate-qrcode', [QrCodeController::class, 'generate'])
+        ->name('qrcode.generate');
+
+    // Route for downloading QR code as image
+    Route::get('/qrcode/download/{type}/{data}', [QrCodeController::class, 'download'])
+        ->name('qrcode.download');
 });
 
 require __DIR__ . '/settings.php';
