@@ -10,6 +10,7 @@ use App\Http\Controllers\LetterController;
 use App\Http\Controllers\LetterDelegationController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PositionController;
+use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\SettingController;
@@ -384,12 +385,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('settings', [SettingController::class, 'update'])
         ->middleware('role:super-admin|org-admin')->name('settings.update');
 
-    Route::post('/generate-qrcode', [QrCodeController::class, 'generate'])
+    Route::get('/qrcode/generate', [QrCodeController::class, 'index'])
         ->name('qrcode.generate');
+    // Route::post('/generate-qrcode', [QrCodeController::class, 'generate'])
+    //     ->name('qrcode.generate');
 
-    // Route for downloading QR code as image
-    Route::get('/qrcode/download/{type}/{data}', [QrCodeController::class, 'download'])
-        ->name('qrcode.download');
+    // // Route for downloading QR code as image
+    // Route::get('/qrcode/download/{type}/{data}', [QrCodeController::class, 'download'])
+    //     ->name('qrcode.download');
 });
 
 require __DIR__ . '/settings.php';
