@@ -79,7 +79,7 @@ export default function TazkiraIndex({ tazkiras, filters, can }: Props) {
         volosvali: filters.volosvali || '',
         qaria: filters.qaria || '',
         status: filters.status || '',
-    });
+    });    
 
     const [showFilters, setShowFilters] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -496,6 +496,7 @@ export default function TazkiraIndex({ tazkiras, filters, can }: Props) {
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">جلد / صفحه</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">ولایت / ولسوالی</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تاریخ ثبت</th>
+                                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">ثبت کننده</th>
                                                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">وضعیت</th>
                                                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">عملیات</th>
                                             </tr>
@@ -541,9 +542,12 @@ export default function TazkiraIndex({ tazkiras, filters, can }: Props) {
                                                         <div className="flex items-center gap-1.5">
                                                             <Calendar className="h-3.5 w-3.5 text-gray-400" />
                                                             <span className="text-sm text-gray-600">
-                                                                {new Date(tazkira.created_at).toLocaleDateString('fa-IR')}
+                                                                {new Date(tazkira.created_at).toLocaleDateString('fa-Af')}
                                                             </span>
                                                         </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className='text-xs '>{tazkira.created_by?.full_name}</span>
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         {getStatusBadge(tazkira.status)}

@@ -67,6 +67,11 @@ class User extends Authenticatable
         'is_active' => 'boolean',
     ];
 
+    protected $appends = [
+        'full_name',
+    ];
+
+
     // ─── Accessors ─────────────────────────────────────────────
 
     public function getFullNameAttribute(): string
