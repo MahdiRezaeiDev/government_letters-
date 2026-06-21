@@ -264,13 +264,13 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
                                         <input type="text" value={formData.page} onChange={e => set('page', e.target.value)} className={`${inputClass} pr-9`} />
                                     </div>
                                 </div>
-                                <div>
+                                {/* <div>
                                     <label className={labelClass}>صکو / شماره ثبت</label>
                                     <div className="relative">
                                         <Grid className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                         <input type="text" value={formData.registration_number} onChange={e => set('registration_number', e.target.value)} className={`${inputClass} pr-9`} />
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
 
@@ -292,13 +292,13 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
                                         <input type="text" value={formData.volosvali} onChange={e => set('volosvali', e.target.value)} className={`${inputClass} pr-9`} placeholder="نهمارکزی" />
                                     </div>
                                 </div>
-                                <div className="md:col-span-2">
+                                {/* <div className="md:col-span-2">
                                     <label className={labelClass}>قریه / ناحیه</label>
                                     <div className="relative">
                                         <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                         <input type="text" value={formData.qaria} onChange={e => set('qaria', e.target.value)} className={`${inputClass} pr-9`} placeholder="سرک تذکره" />
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
 

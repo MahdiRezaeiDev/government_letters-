@@ -205,13 +205,13 @@ export default function TazkiraCreate() {
                                         <input type="text" value={formData.page} onChange={e => set('page', e.target.value)} className={`${inputClass} pr-8`} placeholder="10" />
                                     </div>
                                 </div>
-                                <div>
+                                {/* <div>
                                     <label className={labelClass}>صکو / شماره ثبت</label>
                                     <div className="relative">
                                         <Grid className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
                                         <input type="text" value={formData.registration_number} onChange={e => set('registration_number', e.target.value)} className={`${inputClass} pr-8`} placeholder="12345" />
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
 
@@ -233,13 +233,13 @@ export default function TazkiraCreate() {
                                         <input type="text" value={formData.volosvali} onChange={e => set('volosvali', e.target.value)} className={`${inputClass} pr-8`} placeholder="نهمارکزی" />
                                     </div>
                                 </div>
-                                <div className="md:col-span-2">
+                                {/* <div className="md:col-span-2">
                                     <label className={labelClass}>قریه / ناحیه</label>
                                     <div className="relative">
                                         <MapPin className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
                                         <input type="text" value={formData.qaria} onChange={e => set('qaria', e.target.value)} className={`${inputClass} pr-8`} placeholder="سرک تذکره" />
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
 
