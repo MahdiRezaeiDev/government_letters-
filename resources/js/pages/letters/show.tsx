@@ -10,6 +10,7 @@ import { DelegateReplyModal } from '@/components/DelegateReplyModal';
 import delegations from '@/routes/delegations';
 import letters from '@/routes/letters';
 import type { Letter, Case, Organization } from '@/types';
+import { QRCodeCanvas } from 'qrcode.react';
 
 interface Attachment {
     id: number;
@@ -85,6 +86,18 @@ export default function LettersShow({
     const [showDelegateModal, setShowDelegateModal] = useState(false);
     const status = STATUS_CONFIG[letter.final_status] || STATUS_CONFIG.pending;
     const currentUser = usePage().props.auth.user;
+    const qrData = `
+    عنوان مکتوب: ${letter.subject}
+    شماره مکتوب: ${letter.letter_number} \n
+    فرستنده: ${letter.sender_name} \n
+    گیرنده: ${letter.recipient_name} \n
+    `;
+    const [qrSettings, setQrSettings] = useState({
+        size: 100,
+        fgColor: '#000000',
+        bgColor: '#ffffff',
+        level: 'M',
+    });
 
     // بررسی ارجاع فعال به کاربر فعلی
     const activeDelegation = letter.delegations?.find(
@@ -379,6 +392,14 @@ export default function LettersShow({
                                 </div>
                             )}
                         </div>
+                        <QRCodeCanvas
+                            value={qrData}
+                            size={qrSettings.size}
+                            bgColor={qrSettings.bgColor}
+                            fgColor={qrSettings.fgColor}
+                            level={qrSettings.level}
+                            includeMargin={true}
+                        />
                     </div>
 
 
