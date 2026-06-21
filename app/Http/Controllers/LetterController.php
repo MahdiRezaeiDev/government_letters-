@@ -96,15 +96,16 @@ class LetterController extends Controller
             })
             ->when($request->filled('date_from'), function ($q) use ($request) {
                 $fromDate = $this->convertToGregorian($request->date_from);
+
                 if ($fromDate) {
-                    return $q->whereDate('date', '>=', $fromDate);
+                    return $q->whereDate('created_at', '>=', $fromDate);
                 }
                 return $q;
             })
             ->when($request->filled('date_to'), function ($q) use ($request) {
                 $toDate = $this->convertToGregorian($request->date_to);
                 if ($toDate) {
-                    return $q->whereDate('date', '<=', $toDate);
+                    return $q->whereDate('created_at', '<=', $toDate);
                 }
                 return $q;
             })
