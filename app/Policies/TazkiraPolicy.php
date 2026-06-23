@@ -12,6 +12,7 @@ class TazkiraPolicy
     {
         return $user->can(PermissionEnum::NID_REGISTER) ||
             $user->can(PermissionEnum::NID_APPROVE) ||
+            $user->can(PermissionEnum::NID_VIEW) ||
             $user->can(PermissionEnum::NID_DESTROY);
     }
 

@@ -72,7 +72,6 @@ enum PermissionEnum: string
     case EDIT_CATEGORY     = 'edit-category';
     case DELETE_CATEGORY   = 'delete-category';
 
-
         // ============================================
         // مجوزهای  تاییدی تذکره
         // ============================================
