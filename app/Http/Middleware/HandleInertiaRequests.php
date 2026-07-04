@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Department;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -40,6 +41,9 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
+                'isReceptionUser' => $request->user()
+                    ? Department::where('reception_user_id', $request->user()->id)->exists()
+                    : false,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

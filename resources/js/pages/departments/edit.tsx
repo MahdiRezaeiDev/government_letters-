@@ -2,7 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import {
     Save, X, Building2, Layers,
-    CheckCircle, AlertCircle, FolderTree
+    CheckCircle, AlertCircle, FolderTree, UserCheck
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import FieldLabel from '@/components/ui/FieldLabel';
@@ -11,25 +11,35 @@ import SelectField from '@/components/ui/SelectField';
 import departments from '@/routes/departments';
 import type { Organization, Department } from '@/types';
 
+interface OrganizationUser {
+    id: number;
+    name: string;
+    department_id: number | null;
+}
+
 interface Props {
     department: Department;
     organizations: Organization[];
     parentDepartments: Department[];
+    organizationUsers?: OrganizationUser[];
 }
 
 // ─── Main Component ────────────────────────────────────────────────────────
 
-export default function DepartmentsEdit({ department, organizations, parentDepartments }: Props) {
+export default function DepartmentsEdit({ department, organizations, parentDepartments, organizationUsers = [] }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         organization_id: department.organization_id,
         name: department.name,
         code: department.code,
         parent_id: department.parent_id || '',
+        reception_user_id: department.reception_user_id || '',
         status: department.status,
     });
 
     const [availableParentDepts, setAvailableParentDepts] = useState<Department[]>(parentDepartments);
+    const [availableUsers, setAvailableUsers] = useState<OrganizationUser[]>(organizationUsers);
     const [loadingParents, setLoadingParents] = useState(false);
+    const [loadingUsers, setLoadingUsers] = useState(false);
 
     const selectedOrgName = useMemo(() => {
         if (!data.organization_id) {
@@ -54,6 +64,7 @@ export default function DepartmentsEdit({ department, organizations, parentDepar
 
         let cancelled = false;
         setLoadingParents(true);
+        setLoadingUsers(true);
 
         fetch(`/departments-list?organization_id=${data.organization_id}`)
             .then(r => r.json())
@@ -66,6 +77,20 @@ export default function DepartmentsEdit({ department, organizations, parentDepar
             .catch(() => {
                 if (!cancelled) {
                     setLoadingParents(false);
+                }
+            });
+
+        fetch(`/departments/organization-users?organization_id=${data.organization_id}`)
+            .then(r => r.json())
+            .then(d => {
+                if (!cancelled) {
+                    setAvailableUsers(d);
+                    setLoadingUsers(false);
+                }
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setLoadingUsers(false);
                 }
             });
 
@@ -126,6 +151,7 @@ export default function DepartmentsEdit({ department, organizations, parentDepar
                                                     onChange={v => {
                                                         setData('organization_id', v);
                                                         setData('parent_id', '');
+                                                        setData('reception_user_id', '');
                                                     }}
                                                     error={errors.organization_id}
                                                 >
@@ -144,7 +170,12 @@ export default function DepartmentsEdit({ department, organizations, parentDepar
                                                 <SelectField
                                                     icon={Layers}
                                                     value={data.parent_id}
-                                                    onChange={v => setData('parent_id', v)}
+                                                    onChange={v => {
+                                                        setData('parent_id', v);
+                                                        if (v) {
+                                                            setData('reception_user_id', '');
+                                                        }
+                                                    }}
                                                     disabled={loadingParents || !data.organization_id}
                                                 >
                                                     <option value="">بدون والد (ریاست سطح اول)</option>
@@ -167,6 +198,36 @@ export default function DepartmentsEdit({ department, organizations, parentDepar
                                                 </p>
                                             )}
                                         </div>
+
+                                        {!data.parent_id && (
+                                            <div>
+                                                <FieldLabel>کاربر دبیرخانه</FieldLabel>
+                                                <div className="relative">
+                                                    <SelectField
+                                                        icon={UserCheck}
+                                                        value={data.reception_user_id}
+                                                        onChange={v => setData('reception_user_id', v)}
+                                                        disabled={loadingUsers || !data.organization_id}
+                                                        error={errors.reception_user_id}
+                                                    >
+                                                        <option value="">بدون دبیرخانه</option>
+                                                        {availableUsers.map(user => (
+                                                            <option key={user.id} value={user.id}>
+                                                                {user.name}
+                                                            </option>
+                                                        ))}
+                                                    </SelectField>
+                                                    {loadingUsers && (
+                                                        <div className="absolute left-3 top-3">
+                                                            <div className="h-4 w-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs text-slate-400 mt-1.5">
+                                                    فقط برای ریاست سطح اول. نامه‌های این ریاست و زیرمجموعه‌ها ابتدا به دبیرخانه می‌روند.
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 

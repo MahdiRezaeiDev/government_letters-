@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Jobs\ProcessLetterAfterCreation;
 use App\Jobs\ProcessReplyAfterCreation;
+use App\Models\Department;
 use App\Models\Letter;
+use App\Models\Routing;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -21,6 +23,10 @@ class LetterService
         DB::beginTransaction();
 
         try {
+            if (($data['recipient_type'] ?? 'internal') === 'internal') {
+                $data = $this->applyReceptionRecipient($data, $creator);
+            }
+
             $tempFiles = $this->storeTempFiles($data['attachments'] ?? []);
 
             $senderData = $this->prepareSenderData($creator);
@@ -62,6 +68,10 @@ class LetterService
         DB::beginTransaction();
 
         try {
+            if (($data['recipient_type'] ?? 'internal') === 'internal') {
+                $data = $this->applyReceptionRecipient($data, $creator);
+            }
+
             // ذخیره موقت فایل‌ها
             $tempFiles = $this->storeTempFiles($data['attachments'] ?? []);
 
@@ -299,22 +309,200 @@ class LetterService
     }
 
     /**
-     * ایجاد ارجاع اولیه
+     * تعیین مقصد ارجاع اولیه (دبیرخانه ریاست ریشه)
      */
-    public function createInitialRouting(Letter $letter, ?int $recipientUserId, ?string $instruction): void
+    public function resolveInitialRoutingTarget(Letter $letter, bool $skipReception = false): ?array
     {
-        if (!$recipientUserId) {
-            return;
+        if ($skipReception) {
+            if (!$letter->recipient_user_id) {
+                return null;
+            }
+
+            return $this->buildRoutingTarget(
+                $letter->recipient_user_id,
+                $letter->recipient_position_id,
+                false
+            );
         }
 
-        // TODO: پیاده‌سازی منطق ارجاع
-        // Routing::create([
-        //     'letter_id' => $letter->id,
-        //     'from_user_id' => $letter->sender_user_id,
-        //     'to_user_id' => $recipientUserId,
-        //     'instruction' => $instruction,
-        //     'status' => 'pending',
-        // ]);
+        if (!$this->shouldRouteThroughReception($letter)) {
+            if (!$letter->recipient_user_id) {
+                return null;
+            }
+
+            return $this->buildRoutingTarget(
+                $letter->recipient_user_id,
+                $letter->recipient_position_id,
+                false
+            );
+        }
+
+        $targetDepartment = Department::find($letter->recipient_department_id);
+        $rootDepartment = $targetDepartment?->getRootDepartment();
+
+        if (!$rootDepartment?->reception_user_id) {
+            if (!$letter->recipient_user_id) {
+                return null;
+            }
+
+            return $this->buildRoutingTarget(
+                $letter->recipient_user_id,
+                $letter->recipient_position_id,
+                false
+            );
+        }
+
+        $receptionUser = User::find($rootDepartment->reception_user_id);
+
+        return $this->buildRoutingTarget(
+            $rootDepartment->reception_user_id,
+            $receptionUser?->primary_position_id,
+            true
+        );
+    }
+
+    /**
+     * ایجاد ارجاع اولیه
+     */
+    public function createInitialRouting(Letter $letter, ?array $target, ?string $instruction = null): ?Routing
+    {
+        if (!$target || empty($target['user_id'])) {
+            return null;
+        }
+
+        $toUser = User::find($target['user_id']);
+        if (!$toUser) {
+            return null;
+        }
+
+        $fromPositionId = $letter->sender_position_id
+            ?? User::find($letter->sender_user_id)?->primary_position_id;
+        $toPositionId = $target['position_id'] ?? $toUser->primary_position_id;
+
+        if (!$fromPositionId || !$toPositionId || !$letter->sender_user_id) {
+            return null;
+        }
+
+        $isReception = $target['is_reception'] ?? false;
+        $lastStep = Routing::where('letter_id', $letter->id)->max('step_order') ?? 0;
+
+        return Routing::create([
+            'letter_id'        => $letter->id,
+            'from_user_id'     => $letter->sender_user_id,
+            'from_position_id' => $fromPositionId,
+            'to_user_id'       => $toUser->id,
+            'to_position_id'   => $toPositionId,
+            'action_type'      => $isReception ? 'coordination' : 'action',
+            'instruction'      => $instruction ?? (
+                $isReception
+                    ? 'نامه در دبیرخانه دریافت شد. لطفاً به گیرنده مقصد ارجاع دهید.'
+                    : 'لطفاً بررسی و اقدام لازم انجام شود.'
+            ),
+            'deadline'         => now()->addDays(7),
+            'status'           => 'pending',
+            'step_order'       => $lastStep + 1,
+            'is_reception'     => $isReception,
+        ]);
+    }
+
+    /**
+     * ارجاع نامه از دبیرخانه به کاربر مقصد در زیرمجموعه
+     */
+    public function forwardFromReception(
+        Routing $routing,
+        User $receptionUser,
+        int $toUserId,
+        ?int $toPositionId = null,
+        ?int $toDepartmentId = null,
+        ?string $note = null
+    ): ?Routing {
+        $letter = $routing->letter;
+        $toUser = User::with('primaryPosition')->find($toUserId);
+
+        if (!$toUser) {
+            return null;
+        }
+
+        $routing->update([
+            'status'         => 'completed',
+            'completed_at'   => now(),
+            'completed_note' => $note ?? 'ارجاع از دبیرخانه به گیرنده مقصد',
+        ]);
+
+        $letter->update([
+            'recipient_user_id'       => $toUser->id,
+            'recipient_position_id'   => $toPositionId ?? $toUser->primary_position_id,
+            'recipient_department_id' => $toDepartmentId ?? $toUser->department_id ?? $letter->recipient_department_id,
+            'recipient_name'          => $toUser->full_name,
+            'recipient_position_name' => $toUser->primaryPosition?->name,
+        ]);
+
+        $letter->refresh();
+
+        return $this->createInitialRouting(
+            $letter,
+            $this->resolveInitialRoutingTarget($letter, skipReception: true),
+            $note
+        );
+    }
+
+    /**
+     * تنظیم گیرنده نامه به دبیرخانه ریاست ریشه
+     */
+    protected function applyReceptionRecipient(array $data, User $creator): array
+    {
+        $targetDepartmentId = $data['recipient_department_id'] ?? null;
+
+        if (!$targetDepartmentId) {
+            throw new \InvalidArgumentException('انتخاب واحد مقصد الزامی است.');
+        }
+
+        $targetDepartment = Department::find($targetDepartmentId);
+        if (!$targetDepartment) {
+            throw new \InvalidArgumentException('واحد مقصد انتخاب شده معتبر نیست.');
+        }
+
+        $rootDepartment = Department::with('receptionUser.primaryPosition')
+            ->where('organization_id', $creator->organization_id)
+            ->whereNull('parent_id')
+            ->find($targetDepartment->getRootDepartment()->id);
+
+        if (!empty($data['root_department_id']) && (int) $data['root_department_id'] !== $rootDepartment?->id) {
+            throw new \InvalidArgumentException('واحد مقصد باید متعلق به همان ریاست باشد.');
+        }
+
+        if (!$rootDepartment?->reception_user_id) {
+            throw new \InvalidArgumentException('برای این ریاست کاربر دبیرخانه تعیین نشده است.');
+        }
+
+        $receptionUser = $rootDepartment->receptionUser;
+
+        $data['recipient_department_id'] = $targetDepartmentId;
+        $data['recipient_user_id'] = $receptionUser->id;
+        $data['recipient_position_id'] = $receptionUser->primary_position_id;
+        $data['recipient_name'] = 'دبیرخانه ' . $rootDepartment->name;
+        $data['recipient_position_name'] = $receptionUser->primaryPosition?->name ?? 'دبیرخانه';
+        $data['recipient_organization_id'] = $creator->organization_id;
+
+        return $data;
+    }
+
+    protected function shouldRouteThroughReception(Letter $letter): bool
+    {
+        if (!$letter->recipient_department_id) {
+            return false;
+        }
+
+        return $letter->letter_type === 'internal';
+    }
+
+    protected function buildRoutingTarget(int $userId, ?int $positionId, bool $isReception): array
+    {
+        return [
+            'user_id'      => $userId,
+            'position_id'  => $positionId,
+            'is_reception' => $isReception,
+        ];
     }
 
     /**
@@ -330,7 +518,7 @@ class LetterService
             return false;
         }
 
-        return !empty($recipientData['user_id']);
+        return !empty($recipientData['department_id']);
     }
 
     /**

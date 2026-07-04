@@ -4,11 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Routing;
 use App\Models\LetterDelegation;
+use App\Models\LetterHistory;
+use App\Notifications\LetterReceivedNotification;
+use App\Services\LetterService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class CartableController extends Controller
 {
+    public function __construct(protected LetterService $letterService) {}
     /**
      * نمایش کارتابل شخصی کاربر
      */
@@ -27,7 +32,7 @@ class CartableController extends Controller
                 });
         })
             ->where('status', 'pending')
-            ->with(['letter', 'fromUser', 'toUser'])
+            ->with(['letter.recipientUser', 'letter.recipientDepartment', 'fromUser', 'toUser'])
             ->orderBy('created_at', 'asc')
             ->paginate(15);
 
@@ -186,5 +191,84 @@ class CartableController extends Controller
         $routing->letter->update(['final_status' => 'rejected']);
 
         return redirect()->back()->with('success', 'اقدام با موفقیت رد شد.');
+    }
+
+    /**
+     * ارجاع نامه از دبیرخانه به گیرنده مقصد
+     */
+    public function forward(Request $request, Routing $routing)
+    {
+        $user = auth()->user();
+
+        if (!$routing->is_reception || $routing->to_user_id !== $user->id) {
+            abort(403, 'شما مجاز به ارجاع این نامه از دبیرخانه نیستید.');
+        }
+
+        if ($routing->status !== 'pending') {
+            return back()->with('error', 'این اقدام قبلاً تکمیل شده است.');
+        }
+
+        $letter = $routing->letter;
+
+        if (!$letter?->recipient_user_id) {
+            return back()->with('error', 'گیرنده مقصد برای این نامه مشخص نیست.');
+        }
+
+        $request->validate([
+            'note' => 'nullable|string|max:500',
+            'to_user_id' => 'required|exists:users,id',
+            'to_position_id' => 'nullable|exists:positions,id',
+            'to_department_id' => 'nullable|exists:departments,id',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $forwardRouting = $this->letterService->forwardFromReception(
+                $routing,
+                $user,
+                (int) $request->to_user_id,
+                $request->to_position_id ? (int) $request->to_position_id : null,
+                $request->to_department_id ? (int) $request->to_department_id : null,
+                $request->note
+            );
+
+            if (!$forwardRouting) {
+                DB::rollBack();
+
+                return back()->with('error', 'خطا در ارجاع نامه به گیرنده مقصد.');
+            }
+
+            \App\Models\Action::create([
+                'routing_id' => $routing->id,
+                'user_id' => $user->id,
+                'action_type' => 'forward',
+                'description' => $request->note ?? 'ارجاع از دبیرخانه به گیرنده مقصد',
+                'ip_address' => $request->ip(),
+            ]);
+
+            LetterHistory::create([
+                'letter_id' => $letter->id,
+                'action_type' => 'routed',
+                'user_id' => $user->id,
+                'ip_address' => $request->ip(),
+                'changes' => json_encode([
+                    'from' => 'reception',
+                    'to_user' => $letter->recipientUser?->full_name,
+                ]),
+            ]);
+
+            $letter->recipientUser?->notify(
+                new LetterReceivedNotification($letter->fresh(), false)
+            );
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'نامه با موفقیت به گیرنده مقصد ارجاع شد.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'خطا در ارجاع نامه: ' . $e->getMessage());
+        }
     }
 }

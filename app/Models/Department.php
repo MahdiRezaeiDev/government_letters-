@@ -20,6 +20,7 @@ class Department extends Model
         'code',
         'parent_id',
         'manager_position_id',
+        'reception_user_id',
         'status',
         'level',
         'path'
@@ -55,6 +56,68 @@ class Department extends Model
     public function managerPosition(): BelongsTo
     {
         return $this->belongsTo(Position::class, 'manager_position_id');
+    }
+
+    public function receptionUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reception_user_id');
+    }
+
+    /**
+     * آیا این ریاست سطح اول (بدون والد) است؟
+     */
+    public function isRoot(): bool
+    {
+        return $this->parent_id === null;
+    }
+
+    /**
+     * ریاست ریشه (سطح اول) این شاخه
+     */
+    public function getRootDepartment(): self
+    {
+        $department = $this;
+
+        while ($department->parent_id) {
+            $parent = static::find($department->parent_id);
+            if (!$parent) {
+                break;
+            }
+            $department = $parent;
+        }
+
+        return $department;
+    }
+
+    /**
+     * کاربر دبیرخانه ریاست ریشه
+     */
+    public function resolveReceptionUser(): ?User
+    {
+        return $this->getRootDepartment()->receptionUser;
+    }
+
+    /**
+     * تمام شناسه‌های این ریاست و زیرمجموعه‌ها
+     */
+    public function getDescendantIds(): array
+    {
+        $ids = [$this->id];
+        $children = static::where('parent_id', $this->id)->pluck('id');
+
+        foreach ($children as $childId) {
+            $child = static::find($childId);
+            if ($child) {
+                $ids = array_merge($ids, $child->getDescendantIds());
+            }
+        }
+
+        return array_unique($ids);
+    }
+
+    public function scopeRoot($query)
+    {
+        return $query->whereNull('parent_id');
     }
 
     public function archives(): HasMany

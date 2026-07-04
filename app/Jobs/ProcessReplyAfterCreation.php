@@ -69,11 +69,15 @@ class ProcessReplyAfterCreation implements ShouldQueue
 
         // 3. ایجاد ارجاع در صورت نیاز
         if ($letterService->shouldCreateRoutingForReply($this->recipientData, $this->replyLetter)) {
-            $letterService->createInitialRouting(
-                $this->replyLetter,
-                $this->recipientData['user_id'] ?? null,
-                $this->instruction
-            );
+            $target = $letterService->resolveInitialRoutingTarget($this->replyLetter);
+
+            if ($target) {
+                $letterService->createInitialRouting(
+                    $this->replyLetter,
+                    $target,
+                    $this->instruction
+                );
+            }
         }
 
         // 4. ارسال نوتیفیکیشن

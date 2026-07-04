@@ -15,6 +15,17 @@ class DepartmentRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->reception_user_id === '' || $this->reception_user_id === null) {
+            $this->merge(['reception_user_id' => null]);
+        }
+
+        if ($this->parent_id) {
+            $this->merge(['reception_user_id' => null]);
+        }
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -27,6 +38,7 @@ class DepartmentRequest extends FormRequest
             'name'                       => 'required|string|max:255',
             'parent_id'                  => 'nullable|exists:departments,id',
             'manager_position_id'        => 'nullable|exists:positions,id',
+            'reception_user_id'          => 'nullable|exists:users,id',
             'status'                     => 'required|in:active,inactive',
         ];
     }
@@ -50,6 +62,8 @@ class DepartmentRequest extends FormRequest
 
             'manager_position_id.exists'        => 'سمت مدیر انتخاب شده معتبر نیست.',
 
+            'reception_user_id.exists'          => 'کاربر دبیرخانه انتخاب شده معتبر نیست.',
+
             'status.required'                   => 'وضعیت دپارتمان الزامی است.',
             'status.in'                         => 'وضعیت دپارتمان باید فعال یا غیرفعال باشد.',
         ];
@@ -67,6 +81,7 @@ class DepartmentRequest extends FormRequest
             'name'                                 => 'نام دپارتمان',
             'parent_id'                            => 'دپارتمان والد',
             'manager_position_id'                  => 'سمت مدیر',
+            'reception_user_id'                    => 'کاربر دبیرخانه',
             'status'                               => 'وضعیت',
         ];
     }

@@ -26,24 +26,32 @@ interface SecurityLevel {
     inactiveColor: string;
 }
 
+interface Reception {
+    id: number;
+    name: string;
+    code: string;
+    reception_user_id: number;
+    reception_user?: { id: number; first_name: string; last_name: string };
+}
+
+interface DepartmentOption {
+    id: number;
+    name: string;
+    parent_id: number | null;
+}
+
 interface Props {
     categories: LetterCategory[];
-    departments: { id: number; name: string }[];
-    positions: {
-        id: number;
-        name: string;
-        department_id: number;
-        user_id: number;
-        user_name?: string;
-    }[];
+    receptions: Reception[];
+    departments: DepartmentOption[];
     externalOrganizations?: Organization[];
     securityLevels: Record<string, SecurityLevel>;
     priorityLevels: Record<string, PriorityLevel>;
 }
 
 export default function LettersCreate({
+    receptions,
     departments,
-    positions,
     externalOrganizations = [],
     securityLevels,
     priorityLevels,
@@ -61,6 +69,7 @@ export default function LettersCreate({
         attachments: [],
         is_draft: false,
         recipient_type: 'internal',
+        root_department_id: null,
         recipient_organization_id: currentUser.organization_id,
         recipient_department_id: null,
         recipient_position_id: null,
@@ -74,57 +83,45 @@ export default function LettersCreate({
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [searchType, setSearchType] = useState<'internal' | 'external'>('internal');
 
-    const [availablePositions, setAvailablePositions] = useState<{
-        id: number;
-        name: string;
-        department_id: number;
-        user_id?: number;
-        user_name?: string;
-    }[]>([]);
     const [extDepartments, setExtDepartments] = useState<{ id: number; name: string }[]>([]);
     const [extPositions, setExtPositions] = useState<{ id: number; name: string; department_id: number }[]>([]);
-    const [loadingPositions, setLoadingPositions] = useState(false);
     const [loadingExtDepts, setLoadingExtDepts] = useState(false);
     const [loadingExtPositions, setLoadingExtPositions] = useState(false);
 
-    // نتایج جستجوی داخلی
-    const internalSearchResults = useMemo(() => {
-        if (!searchTerm.trim() || searchType !== 'internal') return [];
+    const selectedReception = useMemo(
+        () => receptions.find(r => r.id === Number(data.root_department_id)),
+        [receptions, data.root_department_id]
+    );
 
-        const term = searchTerm.toLowerCase().trim();
+    const targetDepartments = useMemo(() => {
+        if (!data.root_department_id) {
+            return [];
+        }
 
-        // جستجو در ریاست‌ها
-        const deptResults = departments
-            .filter(dept => dept.name.toLowerCase().includes(term))
-            .map(dept => ({
-                id: dept.id,
-                name: dept.name,
-                type: 'department' as const,
-                parentName: null,
-                positionId: null,
-                departmentId: dept.id
-            }));
+        const rootId = Number(data.root_department_id);
+        const result: DepartmentOption[] = [];
+        const root = departments.find(d => d.id === rootId);
 
-        // جستجو در پست‌ها
-        const positionResults = positions
-            .filter(pos => {
-                const dept = departments.find(d => d.id === pos.department_id);
-                return pos.name.toLowerCase().includes(term) ||
-                    (dept && dept.name.toLowerCase().includes(term));
-            })
-            .map(pos => ({
-                id: pos.id,
-                name: pos.name,
-                type: 'position' as const,
-                parentName: departments.find(d => d.id === pos.department_id)?.name || '',
-                positionId: pos.id,
-                departmentId: pos.department_id,
-                userId: pos.user_id,
-                userName: pos.user_name
-            }));
+        if (root) {
+            result.push(root);
+        }
 
-        return [...deptResults, ...positionResults];
-    }, [searchTerm, departments, positions, searchType]);
+        const collectChildren = (parentId: number) => {
+            departments
+                .filter(d => d.parent_id === parentId)
+                .forEach((child) => {
+                    result.push(child);
+                    collectChildren(child.id);
+                });
+        };
+
+        collectChildren(rootId);
+
+        return result;
+    }, [data.root_department_id, departments]);
+
+    // نتایج جستجوی داخلی - غیرفعال (ارسال فقط از طریق دبیرخانه)
+    const internalSearchResults = useMemo(() => [], []);
 
     // نتایج جستجوی خارجی
     const externalSearchResults = useMemo(() => {
@@ -150,17 +147,6 @@ export default function LettersCreate({
 
         return orgResults;
     }, [searchTerm, externalOrganizations, searchType]);
-
-    // فیلتر پست‌های داخلی بر اساس ریاست / آمریت انتخابی
-    useEffect(() => {
-        if (data.recipient_department_id && data.recipient_type === 'internal') {
-            setLoadingPositions(true);
-            setAvailablePositions(positions.filter(p => p.department_id === data.recipient_department_id));
-            setLoadingPositions(false);
-        } else {
-            setAvailablePositions([]);
-        }
-    }, [data.recipient_department_id, data.recipient_type, positions]);
 
     // دریافت ریاست / آمریت‌های وزارت خارجی
     useEffect(() => {
@@ -206,7 +192,6 @@ export default function LettersCreate({
             onSuccess: () => {
                 if (!isDraft) {
                     reset();
-                    setAvailablePositions([]);
                     setExtDepartments([]);
                     setExtPositions([]);
                     setSearchTerm('');
@@ -420,18 +405,20 @@ export default function LettersCreate({
                                     </div>
                                     <div className="p-5 space-y-4">
 
-                                        {/* دکمه جستجو */}
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setSearchType(data.recipient_type);
-                                                setIsSearchOpen(true);
-                                            }}
-                                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-all duration-200 border border-blue-200"
-                                        >
-                                            <Search className="h-4 w-4" />
-                                            <span className="text-sm font-medium">جستجوی گیرنده</span>
-                                        </button>
+                                        {/* دکمه جستجو - فقط برای خارجی */}
+                                        {data.recipient_type === 'external' && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setSearchType(data.recipient_type);
+                                                    setIsSearchOpen(true);
+                                                }}
+                                                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-all duration-200 border border-blue-200"
+                                            >
+                                                <Search className="h-4 w-4" />
+                                                <span className="text-sm font-medium">جستجوی گیرنده</span>
+                                            </button>
+                                        )}
 
                                         {/* مودال جستجو */}
                                         {isSearchOpen && (
@@ -558,6 +545,7 @@ export default function LettersCreate({
 
                                                         if (type === 'internal') {
                                                             setData('recipient_organization_id', currentUser.organization_id);
+                                                            setData('root_department_id', null);
                                                             setData('recipient_department_id', null);
                                                             setData('recipient_position_id', null);
                                                             setData('recipient_user_id', null);
@@ -581,27 +569,74 @@ export default function LettersCreate({
                                             ))}
                                         </div>
 
-                                        {/* ── گیرنده داخلی ── */}
+                                        {/* ── گیرنده داخلی (فقط دبیرخانه) ── */}
                                         {data.recipient_type === 'internal' && (
                                             <div className="space-y-3">
+                                                <div className="bg-indigo-50 border border-indigo-100 rounded-md p-3 text-xs text-indigo-800">
+                                                    نامه ابتدا به دبیرخانه ریاست ارسال می‌شود و سپس توسط دبیرخانه به واحد مقصد ارجاع می‌گردد.
+                                                </div>
+
                                                 <div>
                                                     <label className="block text-xs font-medium text-slate-600 mb-1">
-                                                        ریاست <span className="text-red-500">*</span>
+                                                        دبیرخانه (ریاست) <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <select
+                                                        value={data.root_department_id || ''}
+                                                        onChange={(e) => {
+                                                            const id = parseInt(e.target.value) || null;
+                                                            const reception = receptions.find(r => r.id === id);
+
+                                                            setData('root_department_id', id);
+                                                            setData('recipient_department_id', null);
+                                                            setData('recipient_name', reception
+                                                                ? `دبیرخانه ${reception.name}`
+                                                                : '');
+                                                        }}
+                                                        className={inputClass}
+                                                    >
+                                                        <option value="">انتخاب دبیرخانه...</option>
+                                                        {receptions.map(r => (
+                                                            <option key={r.id} value={r.id}>
+                                                                {r.name}
+                                                                {r.reception_user
+                                                                    ? ` — ${r.reception_user.first_name} ${r.reception_user.last_name}`
+                                                                    : ''}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    {(errors as any).root_department_id && (
+                                                        <p className="text-red-500 text-xs mt-1">{(errors as any).root_department_id}</p>
+                                                    )}
+                                                    {receptions.length === 0 && (
+                                                        <p className="text-amber-600 text-xs mt-1">
+                                                            هیچ ریاستی با کاربر دبیرخانه تعریف نشده است.
+                                                        </p>
+                                                    )}
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-xs font-medium text-slate-600 mb-1">
+                                                        واحد مقصد (ریاست یا زیرمجموعه) <span className="text-red-500">*</span>
                                                     </label>
                                                     <select
                                                         value={data.recipient_department_id || ''}
                                                         onChange={(e) => {
                                                             const id = parseInt(e.target.value) || null;
+                                                            const dept = targetDepartments.find(d => d.id === id);
+
                                                             setData('recipient_department_id', id);
-                                                            setData('recipient_position_id', null);
-                                                            setData('recipient_position_name', '');
-                                                            setData('recipient_user_id', null);
-                                                            setData('recipient_name', '');
+                                                            if (dept && selectedReception) {
+                                                                setData('recipient_name', `دبیرخانه ${selectedReception.name} ← ${dept.name}`);
+                                                            }
                                                         }}
-                                                        className={inputClass}>
-                                                        <option value="">انتخاب ریاست / آمریت...</option>
-                                                        {departments.map(d => (
-                                                            <option key={d.id} value={d.id}>{d.name}</option>
+                                                        disabled={!data.root_department_id}
+                                                        className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400`}
+                                                    >
+                                                        <option value="">انتخاب واحد مقصد...</option>
+                                                        {targetDepartments.map(d => (
+                                                            <option key={d.id} value={d.id}>
+                                                                {d.parent_id ? '↳ ' : ''}{d.name}
+                                                            </option>
                                                         ))}
                                                     </select>
                                                     {errors.recipient_department_id && (
@@ -609,63 +644,13 @@ export default function LettersCreate({
                                                     )}
                                                 </div>
 
-                                                <div>
-                                                    <label className="block text-xs font-medium text-slate-600 mb-1">
-                                                        عنوان <span className="text-red-500">*</span>
-                                                    </label>
-                                                    <div className="relative">
-                                                        <select
-                                                            value={data.recipient_position_id || ''}
-                                                            onChange={(e) => {
-                                                                const id = parseInt(e.target.value) || null;
-                                                                const position = availablePositions.find(p => p.id === id);
-
-                                                                setData('recipient_position_id', id);
-                                                                setData('recipient_position_name', position?.name || '');
-                                                                setData('recipient_user_id', position?.user_id || null);
-                                                                setData('recipient_name', position?.user_name || '');
-                                                            }}
-                                                            disabled={!data.recipient_department_id || loadingPositions}
-                                                            className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed`}>
-                                                            <option value="">انتخاب عنوان...</option>
-                                                            {availablePositions.map(p => (
-                                                                <option key={p.id} value={p.id}>{p.name}</option>
-                                                            ))}
-                                                        </select>
-                                                        {loadingPositions && (
-                                                            <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                                                                <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    {errors.recipient_position_id && (
-                                                        <p className="text-red-500 text-xs mt-1">{errors.recipient_position_id}</p>
-                                                    )}
-                                                </div>
-
-                                                {/* نمایش خلاصه گیرنده داخلی */}
-                                                {data.recipient_position_name && (
+                                                {selectedReception && data.recipient_department_id && (
                                                     <div className="bg-green-50 border border-green-200 rounded-md p-3 text-xs text-green-800">
-                                                        <p className="font-medium mb-1">گیرنده انتخاب شده:</p>
-                                                        <p>بست: {data.recipient_position_name}</p>
-                                                        <p className="text-green-600 text-[10px] mt-1">
-                                                            ریاست: {departments.find(d => d.id === data.recipient_department_id)?.name}
+                                                        <p className="font-medium mb-1">مسیر ارسال:</p>
+                                                        <p>دبیرخانه: {selectedReception.name}</p>
+                                                        <p className="mt-1">
+                                                            واحد مقصد: {targetDepartments.find(d => d.id === Number(data.recipient_department_id))?.name}
                                                         </p>
-                                                        {data.recipient_name && (
-                                                            <p className="text-green-700 text-[10px] font-medium">
-                                                                نام: {data.recipient_name}
-                                                            </p>
-                                                        )}
-                                                        {data.recipient_user_id && (
-                                                            <p className="text-green-600 text-[10px]">
-                                                                کد کاربری: {data.recipient_user_id}
-                                                            </p>
-                                                        )}
-                                                        {!data.recipient_user_id && (
-                                                            <p className="text-yellow-600 text-[10px] mt-1">
-                                                                ⚠ کاربری به این بست اختصاص داده نشده است
-                                                            </p>
-                                                        )}
                                                     </div>
                                                 )}
                                             </div>

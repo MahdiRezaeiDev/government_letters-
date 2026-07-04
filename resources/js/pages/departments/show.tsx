@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Building2, Users, Briefcase, Pencil, Trash2, ChevronLeft, CheckCircle, AlertCircle, FolderTree, MapPin, Calendar, Hash, ExternalLink, GitBranch, Award, TrendingUp } from 'lucide-react';
+import { Building2, Users, Briefcase, Pencil, Trash2, ChevronLeft, CheckCircle, AlertCircle, FolderTree, MapPin, Calendar, Hash, ExternalLink, GitBranch, Award, TrendingUp, UserCheck } from 'lucide-react';
 import { useState } from 'react';
 import departments from '@/routes/departments';
 import type { Department } from '@/types';
@@ -239,6 +239,22 @@ export default function DepartmentsShow({ department, stats, can }: Props) {
                                                     {department.parent.name}
                                                     <ExternalLink className="h-3 w-3" />
                                                 </Link>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {department.parent_id === null && (
+                                        <div className="flex items-start gap-3">
+                                            <div className="p-2 bg-gray-100 rounded-lg">
+                                                <UserCheck className="h-4 w-4 text-gray-500" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-xs text-gray-500">کاربر دبیرخانه</p>
+                                                <p className="text-sm text-gray-900">
+                                                    {department.reception_user
+                                                        ? `${department.reception_user.first_name} ${department.reception_user.last_name}`
+                                                        : 'تعیین نشده'}
+                                                </p>
                                             </div>
                                         </div>
                                     )}

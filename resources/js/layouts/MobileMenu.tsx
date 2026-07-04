@@ -3,7 +3,7 @@ import {
     X, LayoutDashboard, Building2, Briefcase,
     Users, Inbox, Send, Archive,
     BarChart3, Settings, ChevronDown, FolderTree,
-    LogOut, UserCircle, Map, Sparkles, Layout, Zap
+    LogOut, UserCircle, Map, Sparkles, Layout, Zap, Mail
 } from 'lucide-react';
 import React, { useEffect, useState, useMemo } from 'react';
 import { dashboard, logout } from '@/routes';
@@ -34,6 +34,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
     const { auth, url } = usePage().props as any;
     const [openMenus, setOpenMenus] = useState<string[]>([]);
     const userRole = auth?.user?.roles?.[0]?.name || 'user';
+    const isReceptionUser = auth?.isReceptionUser === true;
 
     useEffect(() => {
         if (isOpen) {
@@ -69,6 +70,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
             ],
         },
         { title: 'کارتابل جاری', href: cartable.index().url, icon: Layout },
+        ...(isReceptionUser ? [{ title: 'دبیرخانه', href: '/reception', icon: Mail }] : []),
         { title: 'مکتوب ها وارده', href: letters.index({ query: { direction: 'incoming' } }).url, icon: Inbox },
         { title: 'مکتوب ها صادره', href: letters.index({ query: { direction: 'outgoing' } }).url, icon: Send },
         { title: 'ثبت مکتوب / استعلام', href: letters.create().url, icon: Sparkles },

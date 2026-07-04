@@ -83,6 +83,7 @@ export interface Department {
     code: string;
     parent_id: number | null;
     manager_position_id: number | null;
+    reception_user_id: number | null;
     status: 'active' | 'inactive';
     level: number;
     path: string | null;
@@ -90,6 +91,7 @@ export interface Department {
     parent?: Department;
     children?: Department[];
     positions?: Position[];
+    reception_user?: User;
     created_at: string;
     updated_at: string;
 }

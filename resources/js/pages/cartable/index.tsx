@@ -20,11 +20,20 @@ interface Routing {
     deadline: string | null;
     deadline_jalali?: string;
     status: string;
+    is_reception?: boolean;
     letter: {
         id: number;
         subject: string;
         letter_number: string;
         priority: string;
+        recipient_user?: {
+            first_name: string;
+            last_name: string;
+        } | null;
+        recipient_department?: {
+            id: number;
+            name: string;
+        } | null;
     };
     from_user: {
         first_name: string;
@@ -104,6 +113,18 @@ export default function CartableIndex({
     const [loading, setLoading] = useState(false);
     const [completingId, setCompletingId] = useState<number | null>(null);
     const [rejectingId, setRejectingId] = useState<number | null>(null);
+    const [forwardingId, setForwardingId] = useState<number | null>(null);
+    const [showForwardModal, setShowForwardModal] = useState(false);
+    const [forwardUsers, setForwardUsers] = useState<Array<{
+        id: number;
+        name: string;
+        department: string;
+        department_id: number;
+        position: string;
+        position_id: number;
+    }>>([]);
+    const [selectedForwardUserId, setSelectedForwardUserId] = useState<number | null>(null);
+    const [loadingForwardUsers, setLoadingForwardUsers] = useState(false);
     const [acceptingDelegationId, setAcceptingDelegationId] = useState<number | null>(null);
     const [rejectingDelegationId, setRejectingDelegationId] = useState<number | null>(null);
     const [showCompleteModal, setShowCompleteModal] = useState(false);
@@ -202,6 +223,62 @@ export default function CartableIndex({
                 router.reload();
             },
             onFinish: () => setRejectingId(null),
+        });
+    };
+
+    const handleForward = (routing: Routing) => {
+        const deptId = routing.letter?.recipient_department?.id;
+        if (!deptId) {
+            alert('واحد مقصد برای این نامه مشخص نیست.');
+            return;
+        }
+
+        setSelectedRoutingId(routing.id);
+        setSelectedForwardUserId(null);
+        setNote('');
+        setLoadingForwardUsers(true);
+        setShowForwardModal(true);
+
+        fetch(`/reception/departments/${deptId}/users`)
+            .then(r => r.json())
+            .then(data => {
+                setForwardUsers(data.users || []);
+                setLoadingForwardUsers(false);
+            })
+            .catch(() => {
+                setForwardUsers([]);
+                setLoadingForwardUsers(false);
+            });
+    };
+
+    const submitForward = () => {
+        if (!selectedForwardUserId) {
+            alert('لطفاً کاربر مقصد را انتخاب کنید.');
+            return;
+        }
+
+        if (!selectedRoutingId) {
+            return;
+        }
+
+        const selectedUser = forwardUsers.find(u => u.id === selectedForwardUserId);
+
+        setForwardingId(selectedRoutingId);
+        router.post(`/routings/${selectedRoutingId}/forward`, {
+            to_user_id: selectedForwardUserId,
+            to_position_id: selectedUser?.position_id || null,
+            to_department_id: selectedUser?.department_id || null,
+            note,
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setShowForwardModal(false);
+                setSelectedRoutingId(null);
+                setSelectedForwardUserId(null);
+                setNote('');
+                router.reload();
+            },
+            onFinish: () => setForwardingId(null),
         });
     };
 
@@ -500,6 +577,12 @@ export default function CartableIndex({
                                                                             <span>{routing.instruction}</span>
                                                                         </div>
                                                                     )}
+                                                                    {routing.is_reception && routing.letter?.recipient_department && (
+                                                                        <div className="mt-2 flex items-center gap-1.5 text-xs text-indigo-600 bg-indigo-50 rounded-lg px-3 py-2">
+                                                                            <CornerUpRight className="h-3.5 w-3.5" />
+                                                                            واحد مقصد: {routing.letter.recipient_department.name}
+                                                                        </div>
+                                                                    )}
                                                                     <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 flex-wrap">
                                                                         <span className="flex items-center gap-1.5">
                                                                             <User className="h-3.5 w-3.5" />
@@ -518,10 +601,17 @@ export default function CartableIndex({
                                                                         <Eye className="h-4 w-4" />
                                                                         مشاهده
                                                                     </Link>
-                                                                    <button onClick={() => openCompleteModal(routing.id)} disabled={completingId === routing.id} className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm transition-all duration-200 shadow-sm disabled:opacity-50">
-                                                                        {completingId === routing.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
-                                                                        تکمیل
-                                                                    </button>
+                                                                    {routing.is_reception ? (
+                                                                        <button onClick={() => handleForward(routing)} disabled={forwardingId === routing.id} className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm transition-all duration-200 shadow-sm disabled:opacity-50">
+                                                                            {forwardingId === routing.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CornerUpRight className="h-4 w-4" />}
+                                                                            ارجاع به گیرنده
+                                                                        </button>
+                                                                    ) : (
+                                                                        <button onClick={() => openCompleteModal(routing.id)} disabled={completingId === routing.id} className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm transition-all duration-200 shadow-sm disabled:opacity-50">
+                                                                            {completingId === routing.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                                                                            تکمیل
+                                                                        </button>
+                                                                    )}
                                                                     <button onClick={() => openRejectModal(routing.id)} disabled={rejectingId === routing.id} className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm transition-all duration-200 shadow-sm disabled:opacity-50">
                                                                         {rejectingId === routing.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
                                                                         رد
@@ -583,6 +673,12 @@ export default function CartableIndex({
                                                                     <span className="line-clamp-2">{routing.instruction}</span>
                                                                 </div>
                                                             )}
+                                                            {routing.is_reception && routing.letter?.recipient_department && (
+                                                                <div className="mt-2 flex items-center gap-1.5 text-xs text-indigo-600 bg-indigo-50 rounded-lg px-3 py-2">
+                                                                    <CornerUpRight className="h-3.5 w-3.5" />
+                                                                    واحد: {routing.letter.recipient_department.name}
+                                                                </div>
+                                                            )}
                                                             <div className="mt-4 pt-3 border-t border-gray-100">
                                                                 <div className="flex items-center justify-between text-xs text-gray-500">
                                                                     <span className="flex items-center gap-1.5">
@@ -602,10 +698,17 @@ export default function CartableIndex({
                                                                     <Eye className="h-4 w-4" />
                                                                     مشاهده
                                                                 </Link>
-                                                                <button onClick={() => openCompleteModal(routing.id)} className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm transition-all duration-200">
-                                                                    <CheckCircle className="h-4 w-4" />
-                                                                    تکمیل
-                                                                </button>
+                                                                {routing.is_reception ? (
+                                                                    <button onClick={() => handleForward(routing)} disabled={forwardingId === routing.id} className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm transition-all duration-200 disabled:opacity-50">
+                                                                        {forwardingId === routing.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CornerUpRight className="h-4 w-4" />}
+                                                                        ارجاع
+                                                                    </button>
+                                                                ) : (
+                                                                    <button onClick={() => openCompleteModal(routing.id)} className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm transition-all duration-200">
+                                                                        <CheckCircle className="h-4 w-4" />
+                                                                        تکمیل
+                                                                    </button>
+                                                                )}
                                                                 <button onClick={() => openRejectModal(routing.id)} className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm transition-all duration-200">
                                                                     <XCircle className="h-4 w-4" />
                                                                     رد
@@ -900,6 +1003,56 @@ export default function CartableIndex({
                             <button onClick={handleRejectDelegation} disabled={!reason.trim()} className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl text-sm hover:bg-red-700 transition disabled:opacity-50">
                                 {rejectingDelegationId && <Loader2 className="h-4 w-4 animate-spin" />}
                                 تأیید و رد
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Forward from Reception Modal */}
+            {showForwardModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-indigo-100 rounded-lg">
+                                <CornerUpRight className="h-6 w-6 text-indigo-600" />
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900">ارجاع از دبیرخانه</h3>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-4">کاربر مقصد در واحد مربوطه را انتخاب کنید</p>
+
+                        {loadingForwardUsers ? (
+                            <div className="flex items-center justify-center py-8">
+                                <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+                            </div>
+                        ) : (
+                            <select
+                                value={selectedForwardUserId || ''}
+                                onChange={(e) => setSelectedForwardUserId(parseInt(e.target.value) || null)}
+                                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm mb-4"
+                            >
+                                <option value="">انتخاب کاربر...</option>
+                                {forwardUsers.map(user => (
+                                    <option key={user.id} value={user.id}>
+                                        {user.name} — {user.department} ({user.position})
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+
+                        <textarea
+                            value={note}
+                            onChange={(e) => setNote(e.target.value)}
+                            rows={3}
+                            placeholder="یادداشت (اختیاری)..."
+                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none mb-4"
+                        />
+
+                        <div className="flex justify-end gap-3">
+                            <button onClick={() => setShowForwardModal(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition">انصراف</button>
+                            <button onClick={submitForward} disabled={!selectedForwardUserId || forwardingId !== null} className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm hover:bg-indigo-700 transition disabled:opacity-50">
+                                {forwardingId && <Loader2 className="h-4 w-4 animate-spin" />}
+                                ارجاع به گیرنده
                             </button>
                         </div>
                     </div>

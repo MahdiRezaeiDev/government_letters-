@@ -11,6 +11,7 @@ use App\Http\Controllers\LetterDelegationController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\QrCodeController;
+use App\Http\Controllers\ReceptionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoutingController;
 use App\Http\Controllers\SettingController;
@@ -147,6 +148,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:view-departments')->name('departments.index');
     Route::get('departments-list', [DepartmentController::class, 'getList'])
         ->middleware('permission:view-departments')->name('departments.list');
+    Route::get('departments/organization-users', [DepartmentController::class, 'organizationUsers'])
+        ->middleware('permission:view-departments')->name('departments.organization-users');
     Route::get('departments/create', [DepartmentController::class, 'create'])
         ->middleware('permission:create-department')->name('departments.create');
     Route::post('departments', [DepartmentController::class, 'store'])
@@ -263,6 +266,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:view-letters')->name('cartable.complete');
     Route::post('routings/{routing}/reject', [CartableController::class, 'reject'])
         ->middleware('permission:view-letters')->name('cartable.reject');
+    Route::post('routings/{routing}/forward', [CartableController::class, 'forward'])
+        ->middleware('permission:view-letters')->name('cartable.forward');
+
+    Route::get('reception', [ReceptionController::class, 'index'])
+        ->middleware('permission:view-letters')->name('reception.index');
+    Route::get('reception/departments/{department}/users', [ReceptionController::class, 'departmentUsers'])
+        ->middleware('permission:view-letters')->name('reception.department-users');
 
     // ==================== ارجاع مکتوب برای پاسخ (Delegation) ====================
     Route::prefix('delegations')->middleware(['auth', 'verified'])->group(function () {

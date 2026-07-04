@@ -19,7 +19,7 @@ class DepartmentController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $query = Department::with(['organization', 'parent', 'managerPosition']);
+        $query = Department::with(['organization', 'parent', 'managerPosition', 'receptionUser']);
 
         // فیلتر بر اساس سازمان (برای ادمین سازمان)
         if ($user->isOrgAdmin() || $user->isDeptManager()) {
@@ -85,6 +85,7 @@ class DepartmentController extends Controller
             'organizations' => $organizations,
             'parentDepartments' => $parentDepartments,
             'selectedOrganization' => $selectedOrganization,
+            'organizationUsers' => $this->getOrganizationUsers($selectedOrganization),
         ]);
     }
 
@@ -119,6 +120,7 @@ class DepartmentController extends Controller
             'code' => Department::generateCode(),
             'parent_id' => $request->parent_id,
             'manager_position_id' => $request->manager_position_id,
+            'reception_user_id' => $request->reception_user_id,
             'status' => $request->status,
             'level' => $level,
             'path' => $path,
@@ -152,6 +154,7 @@ class DepartmentController extends Controller
             'parent',
             'children',
             'managerPosition',
+            'receptionUser',
             'positions' => function ($q) {
                 $q->withCount('users');
             },
@@ -212,6 +215,7 @@ class DepartmentController extends Controller
             'organizations' => $organizations,
             'parentDepartments' => $parentDepartments,
             'managerPositions' => $managerPositions,
+            'organizationUsers' => $this->getOrganizationUsers($department->organization_id),
         ]);
     }
 
@@ -247,6 +251,7 @@ class DepartmentController extends Controller
             'code' => $request->code,
             'parent_id' => $request->parent_id,
             'manager_position_id' => $request->manager_position_id,
+            'reception_user_id' => $request->reception_user_id,
             'status' => $request->status,
             'level' => $level,
             'path' => $path,
@@ -340,5 +345,39 @@ class DepartmentController extends Controller
         $departments = $query->orderBy('name')->get();
 
         return response()->json($departments);
+    }
+
+    /**
+     * دریافت کاربران سازمان برای انتخاب دبیرخانه
+     */
+    public function organizationUsers(Request $request)
+    {
+        $user = auth()->user();
+        $organizationId = $request->integer('organization_id');
+
+        if (!$user->isSuperAdmin() && $user->organization_id !== $organizationId) {
+            abort(403);
+        }
+
+        return response()->json($this->getOrganizationUsers($organizationId));
+    }
+
+    private function getOrganizationUsers(?int $organizationId): array
+    {
+        if (!$organizationId) {
+            return [];
+        }
+
+        return User::where('organization_id', $organizationId)
+            ->where('status', 'active')
+            ->orderBy('first_name')
+            ->get(['id', 'first_name', 'last_name', 'department_id'])
+            ->map(fn (User $user) => [
+                'id' => $user->id,
+                'name' => $user->full_name,
+                'department_id' => $user->department_id,
+            ])
+            ->values()
+            ->all();
     }
 }

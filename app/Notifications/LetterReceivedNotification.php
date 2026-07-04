@@ -13,7 +13,7 @@ class LetterReceivedNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
 
-    public function __construct(public Letter $letter) {}
+    public function __construct(public Letter $letter, public bool $isReception = false) {}
 
     public function via(object $notifiable): array
     {
@@ -25,7 +25,9 @@ class LetterReceivedNotification extends Notification implements ShouldBroadcast
         return [
             'letter_id' => $this->letter->id,
             'title'     => $this->letter->subject,
-            'message'   => 'یک مکتوب جدید دریافت کردید',
+            'message'   => $this->isReception
+                ? 'نامه جدید در دبیرخانه دریافت شد'
+                : 'یک مکتوب جدید دریافت کردید',
         ];
     }
 
@@ -34,7 +36,9 @@ class LetterReceivedNotification extends Notification implements ShouldBroadcast
         return new BroadcastMessage([
             'letter_id' => $this->letter->id,
             'title'     => $this->letter->subject,
-            'message'   => 'یک مکتوب جدید دریافت کردید',
+            'message'   => $this->isReception
+                ? 'نامه جدید در دبیرخانه دریافت شد'
+                : 'یک مکتوب جدید دریافت کردید',
         ]);
     }
 }

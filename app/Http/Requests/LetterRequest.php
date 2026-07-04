@@ -35,12 +35,13 @@ class LetterRequest extends FormRequest
             'recipient_type'    => 'nullable|in:internal,external',
 
             // فیلدهای گیرنده داخلی
-            'recipient_name'            => 'required|string|max:255',
+            'root_department_id'        => 'required_if:recipient_type,internal|nullable|exists:departments,id',
+            'recipient_name'            => 'required_if:recipient_type,external|nullable|string|max:255',
             'recipient_organization_id' => 'required|numeric|exists:organizations,id',
-            'recipient_position_name'   => 'required|string|max:255',
-            'recipient_user_id'         => 'required|exists:users,id',
+            'recipient_position_name'   => 'nullable|string|max:255',
+            'recipient_user_id'         => 'nullable|exists:users,id',
             'recipient_department_id'   => 'required|exists:departments,id',
-            'recipient_position_id'     => 'required|exists:positions,id',
+            'recipient_position_id'     => 'nullable|exists:positions,id',
 
             // فیلدهای فرستنده
             'sender_name'               => 'nullable|string|max:255',
@@ -85,9 +86,11 @@ class LetterRequest extends FormRequest
             'recipient_organization_id.required' => 'سازمان گیرنده الزامی است.',
             'recipient_organization_id.numeric'  => 'سازمان گیرنده باید عدد باشد.',
             'recipient_organization_id.exists'   => 'سازمان گیرنده انتخاب شده وجود ندارد.',
-            'recipient_name.required'               => 'نام گیرنده الزامی است.',
-            'recipient_position_name.required'      => 'عنوان بست گیرنده الزامی است.',
-            'recipient_user_id.required'            => 'کاربر گیرنده الزامی است.',
+            'recipient_name.required_if'               => 'نام گیرنده الزامی است.',
+            'root_department_id.required_if'           => 'انتخاب ریاست (دبیرخانه) الزامی است.',
+            'root_department_id.exists'                => 'ریاست انتخاب شده معتبر نیست.',
+            'recipient_position_name.required'         => 'عنوان بست گیرنده الزامی است.',
+            'recipient_user_id.required'               => 'کاربر گیرنده الزامی است.',
             'recipient_department_id.required'      => 'دیپارتمنت گیرنده الزامی است.',
             'recipient_position_id.required'        => 'بست گیرنده الزامی است.',
 

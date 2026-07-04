@@ -3,7 +3,7 @@ import {
     LayoutDashboard, Building2, Map as Sitemap, Briefcase,
     Users, Inbox, Send, Archive,
     BarChart3, Settings, ChevronDown, ChevronLeft,
-    Sparkles, Layout, Zap, X
+    Sparkles, Layout, Zap, X, Mail
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
@@ -34,6 +34,7 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: 
     const { auth } = usePage().props as any;
     const [openMenus, setOpenMenus] = useState<string[]>([]);
     const userRole = auth?.user?.roles?.[0]?.name || 'user';
+    const isReceptionUser = auth?.isReceptionUser === true;
 
     const isUrlActive = (href: any) => {
         if (!url || !href || typeof href !== 'string') {
@@ -50,6 +51,7 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: 
     const navigationItems = [
         { title: 'داشبورد', href: dashboard(), icon: LayoutDashboard },
         { title: 'کارتابل جاری', href: cartableIndex(), icon: Layout },
+        ...(isReceptionUser ? [{ title: 'دبیرخانه', href: '/reception', icon: Mail }] : []),
         {
             title: 'مدیریت تشکیلات',
             icon: Building2,

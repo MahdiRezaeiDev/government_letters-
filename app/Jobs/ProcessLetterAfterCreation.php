@@ -51,7 +51,11 @@ class ProcessLetterAfterCreation implements ShouldQueue
 
         // 2. ایجاد ارجاع اولیه
         if ($this->letter->recipient_user_id && $this->letter->final_status !== 'draft') {
-            $letterService->createInitialRouting($this->letter, $this->letter->recipient_user_id, $this->instruction);
+            $target = $letterService->resolveInitialRoutingTarget($this->letter);
+
+            if ($target) {
+                $letterService->createInitialRouting($this->letter, $target, $this->instruction);
+            }
         }
 
         // 3. ارسال نوتیفیکیشن

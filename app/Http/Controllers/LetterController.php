@@ -7,7 +7,6 @@ use App\Models\LetterCategory;
 use App\Models\Position;
 use App\Models\Department;
 use App\Models\Attachment;
-use App\Models\Routing;
 use App\Models\LetterHistory;
 use App\Models\Organization;
 use Illuminate\Http\Request;
@@ -227,27 +226,17 @@ class LetterController extends Controller
 
         $user = auth()->user();
 
-        $positions = Position::whereHas(
-            'department',
-            fn($q) =>
-            $q->where('organization_id', $user->organization_id)
-                ->where('status', 'active')
-        )
-            ->where('id', '!=', $user->primaryPosition->id)
-            ->with(['users:id,first_name,last_name'])
-            ->get(['id', 'name', 'department_id'])
-            ->map(fn($p) => [
-                'id'            => $p->id,
-                'name'          => $p->name,
-                'department_id' => $p->department_id,
-                'user_id'       => $p->users->first()?->id,
-                'user_name'     => $p->users->first()?->full_name,
-            ]);
-
         return Inertia::render('letters/create', [
+            'receptions'           => Department::where('organization_id', $user->organization_id)
+                ->where('status', 'active')
+                ->whereNull('parent_id')
+                ->whereNotNull('reception_user_id')
+                ->with('receptionUser:id,first_name,last_name')
+                ->get(['id', 'name', 'code', 'reception_user_id']),
             'departments'          => Department::where('organization_id', $user->organization_id)
-                ->where('status', 'active')->get(['id', 'name']),
-            'positions'            => $positions,
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->get(['id', 'name', 'parent_id']),
             'externalOrganizations' => Organization::where('id', '!=', $user->organization_id)
                 ->where('status', 'active')->get(['id', 'name', 'code']),
             'securityLevels'       => $this->getSecurityLevels(),
@@ -416,7 +405,11 @@ class LetterController extends Controller
             ]);
 
             if ($letter->recipient_user_id) {
-                $this->createRouting($letter, $letter->recipient_user_id);
+                $target = $this->letterService->resolveInitialRoutingTarget($letter);
+
+                if ($target) {
+                    $this->letterService->createInitialRouting($letter, $target);
+                }
             }
 
             LetterHistory::create([
@@ -555,19 +548,5 @@ class LetterController extends Controller
         $seq  = $last ? intval(substr($last->letter_number, -5)) + 1 : 1;
 
         return sprintf('%s/%s/%s/%05d', $code, $year, $month, $seq);
-    }
-
-    private function createRouting(Letter $letter, int $toUserId, ?string $instruction = null): void
-    {
-        Routing::create([
-            'letter_id'   => $letter->id,
-            'from_user_id' => auth()->id(),
-            'to_user_id'  => $toUserId,
-            'action_type' => $letter->letter_type === 'incoming' ? 'action' : 'approval',
-            'instruction' => $instruction ?? 'لطفاً بررسی و اقدام لازم انجام شود.',
-            'deadline'    => now()->addDays(7),
-            'status'      => 'pending',
-            'step_order'  => 1,
-        ]);
     }
 }

@@ -27,6 +27,7 @@ class Routing extends Model
         'completed_note',
         'priority',
         'step_order',
+        'is_reception',
         'is_parallel',
         'parallel_group_id',
     ];
@@ -34,6 +35,7 @@ class Routing extends Model
     protected $casts = [
         'deadline' => 'datetime',
         'completed_at' => 'datetime',
+        'is_reception' => 'boolean',
         'is_parallel' => 'boolean',
         'priority' => 'integer',
         'step_order' => 'integer',
