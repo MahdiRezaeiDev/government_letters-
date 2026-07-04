@@ -70,7 +70,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
             ],
         },
         { title: 'کارتابل جاری', href: cartable.index().url, icon: Layout },
-        ...(isReceptionUser ? [{ title: 'دبیرخانه', href: '/reception', icon: Mail }] : []),
+        ...(isReceptionUser ? [{ title: 'داشبورد دبیرخانه', href: '/reception', icon: Mail }] : []),
         { title: 'مکتوب ها وارده', href: letters.index({ query: { direction: 'incoming' } }).url, icon: Inbox },
         { title: 'مکتوب ها صادره', href: letters.index({ query: { direction: 'outgoing' } }).url, icon: Send },
         { title: 'ثبت مکتوب / استعلام', href: letters.create().url, icon: Sparkles },

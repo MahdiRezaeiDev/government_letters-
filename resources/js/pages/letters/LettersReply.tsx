@@ -82,9 +82,6 @@ export default function LettersReply({
         parent_letter_id: originalLetter.parent_letter_id || originalLetter.id,
     });
 
-    console.log(defaultRecipient);
-    
-
     const handleSubmit = (e: React.FormEvent, isDraft: boolean) => {
         e.preventDefault();
         post(LetterRoute.reply.store({ letter: originalLetter.id }).url, {
@@ -280,7 +277,7 @@ export default function LettersReply({
                                             </div>
                                         </div>
                                         <p className="text-[10px] text-slate-400 text-center bg-slate-50 rounded-md py-1.5">
-                                            گیرنده بر اساس مکتوب اصلی تعیین شده است
+                                            پاسخ مستقیماً به فرستنده مکتوب اصلی ارسال می‌شود
                                         </p>
                                     </div>
                                 </div>
@@ -384,8 +381,8 @@ export default function LettersReply({
                                         <div className="text-xs text-emerald-800">
                                             <p className="font-medium mb-1">راهنمای پاسخ به مکتوب</p>
                                             <ul className="space-y-1 text-emerald-700">
-                                                <li>• گیرنده به صورت خودکار از مکتوب اصلی تعیین شده</li>
-                                                <li>• پس از ارسال، پاسخ به کارتابل گیرنده می‌رود</li>
+                                                <li>• گیرنده به صورت خودکار فرستنده مکتوب اصلی است</li>
+                                                <li>• پاسخ مستقیماً به کارتابل فرستنده ارسال می‌شود</li>
                                                 <li>• می‌توانید پاسخ را به صورت پیش‌نویس ذخیره کنید</li>
                                             </ul>
                                         </div>

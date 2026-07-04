@@ -35,7 +35,7 @@ class LetterRequest extends FormRequest
             'recipient_type'    => 'nullable|in:internal,external',
 
             // فیلدهای گیرنده داخلی
-            'root_department_id'        => 'required_if:recipient_type,internal|nullable|exists:departments,id',
+            'root_department_id'        => 'nullable|exists:departments,id',
             'recipient_name'            => 'required_if:recipient_type,external|nullable|string|max:255',
             'recipient_organization_id' => 'required|numeric|exists:organizations,id',
             'recipient_position_name'   => 'nullable|string|max:255',
@@ -87,7 +87,7 @@ class LetterRequest extends FormRequest
             'recipient_organization_id.numeric'  => 'سازمان گیرنده باید عدد باشد.',
             'recipient_organization_id.exists'   => 'سازمان گیرنده انتخاب شده وجود ندارد.',
             'recipient_name.required_if'               => 'نام گیرنده الزامی است.',
-            'root_department_id.required_if'           => 'انتخاب ریاست (دبیرخانه) الزامی است.',
+            'root_department_id.required'            => 'انتخاب ریاست (دبیرخانه) الزامی است.',
             'root_department_id.exists'                => 'ریاست انتخاب شده معتبر نیست.',
             'recipient_position_name.required'         => 'عنوان بست گیرنده الزامی است.',
             'recipient_user_id.required'               => 'کاربر گیرنده الزامی است.',
@@ -172,5 +172,21 @@ class LetterRequest extends FormRequest
                 }
             }
         }
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if (
+                $this->routeIs('letters.store')
+                && ($this->input('recipient_type') ?? 'internal') === 'internal'
+                && !$this->input('root_department_id')
+            ) {
+                $validator->errors()->add(
+                    'root_department_id',
+                    'انتخاب ریاست (دبیرخانه) الزامی است.'
+                );
+            }
+        });
     }
 }

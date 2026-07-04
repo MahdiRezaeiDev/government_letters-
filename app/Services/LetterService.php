@@ -23,7 +23,10 @@ class LetterService
         DB::beginTransaction();
 
         try {
-            if (($data['recipient_type'] ?? 'internal') === 'internal') {
+            if (
+                ($data['recipient_type'] ?? 'internal') === 'internal'
+                && !($data['is_draft'] ?? false)
+            ) {
                 $data = $this->applyReceptionRecipient($data, $creator);
             }
 
@@ -68,9 +71,7 @@ class LetterService
         DB::beginTransaction();
 
         try {
-            if (($data['recipient_type'] ?? 'internal') === 'internal') {
-                $data = $this->applyReceptionRecipient($data, $creator);
-            }
+            // پاسخ مستقیماً به فرستنده اصلی می‌رود — بدون عبور از دبیرخانه
 
             // ذخیره موقت فایل‌ها
             $tempFiles = $this->storeTempFiles($data['attachments'] ?? []);
@@ -489,6 +490,11 @@ class LetterService
 
     protected function shouldRouteThroughReception(Letter $letter): bool
     {
+        // پاسخ به نامه مستقیماً به فرستنده می‌رود
+        if ($letter->reply_to_letter_id) {
+            return false;
+        }
+
         if (!$letter->recipient_department_id) {
             return false;
         }
@@ -518,7 +524,7 @@ class LetterService
             return false;
         }
 
-        return !empty($recipientData['department_id']);
+        return !empty($recipientData['user_id']);
     }
 
     /**

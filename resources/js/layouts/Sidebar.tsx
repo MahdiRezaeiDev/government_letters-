@@ -51,7 +51,7 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: 
     const navigationItems = [
         { title: 'داشبورد', href: dashboard(), icon: LayoutDashboard },
         { title: 'کارتابل جاری', href: cartableIndex(), icon: Layout },
-        ...(isReceptionUser ? [{ title: 'دبیرخانه', href: '/reception', icon: Mail }] : []),
+        ...(isReceptionUser ? [{ title: 'داشبورد دبیرخانه', href: '/reception', icon: Mail }] : []),
         {
             title: 'مدیریت تشکیلات',
             icon: Building2,

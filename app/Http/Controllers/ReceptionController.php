@@ -3,59 +3,37 @@
 namespace App\Http\Controllers;
 
 use App\Models\Department;
-use App\Models\Letter;
-use App\Models\Routing;
 use App\Models\User;
+use App\Services\ReceptionService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ReceptionController extends Controller
 {
+    public function __construct(protected ReceptionService $receptionService) {}
+
     /**
-     * داشبورد دبیرخانه با آمار نامه‌ها
+     * داشبورد دبیرخانه — آمار نامه‌های دریافتی و پاسخ‌های ریاست
      */
     public function index(Request $request)
     {
         $user = auth()->user();
-
-        $managedDepartments = Department::where('reception_user_id', $user->id)
-            ->whereNull('parent_id')
-            ->with('organization:id,name')
-            ->get(['id', 'name', 'code', 'organization_id']);
+        $managedDepartments = $this->receptionService->getManagedRootDepartments($user);
 
         if ($managedDepartments->isEmpty()) {
             abort(403, 'شما به عنوان دبیرخانه تعیین نشده‌اید.');
         }
 
-        $baseQuery = Routing::where('to_user_id', $user->id)->where('is_reception', true);
-
-        $stats = [
-            'total_received'  => (clone $baseQuery)->count(),
-            'pending'         => (clone $baseQuery)->where('status', 'pending')->count(),
-            'forwarded'       => (clone $baseQuery)->where('status', 'completed')->count(),
-            'today_received'  => (clone $baseQuery)->whereDate('created_at', today())->count(),
-            'replies'         => Letter::whereHas('routings', function ($q) use ($user) {
-                $q->where('to_user_id', $user->id)
-                    ->where('is_reception', true)
-                    ->where('status', 'completed');
-            })->whereHas('replies')->count(),
-        ];
-
-        $recentRoutings = Routing::where('to_user_id', $user->id)
-            ->where('is_reception', true)
-            ->with([
-                'letter:id,subject,letter_number,priority,recipient_department_id',
-                'letter.recipientDepartment:id,name',
-                'fromUser:id,first_name,last_name',
-            ])
-            ->latest()
-            ->limit(15)
-            ->get();
+        $departmentIds = $this->receptionService->getManagedDepartmentIds($managedDepartments);
 
         return Inertia::render('reception/index', [
-            'managedDepartments' => $managedDepartments,
-            'stats'              => $stats,
-            'recentRoutings'     => $recentRoutings,
+            'managedDepartments'   => $managedDepartments,
+            'stats'                => $this->receptionService->buildStats($user, $managedDepartments, $departmentIds),
+            'departmentBreakdown'  => $this->receptionService->buildDepartmentBreakdown($user, $managedDepartments),
+            'monthlyTrend'         => $this->receptionService->buildMonthlyTrend($departmentIds),
+            'pendingRoutings'      => $this->receptionService->getPendingRoutings($user),
+            'recentForwarded'      => $this->receptionService->getRecentForwarded($user),
+            'recentReplies'        => $this->receptionService->getRecentReplies($departmentIds),
         ]);
     }
 
@@ -80,12 +58,12 @@ class ReceptionController extends Controller
             ->orderBy('first_name')
             ->get(['id', 'first_name', 'last_name', 'department_id', 'primary_position_id'])
             ->map(fn (User $u) => [
-                'id'           => $u->id,
-                'name'         => $u->full_name,
-                'department'   => $u->department?->name,
-                'department_id'=> $u->department_id,
-                'position'     => $u->primaryPosition?->name,
-                'position_id'  => $u->primary_position_id,
+                'id'            => $u->id,
+                'name'          => $u->full_name,
+                'department'    => $u->department?->name,
+                'department_id' => $u->department_id,
+                'position'      => $u->primaryPosition?->name,
+                'position_id'   => $u->primary_position_id,
             ]);
 
         $departments = Department::whereIn('id', $departmentIds)
