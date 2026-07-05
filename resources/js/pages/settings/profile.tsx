@@ -214,7 +214,7 @@ export default function ProfileSettings() {
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50" dir="rtl">
+            <div className="min-h-screen" dir="rtl">
 
                 {/* ── Sticky Top Bar ── */}
                 <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-100 shadow-sm">

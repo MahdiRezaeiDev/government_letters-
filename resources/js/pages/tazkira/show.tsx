@@ -172,7 +172,7 @@ export default function TazkiraShow({ tazkira, can }: Props) {
         <>
             <Head title={`تذکره - ${tazkira.first_name} ${tazkira.last_name}`} />
 
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50">
+            <div className="min-h-screen">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
 
                     {/* Header */}

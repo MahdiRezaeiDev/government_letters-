@@ -181,7 +181,7 @@ export default function TazkiraEdit({ tazkira, can }: Props) {
         <>
             <Head title={`ویرایش تذکره — ${tazkira.first_name} ${tazkira.last_name}`} />
 
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
+            <div className="min-h-screen">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
                     <form onSubmit={handleSubmit} className="space-y-5">
 

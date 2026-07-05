@@ -128,7 +128,7 @@ export default function TazkiraCreate() {
         <>
             <Head title="ثبت تذکره جدید" />
 
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
+            <div className="min-h-screen">
                 <div className="max-w-3xl mx-auto px-4 sm:px-5 py-5">
                     <form onSubmit={handleSubmit} className="space-y-4">
 

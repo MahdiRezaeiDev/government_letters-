@@ -170,7 +170,7 @@ export default function AdminLettersDashboard({
         <>
             <Head title="داشبورد مکاتیب — ادمین کل" />
 
-            <div className="min-h-screen bg-slate-100/50">
+            <div className="min-h-screen">
                 <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
                     {/* Header */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
