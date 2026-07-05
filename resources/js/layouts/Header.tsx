@@ -96,10 +96,10 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
     };
 
     return (
-        <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200 shadow-sm">
-            <div className="max-w-[1600px] mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
+        <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200/80">
+            <div className="max-w-[1600px] mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
 
-                {/* Right — menu + title */}
+                {/* Right — menu + greeting */}
                 <div className="flex items-center gap-3">
                     {isMobile && (
                         <button
@@ -109,8 +109,17 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                             <Menu className="h-5 w-5 text-slate-600" />
                         </button>
                     )}
-                    {isMobile && (
-                        <span className="text-sm font-bold text-slate-700">سیستم مکاتبات</span>
+                    {isMobile ? (
+                        <span className="text-sm font-bold text-slate-700">سیستم مکاتیب</span>
+                    ) : (
+                        <div>
+                            <p className="text-sm font-bold text-slate-800 leading-none">
+                                سلام، {auth?.user?.first_name || 'کاربر'} 👋
+                            </p>
+                            <p className="text-[11px] text-slate-400 mt-1 leading-none">
+                                به سیستم مدیریت مکاتیب خوش آمدید
+                            </p>
+                        </div>
                     )}
                 </div>
 
@@ -121,7 +130,7 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                     <div className="hidden md:block text-left border-l pl-5 border-slate-200">
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1">امروز</p>
                         <p className="text-sm font-bold text-slate-700">
-                            {currentTime.toLocaleDateString('fa-Af', { day: 'numeric', month: 'long' })}
+                            {currentTime.toLocaleDateString('fa-Af', { weekday: 'long', day: 'numeric', month: 'long' })}
                         </p>
                     </div>
 

@@ -135,26 +135,26 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
     return (
         <>
             {/* اوورلی */}
-            <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose} />
+            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50" onClick={onClose} />
 
             {/* منوی موبایل */}
-            <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-xl z-50 flex flex-col animate-slide-in-right">
+            <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl z-50 flex flex-col animate-slide-in-right">
                 {/* هدر */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                    <div className="flex items-center gap-2">
-                        <div className="h-10 w-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                <div className="flex items-center justify-between p-4 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200/60">
                             <Zap className="text-white h-5 w-5 fill-current" />
                         </div>
                         <div>
-                            <p className="font-bold text-gray-800">سیستم مدیریت مکتوب ها</p>
-                            <p className="text-xs text-gray-500">{auth.user?.email}</p>
+                            <p className="font-bold text-sm text-slate-800">سیستم مدیریت مکاتیب</p>
+                            <p className="text-[11px] text-slate-400 mt-0.5 truncate max-w-[160px]">{auth.user?.email}</p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                        className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
                     >
-                        <X className="h-5 w-5 text-gray-600" />
+                        <X className="h-5 w-5 text-slate-500" />
                     </button>
                 </div>
 
@@ -166,9 +166,9 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                                 <div>
                                     <button
                                         onClick={() => toggleMenu(item.title)}
-                                        className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${openMenus.includes(item.title)
-                                            ? 'text-indigo-600 bg-indigo-50'
-                                            : 'text-gray-700 hover:bg-gray-100'
+                                        className={`w-full flex items-center justify-between px-3 py-3 rounded-xl text-sm font-semibold transition-colors ${openMenus.includes(item.title)
+                                            ? 'text-indigo-700 bg-indigo-50/70'
+                                            : 'text-slate-600 hover:bg-slate-100/80'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
@@ -180,15 +180,15 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                                     </button>
 
                                     {openMenus.includes(item.title) && (
-                                        <div className="mr-8 mt-1 space-y-1">
+                                        <div className="mr-6 pr-3 mt-1 space-y-0.5 border-r-2 border-indigo-100">
                                             {item.children.map((child) => (
                                                 <Link
                                                     key={child.title}
                                                     href={child.href!}
                                                     onClick={onClose}
-                                                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${isActive(child.href)
-                                                        ? 'text-indigo-600 bg-indigo-50'
-                                                        : 'text-gray-600 hover:bg-gray-100'
+                                                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${isActive(child.href)
+                                                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
+                                                        : 'text-slate-500 hover:text-indigo-700 hover:bg-indigo-50/70'
                                                         }`}
                                                 >
                                                     <child.icon className="h-4 w-4" />
@@ -202,9 +202,9 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                                 <Link
                                     href={item.href!}
                                     onClick={onClose}
-                                    className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors ${isActive(item.href)
-                                        ? 'text-indigo-600 bg-indigo-50'
-                                        : 'text-gray-700 hover:bg-gray-100'
+                                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-colors ${isActive(item.href)
+                                        ? 'bg-gradient-to-l from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-200/70'
+                                        : 'text-slate-600 hover:bg-slate-100/80'
                                         }`}
                                 >
                                     <item.icon className="h-5 w-5" />
@@ -216,12 +216,12 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                 </nav>
 
                 {/* فوتر */}
-                <div className="p-4 border-t border-gray-200">
+                <div className="p-4 border-t border-slate-100">
                     <Link
                         href={logout()}
                         method="post"
                         as="button"
-                        className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
                     >
                         <LogOut className="h-5 w-5" />
                         خروج از سیستم
