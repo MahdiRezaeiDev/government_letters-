@@ -135,7 +135,7 @@
 
 @theme {
     --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+        'Vazirmatn', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
 
@@ -224,7 +224,10 @@
 }
 
 body {
-    font-family: var(--font-family);
+    font-family: 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 @layer base {
@@ -235,6 +238,85 @@ body {
     body {
         @apply bg-background text-foreground;
     }
+}
+
+/* ─── اسکرول‌بار سراسری ─────────────────────────────── */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+    background-clip: content-box;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+/* ─── انتخاب متن ─────────────────────────────────────── */
+::selection {
+    background: #c7d2fe;
+    color: #1e1b4b;
+}
+
+/* ─── فوکوس یکدست ────────────────────────────────────── */
+:focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+    outline: none;
+}
+
+/* ─── ترنزیشن نرم برای المان‌های تعاملی ──────────────── */
+button,
+a,
+input,
+select,
+textarea {
+    transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── اعداد فارسی هم‌عرض در جدول‌ها ──────────────────── */
+table {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ─── انیمیشن ورود صفحات ─────────────────────────────── */
+@keyframes page-enter {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+main > * {
+    animation: page-enter 0.3s ease-out;
 }
 
 .ProseMirror {

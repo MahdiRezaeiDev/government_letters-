@@ -50,6 +50,7 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: 
     // لیست کامل آیتم‌ها
     const navigationItems = [
         { title: 'داشبورد', href: dashboard(), icon: LayoutDashboard },
+        { title: 'داشبورد مکاتیب', href: '/admin/letters-dashboard', icon: BarChart3, permission: 'super-admin' },
         { title: 'کارتابل جاری', href: cartableIndex(), icon: Layout },
         ...(isReceptionUser ? [{ title: 'داشبورد دبیرخانه', href: '/reception', icon: Mail }] : []),
         {

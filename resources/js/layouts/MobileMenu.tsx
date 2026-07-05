@@ -58,6 +58,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
 
     const navigationItems: NavItem[] = [
         { title: 'داشبورد', href: dashboard().url, icon: LayoutDashboard },
+        { title: 'داشبورد مکاتیب', href: '/admin/letters-dashboard', icon: BarChart3, permission: 'super-admin' },
         {
             title: 'مدیریت تشکیلات',
             icon: Building2,

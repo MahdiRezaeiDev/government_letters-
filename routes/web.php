@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminLetterController;
 use App\Http\Controllers\ArchiveController;
 use App\Http\Controllers\CartableController;
 use App\Http\Controllers\CaseController;
@@ -57,6 +58,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ادمین کل — مدیریت سازمان‌ها
     // ═══════════════════════════════════════════════════════
     Route::prefix('admin')->middleware(['role:super-admin'])->group(function () {
+        Route::get('letters-dashboard', [AdminLetterController::class, 'index'])->name('admin.letters.index');
+
         Route::get('organizations', [OrganizationController::class, 'index'])->name('organizations.index');
         Route::get('organizations/create', [OrganizationController::class, 'create'])->name('organizations.create');
         Route::post('organizations', [OrganizationController::class, 'store'])->name('organizations.store');
