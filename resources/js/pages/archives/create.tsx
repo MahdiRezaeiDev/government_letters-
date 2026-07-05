@@ -126,7 +126,7 @@ export default function ArchivesCreate({ departments, parentArchives }: Props) {
                 .fade-up { animation: fadeUp 0.25s ease-out both; }
             `}</style>
 
-            <div className="min-h-screen bg-slate-50/70" dir="rtl">
+            <div className="min-h-screen" dir="rtl">
 
                 {/* ── Sticky Top Bar ── */}
                 <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">

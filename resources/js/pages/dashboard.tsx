@@ -121,7 +121,7 @@ export default function Dashboard({
     }, [pieData]);
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-screen">
             <Head title="داشبورد مکتوب ها" />
             <main className="max-w-[1600px] mx-auto px-4 sm:px-6 space-y-6 py-6">
                 {/* ═══════════════ HEADER با تاریخ ═══════════════ */}
@@ -141,13 +141,14 @@ export default function Dashboard({
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     {statCards.map(({ label, value, icon: Icon, gradient, iconBg }) => (
                         <div key={label}
-                            className={`relative bg-gradient-to-br ${gradient} rounded-xl p-5 overflow-hidden shadow-md`}>
+                            className={`relative bg-gradient-to-br ${gradient} rounded-2xl p-5 overflow-hidden shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300`}>
+                            <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full" />
                             <div className="relative z-10 flex items-start justify-between">
                                 <div>
                                     <p className="text-white/80 text-xs font-medium">{label}</p>
                                     <p className="text-3xl font-bold text-white mt-1">{value}</p>
                                 </div>
-                                <div className={`${iconBg} p-2.5 rounded-lg backdrop-blur-sm`}>
+                                <div className={`${iconBg} p-2.5 rounded-xl backdrop-blur-sm`}>
                                     <Icon className="h-5 w-5 text-white" />
                                 </div>
                             </div>
@@ -159,8 +160,8 @@ export default function Dashboard({
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     {infoCards.map(({ label, value, icon: Icon, color }) => (
                         <div key={label}
-                            className="rounded-xl border border-slate-200 bg-white p-5 flex items-center gap-4 hover:border-slate-300 hover:shadow-sm transition-all">
-                            <div className="w-11 h-11 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                            className="rounded-2xl border border-slate-200/80 bg-white p-5 flex items-center gap-4 hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-100/50 transition-all duration-300">
+                            <div className="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
                                 <Icon className={`h-5 w-5 ${color}`} />
                             </div>
                             <div>
