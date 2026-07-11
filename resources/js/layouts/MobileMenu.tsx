@@ -115,7 +115,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
         };
 
         return filter(navigationItems);
-    }, [userRole]);
+    }, [userRole, isReceptionUser]);
 
     const isActive = (href?: string) => {
         if (!href) {

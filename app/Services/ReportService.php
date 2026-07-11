@@ -356,20 +356,21 @@ class ReportService
 
     protected function buildOrganizationStats(Builder $query): array
     {
-        return (clone $query)
+        $results = (clone $query)
             ->select('organization_id', DB::raw('COUNT(*) as count'))
             ->whereNotNull('organization_id')
             ->groupBy('organization_id')
             ->orderByDesc('count')
             ->limit(10)
-            ->with('organization:id,name')
-            ->get()
-            ->map(fn ($row) => [
-                'name'  => $row->organization?->name ?? '—',
-                'count' => (int) $row->count,
-            ])
-            ->values()
-            ->all();
+            ->get();
+
+        $orgNames = Organization::whereIn('id', $results->pluck('organization_id'))
+            ->pluck('name', 'id');
+
+        return $results->map(fn ($row) => [
+            'name'  => $orgNames[$row->organization_id] ?? '—',
+            'count' => (int) $row->count,
+        ])->values()->all();
     }
 
     protected function buildDepartmentStats(Builder $query, User $user): array
@@ -406,22 +407,22 @@ class ReportService
 
     protected function buildUserPerformance(Builder $query): array
     {
-        return (clone $query)
+        $results = (clone $query)
             ->select('sender_user_id', DB::raw('COUNT(*) as count'))
             ->whereNotNull('sender_user_id')
             ->groupBy('sender_user_id')
             ->orderByDesc('count')
             ->limit(8)
-            ->with('senderUser:id,first_name,last_name')
-            ->get()
-            ->map(fn ($row) => [
-                'name'  => $row->senderUser
-                    ? trim($row->senderUser->first_name . ' ' . $row->senderUser->last_name)
-                    : '—',
-                'count' => (int) $row->count,
-            ])
-            ->values()
-            ->all();
+            ->get();
+
+        $userNames = User::whereIn('id', $results->pluck('sender_user_id'))
+            ->get(['id', 'first_name', 'last_name'])
+            ->mapWithKeys(fn ($u) => [$u->id => trim($u->first_name . ' ' . $u->last_name)]);
+
+        return $results->map(fn ($row) => [
+            'name'  => $userNames[$row->sender_user_id] ?? '—',
+            'count' => (int) $row->count,
+        ])->values()->all();
     }
 
     protected function buildRoutingStats(User $user): array

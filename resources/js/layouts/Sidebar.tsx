@@ -108,7 +108,7 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: 
         };
 
         return filter(navigationItems);
-    }, [userRole]);
+    }, [userRole, isReceptionUser]);
 
     // محتوای سایدبار (برای استفاده در هر دو حالت دسکتاپ و موبایل)
     const sidebarContent = (
