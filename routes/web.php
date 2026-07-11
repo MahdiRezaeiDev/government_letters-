@@ -362,7 +362,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ✅ static routes اول
     // ═══════════════════════════════════════════════════════
     Route::get('reports', [ReportController::class, 'index'])
-        ->middleware('permission:view-reports')->name('reports.index');
+        ->name('reports.index');
     Route::get('reports/export-excel', [ReportController::class, 'exportExcel'])
         ->middleware('permission:export-reports')->name('reports.export-excel');
     Route::get('reports/export-pdf', [ReportController::class, 'exportPdf'])

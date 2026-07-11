@@ -101,7 +101,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                     }
 
                     if (item.permission === 'dept-manager') {
-                        return ['super-admin', 'org-admin', 'dept-manager'].includes(userRole);
+                        return ['super-admin', 'org-admin', 'dept-manager'].includes(userRole) || isReceptionUser;
                     }
 
                     if (item.permission === 'user') {

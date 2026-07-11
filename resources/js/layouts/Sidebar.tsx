@@ -94,7 +94,7 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: 
                     }
 
                     if (item.permission === 'dept-manager') {
-                        return ['super-admin', 'org-admin', 'dept-manager'].includes(userRole);
+                        return ['super-admin', 'org-admin', 'dept-manager'].includes(userRole) || isReceptionUser;
                     }
 
                     if (item.permission === 'user') {
