@@ -7,6 +7,7 @@ use App\Models\Letter;
 use App\Models\Organization;
 use App\Models\Routing;
 use App\Models\User;
+use App\Support\AfghanCalendar;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -251,7 +252,7 @@ class ReportService
             $date = now()->subMonths($i);
             $key  = $date->format('Y-m');
             $months[] = [
-                'month' => $this->jalaliMonthLabel($date),
+                'month' => AfghanCalendar::labelFromCarbon($date),
                 'count' => (int) ($counts[$key] ?? 0),
             ];
         }
@@ -261,20 +262,11 @@ class ReportService
 
     protected function formatReceptionMonthlyTrend(array $trend): array
     {
-        return collect($trend)->map(function ($row) {
-            try {
-                [$year, $month] = explode('-', $row['month']);
-                $label = $this->jalaliMonthLabel(Jalalian::fromFormat('Y-m-d', "{$year}-{$month}-01")->toCarbon());
-            } catch (\Exception $e) {
-                $label = $row['month'];
-            }
-
-            return [
-                'month'    => $label,
-                'incoming' => $row['incoming'],
-                'replies'  => $row['replies'],
-            ];
-        })->all();
+        return collect($trend)->map(fn ($row) => [
+            'month'    => $row['label'] ?? AfghanCalendar::labelFromGregorianMonthKey($row['month']),
+            'incoming' => $row['incoming'],
+            'replies'  => $row['replies'],
+        ])->all();
     }
 
     protected function buildTypeDistribution(Builder $query): array
@@ -454,23 +446,6 @@ class ReportService
                 'letter_number', 'subject', 'letter_type', 'priority',
                 'final_status', 'sender_name', 'recipient_name', 'created_at',
             ]);
-    }
-
-    protected function jalaliMonthLabel($date): string
-    {
-        $months = [
-            1 => 'حمل', 2 => 'ثور', 3 => 'جوزا', 4 => 'سرطان',
-            5 => 'اسد', 6 => 'سنبله', 7 => 'میزان', 8 => 'عقرب',
-            9 => 'قوس', 10 => 'جدی', 11 => 'دلو', 12 => 'حوت',
-        ];
-
-        try {
-            $jalali = Jalalian::fromCarbon($date instanceof \Carbon\Carbon ? $date : $date->toMutable());
-
-            return $months[$jalali->getMonth()] ?? (string) $jalali->getMonth();
-        } catch (\Exception $e) {
-            return $date->format('Y-m');
-        }
     }
 
     public function convertToGregorian(?string $jalaliDate): ?string

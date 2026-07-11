@@ -6,6 +6,7 @@ use App\Models\Department;
 use App\Models\Letter;
 use App\Models\Routing;
 use App\Models\User;
+use App\Support\AfghanCalendar;
 use Illuminate\Support\Collection;
 
 class ReceptionService
@@ -142,6 +143,7 @@ class ReceptionService
             $key = now()->subMonths($i)->format('Y-m');
             $months[] = [
                 'month'    => $key,
+                'label'    => AfghanCalendar::labelFromGregorianMonthKey($key),
                 'incoming' => (int) ($incoming[$key] ?? 0),
                 'replies'  => (int) ($replies[$key] ?? 0),
             ];

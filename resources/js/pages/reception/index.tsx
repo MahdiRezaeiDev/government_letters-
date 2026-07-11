@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import cartable from '@/routes/cartable';
 import letters from '@/routes/letters';
+import { formatGregorianMonthKey } from '@/lib/afghan-calendar';
 
 interface Department {
     id: number;
@@ -53,6 +54,7 @@ interface DepartmentBreakdown {
 
 interface MonthlyTrend {
     month: string;
+    label?: string;
     incoming: number;
     replies: number;
 }
@@ -107,13 +109,6 @@ interface Props {
     recentReplies: RecentReply[];
 }
 
-function formatMonth(monthKey: string): string {
-    const [year, month] = monthKey.split('-');
-    const months = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
-
-    return `${months[parseInt(month, 10) - 1]} ${year}`;
-}
-
 export default function ReceptionIndex({
     managedDepartments,
     stats,
@@ -144,7 +139,7 @@ export default function ReceptionIndex({
 
     const chartData = monthlyTrend.map(item => ({
         ...item,
-        label: formatMonth(item.month),
+        label: item.label ?? formatGregorianMonthKey(item.month),
     }));
 
     return (

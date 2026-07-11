@@ -6,6 +6,7 @@ use App\Models\Letter;
 use App\Models\User;
 use App\Models\Department;
 use App\Models\Routing;
+use App\Support\AfghanCalendar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -69,31 +70,42 @@ class DashboardController extends Controller
                 'created_at' => $letter->created_at,
             ]);
 
-        // آمار ماهانه (دیتای واقعی برای نمودار)
-        $monthlyStats = Letter::select(
-            DB::raw('MONTH(created_at) as month'),
-            DB::raw('COUNT(*) as count')
-        )
-            ->when(!$user->isSuperAdmin(), function ($query) use ($user) {
-                if ($user->isOrgAdmin()) {
-                    $query->where('organization_id', $user->organization_id);
-                } elseif ($user->isDeptManager()) {
-                    $query->where(function ($q) use ($user) {
-                        $q->where('sender_department_id', $user->department_id)
-                            ->orWhere('recipient_department_id', $user->department_id);
-                    });
-                } else {
-                    $query->where('created_by', $user->id);
-                }
-            })
-            ->whereYear('created_at', date('Y'))
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get()
-            ->map(fn($item) => [
-                'month' => $this->getPersianMonthName($item->month),
-                'count' => $item->count,
-            ]);
+        // آمار ماهانه (بر اساس تقویم شمسی افغانی)
+        $monthlyStats = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $key  = $date->format('Y-m');
+
+            $count = Letter::query()
+                ->where('is_draft', false)
+                ->whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->when(!$user->isSuperAdmin(), function ($query) use ($user) {
+                    if ($user->isOrgAdmin()) {
+                        $query->where(function ($q) use ($user) {
+                            $q->where('organization_id', $user->organization_id)
+                                ->orWhere('recipient_organization_id', $user->organization_id);
+                        });
+                    } elseif ($user->isDeptManager()) {
+                        $query->where(function ($q) use ($user) {
+                            $q->where('sender_department_id', $user->department_id)
+                                ->orWhere('recipient_department_id', $user->department_id);
+                        });
+                    } else {
+                        $query->where(function ($q) use ($user) {
+                            $q->where('sender_user_id', $user->id)
+                                ->orWhere('recipient_user_id', $user->id)
+                                ->orWhere('created_by', $user->id);
+                        });
+                    }
+                })
+                ->count();
+
+            $monthlyStats[] = [
+                'month' => AfghanCalendar::labelFromGregorianMonthKey($key),
+                'count' => $count,
+            ];
+        }
 
         // توزیع اولویت‌ها (دیتای واقعی برای نمودار دایره‌ای)
         $priorities = Letter::select('priority', DB::raw('COUNT(*) as count'))
@@ -152,25 +164,6 @@ class DashboardController extends Controller
             'priorityDistribution' => $priorityDistribution,
             'notifications' => $notifications,
         ]);
-    }
-
-    private function getPersianMonthName($month): string
-    {
-        $months = [
-            1 => 'حمل',
-            2 => 'ثور',
-            3 => 'جوزا',
-            4 => 'سرطان',
-            5 => 'اسد',
-            6 => 'سنبله',
-            7 => 'میزان',
-            8 => 'عقرب',
-            9 => 'قوس',
-            10 => 'جدی',
-            11 => 'دلو',
-            12 => 'حوت'
-        ];
-        return $months[$month] ?? '';
     }
 
     private function getPriorityName($priority): string

@@ -7,6 +7,7 @@ use App\Models\Letter;
 use App\Models\LetterCategory;
 use App\Models\Organization;
 use App\Models\User;
+use App\Support\AfghanCalendar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -158,6 +159,7 @@ class AdminLetterController extends Controller
             $key = now()->subMonths($i)->format('Y-m');
             $months[] = [
                 'month' => $key,
+                'label' => AfghanCalendar::labelFromGregorianMonthKey($key, true),
                 'count' => (int) ($counts[$key] ?? 0),
             ];
         }
