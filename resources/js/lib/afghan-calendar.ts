@@ -1,10 +1,8 @@
 import DateObject from 'react-date-object';
 import persian from 'react-date-object/calendars/persian';
+import { AFGHAN_MONTHS } from './afghan-months';
 
-export const AFGHAN_MONTHS = [
-    'حمل', 'ثور', 'جوزا', 'سرطان', 'اسد', 'سنبله',
-    'میزان', 'عقرب', 'قوس', 'جدی', 'دلو', 'حوت',
-] as const;
+export { AFGHAN_MONTHS };
 
 /**
  * تبدیل کلید ماه میلادی (مثلاً 2026-07) به نام ماه افغانی + سال شمسی

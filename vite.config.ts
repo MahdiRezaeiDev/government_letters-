@@ -22,4 +22,15 @@ export default defineConfig({
             formVariants: true,
         }),
     ],
+    server: {
+        host: '127.0.0.1',
+        port: 5173,
+        strictPort: true,
+        hmr: {
+            host: '127.0.0.1',
+        },
+    },
+    optimizeDeps: {
+        include: ['react-date-object', 'react-multi-date-picker', 'recharts'],
+    },
 });

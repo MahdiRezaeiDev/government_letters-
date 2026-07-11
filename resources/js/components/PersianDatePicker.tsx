@@ -1,7 +1,7 @@
 import React from "react";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
-import { AFGHAN_MONTHS } from "@/lib/afghan-calendar";
+import { AFGHAN_MONTHS } from "@/lib/afghan-months";
 import * as DatePickerModule from "react-multi-date-picker";
 
 const DatePicker = (
