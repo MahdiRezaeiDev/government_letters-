@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useNotifications } from '@/hooks/use-notifications';
+import { todayAfghanLabel } from '@/lib/afghan-calendar';
 
 interface HeaderProps {
     onMenuClick: () => void;
@@ -130,7 +131,7 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                     <div className="hidden md:block text-left border-l pl-5 border-slate-200">
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1">امروز</p>
                         <p className="text-sm font-bold text-slate-700">
-                            {currentTime.toLocaleDateString('fa-Af', { weekday: 'long', day: 'numeric', month: 'long' })}
+                            {todayAfghanLabel(false)}
                         </p>
                     </div>
 

@@ -58,7 +58,7 @@ interface Props {
         this_month: number;
         urgent: number;
     };
-    monthlyTrend: { month: string; count: number }[];
+    monthlyTrend: { month: string; label?: string; count: number }[];
     statusDistribution: { name: string; value: number; color: string }[];
     topOrganizations: { name: string; count: number }[];
     organizations: { id: number; name: string }[];
@@ -89,13 +89,6 @@ const securityLabels: Record<string, string> = {
     secret: 'سری',
     top_secret: 'بسیار سری',
 };
-
-function formatMonth(monthKey: string): string {
-    const [year, month] = monthKey.split('-');
-    const months = ['حمل', 'ثور', 'جوزا', 'سرطان', 'اسد', 'سنبله', 'میزان', 'عقرب', 'قوس', 'جدی', 'دلو', 'حوت'];
-
-    return `${months[parseInt(month, 10) - 1]} ${year.slice(2)}`;
-}
 
 export default function AdminLettersDashboard({
     letters,
@@ -165,7 +158,10 @@ export default function AdminLettersDashboard({
         { label: 'این ماه', value: stats.this_month, icon: BarChart3, color: 'text-violet-600', bg: 'bg-violet-50' },
     ];
 
-    const chartData = monthlyTrend.map(item => ({ ...item, label: formatMonth(item.month) }));
+    const chartData = monthlyTrend.map(item => ({
+        ...item,
+        label: item.label ?? formatGregorianMonthKey(item.month, true),
+    }));
 
     return (
         <>

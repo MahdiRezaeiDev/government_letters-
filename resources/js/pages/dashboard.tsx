@@ -4,6 +4,7 @@ import {
     Activity, Download, BookOpen, LayoutGrid, Bell, CheckCircle2, Send, Edit3
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
+import { todayAfghanLabel, formatAfghanDate } from '@/lib/afghan-calendar';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid,
     Tooltip, ResponsiveContainer, PieChart, Pie, Cell
@@ -72,9 +73,7 @@ export default function Dashboard({
         return () => clearInterval(t);
     }, []);
 
-    const persianDate = currentTime.toLocaleDateString('fa-af', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
+    const persianDate = todayAfghanLabel(true);
 
     // استفاده از دیتای واقعی برای نمودار دایره‌ای
     const pieData = useMemo(() => {
@@ -307,7 +306,7 @@ export default function Dashboard({
                                         {filteredLetters.map(letter => {
                                             const pri = priorityConfig[letter.priority ?? 'normal'] ?? priorityConfig.normal;
                                             const sts = statusConfig[letter.final_status ?? 'pending'] ?? statusConfig.pending;
-                                            const date = letter.created_at ? new Date(letter.created_at).toLocaleDateString('fa-af') : '—';
+                                            const date = letter.created_at ? formatAfghanDate(letter.created_at) : '—';
 
                                             return (
                                                 <tr key={letter.id}

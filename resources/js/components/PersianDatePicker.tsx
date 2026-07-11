@@ -1,6 +1,7 @@
 import React from "react";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
+import { AFGHAN_MONTHS } from "@/lib/afghan-calendar";
 import * as DatePickerModule from "react-multi-date-picker";
 
 const DatePicker = (
@@ -19,20 +20,7 @@ interface Props {
 
 const afghan_dari = {
     ...persian_fa,
-    months: [
-        ["حمل", "حمل"],
-        ["ثور", "ثور"],
-        ["جوزا", "جوزا"],
-        ["سرطان", "سرطان"],
-        ["اسد", "اسد"],
-        ["سنبله", "سنبله"],
-        ["میزان", "میزان"],
-        ["عقرب", "عقرب"],
-        ["قوس", "قوس"],
-        ["جدی", "جدی"],
-        ["دلو", "دلو"],
-        ["حوت", "حوت"],
-    ],
+    months: AFGHAN_MONTHS.map(name => [name, name]),
 };
 
 const PersianDatePicker: React.FC<Props> = ({
