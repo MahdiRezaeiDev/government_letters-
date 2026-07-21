@@ -125,7 +125,7 @@ class ReceptionService
             ->whereNull('reply_to_letter_id')
             ->whereIn('recipient_department_id', $departmentIds)
             ->where('created_at', '>=', $since)
-            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, COUNT(*) as count')
+            ->selectRaw(\App\Support\DatabaseExpressions::yearMonth('created_at') . ' as month, COUNT(*) as count')
             ->groupBy('month')
             ->pluck('count', 'month');
 
@@ -134,7 +134,7 @@ class ReceptionService
             ->whereNotNull('reply_to_letter_id')
             ->whereHas('replyTo', fn ($q) => $q->whereIn('recipient_department_id', $departmentIds))
             ->where('created_at', '>=', $since)
-            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, COUNT(*) as count')
+            ->selectRaw(\App\Support\DatabaseExpressions::yearMonth('created_at') . ' as month, COUNT(*) as count')
             ->groupBy('month')
             ->pluck('count', 'month');
 

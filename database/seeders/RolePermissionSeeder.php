@@ -56,6 +56,7 @@ class RolePermissionSeeder extends Seeder
                 'last_name'       => 'کل',
                 'national_code'   => '1111111111',
                 'status'          => 'active',
+                'email_verified_at' => now(),
             ]
         );
         $superUser->assignRole(RoleEnum::SUPER_ADMIN->value);

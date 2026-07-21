@@ -150,7 +150,7 @@ class AdminLetterController extends Controller
 
         $counts = (clone $query)
             ->where('created_at', '>=', $since)
-            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, COUNT(*) as count')
+            ->selectRaw(\App\Support\DatabaseExpressions::yearMonth('created_at') . ' as month, COUNT(*) as count')
             ->groupBy('month')
             ->pluck('count', 'month');
 
