@@ -33,7 +33,15 @@ export function useNotifications(userId: number) {
                 const response = await axios.get(
                     `/notifications?user_id=${userId}`,
                 );
-                const data = response.data;
+                const data = (response.data as any[]).map((n) => ({
+                    id: n.id,
+                    letter_id: n.letter_id ?? n.data?.letter_id ?? n.data?.reply_letter_id ?? n.data?.original_letter_id,
+                    title: n.title ?? n.data?.title ?? n.data?.original_letter_subject ?? 'اعلان جدید',
+                    message: n.message ?? n.data?.message ?? n.data?.reply_content ?? '',
+                    read_at: n.read_at,
+                    created_at: n.created_at,
+                    type: n.type,
+                }));
 
                 setNotifications(data);
                 const unread = data.filter(
@@ -204,11 +212,9 @@ export function useNotifications(userId: number) {
                 await markAsRead(notification.id);
             }
 
-            console.log(notification + 'fdffd');
-
             // هدایت به صفحه نامه
-            if (notification.data.letter_id) {
-                window.location.href = `/letters/${notification.data.letter_id}`;
+            if (notification.letter_id) {
+                window.location.href = `/letters/${notification.letter_id}`;
             }
         },
         [markAsRead],

@@ -31,7 +31,27 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/notifications', function () {
-        return auth()->user()->notifications()->latest()->take(50)->get();
+        return auth()->user()->notifications()->latest()->take(50)->get()->map(function ($notification) {
+            $data = $notification->data ?? [];
+
+            return [
+                'id' => $notification->id,
+                'type' => $notification->type,
+                'letter_id' => $data['letter_id']
+                    ?? $data['reply_letter_id']
+                    ?? $data['original_letter_id']
+                    ?? null,
+                'title' => $data['title']
+                    ?? $data['original_letter_subject']
+                    ?? 'اعلان جدید',
+                'message' => $data['message']
+                    ?? $data['reply_content']
+                    ?? '',
+                'data' => $data,
+                'read_at' => $notification->read_at,
+                'created_at' => $notification->created_at,
+            ];
+        });
     });
 
     Route::post('/notifications/{id}/read', function ($id) {
@@ -47,8 +67,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return response()->json(['success' => true]);
     });
 
+    Route::delete('/notifications/delete-all', function () {
+        auth()->user()->notifications()->delete();
+        return response()->json(['success' => true]);
+    });
+
     Route::delete('/notifications/{id}', function ($id) {
-        auth()->user()->notifications()->find($id)->delete();
+        auth()->user()->notifications()->find($id)?->delete();
         return response()->json(['success' => true]);
     });
 
@@ -90,6 +115,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // ذخیره تذکره جدید
         Route::post('/', [TazkiraController::class, 'store'])->name('tazkira.store');
 
+        // جستجوی تذکره (before /{tazkira} so "search" is not treated as an id)
+        Route::get('/search', [TazkiraController::class, 'search'])->name('tazkira.search');
+
+        // دریافت اطلاعات تذکره با شماره (API)
+        Route::get('/by-number/{tazkiraNumber}', [TazkiraController::class, 'getByNumber'])->name('tazkira.by-number');
+
         // نمایش جزئیات یک تذکره
         Route::get('/{tazkira}', [TazkiraController::class, 'show'])->name('tazkira.show');
 
@@ -107,12 +138,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // رد تذکره
         Route::post('/{tazkira}/reject', [TazkiraController::class, 'reject'])->name('tazkira.reject');
-
-        // جستجوی تذکره
-        Route::get('/search', [TazkiraController::class, 'search'])->name('tazkira.search');
-
-        // دریافت اطلاعات تذکره با شماره (API)
-        Route::get('/by-number/{tazkiraNumber}', [TazkiraController::class, 'getByNumber'])->name('tazkira.by-number');
     });
 
     // ═══════════════════════════════════════════════════════

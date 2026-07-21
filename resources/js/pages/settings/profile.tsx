@@ -11,7 +11,6 @@ import { Settings } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import passwordRoute from '@/routes/password';
 import profile from '@/routes/profile';
-import users from '@/routes/users';
 
 // ─── Toast Notification Component ──────────────────────────────────────────
 const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) => {
@@ -136,7 +135,7 @@ export default function ProfileSettings() {
 
     const handleProfileSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        patchProfile(users.update, {
+        patchProfile(profile.update(), {
             preserveScroll: true,
             onSuccess: () => {
                 showToast('اطلاعات شخصی با موفقیت به‌روزرسانی شد', 'success');

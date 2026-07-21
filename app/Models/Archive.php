@@ -46,7 +46,7 @@ class Archive extends Model
 
     public function cases(): HasMany
     {
-        return $this->hasMany(CaseModel::class);
+        return $this->hasMany(ArchiveCase::class);
     }
 
     public function permissions(): HasMany

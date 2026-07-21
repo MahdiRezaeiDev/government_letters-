@@ -15,19 +15,19 @@ trait ProfileValidationRules
     protected function profileRules(?int $userId = null): array
     {
         return [
-            'name' => $this->nameRules(),
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
             'email' => $this->emailRules($userId),
+            'mobile' => ['nullable', 'string', 'max:20'],
+            'national_code' => [
+                'nullable',
+                'string',
+                'max:20',
+                $userId === null
+                    ? Rule::unique(User::class, 'national_code')
+                    : Rule::unique(User::class, 'national_code')->ignore($userId),
+            ],
         ];
-    }
-
-    /**
-     * Get the validation rules used to validate user names.
-     *
-     * @return array<int, \Illuminate\Contracts\Validation\Rule|array<mixed>|string>
-     */
-    protected function nameRules(): array
-    {
-        return ['required', 'string', 'max:255'];
     }
 
     /**

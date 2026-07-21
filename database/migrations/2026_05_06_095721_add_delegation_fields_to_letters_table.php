@@ -34,11 +34,12 @@ return new class extends Migration
                 ->after('delegated_by_user_id')
                 ->comment('زمان ارجاع مکتوب');
             
-            // ==================== اضافه کردن وضعیت جدید به enum ====================
-            // توجه: برای تغییر enum باید از دستور زیر استفاده کرد
-            // ابتدا enum قدیمی را حذف و دوباره با مقدار جدید ایجاد می‌کنیم
-            DB::statement("ALTER TABLE letters MODIFY COLUMN final_status ENUM('draft', 'pending', 'approved', 'rejected', 'archived', 'delegated') DEFAULT 'draft'");
         });
+
+        // MySQL-only: SQLite stores enums as strings and does not support MODIFY COLUMN
+        if (Schema::getConnection()->getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE letters MODIFY COLUMN final_status ENUM('draft', 'pending', 'approved', 'rejected', 'archived', 'delegated') DEFAULT 'draft'");
+        }
     }
 
     public function down(): void
@@ -48,9 +49,10 @@ return new class extends Migration
             $table->dropForeign(['delegated_to_user_id']);
             $table->dropForeign(['delegated_by_user_id']);
             $table->dropColumn(['delegated_to_user_id', 'delegated_by_user_id', 'delegated_at']);
-            
-            // برگرداندن enum به حالت قبلی
-            DB::statement("ALTER TABLE letters MODIFY COLUMN final_status ENUM('draft', 'pending', 'approved', 'rejected', 'archived') DEFAULT 'draft'");
         });
+
+        if (Schema::getConnection()->getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE letters MODIFY COLUMN final_status ENUM('draft', 'pending', 'approved', 'rejected', 'archived') DEFAULT 'draft'");
+        }
     }
 };

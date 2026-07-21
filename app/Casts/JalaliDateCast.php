@@ -62,9 +62,9 @@ class JalaliDateCast implements CastsAttributes
             return Jalalian::fromFormat($this->format, $value)->toCarbon();
         }
 
-        // اگر مقدار از نوع Carbon باشد
-        if ($value instanceof \Carbon\Carbon) {
-            return $value;
+        // اگر مقدار از نوع Carbon / CarbonImmutable باشد
+        if ($value instanceof \DateTimeInterface) {
+            return Carbon::instance(\DateTimeImmutable::createFromInterface($value));
         }
 
         throw new InvalidArgumentException('Invalid date format for Jalali cast');

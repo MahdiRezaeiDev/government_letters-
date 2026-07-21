@@ -4,11 +4,12 @@ namespace App\Notifications;
 
 use App\Models\Letter;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class LetterRepliedNotification extends Notification implements ShouldQueue
+class LetterRepliedNotification extends Notification implements ShouldQueue, ShouldBroadcast
 {
     use Queueable;
 

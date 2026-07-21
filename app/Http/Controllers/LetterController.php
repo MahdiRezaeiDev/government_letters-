@@ -511,6 +511,23 @@ class LetterController extends Controller
         }
     }
 
+    public function updateFollowUp(Request $request, Letter $letter)
+    {
+        $this->authorize('update', $letter);
+
+        $validated = $request->validate([
+            'status' => 'required|string|in:pending,in_progress,completed,cancelled',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $letter->updateFollowUpStatus(
+            $validated['status'],
+            $validated['notes'] ?? null
+        );
+
+        return back()->with('success', 'وضعیت تعقیب بروزرسانی شد.');
+    }
+
     // =========================================================
     // HELPERS (private)
     // =========================================================

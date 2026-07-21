@@ -3,17 +3,20 @@
 namespace App\Models;
 
 use App\Casts\JalaliDateCast;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use Notifiable, SoftDeletes, HasRoles;
+    /** @use HasFactory<\Database\Factories\UserFactory> */
+    use HasFactory, Notifiable, SoftDeletes, HasRoles, TwoFactorAuthenticatable;
 
     protected $table = 'users';
 
@@ -56,11 +59,12 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        'email_verified_at' => JalaliDateCast::class,
+        'email_verified_at' => 'datetime',
         'two_factor_confirmed_at' => 'datetime',
         'last_login_at' => 'datetime',
         'last_activity_at' => 'datetime',
         'birth_date' => JalaliDateCast::class,
+        'password' => 'hashed',
         'status' => 'string',
         'security_clearance' => 'string',
         'preferences' => 'array',
@@ -143,12 +147,12 @@ class User extends Authenticatable
 
     public function delegationsFrom(): HasMany
     {
-        return $this->hasMany(LetterDelegation::class, 'from_user_id');
+        return $this->hasMany(LetterDelegation::class, 'delegated_by_user_id');
     }
 
     public function delegationsTo(): HasMany
     {
-        return $this->hasMany(LetterDelegation::class, 'to_user_id');
+        return $this->hasMany(LetterDelegation::class, 'delegated_to_user_id');
     }
 
     public function reminders(): HasMany
@@ -176,9 +180,9 @@ class User extends Authenticatable
     public function getAllPermissionsForFrontend(): array
     {
         return [
-            'all' => $this->getAllPermissions()->pluck('name'),
-            'direct' => $this->getDirectPermissions()->pluck('name'),
-            'via_roles' => $this->getPermissionsViaRoles()->pluck('name'),
+            'all' => $this->getAllPermissions()->pluck('name')->values()->all(),
+            'direct' => $this->getDirectPermissions()->pluck('name')->values()->all(),
+            'via_roles' => $this->getPermissionsViaRoles()->pluck('name')->values()->all(),
         ];
     }
 
