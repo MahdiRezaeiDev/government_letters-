@@ -5,7 +5,8 @@ import {
     Save, Shield, Globe, Database, Mail, Settings,
     CheckCircle, Server, Lock, FileType, Clock, Hash, Type
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { usePage } from '@inertiajs/react';
 import settingsRoutes from '@/routes/settings';
 
 const FONTS = [
@@ -27,8 +28,9 @@ interface Props {
         session_lifetime: number;
         max_upload_size: number;
         allowed_file_types: string;
-        preferred_font: string; // ← اضافه شد
+        preferred_font?: string;
     };
+    preferred_font?: string;
 }
 
 // ─── Shared Field Components ───────────────────────────────────────────────
@@ -180,9 +182,16 @@ function SectionCard({ icon: Icon, iconColor, title, subtitle, children }: {
 
 // ─── Main Component ────────────────────────────────────────────────────────
 
-export default function SystemSettings({ settings }: Props) {
+export default function SystemSettings({ settings, preferred_font }: Props) {
     const [activeTab, setActiveTab] = useState<'general' | 'mail' | 'security' | 'upload'>('general');
     const [saved, setSaved] = useState(false);
+    const skipInitialFontSave = useRef(true);
+    const authUser = (usePage().props as any).auth?.user;
+    const initialFont =
+        preferred_font
+        || settings.preferred_font
+        || authUser?.preferred_font
+        || 'Vazirmatn';
 
     const { data, setData, patch, processing } = useForm({
         app_name: settings.app_name,
@@ -195,20 +204,27 @@ export default function SystemSettings({ settings }: Props) {
         mail_port: settings.mail_port,
         mail_username: settings.mail_username,
         mail_encryption: settings.mail_encryption,
-        preferred_font: settings.preferred_font ?? 'Vazirmatn', // ← اضافه شد
+        preferred_font: initialFont,
     });
 
-    // اعمال فونت به صورت زنده هنگام تغییر
+    // اعمال فونت به صورت زنده هنگام تغییر (بدون بازنویسی اشتباه در mount)
     useEffect(() => {
-        document.documentElement.style.setProperty('--font-family', `'${data.preferred_font}', Tahoma, sans-serif`);
-        axios.post(settingsRoutes.changeFont().url, { preferred_font: data.preferred_font })
-            .then((res) => {
-                console.log(res);
+        document.documentElement.style.setProperty(
+            '--font-family',
+            `'${data.preferred_font}', Tahoma, sans-serif`,
+        );
 
+        if (skipInitialFontSave.current) {
+            skipInitialFontSave.current = false;
+            return;
+        }
+
+        axios
+            .post(settingsRoutes.changeFont().url, {
+                preferred_font: data.preferred_font,
             })
             .catch((error) => {
-                console.log(error);
-
+                console.error(error);
             });
     }, [data.preferred_font]);
 

@@ -47,6 +47,7 @@ class User extends Authenticatable
         'email_verified_at',
         'security_clearance',
         'preferences',
+        'preferred_font',
         'locale',
         'timezone',
     ];

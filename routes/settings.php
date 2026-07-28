@@ -22,17 +22,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('user-password.update');
 
     Route::post('settings/preferred-font', function (Request $request) {
-
-        request()->validate([
-            'preferred_font' => 'required|string|max:255',
+        $validated = $request->validate([
+            'preferred_font' => 'required|string|in:Vazirmatn,Sahel,DroidArabicKufi,IranNastaliq',
         ]);
 
-        $user = auth()->user();
-        $user->preferred_font = $request->preferred_font;
-        $user->save();
+        $user = $request->user();
+        $user->forceFill([
+            'preferred_font' => $validated['preferred_font'],
+        ])->save();
 
-
-        return response()->json(['message' => $user]);
+        return response()->json([
+            'message' => 'فونت ذخیره شد',
+            'preferred_font' => $user->preferred_font,
+        ]);
     })->name('settings.changeFont');
 
     Route::inertia('settings/appearance', 'settings/appearance')->name('appearance.edit');

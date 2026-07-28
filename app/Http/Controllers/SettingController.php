@@ -59,6 +59,7 @@ class SettingController extends Controller
         return Inertia::render('settings/index', [
             'settings' => $settings,
             'defaultSettings' => $defaultSettings,
+            'preferred_font' => $user->preferred_font ?: 'Vazirmatn',
             'locales' => [
                 'fa' => 'فارسی',
                 'en' => 'English',

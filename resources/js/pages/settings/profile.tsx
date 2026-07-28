@@ -1,16 +1,25 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
+import axios from 'axios';
 import {
     Save, UserIcon, Mail, Camera,
     Lock, Eye, EyeOff, CheckCircle, AlertCircle,
     Briefcase, Building2, Shield, LogOut,
     Smartphone, IdCard, Globe, Moon, Sun, Bell,
-    Database, Key, Clock
+    Database, Key, Clock, Type
 } from 'lucide-react';
 import { Settings } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import passwordRoute from '@/routes/password';
 import profile from '@/routes/profile';
+import settingsRoutes from '@/routes/settings';
+
+const FONTS = [
+    { value: 'Vazirmatn', label: 'وزیرمتن' },
+    { value: 'Sahel', label: 'ساحل' },
+    { value: 'DroidArabicKufi', label: 'کوفی عربی' },
+    { value: 'IranNastaliq', label: 'نستعلیق' },
+];
 
 // ─── Toast Notification Component ──────────────────────────────────────────
 const Toast = ({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) => {
@@ -122,16 +131,42 @@ export default function ProfileSettings() {
 
     const {
         data: preferencesData, setData: setPreferencesData,
-        patch: patchPreferences, processing: preferencesProcessing
+        processing: preferencesProcessing,
     } = useForm({
-        language: user.language || 'fa',
-        theme: user.theme || 'light',
-        notifications: user.notifications !== false,
+        language: user.locale || user.language || 'fa',
+        theme: user.theme || user.preferences?.theme || 'light',
+        notifications: user.notifications !== false && user.preferences?.notifications !== false,
+        preferred_font: user.preferred_font || 'Vazirmatn',
     });
+    const skipInitialFontSave = useRef(true);
 
     const showToast = (message: string, type: 'success' | 'error') => {
         setToast({ message, type });
     };
+
+    // اعمال فونت انتخابی کاربر
+    useEffect(() => {
+        document.documentElement.style.setProperty(
+            '--font-family',
+            `'${preferencesData.preferred_font}', Tahoma, sans-serif`,
+        );
+
+        if (skipInitialFontSave.current) {
+            skipInitialFontSave.current = false;
+            return;
+        }
+
+        axios
+            .post(settingsRoutes.changeFont().url, {
+                preferred_font: preferencesData.preferred_font,
+            })
+            .then(() => {
+                showToast('فونت با موفقیت اعمال شد', 'success');
+            })
+            .catch(() => {
+                showToast('خطا در ذخیره فونت', 'error');
+            });
+    }, [preferencesData.preferred_font]);
 
     const handleProfileSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -160,14 +195,21 @@ export default function ProfileSettings() {
         });
     };
 
-    const handlePreferencesSubmit = (e: React.FormEvent) => {
+    const handlePreferencesSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        patchPreferences(profile.preferences(), {
-            preserveScroll: true,
-            onSuccess: () => {
-                showToast('تنظیمات با موفقیت ذخیره شد', 'success');
-            },
-        });
+
+        try {
+            await axios.post(settingsRoutes.changeFont().url, {
+                preferred_font: preferencesData.preferred_font,
+            });
+            document.documentElement.style.setProperty(
+                '--font-family',
+                `'${preferencesData.preferred_font}', Tahoma, sans-serif`,
+            );
+            showToast('تنظیمات با موفقیت ذخیره شد', 'success');
+        } catch {
+            showToast('خطا در ذخیره تنظیمات', 'error');
+        }
     };
 
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -626,6 +668,42 @@ export default function ProfileSettings() {
                                                     <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
                                                 </div>
                                             </label>
+                                        </div>
+
+                                        <div>
+                                            <FieldLabel>فونت دلخواه</FieldLabel>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {FONTS.map((font) => {
+                                                    const isActive = preferencesData.preferred_font === font.value;
+
+                                                    return (
+                                                        <button
+                                                            key={font.value}
+                                                            type="button"
+                                                            onClick={() => setPreferencesData('preferred_font', font.value)}
+                                                            className={`flex flex-col items-start gap-1.5 p-3 rounded-xl border-2 text-right transition-all ${
+                                                                isActive
+                                                                    ? 'border-emerald-400 bg-emerald-50'
+                                                                    : 'border-gray-200 hover:border-gray-300'
+                                                            }`}
+                                                        >
+                                                            <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-500">
+                                                                <Type className="h-3.5 w-3.5" />
+                                                                {font.label}
+                                                            </span>
+                                                            <span
+                                                                className="text-sm text-gray-800"
+                                                                style={{ fontFamily: font.value }}
+                                                            >
+                                                                سیستم مکاتیب اداری
+                                                            </span>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                            <p className="text-xs text-gray-400 mt-2">
+                                                فونت بلافاصله اعمال و ذخیره می‌شود.
+                                            </p>
                                         </div>
 
                                         <div className="pt-4 flex justify-end border-t border-gray-100">

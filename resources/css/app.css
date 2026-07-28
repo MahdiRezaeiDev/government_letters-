@@ -134,10 +134,7 @@
 }
 
 @theme {
-    --font-sans:
-        'Vazirmatn', ui-sans-serif, system-ui, sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-        'Noto Color Emoji';
+    --font-sans: var(--font-family, 'Vazirmatn', ui-sans-serif, system-ui, sans-serif);
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -224,7 +221,7 @@
 }
 
 body {
-    font-family: 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-family, 'Vazirmatn', ui-sans-serif, system-ui, sans-serif);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
