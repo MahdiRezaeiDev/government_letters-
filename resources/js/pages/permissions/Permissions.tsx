@@ -1,16 +1,6 @@
-// resources/js/Pages/Admin/Users/Permissions.tsx
-import { router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Shield, UserCheck, AlertCircle, Save } from 'lucide-react';
 import { useState } from 'react';
-import { Badge } from '@/Components/ui/badge';
-import { Button } from '@/Components/ui/button';
-import { Card, CardHeader, CardContent } from '@/Components/ui/card';
-import { Checkbox } from '@/Components/ui/checkbox';
-
-interface Permission {
-    name: string;
-    label: string;
-}
 
 interface User {
     id: number;
@@ -30,9 +20,13 @@ interface Props {
     groupedPermissions: Record<string, Record<string, string>>;
 }
 
-export default function UserPermissions({ user, allPermissions, groupedPermissions }: Props) {
+export default function UserPermissions({
+    user,
+    allPermissions,
+    groupedPermissions,
+}: Props) {
     const [selectedPermissions, setSelectedPermissions] = useState<string[]>(
-        user.permissions.direct
+        user.permissions.direct || [],
     );
     const [saving, setSaving] = useState(false);
 
@@ -40,7 +34,9 @@ export default function UserPermissions({ user, allPermissions, groupedPermissio
         if (checked) {
             setSelectedPermissions([...selectedPermissions, permissionName]);
         } else {
-            setSelectedPermissions(selectedPermissions.filter(p => p !== permissionName));
+            setSelectedPermissions(
+                selectedPermissions.filter((p) => p !== permissionName),
+            );
         }
     };
 
@@ -48,32 +44,26 @@ export default function UserPermissions({ user, allPermissions, groupedPermissio
         e.preventDefault();
         setSaving(true);
 
-        router.put(route('admin.users.permissions.update', user.id), {
-            permissions: selectedPermissions
+        router.put(`/admin/users/${user.id}/permissions`, {
+            permissions: selectedPermissions,
         }, {
             preserveScroll: true,
             onFinish: () => setSaving(false),
         });
     };
 
-    // بررسی آیا کاربر از طریق نقش این دسترسی را دارد
-    const hasViaRole = (permission: string) => {
-        return user.permissions.via_roles.includes(permission);
-    };
-
-    // بررسی آیا دسترسی مستقیم دارد
-    const hasDirect = (permission: string) => {
-        return selectedPermissions.includes(permission);
-    };
+    const hasViaRole = (permission: string) =>
+        user.permissions.via_roles?.includes(permission);
 
     return (
         <>
-            <div className="py-6">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* Header */}
-                    <div className="mb-6">
+            <Head title="مدیریت دسترسی‌ها" />
+
+            <div className="py-6" dir="rtl">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+                    <div>
                         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                            <Shield className="h-6 w-6" />
+                            <Shield className="h-6 w-6 text-indigo-600" />
                             مدیریت دسترسی‌های مستقیم
                         </h1>
                         <p className="text-gray-600 mt-1">
@@ -81,133 +71,126 @@ export default function UserPermissions({ user, allPermissions, groupedPermissio
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit}>
-                        <div className="space-y-6">
-                            {/* User Roles Info */}
-                            <Card>
-                                <CardHeader>
-                                    <div className="flex items-center gap-2">
-                                        <UserCheck className="h-5 w-5 text-blue-500" />
-                                        <h3 className="text-lg font-semibold">نقش‌های کاربر</h3>
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="flex flex-wrap gap-2">
-                                        {user.roles.length > 0 ? (
-                                            user.roles.map(role => (
-                                                <Badge key={role.id} variant="secondary" className="text-sm">
-                                                    {role.name}
-                                                </Badge>
-                                            ))
-                                        ) : (
-                                            <span className="text-gray-500 text-sm">بدون نقش</span>
-                                        )}
-                                    </div>
-                                    <div className="mt-3 p-3 bg-blue-50 rounded-md">
-                                        <div className="flex items-start gap-2">
-                                            <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5" />
-                                            <div className="text-xs text-blue-800">
-                                                <p className="font-medium">توجه:</p>
-                                                <p>
-                                                    دسترسی‌های مستقیم اولویت بالاتری نسبت به دسترسی‌های نقش دارند.
-                                                    اگر یک دسترسی را در این بخش فعال کنید، حتی اگر نقش آن را نداشته باشد، کاربر به آن دسترسی خواهد داشت.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                            <div className="flex items-center gap-2 mb-3">
+                                <UserCheck className="h-5 w-5 text-blue-500" />
+                                <h3 className="text-lg font-semibold">نقش‌های کاربر</h3>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mb-3">
+                                {user.roles.length > 0 ? (
+                                    user.roles.map((role) => (
+                                        <span
+                                            key={role.id}
+                                            className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold"
+                                        >
+                                            {role.name}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <span className="text-gray-500 text-sm">بدون نقش</span>
+                                )}
+                            </div>
+                            <div className="p-3 bg-blue-50 rounded-xl flex items-start gap-2">
+                                <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5" />
+                                <p className="text-xs text-blue-800">
+                                    دسترسی مستقیم اولویت بالاتری نسبت به دسترسی نقش دارد.
+                                </p>
+                            </div>
+                        </div>
 
-                            {/* Permissions Groups */}
-                            {Object.entries(groupedPermissions).map(([groupName, permissions]) => (
-                                <Card key={groupName}>
-                                    <CardHeader>
-                                        <h3 className="text-lg font-semibold">{groupName}</h3>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                            {Object.entries(permissions).map(([permName, permLabel]) => {
+                        {Object.entries(groupedPermissions).map(
+                            ([groupName, permissions]) => (
+                                <div
+                                    key={groupName}
+                                    className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm"
+                                >
+                                    <h3 className="text-lg font-semibold mb-4">{groupName}</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                        {Object.entries(permissions).map(
+                                            ([permName, permLabel]) => {
                                                 const viaRole = hasViaRole(permName);
-                                                const direct = hasDirect(permName);
+                                                const direct =
+                                                    selectedPermissions.includes(permName);
 
                                                 return (
-                                                    <div key={permName} className="flex items-start space-x-3 space-x-reverse">
-                                                        <Checkbox
-                                                            id={permName}
+                                                    <label
+                                                        key={permName}
+                                                        className="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer"
+                                                    >
+                                                        <input
+                                                            type="checkbox"
                                                             checked={direct}
-                                                            onCheckedChange={(checked) =>
-                                                                handlePermissionToggle(permName, checked as boolean)
+                                                            onChange={(e) =>
+                                                                handlePermissionToggle(
+                                                                    permName,
+                                                                    e.target.checked,
+                                                                )
                                                             }
                                                             className="mt-1"
                                                         />
-                                                        <div className="flex-1">
-                                                            <label
-                                                                htmlFor={permName}
-                                                                className="text-sm font-medium text-gray-700 cursor-pointer"
-                                                            >
+                                                        <div>
+                                                            <span className="text-sm font-medium text-gray-700">
                                                                 {permLabel}
-                                                            </label>
+                                                            </span>
                                                             {viaRole && (
-                                                                <div className="mt-1">
-                                                                    <Badge variant="outline" className="text-xs bg-green-50">
-                                                                        از طریق نقش
-                                                                    </Badge>
-                                                                </div>
-                                                            )}
-                                                            {direct && viaRole && (
-                                                                <p className="text-xs text-orange-600 mt-1">
-                                                                    ⚡ دسترسی مستقیم (اولویت بالاتر)
-                                                                </p>
+                                                                <span className="block mt-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full w-fit">
+                                                                    از طریق نقش
+                                                                </span>
                                                             )}
                                                         </div>
-                                                    </div>
+                                                    </label>
                                                 );
-                                            })}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                                            },
+                                        )}
+                                    </div>
+                                </div>
+                            ),
+                        )}
 
-                            {/* Summary Card */}
-                            <Card>
-                                <CardHeader>
-                                    <h3 className="text-lg font-semibold">خلاصه دسترسی‌های مستقیم</h3>
-                                </CardHeader>
-                                <CardContent>
-                                    {selectedPermissions.length > 0 ? (
-                                        <div className="flex flex-wrap gap-2">
-                                            {selectedPermissions.map(perm => {
-                                                const permission = allPermissions.find(p => p.name === perm);
+                        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                            <h3 className="text-lg font-semibold mb-3">
+                                خلاصه دسترسی‌های مستقیم ({selectedPermissions.length})
+                            </h3>
+                            {selectedPermissions.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                    {selectedPermissions.map((perm) => {
+                                        const permission = allPermissions.find(
+                                            (p) => p.name === perm,
+                                        );
+                                        return (
+                                            <span
+                                                key={perm}
+                                                className="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold"
+                                            >
+                                                {permission?.label || perm}
+                                            </span>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <p className="text-gray-500 text-sm">
+                                    هیچ دسترسی مستقیمی تعریف نشده است.
+                                </p>
+                            )}
+                        </div>
 
-                                                return (
-                                                    <Badge key={perm} variant="default" className="bg-blue-500">
-                                                        {permission?.label || perm}
-                                                    </Badge>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <p className="text-gray-500 text-sm">
-                                            هیچ دسترسی مستقیمی برای این کاربر تعریف نشده است.
-                                        </p>
-                                    )}
-                                </CardContent>
-                            </Card>
-
-                            {/* Actions */}
-                            <div className="flex justify-end gap-3">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => window.history.back()}
-                                >
-                                    انصراف
-                                </Button>
-                                <Button type="submit" disabled={saving}>
-                                    <Save className="h-4 w-4 ml-2" />
-                                    {saving ? 'در حال ذخیره...' : 'ذخیره دسترسی‌ها'}
-                                </Button>
-                            </div>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => window.history.back()}
+                                className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                            >
+                                انصراف
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={saving}
+                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50"
+                            >
+                                <Save className="h-4 w-4" />
+                                {saving ? 'در حال ذخیره...' : 'ذخیره دسترسی‌ها'}
+                            </button>
                         </div>
                     </form>
                 </div>

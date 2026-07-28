@@ -1,7 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     Clock, CheckCircle, XCircle, CornerUpLeft, CornerUpRight,
-    UserCheck, MessageCircle, User, Info, Calendar
+    UserCheck, MessageCircle, User, Info, Calendar, PenLine
 } from 'lucide-react';
 import { useState } from 'react';
 import AttachmentList from '@/components/AttachmentList';
@@ -42,7 +42,8 @@ interface Props {
         approve: boolean;
         reject: boolean;
         reply: boolean;
-        delegate: boolean;  // اضافه شد - مجوز ارجاع
+        delegate: boolean;
+        sign: boolean;
     };
 }
 
@@ -251,6 +252,27 @@ export default function LettersShow({
                                     </Link>
                                 )}
 
+                                {can.sign && letter.final_status !== 'draft' && (
+                                    <button
+                                        onClick={() => {
+                                            if (!confirm('آیا از امضای این مکتوب اطمینان دارید؟')) {
+                                                return;
+                                            }
+                                            setLoading(true);
+                                            router.post(`/letters/${letter.id}/sign`, {
+                                                signature_type: 'electronic',
+                                                signature_data: currentUser?.full_name || currentUser?.first_name,
+                                            }, {
+                                                onFinish: () => setLoading(false),
+                                            });
+                                        }}
+                                        disabled={loading}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
+                                    >
+                                        <PenLine className="h-3.5 w-3.5" /> امضا
+                                    </button>
+                                )}
+
                                 {can.edit && letter.final_status === 'draft' && (
                                     <Link
                                         href={letters.edit({ letter: letter.id })}
@@ -341,6 +363,32 @@ export default function LettersShow({
                                     </span>
                                 </div>
                             </div>
+
+                            {/* Signatures */}
+                            {(letter as any).signatures?.length > 0 && (
+                                <div className="rounded-xl border border-indigo-100 bg-indigo-50/40 p-4">
+                                    <p className="text-xs font-bold text-indigo-700 mb-2 flex items-center gap-1.5">
+                                        <PenLine className="h-3.5 w-3.5" />
+                                        امضاها
+                                    </p>
+                                    <div className="space-y-2">
+                                        {(letter as any).signatures.map((sig: any) => (
+                                            <div
+                                                key={sig.id}
+                                                className="flex items-center justify-between text-sm bg-white rounded-lg px-3 py-2 border border-indigo-100"
+                                            >
+                                                <span className="font-semibold text-slate-800">
+                                                    {sig.user?.full_name || sig.signature_data || 'امضاکننده'}
+                                                </span>
+                                                <span className="text-xs text-slate-500">
+                                                    {formatDate(sig.signed_at)}
+                                                    {sig.verification_result ? ' · تأیید شده' : ''}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Content Preview */}
                             {letter.content && (

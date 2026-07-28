@@ -6,7 +6,8 @@ import {
     ChevronLeft, ChevronRight, Home,
     Archive as ArchiveIcon,
     Pencil,
-    Trash2
+    Trash2,
+    Shield
 } from 'lucide-react';
 import { useState } from 'react';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
@@ -375,6 +376,13 @@ return '';
                                                                     title="مشاهده"
                                                                 >
                                                                     <Eye className="h-4 w-4" />
+                                                                </Link>
+                                                                <Link
+                                                                    href={`/archives/${archive.id}/permissions`}
+                                                                    className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                                                    title="دسترسی‌ها"
+                                                                >
+                                                                    <Shield className="h-4 w-4" />
                                                                 </Link>
                                                                 {can.edit && (
                                                                     <Link

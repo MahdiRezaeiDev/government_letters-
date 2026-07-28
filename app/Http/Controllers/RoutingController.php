@@ -387,31 +387,9 @@ class RoutingController extends Controller
     /**
      * ارسال یادآوری برای ارجاعات ددلاین گذشته
      */
-    public function sendReminders()
+    public function sendReminders(\App\Services\ReminderService $reminderService)
     {
-        $overdueRoutings = Routing::where('status', 'pending')
-            ->where('deadline', '<', now())
-            ->whereDoesntHave('reminders', function ($q) {
-                $q->whereDate('reminder_date', today());
-            })
-            ->get();
-
-        $count = 0;
-        foreach ($overdueRoutings as $routing) {
-            // ایجاد یادآوری جدید
-            Reminder::create([
-                'letter_id' => $routing->letter_id,
-                'routing_id' => $routing->id,
-                'user_id' => $routing->to_user_id,
-                'reminder_type' => 'deadline',
-                'reminder_date' => now(),
-                'message' => "مهلت انجام اقدام برای نامه {$routing->letter->subject} به پایان رسیده است.",
-                'status' => 'pending',
-                'created_by' => 1,
-            ]);
-
-            $count++;
-        }
+        $count = $reminderService->processDeadlineReminders();
 
         return response()->json([
             'message' => "{$count} یادآوری ارسال شد.",

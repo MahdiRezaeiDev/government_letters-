@@ -285,6 +285,7 @@ class LetterController extends Controller
             'delegations.delegatedBy',      // اضافه شد - ارجاع‌دهنده
             'delegations.delegatedTo',      // اضافه شد - ارجاع‌گیرنده
             'activeDelegation',             // اضافه شد - آخرین ارجاع فعال
+            'signatures.user',
         ]);
 
         // ثبت بازدید
@@ -318,14 +319,15 @@ class LetterController extends Controller
             'organizations'  => Organization::all(),
             'users'          => $users,  // اضافه شد
             'can' => [
-                'edit'    => $user->can('update', $letter),
-                'delete'  => $user->can('delete', $letter),
-                'archive' => $user->can('archive', $letter),
-                'route'   => $user->can('route', $letter),
-                'approve' => $user->can('approve', $letter),
-                'sign'    => $user->can('sign', $letter),
-                'reply'   => $user->can('reply', $letter),
-                'delegate' => $user->can('delegate', $letter) ?? true, // اضافه شد - مجوز ارجاع
+                'edit'     => $user->can('update', $letter),
+                'delete'   => $user->can('delete', $letter),
+                'archive'  => $user->can('archive', $letter),
+                'route'    => $user->can('route', $letter),
+                'approve'  => $user->can('approve', $letter),
+                'reject'   => $user->can('approve', $letter),
+                'sign'     => $user->can('sign', $letter),
+                'reply'    => $user->can('reply', $letter),
+                'delegate' => $user->can('delegate', $letter),
             ],
         ]);
     }
@@ -526,6 +528,36 @@ class LetterController extends Controller
         );
 
         return back()->with('success', 'وضعیت تعقیب بروزرسانی شد.');
+    }
+
+    public function sign(Request $request, Letter $letter)
+    {
+        $this->authorize('sign', $letter);
+
+        $validated = $request->validate([
+            'signature_type' => 'required|string|in:digital,electronic,handwritten_scan',
+            'signature_data' => 'nullable|string|max:5000',
+        ]);
+
+        $alreadySigned = $letter->signatures()
+            ->where('user_id', auth()->id())
+            ->exists();
+
+        if ($alreadySigned) {
+            return back()->with('error', 'شما قبلاً این مکتوب را امضا کرده‌اید.');
+        }
+
+        $signature = $letter->signatures()->create([
+            'user_id' => auth()->id(),
+            'signature_type' => $validated['signature_type'],
+            'signature_data' => $validated['signature_data'] ?? auth()->user()->full_name,
+            'signed_at' => now(),
+        ]);
+
+        $signature->verify();
+        $signature->update(['verified_by' => auth()->id()]);
+
+        return back()->with('success', 'امضای مکتوب با موفقیت ثبت شد.');
     }
 
     // =========================================================

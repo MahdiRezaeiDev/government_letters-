@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Letter;
 use App\Models\User;
 use App\Models\Department;
+use App\Models\Reminder;
 use App\Models\Routing;
 use App\Support\AfghanCalendar;
 use Illuminate\Http\Request;
@@ -35,6 +36,10 @@ class DashboardController extends Controller
 
             'my_drafts' => Letter::where('created_by', $user->id)
                 ->where('is_draft', true)
+                ->count(),
+
+            'pending_reminders' => Reminder::forUser($user->id)
+                ->where('status', 'pending')
                 ->count(),
 
             'total_letters' => $this->getTotalLetters($user),

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Archive;
 use App\Models\Department;
 use App\Models\ArchivePermission;
+use App\Models\Position;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
@@ -272,17 +273,61 @@ class ArchiveController extends Controller
     public function permissions(Archive $archive)
     {
         $currentUser = auth()->user();
-        
+
         if (!$currentUser->isSuperAdmin() && !$currentUser->isOrgAdmin()) {
             abort(403);
         }
-        
+
+        $archive->load('department');
+
         $permissions = $archive->permissions()->with('position')->get();
-        
-        return Inertia::render('Archives/Permissions', [
+        $positions = Position::query()
+            ->when(
+                $archive->department_id,
+                fn ($q) => $q->where('department_id', $archive->department_id)
+            )
+            ->orderBy('name')
+            ->get(['id', 'name', 'department_id']);
+
+        return Inertia::render('archives/permissions', [
             'archive' => $archive,
             'permissions' => $permissions,
+            'positions' => $positions,
+            'permissionTypes' => [
+                'read' => 'خواندن',
+                'write' => 'نوشتن',
+                'delete' => 'حذف',
+                'manage' => 'مدیریت',
+            ],
         ]);
+    }
+
+    public function updatePermissions(Request $request, Archive $archive)
+    {
+        $currentUser = auth()->user();
+
+        if (!$currentUser->isSuperAdmin() && !$currentUser->isOrgAdmin()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'permissions' => 'array',
+            'permissions.*.position_id' => 'required|exists:positions,id',
+            'permissions.*.permission_type' => 'required|in:read,write,delete,manage',
+        ]);
+
+        $archive->permissions()->delete();
+
+        foreach ($validated['permissions'] ?? [] as $row) {
+            $archive->permissions()->create([
+                'position_id' => $row['position_id'],
+                'permission_type' => $row['permission_type'],
+            ]);
+        }
+
+        return redirect()
+            ->route('archives.permissions', $archive)
+            ->with('success', 'دسترسی‌های بایگانی بروزرسانی شد.');
     }
     
     /**
