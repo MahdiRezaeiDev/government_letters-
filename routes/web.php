@@ -353,18 +353,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:create-case')->name('archives.create');
     Route::post('archives', [ArchiveController::class, 'store'])
         ->middleware('permission:create-case')->name('archives.store');
+    // بدون id: هدایت به لیست تا کاربر بایگانی را انتخاب کند
+    Route::get('archives/permissions', function () {
+        return redirect()
+            ->route('archives.index')
+            ->with('info', 'برای مدیریت دسترسی، از آیکون سپر کنار هر بایگانی استفاده کنید.');
+    })->middleware('permission:view-cases')->name('archives.permissions.index');
     Route::get('archives/{archive}', [ArchiveController::class, 'show'])
-        ->middleware('permission:view-cases')->name('archives.show');
+        ->middleware('permission:view-cases')->name('archives.show')->whereNumber('archive');
     Route::get('archives/{archive}/edit', [ArchiveController::class, 'edit'])
-        ->middleware('permission:edit-case')->name('archives.edit');
+        ->middleware('permission:edit-case')->name('archives.edit')->whereNumber('archive');
     Route::put('archives/{archive}', [ArchiveController::class, 'update'])
-        ->middleware('permission:edit-case')->name('archives.update');
+        ->middleware('permission:edit-case')->name('archives.update')->whereNumber('archive');
     Route::delete('archives/{archive}', [ArchiveController::class, 'destroy'])
-        ->middleware('permission:delete-case')->name('archives.destroy');
+        ->middleware('permission:delete-case')->name('archives.destroy')->whereNumber('archive');
     Route::get('archives/{archive}/permissions', [ArchiveController::class, 'permissions'])
-        ->middleware('permission:view-cases')->name('archives.permissions');
+        ->middleware('permission:view-cases')->name('archives.permissions')->whereNumber('archive');
     Route::put('archives/{archive}/permissions', [ArchiveController::class, 'updatePermissions'])
-        ->middleware('permission:edit-case')->name('archives.permissions.update');
+        ->middleware('permission:edit-case')->name('archives.permissions.update')->whereNumber('archive');
 
     // پرونده‌ها — nested under archives
     // ✅ static routes اول، بعد {parameter}
