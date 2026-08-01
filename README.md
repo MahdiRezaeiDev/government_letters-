@@ -58,6 +58,7 @@ php artisan reverb:start
 - تذکره (NID)
 - نوتیفیکیشن دیتابیس + Reverb
 - یادآوری خودکار مهلت ارجاع (`reminders:send-deadlines` هر ساعت)
+- بک‌آپ روزانه دیتابیس + فایل‌های آپلود (`backup:run`)
 
 ## نقش‌ها
 
@@ -68,9 +69,42 @@ php artisan reverb:start
 | `dept-manager` | مدیر ریاست |
 | `user` | کاربر عادی |
 
+## بک‌آپ (دیتابیس + آپلودها)
+
+پکیج `spatie/laravel-backup` فعال است و این‌ها را بک‌آپ می‌گیرد:
+
+- دیتابیس MySQL
+- فایل‌های آپلود در `storage/app/public`
+
+خروجی در `storage/app/backups` ذخیره می‌شود.
+
+```bash
+# بک‌آپ دستی
+php artisan backup:run
+
+# فقط دیتابیس
+php artisan backup:run --only-db
+
+# فقط فایل‌ها
+php artisan backup:run --only-files
+```
+
+زمان‌بندی خودکار (با `schedule:work` یا کرون/`schedule:run`):
+
+- `01:00` — پاک‌سازی بک‌آپ‌های قدیمی (`backup:clean`)
+- `01:30` — بک‌آپ جدید (`backup:run`)
+- `02:00` — مانیتور سلامت (`backup:monitor`)
+
+روی ویندوز اگر `mysqldump` در PATH نباشد، در `.env` تنظیم کنید:
+
+```env
+DB_DUMP_BINARY_PATH=C:\xampp\mysql\bin
+```
+
 ## نکات دیپلوی سرور
 
 1. `BROADCAST_CONNECTION=reverb` و مقادیر `REVERB_*` / `VITE_REVERB_*` را با دامنه واقعی سرور تنظیم کنید (نه `localhost`).
 2. پس از تغییر `VITE_*` حتماً `npm run build` بزنید.
 3. سرویس‌های پایدار لازم: `queue:work`، `reverb:start`، `schedule:work` (یا Task Scheduler ویندوز برای `php artisan schedule:run`).
 4. برای HTTPS باید WebSocket روی `wss` پروکسی شود.
+5. پوشه `storage/app/backups` را از وب‌روت خارج نگه دارید و ترجیحاً کپی خارجی هم بگیرید.
