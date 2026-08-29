@@ -44,6 +44,34 @@ class ProfileController extends Controller
     }
 
     /**
+     * Update the user's interface preferences.
+     */
+    public function updatePreferences(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'language' => ['required', 'string', 'in:fa,ps,en'],
+            'theme' => ['required', 'string', 'in:light,dark,system'],
+            'notifications' => ['required', 'boolean'],
+            'preferred_font' => ['required', 'string', 'in:Vazirmatn,Sahel,DroidArabicKufi,IranNastaliq'],
+        ]);
+
+        $user = $request->user();
+        $user->forceFill([
+            'locale' => $validated['language'],
+            'preferred_font' => $validated['preferred_font'],
+            'preferences' => [
+                ...($user->preferences ?? []),
+                'theme' => $validated['theme'],
+                'notifications' => $validated['notifications'],
+            ],
+        ])->save();
+
+        app()->setLocale($validated['language']);
+
+        return to_route('profile.edit');
+    }
+
+    /**
      * Delete the user's profile.
      */
     public function destroy(ProfileDeleteRequest $request): RedirectResponse

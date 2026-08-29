@@ -342,6 +342,7 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
                                                 onChange={v => setData('app_locale', v)}
                                             >
                                                 <option value="fa">فارسی / دری</option>
+                                                <option value="ps">پښتو</option>
                                                 <option value="en">English</option>
                                             </SelectField>
                                         </div>

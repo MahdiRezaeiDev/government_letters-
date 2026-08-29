@@ -13,6 +13,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import passwordRoute from '@/routes/password';
 import profile from '@/routes/profile';
 import settingsRoutes from '@/routes/settings';
+import { update as updatePreferences } from '@/routes/preferences';
 
 const FONTS = [
     { value: 'Vazirmatn', label: 'وزیرمتن' },
@@ -131,7 +132,7 @@ export default function ProfileSettings() {
 
     const {
         data: preferencesData, setData: setPreferencesData,
-        processing: preferencesProcessing,
+        patch: patchPreferences, processing: preferencesProcessing,
     } = useForm({
         language: user.locale || user.language || 'fa',
         theme: user.theme || user.preferences?.theme || 'light',
@@ -195,21 +196,14 @@ export default function ProfileSettings() {
         });
     };
 
-    const handlePreferencesSubmit = async (e: React.FormEvent) => {
+    const handlePreferencesSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        try {
-            await axios.post(settingsRoutes.changeFont().url, {
-                preferred_font: preferencesData.preferred_font,
-            });
-            document.documentElement.style.setProperty(
-                '--font-family',
-                `'${preferencesData.preferred_font}', Tahoma, sans-serif`,
-            );
-            showToast('تنظیمات با موفقیت ذخیره شد', 'success');
-        } catch {
-            showToast('خطا در ذخیره تنظیمات', 'error');
-        }
+        patchPreferences(updatePreferences().url, {
+            preserveScroll: true,
+            onSuccess: () => showToast('تنظیمات با موفقیت ذخیره شد', 'success'),
+            onError: () => showToast('خطا در ذخیره تنظیمات', 'error'),
+        });
     };
 
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -606,6 +600,17 @@ export default function ProfileSettings() {
                                                 >
                                                     <Globe className="h-4 w-4" />
                                                     فارسی
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPreferencesData('language', 'ps')}
+                                                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border transition-all ${preferencesData.language === 'ps'
+                                                        ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
+                                                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                                                        }`}
+                                                >
+                                                    <Globe className="h-4 w-4" />
+                                                    پښتو
                                                 </button>
                                                 <button
                                                     type="button"
