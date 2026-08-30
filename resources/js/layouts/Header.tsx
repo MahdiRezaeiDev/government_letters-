@@ -6,6 +6,7 @@ import {
 import { useState, useEffect, useRef } from 'react';
 import { useNotifications } from '@/hooks/use-notifications';
 import { todayAfghanLabel } from '@/lib/afghan-calendar';
+import { useLocale } from '@/hooks/use-locale';
 
 interface HeaderProps {
     onMenuClick: () => void;
@@ -14,6 +15,7 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
+    const { t } = useLocale();
     const { auth } = usePage().props as any;
     const userId = auth?.user?.id;
     const {
@@ -82,18 +84,18 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
         const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
 
         if (diff < 1) {
-            return 'همین الان';
+            return t('همین الان', 'همدا اوس');
         }
 
         if (diff < 60) {
-            return `${diff} دقیقه پیش`;
+            return `${diff} ${t('دقیقه پیش', 'دقیقې مخکې')}`;
         }
 
         if (diff < 1440) {
-            return `${Math.floor(diff / 60)} ساعت پیش`;
+            return `${Math.floor(diff / 60)} ${t('ساعت پیش', 'ساعته مخکې')}`;
         }
 
-        return `${Math.floor(diff / 1440)} روز پیش`;
+        return `${Math.floor(diff / 1440)} ${t('روز پیش', 'ورځې مخکې')}`;
     };
 
     return (
@@ -111,14 +113,14 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                         </button>
                     )}
                     {isMobile ? (
-                        <span className="text-sm font-bold text-slate-700">سیستم مکاتیب</span>
+                        <span className="text-sm font-bold text-slate-700">{t('سیستم مکاتیب', 'د مکتوبونو سیسټم')}</span>
                     ) : (
                         <div>
                             <p className="text-sm font-bold text-slate-800 leading-none">
-                                سلام، {auth?.user?.first_name || 'کاربر'} 👋
+                                {t('سلام،', 'سلام،')} {auth?.user?.first_name || t('کاربر', 'کاروونکی')} 👋
                             </p>
                             <p className="text-[11px] text-slate-400 mt-1 leading-none">
-                                به سیستم مدیریت مکاتیب خوش آمدید
+                                {t('به سیستم مدیریت مکاتیب خوش آمدید', 'د مکتوبونو مدیریت سیسټم ته ښه راغلاست')}
                             </p>
                         </div>
                     )}
@@ -129,7 +131,7 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
 
                     {/* Date */}
                     <div className="hidden md:block text-left border-l pl-5 border-slate-200">
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1">امروز</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1">{t('امروز', 'نن')}</p>
                         <p className="text-sm font-bold text-slate-700">
                             {todayAfghanLabel(false)}
                         </p>
@@ -182,7 +184,7 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                                     {/* هدر پنل */}
                                     <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
                                         <div className="flex items-center gap-2.5">
-                                            <h3 className="text-sm font-bold text-slate-800">اعلان‌ها</h3>
+                                            <h3 className="text-sm font-bold text-slate-800">{t('اعلان‌ها', 'خبرتیاوې')}</h3>
                                             {unreadCount > 0 && (
                                                 <span className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full">
                                                     {unreadCount}
@@ -201,7 +203,7 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                                                             : 'text-slate-500 hover:text-slate-700'
                                                             }`}
                                                     >
-                                                        {tab === 'unread' ? 'جدید' : 'همه'}
+                                                        {tab === 'unread' ? t('جدید', 'نوي') : t('همه', 'ټولې')}
                                                     </button>
                                                 ))}
                                             </div>
@@ -223,10 +225,10 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                                                 </div>
                                                 <div className="text-center">
                                                     <p className="text-sm font-semibold text-slate-600">
-                                                        {activeTab === 'unread' ? 'اعلان جدیدی نیست' : 'هیچ اعلانی نیست'}
+                                                        {activeTab === 'unread' ? t('اعلان جدیدی نیست', 'نوې خبرتیا نشته') : t('هیچ اعلانی نیست', 'هیڅ خبرتیا نشته')}
                                                     </p>
                                                     <p className="text-xs text-slate-400 mt-1">
-                                                        {activeTab === 'unread' ? 'همه اعلان‌ها خوانده شده‌اند' : 'اعلان‌های جدید اینجا نمایش داده می‌شوند'}
+                                                        {activeTab === 'unread' ? t('همه اعلان‌ها خوانده شده‌اند', 'ټولې خبرتیاوې لوستل شوې دي') : t('اعلان‌های جدید اینجا نمایش داده می‌شوند', 'نوې خبرتیاوې دلته ښودل کېږي')}
                                                     </p>
                                                 </div>
                                                 {activeTab === 'unread' && notifications.length > 0 && (
@@ -234,7 +236,7 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                                                         onClick={() => setActiveTab('all')}
                                                         className="text-xs text-indigo-600 font-semibold hover:underline"
                                                     >
-                                                        مشاهده همه اعلان‌ها
+                                                        {t('مشاهده همه اعلان‌ها', 'ټولې خبرتیاوې وګورئ')}
                                                     </button>
                                                 )}
                                             </div>
@@ -260,7 +262,7 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                                                             <div className="flex items-start justify-between gap-2">
                                                                 <p className={`text-sm leading-snug line-clamp-2 ${!n.read_at ? 'font-semibold text-slate-800' : 'font-normal text-slate-600'
                                                                     }`}>
-                                                                    {n.title || 'اعلان جدید'}
+                                                                    {n.title || t('اعلان جدید', 'نوې خبرتیا')}
                                                                 </p>
                                                                 <button
                                                                     onClick={(e) => {
@@ -292,7 +294,7 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                                                 className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-slate-600 hover:text-indigo-600 py-2 rounded-xl hover:bg-indigo-50 transition-all"
                                             >
                                                 <Check className="h-3.5 w-3.5" />
-                                                علامت‌گذاری همه به عنوان خوانده شده
+                                                {t('علامت‌گذاری همه به عنوان خوانده شده', 'ټولې د لوستل شویو په توګه نښه کړئ')}
                                             </button>
                                         </div>
                                     )}
@@ -311,10 +313,10 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
                         >
                             <div className="hidden sm:flex flex-col text-left">
                                 <span className="text-xs font-bold text-slate-800 leading-none">
-                                    {auth?.user?.first_name || 'کاربر'}
+                                    {auth?.user?.first_name || t('کاربر', 'کاروونکی')}
                                 </span>
                                 <span className="text-[10px] text-slate-400 leading-none mt-0.5">
-                                    {auth?.user?.role || 'کاربر'}
+                                    {auth?.user?.role || t('کاربر', 'کاروونکی')}
                                 </span>
                             </div>
                             <div className="h-8 w-8 md:h-9 md:w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white font-bold text-sm">
@@ -334,18 +336,18 @@ export function Header({ onMenuClick, isMobile, collapsed }: HeaderProps) {
 
                                 <Link href="/profile" className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-all text-sm">
                                     <User className="h-4 w-4" />
-                                    <span>پروفایل کاربری</span>
+                                    <span>{t('پروفایل کاربری', 'د کارونکي پروفایل')}</span>
                                 </Link>
                                 <Link href="/settings" className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-all text-sm">
                                     <Settings className="h-4 w-4" />
-                                    <span>تنظیمات</span>
+                                    <span>{t('تنظیمات', 'امستنې')}</span>
                                 </Link>
 
                                 <div className="h-px bg-slate-100 my-1 mx-2" />
 
                                 <Link method="post" href="/logout" as="button" className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-rose-500 hover:bg-rose-50 transition-all text-sm">
                                     <LogOut className="h-4 w-4" />
-                                    <span>خروج از سیستم</span>
+                                    <span>{t('خروج از سیستم', 'له سیسټم څخه وتل')}</span>
                                 </Link>
                             </div>
                         )}

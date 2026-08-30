@@ -14,6 +14,7 @@ import passwordRoute from '@/routes/password';
 import profile from '@/routes/profile';
 import settingsRoutes from '@/routes/settings';
 import { update as updatePreferences } from '@/routes/preferences';
+import { useLocale } from '@/hooks/use-locale';
 
 const FONTS = [
     { value: 'Vazirmatn', label: 'وزیرمتن' },
@@ -100,6 +101,7 @@ const StatCard = ({ icon: Icon, label, value, color }: { icon: any; label: strin
 
 // ─── Main Component ────────────────────────────────────────────────────────
 export default function ProfileSettings() {
+    const { isPashto, t } = useLocale();
     const [showCurrentPw, setShowCurrentPw] = useState(false);
     const [showNewPw, setShowNewPw] = useState(false);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -162,10 +164,10 @@ export default function ProfileSettings() {
                 preferred_font: preferencesData.preferred_font,
             })
             .then(() => {
-                showToast('فونت با موفقیت اعمال شد', 'success');
+                showToast(t('فونت با موفقیت اعمال شد', 'لیکبڼه په بریالیتوب پلي شوه'), 'success');
             })
             .catch(() => {
-                showToast('خطا در ذخیره فونت', 'error');
+                showToast(t('خطا در ذخیره فونت', 'د لیکبڼې په خوندي کولو کې تېروتنه'), 'error');
             });
     }, [preferencesData.preferred_font]);
 
@@ -201,8 +203,8 @@ export default function ProfileSettings() {
 
         patchPreferences(updatePreferences().url, {
             preserveScroll: true,
-            onSuccess: () => showToast('تنظیمات با موفقیت ذخیره شد', 'success'),
-            onError: () => showToast('خطا در ذخیره تنظیمات', 'error'),
+            onSuccess: () => showToast(t('تنظیمات با موفقیت ذخیره شد', 'امستنې په بریالیتوب خوندي شوې'), 'success'),
+            onError: () => showToast(t('خطا در ذخیره تنظیمات', 'د امستنو په خوندي کولو کې تېروتنه'), 'error'),
         });
     };
 
@@ -233,9 +235,9 @@ export default function ProfileSettings() {
     };
 
     const tabs = [
-        { id: 'profile', label: 'اطلاعات شخصی', icon: UserIcon, color: 'indigo' },
-        { id: 'password', label: 'تغییر رمز عبور', icon: Key, color: 'amber' },
-        { id: 'preferences', label: 'تنظیمات', icon: Settings, color: 'emerald' },
+        { id: 'profile', label: t('اطلاعات شخصی', 'شخصي معلومات'), icon: UserIcon, color: 'indigo' },
+        { id: 'password', label: t('تغییر رمز عبور', 'د پټنوم بدلول'), icon: Key, color: 'amber' },
+        { id: 'preferences', label: t('تنظیمات', 'امستنې'), icon: Settings, color: 'emerald' },
     ];
 
     const avatarSrc = avatarPreview || user.avatar || null;
@@ -245,7 +247,7 @@ export default function ProfileSettings() {
 
     return (
         <>
-            <Head title="تنظیمات پروفایل" />
+            <Head title={t('تنظیمات پروفایل', 'د پروفایل امستنې')} />
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
@@ -580,15 +582,15 @@ export default function ProfileSettings() {
                                                 <Settings className="h-4 w-4 text-emerald-600" />
                                             </div>
                                             <div>
-                                                <h2 className="text-sm font-bold text-gray-800">تنظیمات برنامه</h2>
-                                                <p className="text-xs text-gray-400">سفارشی‌سازی تجربه کاربری</p>
+                                                <h2 className="text-sm font-bold text-gray-800">{t('تنظیمات برنامه', 'د پروګرام امستنې')}</h2>
+                                                <p className="text-xs text-gray-400">{t('سفارشی‌سازی تجربه کاربری', 'د کاروونکي تجربې شخصي کول')}</p>
                                             </div>
                                         </div>
                                     </div>
 
                                     <form onSubmit={handlePreferencesSubmit} className="p-6 space-y-5">
                                         <div>
-                                            <FieldLabel>زبان برنامه</FieldLabel>
+                                            <FieldLabel>{t('زبان برنامه', 'د پروګرام ژبه')}</FieldLabel>
                                             <div className="flex gap-3">
                                                 <button
                                                     type="button"
@@ -599,7 +601,7 @@ export default function ProfileSettings() {
                                                         }`}
                                                 >
                                                     <Globe className="h-4 w-4" />
-                                                    فارسی
+                                                    {t('فارسی', 'فارسي')}
                                                 </button>
                                                 <button
                                                     type="button"
@@ -627,7 +629,7 @@ export default function ProfileSettings() {
                                         </div>
 
                                         <div>
-                                            <FieldLabel>تم برنامه</FieldLabel>
+                                            <FieldLabel>{t('تم برنامه', 'د پروګرام بڼه')}</FieldLabel>
                                             <div className="flex gap-3">
                                                 <button
                                                     type="button"
@@ -638,7 +640,7 @@ export default function ProfileSettings() {
                                                         }`}
                                                 >
                                                     <Sun className="h-4 w-4" />
-                                                    روشن
+                                                    {t('روشن', 'روښانه')}
                                                 </button>
                                                 <button
                                                     type="button"
@@ -649,7 +651,7 @@ export default function ProfileSettings() {
                                                         }`}
                                                 >
                                                     <Moon className="h-4 w-4" />
-                                                    تیره
+                                                    {t('تیره', 'تیاره')}
                                                 </button>
                                             </div>
                                         </div>
@@ -659,8 +661,8 @@ export default function ProfileSettings() {
                                                 <div className="flex items-center gap-3">
                                                     <Bell className="h-5 w-5 text-gray-500" />
                                                     <div>
-                                                        <p className="text-sm font-medium text-gray-700">اعلان‌های سیستمی</p>
-                                                        <p className="text-xs text-gray-400">دریافت اعلان‌های مربوط به نامه‌ها و وظایف</p>
+                                                        <p className="text-sm font-medium text-gray-700">{t('اعلان‌های سیستمی', 'د سیسټم خبرتیاوې')}</p>
+                                                        <p className="text-xs text-gray-400">{t('دریافت اعلان‌های مربوط به نامه‌ها و وظایف', 'د مکتوبونو او دندو اړوند خبرتیاوې ترلاسه کول')}</p>
                                                     </div>
                                                 </div>
                                                 <div className="relative">
@@ -676,7 +678,7 @@ export default function ProfileSettings() {
                                         </div>
 
                                         <div>
-                                            <FieldLabel>فونت دلخواه</FieldLabel>
+                                            <FieldLabel>{t('فونت دلخواه', 'غوره لیکبڼه')}</FieldLabel>
                                             <div className="grid grid-cols-2 gap-3">
                                                 {FONTS.map((font) => {
                                                     const isActive = preferencesData.preferred_font === font.value;
@@ -700,14 +702,14 @@ export default function ProfileSettings() {
                                                                 className="text-sm text-gray-800"
                                                                 style={{ fontFamily: font.value }}
                                                             >
-                                                                سیستم مکاتیب اداری
+                                                                {isPashto ? 'د اداري مکتوبونو سیسټم' : 'سیستم مکاتیب اداری'}
                                                             </span>
                                                         </button>
                                                     );
                                                 })}
                                             </div>
                                             <p className="text-xs text-gray-400 mt-2">
-                                                فونت بلافاصله اعمال و ذخیره می‌شود.
+                                                {t('فونت بلافاصله اعمال و ذخیره می‌شود.', 'لیکبڼه سمدستي پلي او خوندي کېږي.')}
                                             </p>
                                         </div>
 
@@ -718,7 +720,7 @@ export default function ProfileSettings() {
                                                 className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-emerald-500 hover:bg-emerald-600 rounded-xl transition-all shadow-sm disabled:opacity-50"
                                             >
                                                 <Save className="h-4 w-4" />
-                                                {preferencesProcessing ? 'در حال ذخیره...' : 'ذخیره تنظیمات'}
+                                                {preferencesProcessing ? t('در حال ذخیره...', 'د خوندي کولو په حال کې...') : t('ذخیره تنظیمات', 'امستنې خوندي کړئ')}
                                             </button>
                                         </div>
                                     </form>

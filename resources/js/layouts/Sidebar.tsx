@@ -6,6 +6,7 @@ import {
     Sparkles, Layout, Zap, X, Mail
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
+import { useLocale } from '@/hooks/use-locale';
 
 // مسیرها
 import { dashboard } from '@/routes';
@@ -30,11 +31,33 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: SidebarProps) {
+    const { isPashto, t } = useLocale();
     const { url } = usePage();
     const { auth } = usePage().props as any;
     const [openMenus, setOpenMenus] = useState<string[]>([]);
     const userRole = auth?.user?.roles?.[0]?.name || 'user';
     const isReceptionUser = auth?.isReceptionUser === true;
+    const pashtoLabels: Record<string, string> = {
+        'داشبورد': 'ډشبورډ',
+        'داشبورد مکاتیب': 'د مکتوبونو ډشبورډ',
+        'کارتابل جاری': 'روان کارتابل',
+        'داشبورد دبیرخانه': 'د دبیرخانې ډشبورډ',
+        'مدیریت تشکیلات': 'د تشکیلاتو مدیریت',
+        'وزارت‌ خانه‌ها': 'وزارتونه',
+        'ریاست‌ها': 'ریاستونه',
+        'بست‌های کاری': 'کاري بستونه',
+        'مدیریت کارمندان': 'د کارکوونکو مدیریت',
+        'مکتوب و استعلام ها وارده': 'وارده مکتوبونه او استعلامونه',
+        'مکتوب و استعلام ها صادره': 'صادره مکتوبونه او استعلامونه',
+        'ثبت مکتوب / استعلام': 'د مکتوب / استعلام ثبتول',
+        'آرشیف مرکزی': 'مرکزي آرشیف',
+        'گزارشات تحلیلی': 'تحلیلي راپورونه',
+        'تایید تذکره': 'د تذکرې تایید',
+        'تنظیمات سیستم': 'د سیسټم امستنې',
+        'پروفایل کاربری': 'د کارونکي پروفایل',
+        'پیکربندی اصلی': 'اصلي امستنې',
+    };
+    const navLabel = (label: string) => isPashto ? (pashtoLabels[label] ?? label) : label;
 
     const isUrlActive = (href: any) => {
         if (!url || !href || typeof href !== 'string') {
@@ -121,8 +144,8 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: 
                     </div>
                     {(!collapsed || isMobile) && (
                         <div className="flex flex-col animate-in fade-in slide-in-from-right-4 duration-500">
-                            <span className="font-bold text-sm text-slate-900 leading-tight">سیستم مدیریت مکاتیب</span>
-                            <span className="text-[10px] text-slate-400 mt-0.5">اداره اسناد و ارتباطات</span>
+                            <span className="font-bold text-sm text-slate-900 leading-tight">{t('سیستم مدیریت مکاتیب', 'د مکتوبونو مدیریت سیسټم')}</span>
+                            <span className="text-[10px] text-slate-400 mt-0.5">{t('اداره اسناد و ارتباطات', 'د اسنادو او اړیکو اداره')}</span>
                         </div>
                     )}
                 </div>
@@ -166,7 +189,7 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: 
                                     >
                                         <div className="flex items-center gap-3">
                                             <item.icon className={`h-[18px] w-[18px] ${(isOpen || hasActiveChild) ? 'text-indigo-600' : 'text-slate-400'}`} />
-                                            {(!collapsed || isMobile) && <span className="text-[13px] font-semibold">{item.title}</span>}
+                                            {(!collapsed || isMobile) && <span className="text-[13px] font-semibold">{navLabel(item.title)}</span>}
                                         </div>
                                         {(!collapsed || isMobile) && <ChevronDown className={`h-3.5 w-3.5 opacity-40 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />}
                                     </button>
@@ -186,7 +209,7 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: 
                                                             }`}
                                                     >
                                                         <child.icon className="h-4 w-4" />
-                                                        <span>{child.title}</span>
+                                                        <span>{navLabel(child.title)}</span>
                                                     </Link>
                                                 );
                                             })}
@@ -203,7 +226,7 @@ export function Sidebar({ collapsed, setCollapsed, isMobile, isOpen, onClose }: 
                                         }`}
                                 >
                                     <item.icon className={`h-[18px] w-[18px] shrink-0 ${active ? 'text-white' : 'text-slate-400'}`} />
-                                    {(!collapsed || isMobile) && <span className="text-[13px] font-semibold">{item.title}</span>}
+                                    {(!collapsed || isMobile) && <span className="text-[13px] font-semibold">{navLabel(item.title)}</span>}
                                     {active && (!collapsed || isMobile) && (
                                         <span className="absolute left-3 h-1.5 w-1.5 rounded-full bg-white/70" />
                                     )}
