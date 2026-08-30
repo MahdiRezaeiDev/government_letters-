@@ -4,12 +4,9 @@
  */
 export default function pashtoUiBabelPlugin({ types: t }) {
     const hasArabicScript = (value) => /[\u0600-\u06ff]/u.test(value);
-    const displayProperties = new Set([
-        'label', 'title', 'subtitle', 'description', 'desc', 'placeholder',
-        'message', 'emptyText', 'confirmText', 'cancelText', 'text',
-    ]);
     const translatableAttributes = new Set([
-        'alt', 'aria-label', 'placeholder', 'title',
+        'alt', 'aria-label', 'placeholder', 'title', 'subtitle',
+        'label', 'name', 'message', 'description',
     ]);
 
     const translationCall = (value) => t.callExpression(
@@ -23,31 +20,56 @@ export default function pashtoUiBabelPlugin({ types: t }) {
             JSXText(path) {
                 if (!hasArabicScript(path.node.value)) return;
                 path.replaceWith(t.jsxExpressionContainer(translationCall(path.node.value)));
+                path.skip();
             },
             JSXAttribute(path) {
                 const name = path.node.name.name;
                 const value = path.node.value;
                 if (!translatableAttributes.has(name) || !t.isStringLiteral(value) || !hasArabicScript(value.value)) return;
                 path.node.value = t.jsxExpressionContainer(translationCall(value.value));
+                path.skip();
             },
             StringLiteral(path) {
                 if (!hasArabicScript(path.node.value)) return;
 
                 const parent = path.parentPath;
-                const isDisplayProperty = parent.isObjectProperty()
-                    && parent.node.value === path.node
-                    && ((t.isIdentifier(parent.node.key) && displayProperties.has(parent.node.key.name))
-                        || (t.isStringLiteral(parent.node.key) && displayProperties.has(parent.node.key.value)));
-                const isJsxExpression = parent.isJSXExpressionContainer();
-                const isConditionalCopy = parent.isConditionalExpression()
-                    && (parent.node.consequent === path.node || parent.node.alternate === path.node);
-                const isToastCopy = parent.isCallExpression()
-                    && t.isIdentifier(parent.node.callee)
-                    && ['showToast', 'alert', 'confirm'].includes(parent.node.callee.name);
+                const isTechnicalKey = (parent.isObjectProperty() && parent.node.key === path.node)
+                    || (parent.isObjectMethod() && parent.node.key === path.node)
+                    || (parent.isMemberExpression() && parent.node.property === path.node);
+                const isModuleSpecifier = parent.isImportDeclaration()
+                    || parent.isExportNamedDeclaration()
+                    || parent.isExportAllDeclaration();
+                const isTypeLiteral = parent.isTSLiteralType();
+                const isAlreadyTranslated = parent.isCallExpression()
+                    && t.isMemberExpression(parent.node.callee)
+                    && t.isIdentifier(parent.node.callee.object, { name: 'globalThis' })
+                    && t.isIdentifier(parent.node.callee.property, { name: '__uiTranslate' });
 
-                if (!isDisplayProperty && !isJsxExpression && !isConditionalCopy && !isToastCopy) return;
+                if (isTechnicalKey || isModuleSpecifier || isTypeLiteral || isAlreadyTranslated) return;
                 path.replaceWith(translationCall(path.node.value));
                 path.skip();
+            },
+            TemplateLiteral(path) {
+                if (path.parentPath.isTaggedTemplateExpression()) return;
+                if (!path.node.quasis.some((quasi) => hasArabicScript(quasi.value.raw))) return;
+
+                const parts = [];
+                path.node.quasis.forEach((quasi, index) => {
+                    const text = quasi.value.cooked ?? quasi.value.raw;
+                    if (text) {
+                        parts.push(hasArabicScript(text) ? translationCall(text) : t.stringLiteral(text));
+                    }
+                    if (index < path.node.expressions.length) {
+                        parts.push(path.node.expressions[index]);
+                    }
+                });
+
+                if (parts.length === 0) return;
+                const expression = parts.slice(1).reduce(
+                    (left, right) => t.binaryExpression('+', left, right),
+                    parts[0],
+                );
+                path.replaceWith(expression);
             },
         },
     };
