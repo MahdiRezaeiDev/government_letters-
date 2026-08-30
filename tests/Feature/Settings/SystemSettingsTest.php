@@ -40,7 +40,7 @@ test('stored settings are returned as a flat typed object', function () {
     $this->actingAs($this->user)
         ->get(route('settings.index'))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('settings.session_lifetime', 180.0)
+            ->where('settings.session_lifetime', 180)
             ->has('settings.app_name')
             ->has('settings.max_file_size'));
 });
