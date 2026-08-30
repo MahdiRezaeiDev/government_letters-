@@ -6,6 +6,10 @@ export function useLocale() {
     const props = usePage().props as any;
     const locale = (props.locale || props.auth?.user?.locale || 'fa') as AppLocale;
 
+    if (typeof globalThis !== 'undefined') {
+        (globalThis as typeof globalThis & { __appLocale?: AppLocale }).__appLocale = locale;
+    }
+
     return {
         locale,
         isPashto: locale === 'ps',

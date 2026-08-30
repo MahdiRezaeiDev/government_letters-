@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import laravel from 'laravel-vite-plugin';
 import { defineConfig } from 'vite';
+import pashtoUiBabelPlugin from './build-tools/pashto-ui-babel-plugin.js';
 
 export default defineConfig({
     plugins: [
@@ -14,7 +15,7 @@ export default defineConfig({
         inertia(),
         react({
             babel: {
-                plugins: ['babel-plugin-react-compiler'],
+                plugins: [pashtoUiBabelPlugin, 'babel-plugin-react-compiler'],
             },
         }),
         tailwindcss(),
