@@ -17,6 +17,13 @@ export default function pashtoUiBabelPlugin({ types: t }) {
     return {
         name: 'pashto-static-ui-copy',
         visitor: {
+            Program(path, state) {
+                const filename = (state.filename || state.file?.opts?.filename || '').replaceAll('\\', '/');
+
+                if (filename.endsWith('/lib/ui-translator.ts') || filename.endsWith('/lib/ui-translator-bootstrap.ts')) {
+                    path.skip();
+                }
+            },
             JSXText(path) {
                 if (!hasArabicScript(path.node.value)) return;
                 path.replaceWith(t.jsxExpressionContainer(translationCall(path.node.value)));
