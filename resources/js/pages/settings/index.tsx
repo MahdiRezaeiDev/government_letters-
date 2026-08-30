@@ -8,6 +8,7 @@ import {
 import { useState, useEffect, useRef } from 'react';
 import { usePage } from '@inertiajs/react';
 import settingsRoutes from '@/routes/settings';
+import { useLocale } from '@/hooks/use-locale';
 
 const FONTS = [
     { value: 'Vazirmatn', label: 'وزیرمتن', sample: 'سیستم مدیریت لوژیستیک' },
@@ -26,7 +27,7 @@ interface Props {
         mail_encryption: string;
         two_factor_enabled: boolean;
         session_lifetime: number;
-        max_upload_size: number;
+        max_file_size: number;
         allowed_file_types: string;
         preferred_font?: string;
     };
@@ -92,6 +93,8 @@ function SelectField({
 // ─── Font Picker ───────────────────────────────────────────────────────────
 
 function FontPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+    const { isPashto } = useLocale();
+
     return (
         <div className="grid grid-cols-2 gap-3">
             {FONTS.map(font => {
@@ -121,7 +124,7 @@ function FontPicker({ value, onChange }: { value: string; onChange: (v: string) 
                             className="text-base text-slate-800 leading-relaxed w-full truncate"
                             style={{ fontFamily: font.value }}
                         >
-                            {font.sample}
+                            {isPashto ? 'د اداري مکتوبونو سیسټم' : font.sample}
                         </span>
                     </button>
                 );
@@ -183,6 +186,7 @@ function SectionCard({ icon: Icon, iconColor, title, subtitle, children }: {
 // ─── Main Component ────────────────────────────────────────────────────────
 
 export default function SystemSettings({ settings, preferred_font }: Props) {
+    const { t } = useLocale();
     const [activeTab, setActiveTab] = useState<'general' | 'mail' | 'security' | 'upload'>('general');
     const [saved, setSaved] = useState(false);
     const skipInitialFontSave = useRef(true);
@@ -193,17 +197,18 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
         || authUser?.preferred_font
         || 'Vazirmatn';
 
-    const { data, setData, patch, processing } = useForm({
+    const { data, setData, post, processing } = useForm({
         app_name: settings.app_name,
         app_locale: settings.app_locale,
         session_lifetime: settings.session_lifetime,
         two_factor_enabled: settings.two_factor_enabled,
-        max_upload_size: settings.max_upload_size,
+        max_file_size: settings.max_file_size,
         allowed_file_types: settings.allowed_file_types,
         mail_host: settings.mail_host,
         mail_port: settings.mail_port,
         mail_username: settings.mail_username,
         mail_encryption: settings.mail_encryption,
+        mail_password: '',
         preferred_font: initialFont,
     });
 
@@ -230,7 +235,7 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        patch(route('settings.update'), {
+        post(settingsRoutes.update().url, {
             preserveScroll: true,
             onSuccess: () => {
                 setSaved(true);
@@ -240,15 +245,15 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
     };
 
     const tabs = [
-        { id: 'general', label: 'عمومی', icon: Globe, color: '#6366f1' },
-        { id: 'mail', label: 'ایمیل', icon: Mail, color: '#0ea5e9' },
-        { id: 'security', label: 'امنیت', icon: Shield, color: '#10b981' },
-        { id: 'upload', label: 'آپلود فایل', icon: Database, color: '#f59e0b' },
+        { id: 'general', label: t('عمومی', 'عمومي'), icon: Globe, color: '#6366f1' },
+        { id: 'mail', label: t('ایمیل', 'برېښنالیک'), icon: Mail, color: '#0ea5e9' },
+        { id: 'security', label: t('امنیت', 'امنیت'), icon: Shield, color: '#10b981' },
+        { id: 'upload', label: t('آپلود فایل', 'د فایل پورته کول'), icon: Database, color: '#f59e0b' },
     ];
 
     return (
         <>
-            <Head title="تنظیمات سیستم" />
+            <Head title={t('تنظیمات سیستم', 'د سیسټم امستنې')} />
 
             <div className="min-h-screen" dir="rtl">
 
@@ -258,16 +263,16 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
                         <div className="flex items-center justify-between h-16">
                             <div className="flex items-center gap-3">
                                 <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 tracking-wide">
-                                    تنظیمات
+                                    {t('تنظیمات', 'امستنې')}
                                 </span>
                                 <span className="text-slate-300 text-lg font-light">/</span>
-                                <h1 className="text-sm font-bold text-slate-800">تنظیمات سیستم</h1>
+                                <h1 className="text-sm font-bold text-slate-800">{t('تنظیمات سیستم', 'د سیسټم امستنې')}</h1>
                             </div>
                             <div className="flex items-center gap-3">
                                 {saved && (
                                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-full">
                                         <CheckCircle className="h-3.5 w-3.5" />
-                                        ذخیره شد
+                                        {t('ذخیره شد', 'خوندي شو')}
                                     </span>
                                 )}
                                 <button
@@ -277,7 +282,7 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
                                     className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <Save className="h-4 w-4" />
-                                    {processing ? 'در حال ذخیره...' : 'ذخیره تنظیمات'}
+                                    {processing ? t('در حال ذخیره...', 'د خوندي کولو په حال کې...') : t('ذخیره تنظیمات', 'امستنې خوندي کړئ')}
                                 </button>
                             </div>
                         </div>
@@ -294,9 +299,9 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
                                     <Settings className="h-6 w-6 text-white" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-bold text-slate-800">تنظیمات سیستم</p>
+                                    <p className="text-sm font-bold text-slate-800">{t('تنظیمات سیستم', 'د سیسټم امستنې')}</p>
                                     <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                                        پیکربندی عمومی، ایمیل، امنیت و آپلود فایل
+                                        {t('پیکربندی عمومی، ایمیل، امنیت و آپلود فایل', 'عمومي، برېښنالیک، امنیت او د فایل پورته کولو امستنې')}
                                     </p>
                                 </div>
                             </div>
@@ -323,25 +328,25 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
 
                             {/* ── General Tab ── */}
                             {activeTab === 'general' && (
-                                <SectionCard icon={Globe} iconColor="#6366f1" title="تنظیمات عمومی" subtitle="نام، زبان، فونت و مدت نشست سیستم">
+                                <SectionCard icon={Globe} iconColor="#6366f1" title={t('تنظیمات عمومی', 'عمومي امستنې')} subtitle={t('نام، زبان، فونت و مدت نشست سیستم', 'د سیسټم نوم، ژبه، لیکبڼه او د ناستې موده')}>
                                     <div className="space-y-6 fade-up">
                                         <div>
-                                            <FieldLabel>نام سیستم</FieldLabel>
+                                            <FieldLabel>{t('نام سیستم', 'د سیسټم نوم')}</FieldLabel>
                                             <InputField
                                                 icon={Settings}
                                                 value={data.app_name}
                                                 onChange={v => setData('app_name', v)}
-                                                placeholder="سیستم مدیریت لوژیستیک"
+                                                placeholder={t('سیستم مدیریت لوژیستیک', 'د لوژستیک مدیریت سیسټم')}
                                             />
                                         </div>
                                         <div>
-                                            <FieldLabel>زبان پیش‌فرض</FieldLabel>
+                                            <FieldLabel>{t('زبان پیش‌فرض', 'اصلي ژبه')}</FieldLabel>
                                             <SelectField
                                                 icon={Globe}
                                                 value={data.app_locale}
                                                 onChange={v => setData('app_locale', v)}
                                             >
-                                                <option value="fa">فارسی / دری</option>
+                                                <option value="fa">{t('فارسی / دری', 'فارسي / دري')}</option>
                                                 <option value="ps">پښتو</option>
                                                 <option value="en">English</option>
                                             </SelectField>
@@ -349,18 +354,18 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
 
                                         {/* ── Font Picker ── */}
                                         <div>
-                                            <FieldLabel>فونت سیستم</FieldLabel>
+                                            <FieldLabel>{t('فونت سیستم', 'د سیسټم لیکبڼه')}</FieldLabel>
                                             <FontPicker
                                                 value={data.preferred_font}
                                                 onChange={v => setData('preferred_font', v)}
                                             />
                                             <FieldHint>
-                                                فونت انتخاب شده بلافاصله اعمال می‌شود و پس از ذخیره برای همه کاربران فعال خواهد بود.
+                                                {t('فونت انتخاب شده بلافاصله اعمال می‌شود و پس از ذخیره برای همه کاربران فعال خواهد بود.', 'ټاکل شوې لیکبڼه سمدستي پلي کېږي او تر خوندي کولو وروسته به د ټولو کاروونکو لپاره فعاله وي.')}
                                             </FieldHint>
                                         </div>
 
                                         <div>
-                                            <FieldLabel>مدت زمان نشست (دقیقه)</FieldLabel>
+                                            <FieldLabel>{t('مدت زمان نشست (دقیقه)', 'د ناستې موده (دقیقې)')}</FieldLabel>
                                             <InputField
                                                 icon={Clock}
                                                 type="number"
@@ -368,7 +373,7 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
                                                 onChange={v => setData('session_lifetime', parseInt(v))}
                                                 placeholder="120"
                                             />
-                                            <FieldHint>کاربر پس از این مدت بی‌فعالیت از سیستم خارج می‌شود.</FieldHint>
+                                            <FieldHint>{t('کاربر پس از این مدت بی‌فعالیت از سیستم خارج می‌شود.', 'کاروونکی له دې مودې بې‌فعالیتۍ وروسته له سیسټم څخه وځي.')}</FieldHint>
                                         </div>
                                     </div>
                                 </SectionCard>
@@ -376,11 +381,11 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
 
                             {/* ── Mail Tab ── */}
                             {activeTab === 'mail' && (
-                                <SectionCard icon={Mail} iconColor="#0ea5e9" title="تنظیمات ایمیل" subtitle="پیکربندی سرور SMTP برای ارسال ایمیل">
+                                <SectionCard icon={Mail} iconColor="#0ea5e9" title={t('تنظیمات ایمیل', 'د برېښنالیک امستنې')} subtitle={t('پیکربندی سرور SMTP برای ارسال ایمیل', 'د برېښنالیک لېږلو لپاره د SMTP سرور امستنې')}>
                                     <div className="space-y-5 fade-up">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                             <div>
-                                                <FieldLabel>سرور SMTP</FieldLabel>
+                                                <FieldLabel>{t('سرور SMTP', 'د SMTP سرور')}</FieldLabel>
                                                 <InputField
                                                     icon={Server}
                                                     value={data.mail_host}
@@ -389,7 +394,7 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
                                                 />
                                             </div>
                                             <div>
-                                                <FieldLabel>پورت</FieldLabel>
+                                                <FieldLabel>{t('پورت', 'پورټ')}</FieldLabel>
                                                 <InputField
                                                     icon={Hash}
                                                     value={data.mail_port}
@@ -400,7 +405,7 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
                                         </div>
                                         <div className="border-t border-slate-100" />
                                         <div>
-                                            <FieldLabel>نام کاربری</FieldLabel>
+                                            <FieldLabel>{t('نام کاربری', 'کارن نوم')}</FieldLabel>
                                             <InputField
                                                 icon={Mail}
                                                 value={data.mail_username}
@@ -409,7 +414,7 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
                                             />
                                         </div>
                                         <div>
-                                            <FieldLabel>رمز عبور</FieldLabel>
+                                            <FieldLabel>{t('رمز عبور', 'پټنوم')}</FieldLabel>
                                             <InputField
                                                 icon={Lock}
                                                 type="password"
@@ -419,7 +424,7 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
                                             />
                                         </div>
                                         <div>
-                                            <FieldLabel>رمزنگاری</FieldLabel>
+                                            <FieldLabel>{t('رمزنگاری', 'کوډول')}</FieldLabel>
                                             <SelectField
                                                 icon={Shield}
                                                 value={data.mail_encryption}
@@ -427,7 +432,7 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
                                             >
                                                 <option value="tls">TLS</option>
                                                 <option value="ssl">SSL</option>
-                                                <option value="">بدون رمزنگاری</option>
+                                                <option value="">{t('بدون رمزنگاری', 'له کوډولو پرته')}</option>
                                             </SelectField>
                                         </div>
                                     </div>
@@ -436,11 +441,11 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
 
                             {/* ── Security Tab ── */}
                             {activeTab === 'security' && (
-                                <SectionCard icon={Shield} iconColor="#10b981" title="تنظیمات امنیتی" subtitle="کنترل دسترسی و احراز هویت">
+                                <SectionCard icon={Shield} iconColor="#10b981" title={t('تنظیمات امنیتی', 'امنیتي امستنې')} subtitle={t('کنترل دسترسی و احراز هویت', 'د لاسرسي او هویت تصدیق کنټرول')}>
                                     <div className="fade-up divide-y divide-slate-100">
                                         <ToggleRow
-                                            label="احراز هویت دو مرحله‌ای"
-                                            desc="افزایش امنیت ورود کاربران با تأیید هویت اضافی"
+                                            label={t('احراز هویت دو مرحله‌ای', 'دوه پړاویزه تصدیق')}
+                                            desc={t('افزایش امنیت ورود کاربران با تأیید هویت اضافی', 'د اضافي تصدیق له لارې د کاروونکو د ننوتلو امنیت زیاتول')}
                                             value={data.two_factor_enabled}
                                             onChange={v => setData('two_factor_enabled', v)}
                                             color="#10b981"
@@ -450,7 +455,7 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
                                                 <div className="flex items-start gap-3 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3.5">
                                                     <CheckCircle className="h-4 w-4 text-emerald-500 mt-0.5 flex-shrink-0" />
                                                     <p className="text-xs text-emerald-700 leading-relaxed">
-                                                        احراز هویت دو مرحله‌ای فعال است. کاربران در هنگام ورود کد تأیید دریافت خواهند کرد.
+                                                        {t('احراز هویت دو مرحله‌ای فعال است. کاربران در هنگام ورود کد تأیید دریافت خواهند کرد.', 'دوه پړاویزه تصدیق فعال دی. کاروونکي به د ننوتلو پر مهال د تایید کوډ ترلاسه کړي.')}
                                                     </p>
                                                 </div>
                                             </div>
@@ -461,30 +466,30 @@ export default function SystemSettings({ settings, preferred_font }: Props) {
 
                             {/* ── Upload Tab ── */}
                             {activeTab === 'upload' && (
-                                <SectionCard icon={Database} iconColor="#f59e0b" title="تنظیمات آپلود فایل" subtitle="محدودیت حجم و فرمت‌های مجاز">
+                                <SectionCard icon={Database} iconColor="#f59e0b" title={t('تنظیمات آپلود فایل', 'د فایل پورته کولو امستنې')} subtitle={t('محدودیت حجم و فرمت‌های مجاز', 'د اندازې محدودیت او منل شوې بڼې')}>
                                     <div className="space-y-5 fade-up">
                                         <div>
-                                            <FieldLabel>حداکثر حجم فایل (KB)</FieldLabel>
+                                            <FieldLabel>{t('حداکثر حجم فایل (KB)', 'د فایل تر ټولو لویه اندازه (KB)')}</FieldLabel>
                                             <InputField
                                                 icon={Database}
                                                 type="number"
-                                                value={data.max_upload_size}
-                                                onChange={v => setData('max_upload_size', parseInt(v))}
+                                                value={data.max_file_size}
+                                                onChange={v => setData('max_file_size', parseInt(v))}
                                                 placeholder="10240"
                                             />
                                             <FieldHint>
-                                                معادل {data.max_upload_size ? (data.max_upload_size / 1024).toFixed(1) : '0'} مگابایت
+                                                {t('معادل', 'برابر له')} {data.max_file_size ? (data.max_file_size / 1024).toFixed(1) : '0'} {t('مگابایت', 'مېګابایټ')}
                                             </FieldHint>
                                         </div>
                                         <div>
-                                            <FieldLabel>فرمت‌های مجاز</FieldLabel>
+                                            <FieldLabel>{t('فرمت‌های مجاز', 'منل شوې بڼې')}</FieldLabel>
                                             <InputField
                                                 icon={FileType}
                                                 value={data.allowed_file_types}
                                                 onChange={v => setData('allowed_file_types', v)}
                                                 placeholder="pdf,doc,docx,jpg,png"
                                             />
-                                            <FieldHint>فرمت‌ها را با کاما و بدون فاصله جدا کنید.</FieldHint>
+                                            <FieldHint>{t('فرمت‌ها را با کاما و بدون فاصله جدا کنید.', 'بڼې په کامه او بې له تشې څخه جلا کړئ.')}</FieldHint>
                                             {data.allowed_file_types && (
                                                 <div className="flex flex-wrap gap-1.5 mt-2.5">
                                                     {data.allowed_file_types.split(',').filter(Boolean).map((ext, i) => (

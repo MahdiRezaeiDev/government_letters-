@@ -17,11 +17,6 @@ class SettingController extends Controller
         $user = auth()->user();
 
         // دریافت تنظیمات سازمان (اگر کاربر سازمان دارد)
-        $settings = SystemSetting::where('organization_id', $user->organization_id)
-            ->orWhereNull('organization_id')
-            ->get()
-            ->groupBy('group');
-
         // تنظیمات پیش‌فرض
         $defaultSettings = [
             'general' => [
@@ -55,6 +50,25 @@ class SettingController extends Controller
                 'reminder_before_days' => 2,
             ],
         ];
+
+        $settings = array_merge(...array_values($defaultSettings));
+
+        SystemSetting::query()
+            ->where(function ($query) use ($user) {
+                $query->whereNull('organization_id');
+
+                if ($user->organization_id !== null) {
+                    $query->orWhere('organization_id', $user->organization_id);
+                }
+            })
+            ->get()
+            // Global values are defaults; organization values take precedence.
+            ->sortBy(fn (SystemSetting $setting) => $setting->organization_id === null ? 0 : 1)
+            ->each(function (SystemSetting $setting) use (&$settings) {
+                $settings[$setting->key] = $setting->typed_value;
+            });
+
+        $settings['preferred_font'] = $user->preferred_font ?: 'Vazirmatn';
 
         return Inertia::render('settings/index', [
             'settings' => $settings,
@@ -151,6 +165,11 @@ class SettingController extends Controller
         $this->saveSetting('letter', 'default_deadline_days', $request->default_deadline_days);
         $this->saveSetting('letter', 'auto_archive_days', $request->auto_archive_days);
         $this->saveSetting('letter', 'reminder_before_days', $request->reminder_before_days);
+
+        if ($request->filled('app_locale')) {
+            $user->forceFill(['locale' => $request->app_locale])->save();
+            app()->setLocale($request->app_locale);
+        }
 
         return redirect()->route('settings.index')
             ->with('success', 'تنظیمات با موفقیت ذخیره شد.');

@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Header } from './Header';
 import { MobileMenu } from './MobileMenu';
 import { Sidebar } from './Sidebar';
+import { useLocale } from '@/hooks/use-locale';
 
 interface AppLayoutProps {
     children: React.ReactNode;
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
+    const { isRtl } = useLocale();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [collapsed, setCollapsed] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
@@ -35,10 +37,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
         }
     }, [isMobile]);
 
-    const sidebarWidthClasses = collapsed ? 'md:mr-20' : 'md:mr-72';
+    const sidebarWidthClasses = collapsed
+        ? (isRtl ? 'md:mr-20' : 'md:ml-20')
+        : (isRtl ? 'md:mr-72' : 'md:ml-72');
 
     return (
-        <div className="min-h-screen bg-slate-100" dir="rtl">
+        <div className="min-h-screen bg-slate-100" dir={isRtl ? 'rtl' : 'ltr'}>
             {/* Desktop Sidebar */}
             {!isMobile && (
                 <Sidebar
