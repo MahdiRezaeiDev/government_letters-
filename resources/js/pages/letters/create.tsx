@@ -327,6 +327,23 @@ export default function LettersCreate({
         }
     };
 
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = () => {
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        if (e.dataTransfer.files) {
+            setAttachments([...attachments, ...Array.from(e.dataTransfer.files)]);
+        }
+    };
+
     const removeAttachment = (index: number) => {
         setAttachments(attachments.filter((_, i) => i !== index));
     };

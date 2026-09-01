@@ -35,6 +35,12 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 */
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
 Route::inertia('/', 'welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
@@ -44,6 +50,7 @@ Route::inertia('/', 'welcome', [
 // Routes نیازمند احراز هویت
 // ============================================
 Route::middleware(['auth', 'verified'])->group(function () {
+<<<<<<< HEAD
 <<<<<<< HEAD
 
     Route::get('/notifications', function () {
@@ -165,6 +172,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+=======
+    
+    // Dashboard
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+>>>>>>> da81e1b9275abb0475335ab054e8daa07b596ed6
     // ============================================
     // مدیریت سازمان‌ها (فقط ادمین کل)
     // ============================================
@@ -180,7 +193,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // API endpoints برای فرم‌ها (JSON responses)
     // ============================================
     Route::get('organizations/departments', function (Request $request) {
+<<<<<<< HEAD
 >>>>>>> ec70f01 (Updated the user permissions and seeder)
+=======
+>>>>>>> da81e1b9275abb0475335ab054e8daa07b596ed6
         $departments = Department::where('organization_id', $request->organization_id)
             ->where('status', 'active')
             ->get(['id', 'name', 'parent_id']);
@@ -188,12 +204,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('organizations.departments');
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     Route::get('/departments/positions', function (Request $request) {
         $currentUser = auth()->user()->load('department');
 
 =======
     Route::get('departments/positions', function (Request $request) {
 >>>>>>> ec70f01 (Updated the user permissions and seeder)
+=======
+    Route::get('departments/positions', function (Request $request) {
+>>>>>>> da81e1b9275abb0475335ab054e8daa07b596ed6
         $positions = Position::where('department_id', $request->department_id)
             ->where('id', '!=', $currentUser->primaryPosition->id)
             ->with(['users:id,first_name,last_name'])
@@ -209,6 +229,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return response()->json(['positions' => $positions]);
     })->name('departments.positions');
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     // ═══════════════════════════════════════════════════════
     // دپارتمان‌ها
@@ -302,6 +323,42 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // API endpoints برای فرم‌های کاربران (JSON responses)
 >>>>>>> ec70f01 (Updated the user permissions and seeder)
+=======
+    // ============================================
+    // مدیریت دپارتمان‌ها (ادمین کل و ادمین سازمان)
+    // ============================================
+    Route::middleware(['role:super-admin|org-admin'])->group(function () {
+        Route::resource('departments', DepartmentController::class);
+        Route::post('departments/{department}/toggle-status', [DepartmentController::class, 'toggleStatus'])
+            ->name('departments.toggle-status');
+        Route::get('departments-list', [DepartmentController::class, 'getList'])
+            ->name('departments.list');
+    });
+
+    // ============================================
+    // مدیریت سمت‌ها (ادمین کل و ادمین سازمان)
+    // ============================================
+    Route::middleware(['role:super-admin|org-admin'])->group(function () {
+        Route::resource('positions', PositionController::class);
+        Route::get('positions-list', [PositionController::class, 'getList'])
+            ->name('positions.list');
+        Route::get('positions-management-list', [PositionController::class, 'getManagementList'])
+            ->name('positions.management-list');
+    });
+
+    // ============================================
+    // مدیریت کاربران (ادمین کل و ادمین سازمان)
+    // ============================================
+    Route::middleware(['role:super-admin|org-admin'])->group(function () {
+        Route::resource('users', UserController::class);
+        Route::post('users/{user}/assign-role', [UserController::class, 'assignRole'])
+            ->name('users.assign-role');
+        Route::post('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
+            ->name('users.toggle-status');
+    });
+
+    // API endpoints برای فرم‌های کاربران (JSON responses)
+>>>>>>> da81e1b9275abb0475335ab054e8daa07b596ed6
     Route::get('users/departments-by-organization', [UserController::class, 'getDepartmentsByOrganization'])
         ->middleware('permission:view-users')->name('users.departments-by-organization');
     Route::get('users/positions-by-department', [UserController::class, 'getPositionsByDepartment'])
@@ -496,6 +553,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('permission:edit-case')->name('archives.cases.detach-letter');
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     // ═══════════════════════════════════════════════════════
     // گزارشات
     // ✅ static routes اول
@@ -557,6 +615,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('categories.list');
     });
 
+=======
+    // ============================================
+    // مدیریت دسته‌بندی نامه‌ها (ادمین کل و ادمین سازمان)
+    // ============================================
+    Route::middleware(['role:super-admin|org-admin'])->group(function () {
+        Route::resource('categories', LetterCategoryController::class);
+        Route::post('categories/{category}/toggle-status', [LetterCategoryController::class, 'toggleStatus'])
+            ->name('categories.toggle-status');
+        Route::get('categories-list', [LetterCategoryController::class, 'getList'])
+            ->name('categories.list');
+    });
+
+>>>>>>> da81e1b9275abb0475335ab054e8daa07b596ed6
     // ============================================
     // گزارشات (مدیر دپارتمان و بالاتر)
     // ============================================
@@ -573,7 +644,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
     });
+<<<<<<< HEAD
 >>>>>>> ec70f01 (Updated the user permissions and seeder)
+=======
+>>>>>>> da81e1b9275abb0475335ab054e8daa07b596ed6
 });
 
 // فایل تنظیمات اضافی
