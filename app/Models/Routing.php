@@ -106,6 +106,11 @@ class Routing extends Model
         return $this->hasMany(Action::class);
     }
 
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(Reminder::class);
+    }
+
     // ─── Scopes ────────────────────────────────────────────────
 
     public function scopePending($query)

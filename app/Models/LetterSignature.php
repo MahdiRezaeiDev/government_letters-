@@ -53,11 +53,11 @@ class LetterSignature extends Model
 
     // ─── Helpers ───────────────────────────────────────────────
 
-    public function verify(): void
+    public function verify(?int $verifiedBy = null): void
     {
-        // منطق بررسی امضای دیجیتال
         $this->update([
             'verified_at' => now(),
+            'verified_by' => $verifiedBy ?? $this->verified_by,
             'verification_result' => true,
         ]);
     }

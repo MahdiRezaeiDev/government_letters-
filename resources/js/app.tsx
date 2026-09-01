@@ -1,3 +1,4 @@
+import '@/lib/ui-translator-bootstrap';
 import { createInertiaApp } from '@inertiajs/react';
 import { configureEcho } from '@laravel/echo-react';
 import { Toaster } from '@/components/ui/sonner';

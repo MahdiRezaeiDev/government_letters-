@@ -149,10 +149,18 @@ export default function ReportsIndex({ report, filterOptions, filters, canExport
 
     const hasActiveFilters = Object.entries(form).some(([, v]) => v && v !== 'all');
 
-    const handleExportExcel = () => {
+    const exportQuery = () => {
         const params = new URLSearchParams();
         Object.entries(form).forEach(([k, v]) => { if (v && v !== 'all') params.set(k, v); });
-        window.location.href = `/reports/export-excel?${params.toString()}`;
+        return params.toString();
+    };
+
+    const handleExportExcel = () => {
+        window.location.href = `/reports/export-excel?${exportQuery()}`;
+    };
+
+    const handleExportPdf = () => {
+        window.location.href = `/reports/export-pdf?${exportQuery()}`;
     };
 
     // ─── Role-specific overview cards ────────────────────────
@@ -203,13 +211,22 @@ export default function ReportsIndex({ report, filterOptions, filters, canExport
                         <p className="text-sm text-slate-500">{context.description}</p>
                     </div>
                     {canExport && (
-                        <button
-                            onClick={handleExportExcel}
-                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition shadow-md shadow-emerald-200/50"
-                        >
-                            <Download className="h-4 w-4" />
-                            خروجی Excel
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={handleExportExcel}
+                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition shadow-md shadow-emerald-200/50"
+                            >
+                                <Download className="h-4 w-4" />
+                                خروجی Excel
+                            </button>
+                            <button
+                                onClick={handleExportPdf}
+                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-rose-600 text-white rounded-xl text-sm font-semibold hover:bg-rose-700 transition shadow-md shadow-rose-200/50"
+                            >
+                                <Download className="h-4 w-4" />
+                                خروجی PDF
+                            </button>
+                        </div>
                     )}
                 </div>
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\ReportService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -93,10 +94,26 @@ class ReportController extends Controller
         }
 
         $report = $this->reportService->buildReport($user, $request);
+        $rows = $this->reportService->getExportRows($user, $request);
 
-        return response()->json([
-            'message' => 'خروجی PDF به‌زودی اضافه می‌شود. فعلاً از خروجی Excel استفاده کنید.',
-            'overview' => $report['overview'],
-        ], 501);
+        $typeLabels = ['incoming' => 'وارده', 'outgoing' => 'صادره', 'internal' => 'داخلی'];
+        $statusLabels = [
+            'pending' => 'در انتظار', 'approved' => 'تایید شده',
+            'rejected' => 'رد شده', 'archived' => 'بایگانی',
+        ];
+        $priorityLabels = [
+            'low' => 'کم', 'normal' => 'عادی', 'high' => 'مهم',
+            'urgent' => 'عاجل', 'very_urgent' => 'خیلی عاجل',
+        ];
+
+        $pdf = Pdf::loadView('reports.export', [
+            'rows' => $rows,
+            'overview' => $report['overview'] ?? [],
+            'typeLabels' => $typeLabels,
+            'statusLabels' => $statusLabels,
+            'priorityLabels' => $priorityLabels,
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download('letters-report-' . now()->format('Y-m-d') . '.pdf');
     }
 }

@@ -2,45 +2,48 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\User;
 use App\Enums\PermissionEnum;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Inertia\Inertia;
-use Spatie\Permission\Models\Permission;
 
 class UserPermissionController extends Controller
 {
-    // نمایش فرم مدیریت دسترسی‌های مستقیم (React view)
     public function edit(User $user)
     {
-        return Inertia::render('Admin/Users/Permissions', [
+        return Inertia::render('permissions/Permissions', [
             'user' => [
                 'id' => $user->id,
-                'name' => $user->name,
+                'name' => $user->full_name,
                 'email' => $user->email,
-                'roles' => $user->roles->map(fn($role) => [
+                'roles' => $user->roles->map(fn ($role) => [
                     'id' => $role->id,
-                    'name' => $role->name
+                    'name' => $role->name,
                 ]),
                 'permissions' => $user->getAllPermissionsForFrontend(),
             ],
-            'allPermissions' => PermissionEnum::cases(),
+            'allPermissions' => collect(PermissionEnum::cases())->map(fn (PermissionEnum $p) => [
+                'name' => $p->value,
+                'label' => $p->label(),
+            ])->values(),
             'groupedPermissions' => $this->getGroupedPermissions(),
         ]);
     }
 
-    // بروزرسانی دسترسی‌های مستقیم
     public function update(User $user)
     {
-        $permissions = request()->input('permissions', []);
+        $permissions = request()->validate([
+            'permissions' => 'array',
+            'permissions.*' => 'string',
+        ])['permissions'] ?? [];
 
-        // همگام‌سازی دسترسی‌های مستقیم
         $user->syncPermissions($permissions);
 
-        return redirect()->back()->with('success', 'دسترسی‌ها با موفقیت بروزرسانی شد.');
+        return redirect()
+            ->route('admin.users.permissions.edit', $user)
+            ->with('success', 'دسترسی‌ها با موفقیت بروزرسانی شد.');
     }
 
-    // گروه‌بندی دسترسی‌ها برای نمایش بهتر در React
     private function getGroupedPermissions(): array
     {
         return [
@@ -63,7 +66,7 @@ class UserPermissionController extends Controller
                 PermissionEnum::DELETE_USER->value => PermissionEnum::DELETE_USER->label(),
                 PermissionEnum::ASSIGN_ROLE->value => PermissionEnum::ASSIGN_ROLE->label(),
             ],
-            'نامه‌ها' => [
+            'مکاتیب' => [
                 PermissionEnum::VIEW_LETTERS->value => PermissionEnum::VIEW_LETTERS->label(),
                 PermissionEnum::CREATE_LETTER->value => PermissionEnum::CREATE_LETTER->label(),
                 PermissionEnum::EDIT_LETTER->value => PermissionEnum::EDIT_LETTER->label(),
@@ -74,13 +77,34 @@ class UserPermissionController extends Controller
                 PermissionEnum::SIGN_LETTER->value => PermissionEnum::SIGN_LETTER->label(),
                 PermissionEnum::REPLY_LETTER->value => PermissionEnum::REPLY_LETTER->label(),
             ],
+            'بایگانی و پرونده' => [
+                PermissionEnum::VIEW_CASES->value => PermissionEnum::VIEW_CASES->label(),
+                PermissionEnum::CREATE_CASE->value => PermissionEnum::CREATE_CASE->label(),
+                PermissionEnum::EDIT_CASE->value => PermissionEnum::EDIT_CASE->label(),
+                PermissionEnum::DELETE_CASE->value => PermissionEnum::DELETE_CASE->label(),
+            ],
+            'گزارشات' => [
+                PermissionEnum::VIEW_REPORTS->value => PermissionEnum::VIEW_REPORTS->label(),
+                PermissionEnum::EXPORT_REPORTS->value => PermissionEnum::EXPORT_REPORTS->label(),
+            ],
+            'بست‌های کاری' => [
+                PermissionEnum::VIEW_POSITIONS->value => PermissionEnum::VIEW_POSITIONS->label(),
+                PermissionEnum::CREATE_POSITION->value => PermissionEnum::CREATE_POSITION->label(),
+                PermissionEnum::EDIT_POSITION->value => PermissionEnum::EDIT_POSITION->label(),
+                PermissionEnum::DELETE_POSITION->value => PermissionEnum::DELETE_POSITION->label(),
+            ],
+            'دسته‌بندی‌ها' => [
+                PermissionEnum::VIEW_CATEGORIES->value => PermissionEnum::VIEW_CATEGORIES->label(),
+                PermissionEnum::CREATE_CATEGORY->value => PermissionEnum::CREATE_CATEGORY->label(),
+                PermissionEnum::EDIT_CATEGORY->value => PermissionEnum::EDIT_CATEGORY->label(),
+                PermissionEnum::DELETE_CATEGORY->value => PermissionEnum::DELETE_CATEGORY->label(),
+            ],
             'تذکره' => [
                 PermissionEnum::NID_REGISTER->value => PermissionEnum::NID_REGISTER->label(),
                 PermissionEnum::NID_APPROVE->value => PermissionEnum::NID_APPROVE->label(),
                 PermissionEnum::NID_VIEW->value => PermissionEnum::NID_VIEW->label(),
                 PermissionEnum::NID_DESTROY->value => PermissionEnum::NID_DESTROY->label(),
             ],
-            // ... سایر گروه‌ها
         ];
     }
 }

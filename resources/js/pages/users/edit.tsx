@@ -339,7 +339,7 @@ export default function UsersEdit({
                                     </div>
 
                                     <div className="bg-white border-slate-200 p-4 z-20">
-                                        <div className="flex gap-3 max-w-5xl mx-auto">
+                                        <div className="flex flex-wrap gap-3 max-w-5xl mx-auto">
                                             <button
                                                 type="submit"
                                                 disabled={processing}
@@ -347,6 +347,14 @@ export default function UsersEdit({
                                             >
                                                 <Save className="h-4 w-4" />
                                                 {processing ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => router.get(`/admin/users/${user.id}/permissions`)}
+                                                className="cursor-pointer flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                                            >
+                                                <Shield className="h-4 w-4" />
+                                                دسترسی‌های مستقیم
                                             </button>
                                             <button
                                                 type="button"
